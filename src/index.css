@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* You can add your global styles below */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: #ffffff; /* bg-white */
+  color: #0f172a; /* text-slate-900 */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
