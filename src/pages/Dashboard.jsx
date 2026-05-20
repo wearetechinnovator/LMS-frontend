@@ -61,7 +61,7 @@ export default function Dashboard({ username, onLogout }) {
         <Navbar username={username} onLogout={onLogout} currentPage={activeNav} />
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto">
           {/* Dashboard View */}
           {activeNav === 'dashboard' && (
             <>
