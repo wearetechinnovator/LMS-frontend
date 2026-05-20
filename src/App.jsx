@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import AuthPage from './components/Auth/AuthPage'
-import OnboardingPage from './components/Onboarding/OnboardingPage'
-import Dashboard from './components/Dashboard/Dashboard'
+import AuthPage from './pages/Auth/AuthPage'
+import OnboardingPage from './pages/Company/OnboardingPage'
+import Dashboard from './pages/Dashboard'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)

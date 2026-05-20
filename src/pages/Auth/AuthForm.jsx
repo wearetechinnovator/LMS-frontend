@@ -112,7 +112,7 @@ export default function AuthForm({
           <motion.button type="submit"
             custom={isLogin?3:5} variants={inputV} initial="hidden" animate="visible"
             whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-            className="w-full mt-6 bg-primary hover:bg-primary/90 text-on-primary font-headline-md text-headline-md py-2.5 px-4 rounded transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full mt-6 bg-primary hover:bg-primary/90 text-on-primary font-headline-md text-headline-md py-1.5 px-1 rounded transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {isLogin ? 'Log In' : 'Create my account'}
           </motion.button>
