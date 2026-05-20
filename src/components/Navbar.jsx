@@ -1,79 +1,104 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-export default function Navbar({ username, onLogout, currentPage = 'dashboard' }) {
+export default function Navbar() {
+  const location = useLocation()
+  const [showNotifications, setShowNotifications] = useState(false)
+  
   // Page titles map
   const pageTitles = {
-    dashboard: 'Dashboard',
-    leads: 'All Leads',
-    campaigns: 'Campaigns',
-    teams: 'Teams',
-    'form-builder': 'Form Builder',
-    'add-lead': 'Create Lead'
+    '/dashboard': 'Dashboard',
+    '/leads': 'All Leads',
+    '/departments': 'Campaigns',
+    '/teams': 'Teams',
+    '/form-builder': 'Form Builder'
   }
 
   const getPageTitle = () => {
-    return pageTitles[currentPage] || 'Dashboard'
+    for (const [path, title] of Object.entries(pageTitles)) {
+      if (location.pathname.startsWith(path)) {
+        return title
+      }
+    }
+    return 'Dashboard'
   }
+
+  const username = localStorage.getItem('username') || 'ADMIN'
 
   return (
     <motion.nav
-      className="bg-surface border-b border-outline-variant px-8 flex items-center relative"
+      className="bg-surface border-b border-outline-variant px-8 flex items-center justify-between h-11 sticky top-0 z-50"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Left Section - Search */}
-
-
-      {/* Center Section - Title */}
-      <div className="absolute left-4">
-        <h2 className="font-headline-md text-headline-md text-on-background whitespace-nowrap">{getPageTitle()}</h2>
+      {/* Left Section - Title */}
+      <div>
+        <h2 className="text-headline-md font-headline-md text-on-background whitespace-nowrap">
+          {getPageTitle()}
+        </h2>
       </div>
 
       {/* Right Section - Actions & User Menu */}
-      <div className="flex items-center gap-4 ml-auto">
-        <div className="flex items-center gap-1">
-          {/* Search */}
-          <div className="relative w-48">
+      <div className="flex items-center gap-2">
+        {/* Notifications Icon */}
+        <div className="relative">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-2 rounded-full hover:bg-surface-container transition-colors"
+          >
             <span
-              className="material-symbols-outlined absolute left-3 inset-y-0 flex items-center text-on-surface-variant text-[18px] pointer-events-none"
+              className="material-symbols-outlined text-on-surface text-[24px]"
               aria-hidden="true"
             >
-              search
-            </span>
-            
-            <input
-              type="text"
-              placeholder="Search leads..."
-              className="w-full pl-8 pr-3 h-7 bg-surface-container-lowest border border-outline-variant rounded font-body-xs text-body-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </div>
-        
-        {/* Create Lead Button */}
-        <button className="px-4 h-7 bg-primary hover:bg-primary/90 rounded text-on-primary font-body-md text-body-md font-semibold transition-colors flex items-center gap-1">
-          <span className="material-symbols-outlined text-[16px]">add</span>
-          Create Lead
-        </button>
-
-        {/* User Actions */}
-        <div className="flex items-center gap-1">
-          <button className="p-2 hover:bg-surface-container rounded transition-colors">
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
               notifications
             </span>
+            {/* Notification Dot */}
+            <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
           </button>
-          <button className="p-2 hover:bg-surface-container rounded transition-colors">
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
-              settings
+
+          {/* Notifications Dropdown */}
+          {showNotifications && (
+            <motion.div
+              className="absolute right-0 mt-2 w-80 bg-surface border border-outline-variant rounded-lg shadow-lg p-4 z-50"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <div className="text-body-md font-body-md text-on-surface mb-3">Notifications</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className="p-2 bg-surface-container-lowest rounded text-body-sm text-on-surface-variant">
+                  No new notifications
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Help Icon */}
+        <button className="p-2 rounded-full hover:bg-surface-container transition-colors">
+          <span
+            className="material-symbols-outlined text-on-surface text-[24px]"
+            aria-hidden="true"
+          >
+            help
+          </span>
+        </button>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-outline-variant"></div>
+
+        {/* User Profile */}
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end">
+            <span className="text-body-md font-body-md text-on-surface text-[12px] uppercase tracking-wide">
+              {username}
             </span>
-          </button>
-          <button className="p-2 hover:bg-surface-container rounded transition-colors">
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
-              account_circle
-            </span>
-          </button>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-[14px] font-bold cursor-pointer hover:opacity-80 transition-opacity">
+            {username.charAt(0).toUpperCase()}
+          </div>
         </div>
       </div>
     </motion.nav>

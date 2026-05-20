@@ -4,10 +4,17 @@ import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import AllLeads from './AllLeads'
 import FormBuilder from './FormBuilder'
+import Teams from './Teams'
+import Campaigns from './Campaigns'
+import ViewTeam from './ViewTeam'
+import ManageTeam from './ManageTeam'
 
 export default function Dashboard({ username, onLogout }) {
   const [activeNav, setActiveNav] = useState('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState(null)
+  const [viewingTeamDetail, setViewingTeamDetail] = useState(false)
+  const [managingTeam, setManagingTeam] = useState(false)
 
   // Mock data
   const stats = [
@@ -42,6 +49,32 @@ export default function Dashboard({ username, onLogout }) {
       default:
         return 'bg-gray-100 text-gray-600'
     }
+  }
+
+  const handleNavigateToViewTeam = (dept, isManage = false) => {
+    setSelectedTeam(dept)
+    if (isManage) {
+      setManagingTeam(true)
+      setViewingTeamDetail(false)
+    } else {
+      setViewingTeamDetail(true)
+      setManagingTeam(false)
+    }
+  }
+
+  const handleBackFromViewTeam = () => {
+    setViewingTeamDetail(false)
+    setSelectedTeam(null)
+  }
+
+  const handleNavigateToManageTeam = () => {
+    setViewingTeamDetail(false)
+    setManagingTeam(true)
+  }
+
+  const handleBackFromManageTeam = () => {
+    setManagingTeam(false)
+    setSelectedTeam(null)
   }
 
   return (
@@ -215,12 +248,38 @@ export default function Dashboard({ username, onLogout }) {
 
           {/* All Leads View */}
           {activeNav === 'leads' && <AllLeads />}
-
           {/* Form Builder View */}
           {activeNav === 'form-builder' && <FormBuilder />}
 
-          {/* Campaigns, Teams, Add Lead - Placeholder */}
-          {['campaigns', 'teams', 'add-lead'].includes(activeNav) && (
+          {/* Teams View */}
+          {activeNav === 'teams' && <Teams />}
+
+          {/* Campaigns/Department Management View */}
+          {activeNav === 'campaigns' && (
+            <>
+              {!viewingTeamDetail && !managingTeam && (
+                <Campaigns onNavigateToViewTeam={handleNavigateToViewTeam} />
+              )}
+              {viewingTeamDetail && selectedTeam && (
+                <ViewTeam
+                  departmentId={selectedTeam.id}
+                  departmentName={selectedTeam.name}
+                  onBack={handleBackFromViewTeam}
+                  onManageTeam={handleNavigateToManageTeam}
+                />
+              )}
+              {managingTeam && selectedTeam && (
+                <ManageTeam
+                  departmentId={selectedTeam.id}
+                  departmentName={selectedTeam.name}
+                  onBack={handleBackFromManageTeam}
+                />
+              )}
+            </>
+          )}
+
+          {/* Add Lead - Placeholder */}
+          {activeNav === 'add-lead' && (
             <div className="flex items-center justify-center h-full">
               <p className="text-on-surface-variant font-body-md text-body-md">Coming soon...</p>
             </div>

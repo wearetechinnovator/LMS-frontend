@@ -2,426 +2,525 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function FormBuilder() {
-  const [formFields, setFormFields] = useState([
-    { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', helperText: '', options: [] },
-    { id: 2, type: 'phone', label: 'Phone Number', required: true, placeholder: '(555) 000-0000', helperText: "We'll use this to text you reminders.", options: [] },
-    { id: 3, type: 'date', label: 'Date Selection', required: false, placeholder: 'Select Date', helperText: '', options: [] },
-    { id: 4, type: 'date', label: 'Preferred Appointment Date', required: false, placeholder: 'MM/DD/YYYY', helperText: '', options: [] }
-  ])
-  const [selectedFieldId, setSelectedFieldId] = useState(2)
-  const [formTitle, setFormTitle] = useState('Doctor Appointment Inquiry')
-  const [formDescription, setFormDescription] = useState('Please fill out the form below to request an appointment. Our staff will contact you shortly to confirm.')
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [isEditingDescription, setIsEditingDescription] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
+    const [formFields, setFormFields] = useState([
+        { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', helperText: '', options: [] },
+        { id: 2, type: 'phone', label: 'Phone Number', required: true, placeholder: '(555) 000-0000', helperText: "We'll use this to text you reminders.", options: [] },
+        { id: 3, type: 'date', label: 'Date Selection', required: false, placeholder: 'Select Date', helperText: '', options: [] },
+        { id: 4, type: 'date', label: 'Preferred Appointment Date', required: false, placeholder: 'MM/DD/YYYY', helperText: '', options: [] }
+    ])
+    const [selectedFieldId, setSelectedFieldId] = useState(2)
+    const [formTitle, setFormTitle] = useState('Doctor Appointment Inquiry')
+    const [formDescription, setFormDescription] = useState('Please fill out the form below to request an appointment. Our staff will contact you shortly to confirm.')
+    const [isEditingTitle, setIsEditingTitle] = useState(false)
+    const [isEditingDescription, setIsEditingDescription] = useState(false)
+    const [showPreview, setShowPreview] = useState(false)
 
-  const standardFields = [
-    { type: 'text', label: 'Name', icon: 'text_fields' },
-    { type: 'email', label: 'Email', icon: 'mail' },
-    { type: 'phone', label: 'Phone', icon: 'phone' },
-    { type: 'date', label: 'Date Picker', icon: 'calendar_today' },
-    { type: 'select', label: 'Gender', icon: 'person' },
-    { type: 'text', label: 'City', icon: 'location_city' },
-    { type: 'text', label: 'State', icon: 'apps' }
-  ]
+    const standardFields = [
+        { type: 'text', label: 'Name', icon: 'text_fields' },
+        { type: 'email', label: 'Email', icon: 'mail' },
+        { type: 'phone', label: 'Phone', icon: 'phone' },
+        { type: 'date', label: 'Date Picker', icon: 'calendar_today' },
+        { type: 'select', label: 'Select Box', icon: 'arrow_drop_down' },
+        { type: 'radio', label: 'Radio Button', icon: 'radio_button_checked' },
+        { type: 'text', label: 'City', icon: 'location_city' }
+    ]
 
-  const advancedFields = [
-    { type: 'custom', label: 'Custom Field', icon: 'tune' }
-  ]
+    const advancedFields = [
+        { type: 'custom', label: 'Custom Field', icon: 'tune' }
+    ]
 
-  const securityFields = [
-    { type: 'captcha', label: 'CAPTCHA', icon: 'verified_user' },
-    { type: 'custom_button', label: 'Custom Button', icon: 'smart_button' }
-  ]
+    const securityFields = [
+        { type: 'captcha', label: 'CAPTCHA', icon: 'verified_user' },
+        { type: 'custom_button', label: 'Custom Button', icon: 'smart_button' }
+    ]
 
-  const selectedField = formFields.find(f => f.id === selectedFieldId)
+    const selectedField = formFields.find(f => f.id === selectedFieldId)
 
-  const addField = (type) => {
-    const newId = Math.max(...formFields.map(f => f.id), 0) + 1
-    const newField = {
-      id: newId,
-      type: type,
-      label: `New ${type === 'text' ? 'Field' : type}`,
-      required: false,
-      placeholder: '',
-      helperText: ''
+    const addField = (type) => {
+        const newId = Math.max(...formFields.map(f => f.id), 0) + 1
+        const newField = {
+            id: newId,
+            type: type,
+            label: `New ${type === 'text' ? 'Field' : type}`,
+            required: false,
+            placeholder: '',
+            helperText: '',
+            options: (type === 'select' || type === 'radio' || type === 'checkbox') ? ['Option 1'] : []
+        }
+        setFormFields([...formFields, newField])
+        setSelectedFieldId(newId)
     }
-    setFormFields([...formFields, newField])
-    setSelectedFieldId(newId)
-  }
 
-  const updateField = (id, updates) => {
-    setFormFields(formFields.map(f => f.id === id ? { ...f, ...updates } : f))
-  }
-
-  const deleteField = (id) => {
-    setFormFields(formFields.filter(f => f.id !== id))
-    if (selectedFieldId === id) {
-      setSelectedFieldId(formFields[0]?.id || null)
+    const updateField = (id, updates) => {
+        setFormFields(formFields.map(f => f.id === id ? { ...f, ...updates } : f))
     }
-  }
 
-  return (
-    <div className="w-full h-screen flex bg-[#f4f7fb] text-slate-800 font-sans overflow-hidden">
-      
-      <div className="w-[260px] bg-white border-r border-slate-200 flex flex-col h-full shrink-0">
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-          <h2 className="font-bold text-slate-900 text-sm">Field Library</h2>
-          <span className="material-symbols-outlined text-slate-500 text-[18px] cursor-pointer hover:text-slate-700">search</span>
-        </div>
+    const deleteField = (id) => {
+        setFormFields(formFields.filter(f => f.id !== id))
+        if (selectedFieldId === id) {
+            setSelectedFieldId(formFields[0]?.id || null)
+        }
+    }
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <div>
-            <h3 className="text-[11px] font-bold text-slate-500 mb-3 uppercase tracking-wider">Standard Fields</h3>
-            <div className="space-y-2">
-              {standardFields.map(field => (
-                <button
-                  key={field.label}
-                  onClick={() => addField(field.type)}
-                  className="w-full flex items-center gap-3 p-2 bg-white border border-slate-200 rounded shadow-sm hover:border-[#4c84db] transition-colors"
-                >
-                  <span className="material-symbols-outlined text-slate-300 text-[16px]">drag_indicator</span>
-                  <span className="material-symbols-outlined text-[#0053db] text-[16px]">{field.icon}</span>
-                  <span className="text-[13px] text-slate-700 font-semibold">{field.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+    return (
+        <div className="w-full h-full  flex bg-background border border-outline-variant rounded-lg overflow-hidden">
 
-          <div>
-            <h3 className="text-[11px] font-bold text-slate-500 mb-3 uppercase tracking-wider">Advanced</h3>
-            <div className="space-y-2">
-              {advancedFields.map(field => (
-                <button
-                  key={field.label}
-                  onClick={() => addField(field.type)}
-                  className="w-full flex items-center gap-3 p-2 bg-white border border-slate-200 rounded shadow-sm hover:border-[#4c84db] transition-colors"
-                >
-                  <span className="material-symbols-outlined text-slate-300 text-[16px]">drag_indicator</span>
-                  <span className="material-symbols-outlined text-orange-500 text-[16px]">{field.icon}</span>
-                  <span className="text-[13px] text-slate-700 font-semibold">{field.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+            <div className=" bg-surface-container-lowest border-r border-outline-variant flex flex-col shrink-0">
+                <div className="p-2 border-b border-outline-variant flex justify-between items-center">
+                    <h2 className="font-headline-md text-headline-md text-on-background text-[12px]">Field Library</h2>
+                    <span className="material-symbols-outlined text-on-surface-variant text-[16px] cursor-pointer hover:text-on-surface">search</span>
+                </div>
 
-          <div>
-            <h3 className="text-[11px] font-bold text-slate-500 mb-3 uppercase tracking-wider">Security & Custom</h3>
-            <div className="space-y-2">
-              {securityFields.map(field => (
-                <button
-                  key={field.label}
-                  onClick={() => addField(field.type)}
-                  className="w-full flex items-center gap-3 p-2 bg-white border border-slate-200 rounded shadow-sm hover:border-[#4c84db] transition-colors"
-                >
-                  <span className="material-symbols-outlined text-slate-300 text-[16px]">drag_indicator</span>
-                  <span className="material-symbols-outlined text-[#0053db] text-[16px]">{field.icon}</span>
-                  <span className="text-[13px] text-slate-700 font-semibold">{field.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-3">
+                    <div>
+                        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px]">STANDARD FIELDS</h3>
+                        <div className="space-y-1">
+                            {standardFields.map(field => (
+                                <button
+                                    key={field.label}
+                                    onClick={() => addField(field.type)}
+                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
+                                    <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
+                                    <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-      <div className="flex-1 flex flex-col items-center overflow-y-auto px-8 py-8">
-        <div className="w-full max-w-[800px]">
-          
-          <div className="flex justify-between items-end mb-6">
-            <div>
-              <span className="text-[#0053db] font-bold text-xs">Status: Draft</span>
-              {isEditingTitle ? (
-                <input
-                  type="text"
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  onBlur={() => setIsEditingTitle(false)}
-                  onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-                  autoFocus
-                  className="w-full text-2xl font-bold text-slate-900 border border-slate-300 rounded px-2 py-1 mt-1 focus:outline-none focus:border-[#4c84db]"
-                />
-              ) : (
-                <h1
-                  onClick={() => setIsEditingTitle(true)}
-                  className="text-2xl font-bold text-slate-900 mt-1 cursor-pointer"
-                >
-                  {formTitle}
-                </h1>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowPreview(true)}
-                className="px-6 py-2 border border-slate-300 rounded font-bold text-sm text-slate-800 bg-white shadow-sm hover:bg-slate-50 transition-colors"
-              >
-                Preview
-              </button>
-              <button className="px-6 py-2 bg-[#0053db] hover:bg-[#004ac6] text-white rounded font-bold text-sm shadow-sm transition-colors">
-                Publish Form
-              </button>
-            </div>
-          </div>
+                    <div>
+                        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px]">ADVANCED</h3>
+                        <div className="space-y-1">
+                            {advancedFields.map(field => (
+                                <button
+                                    key={field.label}
+                                    onClick={() => addField(field.type)}
+                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
+                                    <span className="material-symbols-outlined text-tertiary text-[14px]">{field.icon}</span>
+                                    <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-          <div className="bg-white border border-slate-200 shadow-sm rounded flex flex-col">
-            
-            <div className="p-8 border-b border-slate-200">
-              {isEditingDescription ? (
-                <textarea
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  onBlur={() => setIsEditingDescription(false)}
-                  autoFocus
-                  className="w-full text-sm text-slate-600 border border-slate-300 rounded px-3 py-2 focus:outline-none focus:border-[#4c84db] resize-none"
-                  rows="2"
-                />
-              ) : (
-                <p
-                  onClick={() => setIsEditingDescription(true)}
-                  className="text-sm text-slate-600 cursor-pointer"
-                >
-                  {formDescription}
-                </p>
-              )}
+                    <div>
+                        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px]">SECURITY & CUSTOM</h3>
+                        <div className="space-y-1">
+                            {securityFields.map(field => (
+                                <button
+                                    key={field.label}
+                                    onClick={() => addField(field.type)}
+                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
+                                    <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
+                                    <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="p-8 space-y-2">
-              {formFields.map((field) => {
-                const isSelected = selectedFieldId === field.id
-                return (
-                  <div
-                    key={field.id}
-                    onClick={() => setSelectedFieldId(field.id)}
-                    className={`relative rounded border-2 transition-all cursor-pointer p-4 ${
-                      isSelected
-                        ? 'border-[#4c84db] bg-[#f4f8ff]'
-                        : 'border-transparent hover:border-slate-200 bg-transparent'
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 flex bg-white border border-slate-200 rounded shadow-sm z-10">
-                        <button className="p-1.5 text-[#0053db] hover:bg-slate-50 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[16px]">settings</span>
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteField(field.id); }}
-                          className="p-1.5 text-slate-600 hover:bg-slate-50 border-l border-slate-200 flex items-center justify-center"
+            <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3">
+                <div className="w-full max-w-[800px]">
+
+                    <div className="flex justify-between items-end mb-3">
+                        <div>
+                            <span className="text-primary font-label-caps text-label-caps text-[9px]">Status: Draft</span>
+                            {isEditingTitle ? (
+                                <input
+                                    type="text"
+                                    value={formTitle}
+                                    onChange={(e) => setFormTitle(e.target.value)}
+                                    onBlur={() => setIsEditingTitle(false)}
+                                    onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+                                    autoFocus
+                                    className="w-full font-headline-lg text-headline-lg text-on-background border border-primary rounded px-2 py-0.5 mt-0.5 focus:outline-none text-[14px]"
+                                />
+                            ) : (
+                                <h1
+                                    onClick={() => setIsEditingTitle(true)}
+                                    className="font-headline-lg text-headline-lg text-on-background mt-0.5 cursor-pointer text-[16px]"
+                                >
+                                    {formTitle}
+                                </h1>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowPreview(true)}
+                                className="px-3 py-0.5 text-[10px] border border-outline-variant rounded text-on-surface bg-surface-container-lowest shadow-sm hover:bg-surface-container-low transition-colors"
+                            >
+                                Preview
+                            </button>
+                            <button className="px-3 py-0.5 text-[10px] bg-primary hover:bg-primary/90 text-on-primary rounded shadow-sm transition-colors">
+                                Publish Form
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-surface-container-lowest border border-outline-variant shadow-sm rounded flex flex-col">
+
+                        <div className="p-3 border-b border-outline-variant">
+                            {isEditingDescription ? (
+                                <textarea
+                                    value={formDescription}
+                                    onChange={(e) => setFormDescription(e.target.value)}
+                                    onBlur={() => setIsEditingDescription(false)}
+                                    autoFocus
+                                    className="w-full font-body-md text-body-md text-on-surface-variant border border-primary rounded px-2 py-1 focus:outline-none resize-none text-[10px]"
+                                    rows="1"
+                                />
+                            ) : (
+                                <p
+                                    onClick={() => setIsEditingDescription(true)}
+                                    className="font-body-md text-body-md text-on-surface-variant cursor-pointer text-[10px]"
+                                >
+                                    {formDescription}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="p-3 space-y-2">
+                            {formFields.map((field) => {
+                                const isSelected = selectedFieldId === field.id
+                                return (
+                                    <div
+                                        key={field.id}
+                                        onClick={() => setSelectedFieldId(field.id)}
+                                        className={`relative rounded border-2 transition-all cursor-pointer p-2 ${isSelected
+                                                ? 'border-primary bg-surface-container'
+                                                : 'border-transparent hover:border-outline-variant bg-transparent'
+                                            }`}
+                                    >
+                                        {isSelected && (
+                                            <div className="absolute -top-2 right-2 flex bg-surface-container-lowest border border-outline-variant rounded shadow-sm z-10 overflow-hidden">
+                                                <button className="p-0.5 text-primary hover:bg-surface-container-low flex items-center justify-center transition-colors">
+                                                    <span className="material-symbols-outlined text-[14px]">settings</span>
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); deleteField(field.id); }}
+                                                    className="p-0.5 text-on-surface-variant hover:bg-error-container hover:text-error border-l border-outline-variant flex items-center justify-center transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <div className="relative">
+                                            <label className="flex items-center font-body-md text-body-md font-bold text-on-background mb-1 text-[11px]">
+                                                {isSelected && (
+                                                    <span className="material-symbols-outlined text-primary text-[14px] absolute -left-5 top-1/2 -translate-y-1/2">drag_indicator</span>
+                                                )}
+                                                {field.label} {field.required && <span className="text-error ml-0.5">*</span>}
+                                            </label>
+
+                                            <div className="relative">
+                                                {field.type === 'select' ? (
+                                                    <select disabled className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[10px] appearance-none">
+                                                        <option>{field.placeholder || 'Select...'}</option>
+                                                        {field.options && field.options.map((opt, idx) => (
+                                                            <option key={idx}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : field.type === 'radio' ? (
+                                                    <div className="space-y-1">
+                                                        {field.options && field.options.map((opt, idx) => (
+                                                            <label key={idx} className="flex items-center gap-2 text-[10px]">
+                                                                <input type="radio" disabled className="w-4 h-4 accent-primary" />
+                                                                <span>{opt}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                ) : field.type === 'checkbox' ? (
+                                                    <div className="space-y-1">
+                                                        {field.options && field.options.map((opt, idx) => (
+                                                            <label key={idx} className="flex items-center gap-2 text-[10px]">
+                                                                <input type="checkbox" disabled className="w-4 h-4 accent-primary" />
+                                                                <span>{opt}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <input
+                                                            type={field.type === 'phone' ? 'tel' : 'text'}
+                                                            placeholder={field.placeholder}
+                                                            disabled
+                                                            className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[10px]"
+                                                        />
+                                                        {field.type === 'date' && (
+                                                            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px]">calendar_today</span>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {field.helperText && (
+                                                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 text-[9px]">{field.helperText}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+
+                            <div className="mt-4 border-2 border-dashed border-outline-variant rounded p-4 flex flex-col items-center justify-center text-on-surface-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+                                <span className="material-symbols-outlined text-[20px] mb-1 text-outline-variant">add_circle</span>
+                                <span className="font-body-md text-body-md font-semibold text-[9px]">Drag and drop fields here</span>
+                            </div>
+                        </div>
+
+                        <div className="p-3 border-t border-outline-variant flex justify-end">
+                            <button className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-on-primary rounded font-body-md text-body-md font-bold shadow-sm transition-colors text-[10px]">
+                                Submit Request
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div className="w-64 bg-surface-container-lowest border-l border-outline-variant flex flex-col h-full shrink-0">
+                <div className="px-3 py-1.5 border-b border-outline-variant">
+                    <h2 className="text-[12px] font-bold text-on-background">Field Settings</h2>
+                </div>
+
+                {selectedField ? (
+                    <div className="flex-1 overflow-y-auto">
+
+                        <div className="p-2.5 bg-surface-container border-b border-outline-variant flex items-center gap-1.5 text-primary text-[10px]">
+                            <span className="material-symbols-outlined text-[14px]">
+                                {selectedField.type === 'phone' ? 'phone' : selectedField.type === 'date' ? 'calendar_today' : 'text_fields'}
+                            </span>
+                            {selectedField.type.charAt(0).toUpperCase() + selectedField.type.slice(1)}
+                        </div>
+
+                        <div className="p-3 space-y-2.5">
+
+                            <div>
+                                <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px]">Field Label</label>
+                                <input
+                                    type="text"
+                                    value={selectedField.label}
+                                    onChange={(e) => updateField(selectedField.id, { label: e.target.value })}
+                                    className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px]">Placeholder</label>
+                                <input
+                                    type="text"
+                                    value={selectedField.placeholder}
+                                    onChange={(e) => updateField(selectedField.id, { placeholder: e.target.value })}
+                                    placeholder="(555) 000-0000"
+                                    className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] placeholder:text-[8px]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px]">Helper Text</label>
+                                <input
+                                    type="text"
+                                    value={selectedField.helperText || ''}
+                                    onChange={(e) => updateField(selectedField.id, { helperText: e.target.value })}
+                                    className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                />
+                            </div>
+
+                            <hr className="border-outline-variant my-1.5" />
+
+                            {selectedField.type === 'phone' && (
+                                <div>
+                                    <h4 className="font-headline-md text-headline-md text-on-background mb-1 text-[10px]">Validation</h4>
+                                    <label className="block font-body-md text-body-md text-on-surface mb-1 text-[8px]">Required</label>
+
+                                    <label className="block font-label-caps text-label-caps text-on-surface mb-0.5 text-[7px]">Format</label>
+                                    <div className="relative">
+                                        <select className="w-full h-8 px-1.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[9px]">
+                                            <option>US Phone (XXX) XXX-XXXX</option>
+                                        </select>
+
+                                    </div>
+                                    <hr className="border-outline-variant my-1.5" />
+                                </div>
+                            )}
+
+                            {(selectedField.type === 'select' || selectedField.type === 'radio' || selectedField.type === 'checkbox') && (
+                                <div className="space-y-2 pb-2 border-b border-outline-variant">
+                                    <p className="text-label-caps font-label-caps text-[8px]">Options</p>
+                                    {selectedField.options && selectedField.options.map((option, index) => (
+                                        <div key={index} className="flex gap-1">
+                                            <input
+                                                type="text"
+                                                value={option}
+                                                onChange={(e) => {
+                                                    const newOptions = [...(selectedField.options || [])];
+                                                    newOptions[index] = e.target.value;
+                                                    updateField(selectedField.id, { options: newOptions });
+                                                }}
+                                                className="flex-1 h-7 px-2 border border-outline-variant rounded bg-surface text-[10px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    const newOptions = selectedField.options.filter((_, i) => i !== index);
+                                                    updateField(selectedField.id, { options: newOptions });
+                                                }}
+                                                className="p-1 hover:bg-error-container hover:text-error text-on-surface-variant transition-colors rounded"
+                                            >
+                                                <span className="material-symbols-outlined text-[12px]">close</span>
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        onClick={() => {
+                                            const newOptions = [...(selectedField.options || []), ''];
+                                            updateField(selectedField.id, { options: newOptions });
+                                        }}
+                                        className="w-full h-7 border border-dashed border-outline-variant rounded text-[9px] text-on-surface-variant hover:bg-surface-container transition-colors font-semibold"
+                                    >
+                                        + Add Option
+                                    </button>
+                                    <hr className="border-outline-variant my-1.5" />
+                                </div>
+                            )}
+
+                            <div>
+                                <h4 className="font-headline-md text-headline-md text-on-background mb-1.5 text-[11px]">Advanced</h4>
+                                <div className="mb-2">
+                                    <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px]">Custom ID</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., phone_input_01"
+                                        className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px]">CSS Classes</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., custom-style p-4"
+                                        className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => deleteField(selectedField.id)}
+                                className="w-full py-1.5 border border-error text-error font-body-md text-body-md font-bold rounded bg-surface-container-lowest hover:bg-error-container transition-colors flex items-center justify-center gap-1 mt-3 text-[10px]"
+                            >
+                                <span className="material-symbols-outlined text-[14px]">delete</span>
+                                Delete
+                            </button>
+
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center h-full text-on-surface-variant font-body-md text-body-md text-[9px] text-center px-2">
+                        Select a field to configure
+                    </div>
+                )}
+            </div>
+
+            <AnimatePresence>
+                {showPreview && (
+                    <motion.div
+                        className="fixed inset-0 bg-on-background/40 flex items-center justify-center z-50 p-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowPreview(false)}
+                    >
+                        <motion.div
+                            className="bg-surface-container-lowest rounded shadow-2xl max-w-[800px] w-full max-h-[90vh] overflow-y-auto"
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
                         >
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
-                        </button>
-                      </div>
-                    )}
+                            <div className="sticky top-0 p-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center z-10">
+                                <h3 className="font-headline-md text-headline-md text-on-background">Form Preview</h3>
+                                <button
+                                    onClick={() => setShowPreview(false)}
+                                    className="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                </button>
+                            </div>
 
-                    <div className="relative">
-                      <label className="flex items-center text-[13px] font-bold text-slate-900 mb-2">
-                        {isSelected && (
-                          <span className="material-symbols-outlined text-[#4c84db] text-[18px] absolute -left-6 top-1/2 -translate-y-1/2">drag_indicator</span>
-                        )}
-                        {field.label} {field.required && <span className="text-red-600 ml-1">*</span>}
-                      </label>
+                            <div className="p-4">
+                                <div className="mb-3 border-b border-outline-variant pb-3">
+                                    <h2 className="font-headline-lg text-headline-lg text-on-background mb-1 text-[14px]">{formTitle}</h2>
+                                    <p className="font-body-md text-body-md text-on-surface-variant text-[10px]">{formDescription}</p>
+                                </div>
 
-                      <div className="relative">
-                        <input
-                          type={field.type === 'phone' ? 'tel' : 'text'}
-                          placeholder={field.placeholder}
-                          disabled
-                          className="w-full h-10 px-3 border border-slate-300 rounded bg-white text-[13px] text-slate-700 placeholder:text-slate-400"
-                        />
-                        {field.type === 'date' && (
-                          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[18px]">calendar_today</span>
-                        )}
-                      </div>
+                                <div className="space-y-3">
+                                    {formFields.map((field) => (
+                                        <div key={field.id}>
+                                            <label className="block font-body-md text-body-md font-bold text-on-background mb-1 text-[11px]">
+                                                {field.label} {field.required && <span className="text-error ml-1">*</span>}
+                                            </label>
+                                            <div className="relative">
+                                                {field.type === 'select' ? (
+                                                    <select className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] appearance-none">
+                                                        <option>{field.placeholder || 'Select...'}</option>
+                                                        {field.options && field.options.map((opt, idx) => (
+                                                            <option key={idx}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : field.type === 'radio' ? (
+                                                    <div className="space-y-1">
+                                                        {field.options && field.options.map((opt, idx) => (
+                                                            <label key={idx} className="flex items-center gap-2 text-[10px]">
+                                                                <input type="radio" className="w-4 h-4 accent-primary" />
+                                                                <span>{opt}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                ) : field.type === 'checkbox' ? (
+                                                    <div className="space-y-1">
+                                                        {field.options && field.options.map((opt, idx) => (
+                                                            <label key={idx} className="flex items-center gap-2 text-[10px]">
+                                                                <input type="checkbox" className="w-4 h-4 accent-primary" />
+                                                                <span>{opt}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <input
+                                                            type={field.type === 'phone' ? 'tel' : 'text'}
+                                                            placeholder={field.placeholder}
+                                                            className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                                        />
+                                                        {field.type === 'date' && (
+                                                            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px]">calendar_today</span>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                            {field.helperText && (
+                                                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 text-[9px]">{field.helperText}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
 
-                      {field.helperText && (
-                        <p className="text-[12px] text-slate-600 mt-2">{field.helperText}</p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+                                <div className="flex justify-end mt-4 border-t border-outline-variant pt-3">
+                                    <button className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-on-primary rounded font-body-md text-body-md font-bold shadow-sm transition-colors text-[10px]">
+                                        Submit Request
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-              <div className="mt-8 border-2 border-dashed border-slate-300 rounded p-10 flex flex-col items-center justify-center text-slate-600 bg-slate-50/50">
-                <span className="material-symbols-outlined text-[28px] mb-2 text-slate-400">add_circle</span>
-                <span className="text-sm font-semibold">Drag and drop fields here</span>
-              </div>
-            </div>
-
-            <div className="p-8 border-t border-slate-100 flex justify-end">
-              <button className="px-6 py-2 bg-[#6b99de] text-white rounded font-bold text-sm shadow-sm">
-                Submit Request
-              </button>
-            </div>
-
-          </div>
         </div>
-      </div>
-
-      <div className="w-[300px] bg-[#f9fafb] border-l border-slate-200 flex flex-col h-full shrink-0">
-        <div className="p-4 border-b border-slate-200 bg-white">
-          <h2 className="font-bold text-slate-900 text-sm">Field Settings</h2>
-        </div>
-
-        {selectedField ? (
-          <div className="flex-1 overflow-y-auto">
-            
-            <div className="p-4 bg-[#eff4ff] border-b border-[#dce5fc] flex items-center gap-2 text-[#0053db] font-bold text-sm">
-              <span className="material-symbols-outlined text-[18px]">
-                {selectedField.type === 'phone' ? 'phone' : selectedField.type === 'date' ? 'calendar_today' : 'text_fields'}
-              </span>
-              {selectedField.type.charAt(0).toUpperCase() + selectedField.type.slice(1)} Input
-            </div>
-
-            <div className="p-5 space-y-6">
-              
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-2">Field Label</label>
-                <input
-                  type="text"
-                  value={selectedField.label}
-                  onChange={(e) => updateField(selectedField.id, { label: e.target.value })}
-                  className="w-full h-8 px-2 border border-slate-300 rounded text-[13px] text-slate-700 bg-white focus:outline-none focus:border-[#0053db]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-2">Placeholder Text</label>
-                <input
-                  type="text"
-                  value={selectedField.placeholder}
-                  onChange={(e) => updateField(selectedField.id, { placeholder: e.target.value })}
-                  className="w-full h-8 px-2 border border-slate-300 rounded text-[13px] text-slate-700 bg-white focus:outline-none focus:border-[#0053db]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-2">Helper Text</label>
-                <input
-                  type="text"
-                  value={selectedField.helperText || ''}
-                  onChange={(e) => updateField(selectedField.id, { helperText: e.target.value })}
-                  className="w-full h-8 px-2 border border-slate-300 rounded text-[13px] text-slate-700 bg-white focus:outline-none focus:border-[#0053db]"
-                />
-              </div>
-
-              <hr className="border-slate-200" />
-
-              <div>
-                <h4 className="text-[13px] font-bold text-slate-900 mb-4">Validation</h4>
-                <label className="block text-[12px] font-medium text-slate-700 mb-5">Required Field</label>
-
-                <label className="block text-[11px] font-bold text-slate-800 mb-2">Format</label>
-                <div className="relative">
-                  <select className="w-full h-8 px-2 border border-slate-300 rounded text-[12px] text-slate-700 bg-white appearance-none focus:outline-none focus:border-[#0053db]">
-                    <option>US Phone (XXX) XXX-XXXX</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
-                </div>
-              </div>
-
-              <hr className="border-slate-200" />
-
-              <div>
-                <h4 className="text-[13px] font-bold text-slate-900 mb-4">Advanced</h4>
-                <div className="mb-4">
-                  <label className="block text-[11px] font-bold text-slate-800 mb-2">Custom ID</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., phone_input_01"
-                    className="w-full h-8 px-2 border border-slate-300 rounded text-[12px] text-slate-700 bg-white focus:outline-none focus:border-[#0053db]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-2">CSS Classes</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., custom-style p-4"
-                    className="w-full h-8 px-2 border border-slate-300 rounded text-[12px] text-slate-700 bg-white focus:outline-none focus:border-[#0053db]"
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={() => deleteField(selectedField.id)}
-                className="w-full py-2 border border-red-500 text-red-600 font-bold text-sm rounded bg-white hover:bg-red-50 transition-colors flex items-center justify-center gap-2 mt-4"
-              >
-                <span className="material-symbols-outlined text-[18px]">delete</span>
-                Delete Field
-              </button>
-
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
-            Select a field to configure
-          </div>
-        )}
-      </div>
-
-      <AnimatePresence>
-        {showPreview && (
-          <motion.div
-            className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowPreview(false)}
-          >
-            <motion.div
-              className="bg-white rounded shadow-2xl max-w-[800px] w-full max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="sticky top-0 p-4 border-b border-slate-200 bg-white flex justify-between items-center z-10">
-                <h3 className="font-bold text-slate-900 text-[16px]">Form Preview</h3>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-500"
-                >
-                  <span className="material-symbols-outlined text-[20px]">close</span>
-                </button>
-              </div>
-
-              <div className="p-8">
-                <div className="mb-6 border-b border-slate-200 pb-6">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">{formTitle}</h2>
-                  <p className="text-sm text-slate-600">{formDescription}</p>
-                </div>
-
-                <div className="space-y-6">
-                  {formFields.map((field) => (
-                    <div key={field.id}>
-                      <label className="block text-[13px] font-bold text-slate-900 mb-2">
-                        {field.label} {field.required && <span className="text-red-600 ml-1">*</span>}
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={field.type === 'phone' ? 'tel' : 'text'}
-                          placeholder={field.placeholder}
-                          className="w-full h-10 px-3 border border-slate-300 rounded bg-white text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0053db]"
-                        />
-                        {field.type === 'date' && (
-                          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">calendar_today</span>
-                        )}
-                      </div>
-                      {field.helperText && (
-                        <p className="text-[12px] text-slate-600 mt-2">{field.helperText}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-end mt-8 border-t border-slate-100 pt-8">
-                  <button className="px-6 py-2 bg-[#6b99de] text-white rounded font-bold text-sm shadow-sm">
-                    Submit Request
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-    </div>
-  )
+    )
 }
