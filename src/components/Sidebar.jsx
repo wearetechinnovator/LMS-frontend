@@ -4,10 +4,11 @@ import { motion } from 'framer-motion'
 export default function Sidebar({ activeNav, setActiveNav, sidebarCollapsed, setSidebarCollapsed, onLogout }) {
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { id: 'form-builder', label: 'Form Builder', icon: 'build' },
     { id: 'leads', label: 'All Leads', icon: 'people' },
     { id: 'campaigns', label: 'Campaigns', icon: 'campaign' },
     { id: 'teams', label: 'Teams', icon: 'group' },
-    { id: 'form-builder', label: 'Form Builder', icon: 'build' },
+    
     { id: 'add-lead', label: 'Create Lead', icon: 'add_circle' }
   ]
 
