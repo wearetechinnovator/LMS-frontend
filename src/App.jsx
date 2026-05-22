@@ -5,18 +5,21 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import AuthPage from './pages/Auth/AuthPage'
 import OnboardingPage from './pages/Company/OnboardingPage'
 
+
 // Dashboard Components
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 
 // Dashboard Pages - Lazy loaded
-const DashboardMain = React.lazy(() => import('./pages/Dashboard/DashboardMain'))
-const AllLeadsPage = React.lazy(() => import('./pages/Leads/AllLeadsPage'))
-const FormBuilderPage = React.lazy(() => import('./pages/Forms/FormBuilderPage'))
+const DashboardMain = React.lazy(() => import('./pages/DashboardMain'))
+const AllLeadsPage = React.lazy(() => import('./pages/AllLeadsPage'))
+const FormBuilderPage = React.lazy(() => import('./pages/FormBuilderPage'))
 const TeamsPage = React.lazy(() => import('./pages/Team/TeamsPage'))
 const ViewTeamPage = React.lazy(() => import('./pages/Team/ViewTeamPage'))
 const ManageTeamPage = React.lazy(() => import('./pages/Team/ManageTeamPage'))
-const CampaignsPage = React.lazy(() => import('./pages/Department/CampaignsPage'))
+const CampaignsPage = React.lazy(() => import('./pages/CampaignsPage'))
+const AuditLogsPage = React.lazy(() => import('./pages/AuditLogs'))
+const LmsSettingsPage = React.lazy(() => import('./pages/LmsSettings'))
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -48,8 +51,8 @@ function DashboardLayout({ username, onLogout }) {
   return (
     <div className="bg-background h-screen flex overflow-hidden">
       {/* Sidebar */}
-      <Sidebar 
-        sidebarCollapsed={sidebarCollapsed} 
+      <Sidebar
+        sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}
         onLogout={onLogout}
       />
@@ -65,23 +68,29 @@ function DashboardLayout({ username, onLogout }) {
             <Routes>
               {/* Dashboard */}
               <Route path="dashboard" element={<DashboardMain />} />
-              
+
               {/* Leads */}
               <Route path="leads" element={<AllLeadsPage />} />
-              
+
               {/* Forms */}
               <Route path="form-builder" element={<FormBuilderPage />} />
-              
+
               {/* Teams */}
               <Route path="teams" element={<TeamsPage />} />
               <Route path="teams/:id" element={<ViewTeamPage />} />
               <Route path="teams/:id/manage" element={<ManageTeamPage />} />
-              
+
               {/* Departments */}
               <Route path="departments" element={<CampaignsPage />} />
               <Route path="departments/:id" element={<ViewTeamPage />} />
               <Route path="departments/:id/manage" element={<ManageTeamPage />} />
-              
+
+              {/* Audit Logs */}
+              <Route path="audit-logs" element={<AuditLogsPage />} />
+
+              {/* LMS Settings */}
+              <Route path="settings" element={<LmsSettingsPage />} />
+
               {/* Default redirect */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -117,8 +126,8 @@ function App() {
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         {/* Auth Route */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             !isAuthenticated ? (
               <AuthPage onAuthSuccess={handleAuthSuccess} />
@@ -127,7 +136,7 @@ function App() {
             ) : (
               <OnboardingPage username={username} onLogout={handleLogout} onComplete={handleOnboardingComplete} />
             )
-          } 
+          }
         />
 
         {/* Onboarding Route */}

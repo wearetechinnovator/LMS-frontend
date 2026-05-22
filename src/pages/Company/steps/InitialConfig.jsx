@@ -1,8 +1,17 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import '../../../assets/custom.css'
 
 export default function InitialConfig() {
   const [selectedIndustry, setSelectedIndustry] = useState('')
+  const [industries, setIndustries] = useState([
+    { id: 'healthcare', name: 'Healthcare', icon: 'local_hospital', color: '#10b981' },
+    { id: 'education', name: 'Education', icon: 'school', color: '#6366f1' },
+    { id: 'realestate', name: 'Real Estate', icon: 'home', color: '#f97316' },
+    { id: 'generalsales', name: 'General Sales', icon: 'shopping_bag', color: '#ec4899' }
+  ])
+  const [isAddingIndustry, setIsAddingIndustry] = useState(false)
+  const [newIndustryName, setNewIndustryName] = useState('')
+
   const [stages, setStages] = useState([
     { id: 1, name: 'New', color: '#2563eb' },
     { id: 2, name: 'Contacted', color: '#bc4800' },
@@ -10,12 +19,7 @@ export default function InitialConfig() {
     { id: 4, name: 'Interested', color: '#eab308' },
     { id: 5, name: 'Converted', color: '#22c55e', locked: true }
   ])
-  const [sources, setSources] = useState({
-    website: true,
-    api: true,
-    manual: true,
-    referral: false
-  })
+
   const [showModal, setShowModal] = useState(false)
   const [newStage, setNewStage] = useState({ name: '', color: '#2563eb' })
   const [draggedItem, setDraggedItem] = useState(null)
@@ -38,23 +42,53 @@ export default function InitialConfig() {
 
   const handleDrop = (e, targetStage) => {
     e.preventDefault()
-    if (!draggedItem || draggedItem.id === targetStage.id) return
+    if (!draggedItem || draggedItem.id === targetStage.id || targetStage.locked) return
 
     const draggedIndex = stages.findIndex(s => s.id === draggedItem.id)
     const targetIndex = stages.findIndex(s => s.id === targetStage.id)
-    
+
     const newStages = [...stages]
     newStages.splice(draggedIndex, 1)
     newStages.splice(targetIndex, 0, draggedItem)
-    
-    setStages(newStages)
+
+    // Keep locked stages at the end
+    const lockedStages = newStages.filter(s => s.locked)
+    const activeStages = newStages.filter(s => !s.locked)
+
+    setStages([...activeStages, ...lockedStages])
     setDraggedItem(null)
+  }
+
+  const handleAddCustomIndustry = (e) => {
+    e.preventDefault()
+    const trimmed = newIndustryName.trim()
+    if (trimmed) {
+      const newId = trimmed.toLowerCase().replace(/[^a-z0-9]/g, '')
+      // Check if it already exists
+      const exists = industries.find(ind => ind.id === newId)
+      if (!exists) {
+        const newInd = { id: newId, name: trimmed, icon: 'business', color: '#06b6d4' }
+        setIndustries([...industries, newInd])
+        setSelectedIndustry(trimmed)
+      } else {
+        setSelectedIndustry(exists.name)
+      }
+      setNewIndustryName('')
+      setIsAddingIndustry(false)
+    }
   }
 
   const handleAddStage = () => {
     if (newStage.name.trim()) {
       const newId = Math.max(...stages.map(s => s.id), 0) + 1
-      setStages([...stages, { id: newId, name: newStage.name, color: newStage.color }])
+      const newStages = [...stages]
+      const convertedIndex = newStages.findIndex(s => s.locked)
+      if (convertedIndex !== -1) {
+        newStages.splice(convertedIndex, 0, { id: newId, name: newStage.name, color: newStage.color })
+      } else {
+        newStages.push({ id: newId, name: newStage.name, color: newStage.color })
+      }
+      setStages(newStages)
       setNewStage({ name: '', color: '#2563eb' })
       setShowModal(false)
     }
@@ -66,210 +100,288 @@ export default function InitialConfig() {
   ]
 
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8 flex-1 content-start">
+    <div className="initial-config-scope w-full">
+      <div className="config-container">
         {/* Industry Selection */}
-        <motion.div 
-          className="lg:col-span-12 bg-surface border border-outline-variant rounded p-6 shadow-sm"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-1 flex items-center">
-            <span className="material-symbols-outlined mr-2 text-primary text-[20px]">domain</span>
+        <div className="config-section-card">
+          <h2 className="config-section-title">
+            <span className="material-symbols-outlined mr-2.5 text-primary text-[20px] font-bold">domain</span>
             Industry Alignment
           </h2>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">Select your primary industry to load optimized default templates.</p>
-          <div className="w-full md:w-1/2">
-            <label className="block font-label-caps text-label-caps text-on-surface-variant mb-2">PRIMARY INDUSTRY</label>
-            <select 
-              value={selectedIndustry}
-              onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md rounded h-10 px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow"
-            >
-              <option value="">Select an industry...</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="education">Education</option>
-              <option value="realestate">Real Estate</option>
-              <option value="generalsales">General Sales</option>
-            </select>
+          <p className="config-section-desc">Select your primary industry or define a custom one to load optimized default templates.</p>
+
+          <div className="industry-grid">
+            {industries.map((ind) => {
+              const isSelected = selectedIndustry === ind.name
+              return (
+                <button
+                  key={ind.id}
+                  type="button"
+                  onClick={() => setSelectedIndustry(ind.name)}
+                  className={isSelected ? 'industry-btn-selected' : 'industry-btn-inactive'}
+                >
+                  <div
+                    className="industry-icon-wrapper"
+                    style={{
+                      backgroundColor: isSelected ? ind.color : `${ind.color}12`,
+                      boxShadow: isSelected ? `0 0 8px ${ind.color}35` : 'none'
+                    }}
+                  >
+                    <span
+                      className="material-symbols-outlined industry-icon"
+                      style={{
+                        color: isSelected ? '#ffffff' : ind.color
+                      }}
+                    >
+                      {ind.icon}
+                    </span>
+                  </div>
+                  <span className="industry-label">
+                    {ind.name}
+                  </span>
+
+                  {isSelected && (
+                    <span className="pulse-dot" />
+                  )}
+                </button>
+              )
+            })}
+
+            {/* Inline Custom Industry Input Card */}
+            {isAddingIndustry ? (
+              <form
+                onSubmit={handleAddCustomIndustry}
+                className="custom-industry-form"
+              >
+                <input
+                  type="text"
+                  autoFocus
+                  value={newIndustryName}
+                  onChange={(e) => setNewIndustryName(e.target.value)}
+                  placeholder="Enter industry..."
+                  className="custom-industry-input"
+                />
+                <div className="action-btn-group">
+                  <button
+                    type="submit"
+                    className="custom-btn-submit"
+                  >
+                    <span className="material-symbols-outlined text-[16px] font-bold leading-none">check</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingIndustry(false)
+                      setNewIndustryName('')
+                    }}
+                    className="custom-btn-cancel"
+                  >
+                    <span className="material-symbols-outlined text-[16px] font-bold leading-none">close</span>
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsAddingIndustry(true)}
+                className="btn-add-custom-industry"
+              >
+                <div className="custom-icon-container">
+                  <span className="material-symbols-outlined custom-icon-add">
+                    add
+                  </span>
+                </div>
+                <span className="industry-label">
+                  Custom
+                </span>
+              </button>
+            )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Pipeline Stages */}
-        <motion.div 
-          className="lg:col-span-7 bg-surface border border-outline-variant rounded p-6 shadow-sm flex flex-col"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex justify-between items-start mb-4">
+        <div className="pipeline-card-container">
+          <div className="pipeline-header">
             <div>
-              <h2 className="font-headline-md text-headline-md text-on-surface mb-1 flex items-center">
-                <span className="material-symbols-outlined mr-2 text-primary text-[20px]">view_timeline</span>
+              <h2 className="config-section-title">
+                <span className="material-symbols-outlined mr-2.5 text-primary text-[20px] font-bold">view_timeline</span>
                 Pipeline Stages
               </h2>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">Define the lifecycle of a lead.</p>
+              <p className="pipeline-desc">Define the lifecycle of a lead. Drag and drop stages horizontally to customize the flow.</p>
             </div>
-            <button 
+            <button
               onClick={() => setShowModal(true)}
-              className="text-primary font-label-caps text-label-caps flex items-center hover:bg-surface-container p-1 rounded transition-colors"
+              className="btn-pipeline-add"
             >
-              <span className="material-symbols-outlined text-[16px] mr-1">add</span> ADD STAGE
+              <span className="material-symbols-outlined text-[14px] mr-1.5 font-bold">add</span> ADD STAGE
             </button>
           </div>
-          <div className="flex-1 border border-outline-variant/50 rounded bg-surface-container-lowest p-2 space-y-2">
-            {stages.map((stage, idx) => (
-              <motion.div 
-                key={stage.id}
-                draggable={!stage.locked}
-                onDragStart={(e) => handleDragStart(e, stage)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, stage)}
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.3 + idx * 0.05 }}
-                className={`flex items-center bg-surface border border-outline-variant p-2 rounded transition-colors group ${
-                  !stage.locked ? 'cursor-grab hover:bg-surface-container-low' : 'cursor-not-allowed opacity-75'
-                }`}
-              >
-                <span className={`material-symbols-outlined text-outline mr-3 text-[18px] ${!stage.locked ? 'group-hover:text-on-surface-variant' : 'opacity-50'}`}>
-                  {stage.locked ? 'lock' : 'drag_indicator'}
-                </span>
-                <div className="w-3 h-3 rounded-full mr-3" style={{backgroundColor: stage.color}}></div>
-                <span className="font-body-md text-body-md text-on-surface flex-1">{stage.name}</span>
-                <button 
-                  onClick={() => handleRemoveStage(stage.id)}
-                  disabled={stage.locked}
-                  className="material-symbols-outlined text-outline-variant text-[16px] cursor-pointer hover:text-error transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {stage.locked ? 'lock' : 'close'}
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
 
-        {/* Primary Lead Sources */}
-        <motion.div 
-          className="lg:col-span-5 bg-surface border border-outline-variant rounded p-6 shadow-sm"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-1 flex items-center">
-            <span className="material-symbols-outlined mr-2 text-primary text-[20px]">input</span>
-            Ingestion Sources
-          </h2>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">Select active channels.</p>
-          <div className="space-y-3">
-            {[
-              { key: 'website', label: 'Website Forms', desc: 'Direct integration via snippet.' },
-              { key: 'api', label: 'API Endpoint', desc: 'RESTful ingestion for third-parties.' },
-              { key: 'manual', label: 'Manual Entry', desc: 'Staff input via dashboard.' },
-              { key: 'referral', label: 'Referral Network', desc: 'Partner portal submissions.' }
-            ].map(source => (
-              <motion.label 
-                key={source.key}
-                className="flex items-start cursor-pointer group"
-                whileHover={{ x: 2 }}
-              >
-                <div className="flex items-center h-5">
-                  <input 
-                    checked={sources[source.key]}
-                    onChange={(e) => setSources({...sources, [source.key]: e.target.checked})}
-                    className="w-4 h-4 text-primary bg-surface border-outline-variant rounded focus:ring-primary focus:ring-1" 
-                    type="checkbox"
-                  />
-                </div>
-                <div className="ml-3">
-                  <span className="block font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">{source.label}</span>
-                  <span className="block font-body-sm text-body-sm text-on-surface-variant">{source.desc}</span>
-                </div>
-              </motion.label>
-            ))}
+          <div className="pipeline-track">
+            <div className="pipeline-track-inner">
+              {stages.map((stage, idx) => (
+                <React.Fragment key={stage.id}>
+                  <div
+                    draggable={!stage.locked}
+                    onDragStart={(e) => handleDragStart(e, stage)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, stage)}
+                    className={stage.locked ? 'pipeline-stage-card-locked' : 'pipeline-stage-card'}
+                  >
+                    {/* Colored absolute left stripe */}
+                    <div
+                      className="stage-stripe"
+                      style={{ backgroundColor: stage.color }}
+                    />
+
+                    {/* Top Row: Handle/Lock + Stage Index and Close button */}
+                    <div className="stage-header-row">
+                      <div className="stage-header-left">
+                        {!stage.locked ? (
+                          <span className="material-symbols-outlined drag-icon">
+                            drag_indicator
+                          </span>
+                        ) : (
+                          <span className="material-symbols-outlined lock-icon">
+                            lock
+                          </span>
+                        )}
+                        <span className="stage-number-label">
+                          STAGE {idx + 1}
+                        </span>
+                      </div>
+
+                      {!stage.locked && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveStage(stage.id);
+                          }}
+                          className="material-symbols-outlined stage-btn-remove"
+                        >
+                          close
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Bottom Row: Stage Name */}
+                    <div className="stage-content-row">
+                      <span className="stage-name-text">
+                        {stage.name}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Chevron Circle exactly between cards */}
+                  {idx < stages.length - 1 && (
+                    <div className="pipeline-connector">
+                      <span className="material-symbols-outlined pipeline-connector-icon">
+                        chevron_right
+                      </span>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Add Stage Trigger Card */}
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="btn-add-stage-card"
+            >
+              <div className="add-stage-card-icon-wrapper">
+                <span className="material-symbols-outlined add-stage-card-icon">
+                  add
+                </span>
+              </div>
+              <span className="add-stage-card-label">
+                Add Stage
+              </span>
+            </button>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Add Stage Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowModal(false)}
-          >
-            <motion.div
-              className="bg-surface border border-outline-variant rounded-lg p-6 max-w-md w-full mx-4"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Add New Stage</h3>
-              
-              <div className="space-y-4">
-                {/* Stage Name Input */}
-                <div>
-                  <label className="block font-label-caps text-label-caps text-on-surface-variant mb-2">STAGE NAME</label>
-                  <input
-                    type="text"
-                    value={newStage.name}
-                    onChange={(e) => setNewStage({...newStage, name: e.target.value})}
-                    placeholder="e.g., Proposal"
-                    className="w-full px-3 h-8 border border-outline-variant rounded font-body-md text-body-md focus:outline-none focus:ring-1 focus:border-primary focus:ring-primary"
-                  />
-                </div>
+      {showModal && (
+        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4">
+              <h3 className="modal-title">Add New Stage</h3>
+              <p className="modal-subtitle">Customize your pipeline stage block</p>
+            </div>
 
-                {/* Color Picker */}
-                <div>
-                  <label className="block font-label-caps text-label-caps text-on-surface-variant mb-2">STAGE COLOR</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {colors.map(color => (
-                      <button
-                        key={color}
-                        onClick={() => setNewStage({...newStage, color})}
-                        className={`w-full h-8 rounded border-2 transition-all ${
-                          newStage.color === color ? 'border-on-surface scale-110' : 'border-outline-variant'
-                        }`}
-                        style={{backgroundColor: color}}
-                      />
-                    ))}
-                  </div>
-                </div>
+            <div className="space-y-4">
+              {/* Stage Name Input */}
+              <div>
+                <label className="modal-label">Stage Name</label>
+                <input
+                  type="text"
+                  value={newStage.name}
+                  onChange={(e) => setNewStage({ ...newStage, name: e.target.value })}
+                  placeholder="e.g., Proposal"
+                  className="modal-input"
+                  autoFocus
+                />
+              </div>
 
-                {/* Preview */}
-                <div className="bg-surface-container-lowest border border-outline-variant rounded p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: newStage.color}}></div>
-                    <span className="font-body-md text-body-md text-on-surface">{newStage.name || 'New Stage'}</span>
-                  </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 h-8 border border-outline-variant rounded bg-surface hover:bg-surface-container-low font-body-md text-body-md text-on-surface transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddStage}
-                    disabled={!newStage.name.trim()}
-                    className="flex-1 h-8 rounded bg-primary hover:bg-primary/90 font-body-md text-body-md text-on-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Add Stage
-                  </button>
+              {/* Color Picker */}
+              <div>
+                <label className="modal-label">Stage Color</label>
+                <div className="color-picker-grid">
+                  {colors.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewStage({ ...newStage, color })}
+                      className={newStage.color === color ? 'color-dot-selected' : 'color-dot-inactive'}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+
+              {/* Live Preview */}
+              <div>
+                <label className="modal-label">Live Preview</label>
+                <div className="preview-container">
+                  <div className="preview-card">
+                    <div className="preview-stripe" style={{ backgroundColor: newStage.color }} />
+                    <div className="stage-header-left">
+                      <span className="material-symbols-outlined drag-icon">drag_indicator</span>
+                      <span className="stage-number-label">PREVIEW STAGE</span>
+                    </div>
+                    <span className="preview-name">
+                      {newStage.name || 'Enter a name...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="btn-modal-cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddStage}
+                  disabled={!newStage.name.trim()}
+                  className="btn-modal-submit"
+                >
+                  Add Stage
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

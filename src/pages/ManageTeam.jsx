@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function ManageTeam({ departmentId, departmentName, onBack }) {
     const [teamMembers, setTeamMembers] = useState([
@@ -21,8 +21,50 @@ export default function ManageTeam({ departmentId, departmentName, onBack }) {
         return matchSearch && matchRole
     })
 
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+    const [newMemberForm, setNewMemberForm] = useState({
+        name: '',
+        email: '',
+        role: 'Specialist',
+        status: 'Active'
+    })
+
     const removeMember = (id) => {
         setTeamMembers(teamMembers.filter(m => m.id !== id))
+    }
+
+    const handleAddMember = (e) => {
+        e.preventDefault()
+        if (!newMemberForm.name.trim() || !newMemberForm.email.trim()) {
+            return
+        }
+
+        const getInitials = (name) => {
+            const parts = name.trim().split(/\s+/)
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase()
+            }
+            return parts[0] ? parts[0].slice(0, 2).toUpperCase() : 'ME'
+        }
+
+        const newMember = {
+            id: Date.now(),
+            name: newMemberForm.name,
+            email: newMemberForm.email,
+            role: newMemberForm.role,
+            joinDate: new Date().toISOString().split('T')[0],
+            status: newMemberForm.status,
+            avatar: getInitials(newMemberForm.name)
+        }
+
+        setTeamMembers([...teamMembers, newMember])
+        setShowAddMemberModal(false)
+        setNewMemberForm({
+            name: '',
+            email: '',
+            role: 'Specialist',
+            status: 'Active'
+        })
     }
 
     return (
@@ -45,7 +87,10 @@ export default function ManageTeam({ departmentId, departmentName, onBack }) {
                         </div>
                     </div>
                 </div>
-                <button className="px-2 py-1 bg-primary hover:bg-primary/90 text-on-primary rounded text-[9px] font-bold shadow-sm transition-colors flex items-center gap-0.5">
+                <button
+                    onClick={() => setShowAddMemberModal(true)}
+                    className="px-2 py-1 bg-primary hover:bg-primary/90 text-on-primary rounded text-[9px] font-bold shadow-sm transition-colors flex items-center gap-0.5"
+                >
                     <span className="material-symbols-outlined text-[12px]">add</span>
                     Add Member
                 </button>
@@ -153,6 +198,132 @@ export default function ManageTeam({ departmentId, departmentName, onBack }) {
                     </div>
                 </div>
             </div>
+
+            {/* Add Team Member Modal */}
+            <AnimatePresence>
+                {showAddMemberModal && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowAddMemberModal(false)}
+                        />
+
+                        {/* Modal Dialog */}
+                        <motion.div
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="bg-surface border border-outline-variant rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto flex flex-col p-5">
+                                {/* Header */}
+                                <div className="flex justify-between items-center pb-2 border-b border-outline-variant mb-4">
+                                    <h3 className="text-headline-md font-headline-md text-on-background text-[16px] font-bold">Add Team Member</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAddMemberModal(false)}
+                                        className="p-1 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">close</span>
+                                    </button>
+                                </div>
+
+                                {/* Form */}
+                                <form onSubmit={handleAddMember} className="space-y-4">
+                                    {/* Initials Avatar Preview Card */}
+                                    <div className="flex flex-col items-center justify-center p-3 bg-surface-container rounded-lg border border-outline-variant max-w-[120px] mx-auto mb-1">
+                                        <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[16px] font-bold shadow-inner">
+                                            {newMemberForm.name ? newMemberForm.name.trim().split(/\s+/).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'ME'}
+                                        </div>
+                                        <span className="text-[8px] font-bold text-on-surface-variant uppercase tracking-wider mt-2">Initials Preview</span>
+                                    </div>
+
+                                    {/* Name */}
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-on-surface-variant block mb-1">FULL NAME *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newMemberForm.name}
+                                            onChange={(e) => setNewMemberForm({ ...newMemberForm, name: e.target.value })}
+                                            placeholder="e.g. Michael Chen"
+                                            className="w-full h-8 px-2.5 border border-outline-variant rounded bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        />
+                                    </div>
+
+                                    {/* Email */}
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-on-surface-variant block mb-1">EMAIL ADDRESS *</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={newMemberForm.email}
+                                            onChange={(e) => setNewMemberForm({ ...newMemberForm, email: e.target.value })}
+                                            placeholder="e.g. michael.chen@company.com"
+                                            className="w-full h-8 px-2.5 border border-outline-variant rounded bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        />
+                                    </div>
+
+                                    {/* Role */}
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-on-surface-variant block mb-1">ROLE *</label>
+                                        <div className="relative">
+                                            <select
+                                                value={newMemberForm.role}
+                                                onChange={(e) => setNewMemberForm({ ...newMemberForm, role: e.target.value })}
+                                                className="w-full h-8 px-2.5 pr-8 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px] appearance-none cursor-pointer"
+                                            >
+                                                {roles.filter(r => r !== 'All').map(role => (
+                                                    <option key={role} value={role}>{role}</option>
+                                                ))}
+                                            </select>
+                                            <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[16px]">expand_more</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-on-surface-variant block mb-1">STATUS</label>
+                                        <div className="relative">
+                                            <select
+                                                value={newMemberForm.status}
+                                                onChange={(e) => setNewMemberForm({ ...newMemberForm, status: e.target.value })}
+                                                className="w-full h-8 px-2.5 pr-8 border border-outline-variant rounded bg-surface-container-lowest text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px] appearance-none cursor-pointer"
+                                            >
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                            </select>
+                                            <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[16px]">expand_more</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="flex gap-2 pt-2 border-t border-outline-variant">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddMemberModal(false)}
+                                            className="flex-1 py-1.5 border border-outline-variant hover:bg-surface-container text-on-surface rounded text-[11px] font-semibold transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="flex-1 py-1.5 bg-primary hover:bg-primary/90 text-on-primary rounded text-[11px] font-bold transition-colors shadow-sm"
+                                        >
+                                            Add Member
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
         </div>
     )

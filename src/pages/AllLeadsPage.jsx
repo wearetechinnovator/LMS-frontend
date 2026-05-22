@@ -1,5 +1,5 @@
 import React from 'react'
-import AllLeads from '../AllLeads'
+import AllLeads from './AllLeads'
 
 export default function AllLeadsPage() {
   return (

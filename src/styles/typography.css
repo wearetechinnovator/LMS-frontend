@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/**
+ * TAILWIND TYPOGRAPHY CLASS MAPPING
+ * Quick reference for typography utilities in Tailwind
+ */
+
+/*
+HEADING SIZES (Use with font-semibold)
+─────────────────────────────────────────────────
+text-h1          → 24px, font-weight: 600, line-height: 1.2, letter-spacing: -0.5px
+text-h2          → 18px, font-weight: 600, line-height: 1.3, letter-spacing: -0.25px
+text-h3          → 16px, font-weight: 600, line-height: 1.3
+text-h4          → 14px, font-weight: 600, line-height: 1.4
+
+NAVIGATION & SIDEBAR
+─────────────────────────────────────────────────
+text-nav         → 14px, font-weight: 500, line-height: 1.4 (navbar links)
+text-sidebar     → 13px, font-weight: 500, line-height: 1.4 (sidebar items)
+
+BODY TEXT STYLES
+─────────────────────────────────────────────────
+text-body        → 13px, font-weight: 400, line-height: 1.5 (standard body)
+text-body-strong → 13px, font-weight: 500, line-height: 1.5 (emphasized body)
+text-label       → 13px, font-weight: 400, line-height: 1.5 (form labels)
+
+TABLE & DATA
+─────────────────────────────────────────────────
+text-table-header → 12px, font-weight: 600, uppercase, letter-spacing: 0.5px
+text-table-data   → 13px, font-weight: 400, line-height: 1.5
+
+UTILITY TEXT
+─────────────────────────────────────────────────
+text-small       → 11px, font-weight: 500, line-height: 1.4 (badges, timestamps)
+text-extra-small → 10px, font-weight: 500, line-height: 1.3 (micro text)
+
+COLOR UTILITIES
+─────────────────────────────────────────────────
+text-text-primary   → #1e293b (slate-800) - main text
+text-text-secondary → #64748b (slate-500) - labels, hints
+text-text-tertiary  → #94a3b8 (slate-400) - disabled, subtle
+bg-primary          → #f8fafc (slate-50)
+bg-surface          → #ffffff (white)
+border-light        → #e2e8f0 (slate-200)
+*/
+
+/* EXAMPLE IMPLEMENTATIONS */
+
+/* Page Title */
+.page-title {
+  @apply text-h1 text-text-primary;
+}
+
+/* Section Header */
+.section-header {
+  @apply text-h2 text-text-primary mb-4;
+}
+
+/* Card Title */
+.card-title {
+  @apply text-h3 text-text-primary;
+}
+
+/* Navbar Link */
+.navbar-link {
+  @apply text-nav font-medium text-text-primary hover:text-slate-600 transition-colors;
+}
+
+/* Sidebar Item */
+.sidebar-menu-item {
+  @apply text-sidebar font-medium text-text-primary hover:bg-slate-100 px-3 py-2 rounded transition-colors;
+}
+
+/* Body Paragraph */
+.body-paragraph {
+  @apply text-body text-text-primary;
+}
+
+/* Form Label */
+.form-label {
+  @apply text-body-strong text-text-primary mb-1;
+}
+
+/* Form Input */
+.form-input {
+  @apply text-body bg-white border border-border-light rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Table Header */
+.table-th {
+  @apply text-table-header text-text-secondary bg-slate-50 border-b border-border-light px-4 py-2;
+}
+
+/* Table Data */
+.table-td {
+  @apply text-table-data text-text-primary px-4 py-3 border-b border-border-light;
+}
+
+/* Badge */
+.badge {
+  @apply text-small font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-800;
+}
+
+/* Timestamp / Helper Text */
+.timestamp {
+  @apply text-small text-text-secondary;
+}
+
+/* Disabled Text */
+.text-disabled {
+  @apply text-small text-text-tertiary;
+}
+
+/* Secondary Description */
+.description {
+  @apply text-body text-text-secondary;
+}
+
+/* Button Text */
+.button-text {
+  @apply text-nav font-medium transition-colors;
+}
+
+/* Modal Header */
+.modal-header {
+  @apply text-h2 text-text-primary;
+}
+
+/* Error Message */
+.error-message {
+  @apply text-body text-red-600;
+}
+
+/* Success Message */
+.success-message {
+  @apply text-body text-green-600;
+}
+
+/* Warning Message */
+.warning-message {
+  @apply text-body text-yellow-600;
+}
+
+/* Info Message */
+.info-message {
+  @apply text-body text-blue-600;
+}

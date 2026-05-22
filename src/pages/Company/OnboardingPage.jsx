@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import CompanyProfile from './steps/CompanyProfile'
 import InitialConfig from './steps/InitialConfig'
+import '../../assets/custom.css'
 
 export default function OnboardingPage({ username, onLogout, onComplete }) {
   const [currentStep, setCurrentStep] = useState(1)
@@ -11,7 +11,10 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
     companySize: '',
     primaryEmail: '',
     supportPhone: '',
-    logoFile: null
+    logoFile: null,
+    adminUsername: '',
+    adminEmail: '',
+    adminPassword: ''
   })
 
   const handleCompanyChange = (field, value) => {
@@ -36,59 +39,47 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
     'Define the core operational parameters for your Lead Management environment.'
   ]
 
-
   return (
-    <div className="bg-background text-on-background font-body-sm text-body-sm antialiased h-screen flex overflow-hidden">
-      {/* SideNavBar */}
-      <nav className="w-60 h-screen fixed left-0 top-0 bg-surface border-r border-outline-variant flex flex-col py-gutter space-y-stack-gap z-10 hidden md:flex">
-        <div className="px-gutter mb-6">
-          <div className="font-headline-md text-headline-md text-primary font-bold">LeadManager Setup</div>
-          <div className="font-body-sm text-body-sm text-on-surface-variant mt-1">Onboarding Progress</div>
+    <div className="onboarding-wrapper onboarding-page-scope">
+      <nav className="onboarding-sidebar">
+        <div className="onboarding-sidebar-header">
+          <div className="onboarding-sidebar-title">LeadManager Setup</div>
+          <div className="onboarding-sidebar-subtitle">Onboarding Progress</div>
         </div>
-        <div className="flex-1 overflow-y-auto px-unit space-y-unit">
-          {/* Step 1 */}
-          <div className={`flex items-center px-cell-padding-h py-cell-padding-v rounded cursor-pointer transition-all duration-200 ${
-            currentStep === 1 
-              ? 'bg-secondary-container/30 border-l-2 border-primary' 
-              : currentStep > 1 
-                ? 'text-on-surface-variant hover:bg-surface-container' 
-                : 'text-on-surface-variant hover:bg-surface-container'
-          }`}>
-            <span className="material-symbols-outlined mr-3 text-[18px]">business</span>
-            <span className="font-body-md text-body-md">Company Profile</span>
+
+        <div className="onboarding-sidebar-nav">
+          <div
+            onClick={() => setCurrentStep(1)}
+            className={`onboarding-nav-item ${currentStep === 1 ? 'active' : ''}`}
+          >
+            <span className="material-symbols-outlined onboarding-nav-icon">business</span>
+            <span className="onboarding-nav-text">Company Profile</span>
           </div>
-          
-          {/* Step 2 */}
-          <div className={`flex items-center px-cell-padding-h py-cell-padding-v rounded cursor-pointer transition-all duration-200 ${
-            currentStep === 2 
-              ? 'bg-secondary-container/30 border-l-2 border-primary text-primary font-bold' 
-              : currentStep > 2 
-                ? 'text-on-surface-variant hover:bg-surface-container' 
-                : 'text-on-surface-variant hover:bg-surface-container'
-          }`}>
-            <span className="material-symbols-outlined mr-3 text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>settings_suggest</span>
-            <span className="font-body-md text-body-md">Initial Config</span>
+
+          <div
+            onClick={() => setCurrentStep(2)}
+            className={`onboarding-nav-item ${currentStep === 2 ? 'active' : ''}`}
+          >
+            <span className="material-symbols-outlined onboarding-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>settings_suggest</span>
+            <span className="onboarding-nav-text">Initial Config</span>
           </div>
         </div>
-        
-        <div className="p-gutter mt-auto border-t border-outline-variant/50">
-          <div className="w-full bg-surface-container h-2 rounded-full overflow-hidden">
-            <div className="bg-primary h-full transition-all" style={{width: `${(currentStep / 2) * 100}%`}}></div>
+
+        <div className="onboarding-sidebar-footer">
+          <div className="onboarding-progress-bar">
+            <div className="onboarding-progress-fill" style={{ width: `${(currentStep / 2) * 100}%` }}></div>
           </div>
-          <div className="mt-2 text-right font-label-caps text-label-caps text-on-surface-variant">STEP {currentStep} OF 2</div>
+          <div className="onboarding-progress-text">STEP {currentStep} OF 2</div>
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-1 md:ml-60 h-screen overflow-y-auto bg-background p-container-padding flex flex-col">
-        {/* Header */}
-        <div className="max-w-4xl mx-auto w-full mb-8">
-          <h1 className="font-headline-lg text-headline-lg text-on-background mb-2">{stepTitles[currentStep - 1]}</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">{stepDescriptions[currentStep - 1]}</p>
+      <main className="onboarding-main">
+        <div className="onboarding-header">
+          <h1 className="onboarding-title">{stepTitles[currentStep - 1]}</h1>
+          <p className="onboarding-description">{stepDescriptions[currentStep - 1]}</p>
         </div>
 
-        {/* Content Canvas - Scrollable */}
-        <div className="max-w-4xl mx-auto w-full flex-1 overflow-y-auto pr-4 flex flex-col">
+        <div className="onboarding-content">
           {currentStep === 1 && (
             <CompanyProfile data={companyData} onChange={handleCompanyChange} />
           )}
@@ -97,27 +88,22 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
           )}
         </div>
 
-        {/* Footer Actions - Fixed */}
-        <div className="border-t border-outline-variant/50 pt-6 pb-2 flex justify-between items-center mt-6">
-          <button 
+        <div className="onboarding-footer-container">
+          <button
             onClick={handlePrevStep}
             disabled={currentStep === 1}
-            className={`h-8 px-4 rounded border border-outline-variant text-on-surface font-body-md text-body-md flex items-center transition-colors ${
-              currentStep === 1 
-                ? 'bg-surface text-on-surface-variant opacity-50 cursor-not-allowed' 
-                : 'bg-surface hover:bg-surface-container-low'
-            }`}
+            className="onboarding-btn onboarding-btn-prev"
           >
-            <span className="material-symbols-outlined text-[18px] mr-2">arrow_back</span>
+            <span className="material-symbols-outlined btn-icon-left">arrow_back</span>
             Previous
           </button>
-          
-          <button 
+
+          <button
             onClick={handleNextStep}
-            className="h-8 px-6 rounded bg-primary-container text-on-primary font-body-md text-body-md font-bold hover:opacity-90 transition-opacity flex items-center shadow-sm"
+            className="onboarding-btn onboarding-btn-next"
           >
             {currentStep === 2 ? 'Complete Setup' : 'Next Step'}
-            <span className="material-symbols-outlined text-[18px] ml-2">
+            <span className="material-symbols-outlined btn-icon-right">
               {currentStep === 2 ? 'check_circle' : 'arrow_forward'}
             </span>
           </button>

@@ -1,16 +1,22 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function FormBuilder() {
-    const [formFields, setFormFields] = useState([
+export default function FormBuilder({
+    initialTitle = 'Doctor Appointment Inquiry',
+    initialDescription = 'Please fill out the form below to request an appointment. Our staff will contact you shortly to confirm.',
+    initialFields = [
         { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', helperText: '', options: [] },
         { id: 2, type: 'phone', label: 'Phone Number', required: true, placeholder: '(555) 000-0000', helperText: "We'll use this to text you reminders.", options: [] },
         { id: 3, type: 'date', label: 'Date Selection', required: false, placeholder: 'Select Date', helperText: '', options: [] },
         { id: 4, type: 'date', label: 'Preferred Appointment Date', required: false, placeholder: 'MM/DD/YYYY', helperText: '', options: [] }
-    ])
-    const [selectedFieldId, setSelectedFieldId] = useState(2)
-    const [formTitle, setFormTitle] = useState('Doctor Appointment Inquiry')
-    const [formDescription, setFormDescription] = useState('Please fill out the form below to request an appointment. Our staff will contact you shortly to confirm.')
+    ],
+    initialStatus = 'Draft',
+    onBack
+}) {
+    const [formFields, setFormFields] = useState(initialFields)
+    const [selectedFieldId, setSelectedFieldId] = useState(initialFields[0]?.id || null)
+    const [formTitle, setFormTitle] = useState(initialTitle)
+    const [formDescription, setFormDescription] = useState(initialDescription)
     const [isEditingTitle, setIsEditingTitle] = useState(false)
     const [isEditingDescription, setIsEditingDescription] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
@@ -128,27 +134,38 @@ export default function FormBuilder() {
             <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3">
                 <div className="w-full max-w-[800px]">
 
-                    <div className="flex justify-between items-end mb-3">
-                        <div>
-                            <span className="text-primary font-label-caps text-label-caps text-[9px]">Status: Draft</span>
-                            {isEditingTitle ? (
-                                <input
-                                    type="text"
-                                    value={formTitle}
-                                    onChange={(e) => setFormTitle(e.target.value)}
-                                    onBlur={() => setIsEditingTitle(false)}
-                                    onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-                                    autoFocus
-                                    className="w-full font-headline-lg text-headline-lg text-on-background border border-primary rounded px-2 py-0.5 mt-0.5 focus:outline-none text-[14px]"
-                                />
-                            ) : (
-                                <h1
-                                    onClick={() => setIsEditingTitle(true)}
-                                    className="font-headline-lg text-headline-lg text-on-background mt-0.5 cursor-pointer text-[16px]"
+                    <div className="flex justify-between items-end mb-3 font-sans">
+                        <div className="flex items-center gap-2">
+                            {onBack && (
+                                <button
+                                    onClick={onBack}
+                                    className="p-1 hover:bg-surface-container rounded-full text-on-surface-variant cursor-pointer flex items-center justify-center mr-1"
+                                    title="Back to Form Management"
                                 >
-                                    {formTitle}
-                                </h1>
+                                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                                </button>
                             )}
+                            <div>
+                                <span className="text-primary font-label-caps text-label-caps text-[9px]">Status: {initialStatus}</span>
+                                {isEditingTitle ? (
+                                    <input
+                                        type="text"
+                                        value={formTitle}
+                                        onChange={(e) => setFormTitle(e.target.value)}
+                                        onBlur={() => setIsEditingTitle(false)}
+                                        onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+                                        autoFocus
+                                        className="w-full font-headline-lg text-headline-lg text-on-background border border-primary rounded px-2 py-0.5 mt-0.5 focus:outline-none text-[14px]"
+                                    />
+                                ) : (
+                                    <h1
+                                        onClick={() => setIsEditingTitle(true)}
+                                        className="font-headline-lg text-headline-lg text-on-background mt-0.5 cursor-pointer text-[15px] font-bold"
+                                    >
+                                        {formTitle}
+                                    </h1>
+                                )}
+                            </div>
                         </div>
                         <div className="flex gap-2">
                             <button
