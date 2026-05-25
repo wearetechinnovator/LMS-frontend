@@ -1,11 +1,16 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ExportButton from '../components/ExportButton'
+import Toast from '../components/Toast'
+import TeamStatsCard from '../components/TeamStateCard'
 
 export default function Teams() {
     const [selectedDept, setSelectedDept] = useState('All')
     const [selectedStatus, setSelectedStatus] = useState('All')
     const [searchTerm, setSearchTerm] = useState('')
     const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+    const [toastMessage, setToastMessage] = useState('')
+    const [showToast, setShowToast] = useState(false)
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -15,9 +20,14 @@ export default function Teams() {
         sendInvite: true
     })
 
+    const triggerToast = (message) => {
+        setToastMessage(message)
+        setShowToast(true)
+    }
+
     const stats = [
         { label: 'TOTAL MEMBERS', value: '128', change: '-2.5%', positive: false },
-        { label: 'ACTIVE NOW', value: '42', icon: 'radio_button_filled', color: 'text-primary' },
+        { label: 'ACTIVE NOW', value: '42', subtext: 'Live users' },
         { label: 'PENDING INVITES', value: '12', warning: true },
         { label: 'AVG ACTIVITY', value: '6.8h', subtext: 'Last 7 days' }
     ]
@@ -51,13 +61,15 @@ export default function Teams() {
                     <p className="text-body-md text-on-surface-variant text-[10px] mt-0.5">Manage team members and control user activity across departments</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 border border-outline-variant rounded text-[10px] bg-surface-container-lowest hover:bg-surface-container transition-colors flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">download</span>
-                        Export
-                    </button>
+                    <Toast
+                        message={toastMessage}
+                        isVisible={showToast}
+                        onClose={() => setShowToast(false)}
+                    />
+                    <ExportButton triggerToast={triggerToast} />
                     <button
                         onClick={() => setShowAddMemberModal(true)}
-                        className="px-3 py-1.5 border border-primary text-primary rounded text-[10px] bg-primary/10 hover:bg-primary/20 transition-colors font-bold flex items-center gap-1">
+                        className="px-3 h-[32px] py-1.5 border border-primary text-primary rounded text-[10px] bg-primary/10 hover:bg-primary/20 transition-colors font-bold flex items-center gap-1">
                         <span className="material-symbols-outlined text-[14px]">add</span>
                         Add Member
                     </button>
@@ -67,29 +79,15 @@ export default function Teams() {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3">
                 {stats.map((stat, idx) => (
-                    <motion.div
+                    <TeamStatsCard
                         key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="bg-surface-container-lowest border border-outline-variant rounded p-3 shadow-sm"
-                    >
-                        <p className="text-label-caps text-label-caps text-on-surface-variant text-[7px] mb-1">{stat.label}</p>
-                        <div className="flex items-end justify-between">
-                            <h3 className="text-headline-md text-headline-md text-on-background text-[16px] font-bold">{stat.value}</h3>
-                            {stat.change && (
-                                <span className={`text-[9px] font-semibold ${stat.positive ? 'text-primary' : 'text-error'}`}>
-                                    {stat.change}
-                                </span>
-                            )}
-                            {stat.warning && (
-                                <span className="text-warning text-[9px] font-semibold">Awaiting</span>
-                            )}
-                            {stat.subtext && (
-                                <span className="text-[8px] text-on-surface-variant">{stat.subtext}</span>
-                            )}
-                        </div>
-                    </motion.div>
+                        label={stat.label}
+                        value={stat.value}
+                        change={stat.change}
+                        warning={stat.warning}
+                        subtext={stat.subtext}
+                        idx={idx}
+                    />
                 ))}
             </div>
 
@@ -301,7 +299,7 @@ export default function Teams() {
                                     <label className="text-on-surface-variant text-[7px] font-semibold mb-1 block tracking-wider">DEPARTMENT *</label>
                                     <div className="relative">
                                         <select
-                                            value={formData.department} 
+                                            value={formData.department}
                                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                             className="w-full h-7 px-2 pr-6 border border-outline-variant rounded bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
                                             style={{ fontSize: '11px', color: 'inherit', lineHeight: '1' }}
@@ -341,8 +339,7 @@ export default function Teams() {
                                 </button>
                                 <button
                                     onClick={() => {
-                                        // TODO: Handle form submission
-                                        console.log('Add member:', formData)
+                                        triggerToast(`${formData.firstName} ${formData.lastName} added to team`)
                                         setShowAddMemberModal(false)
                                         setFormData({
                                             firstName: '',

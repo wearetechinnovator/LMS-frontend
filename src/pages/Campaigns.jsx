@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ExportButton from '../components/ExportButton'
 
 // Initial Campaigns Data
 const initialCampaignsList = [
@@ -465,13 +466,7 @@ export default function Campaigns() {
                 )}
 
                 {/* Simulated Download button */}
-                <button
-                  onClick={() => triggerToast(`Simulating export of ${dashSubTab === 'CHANNEL' ? 'Channel Summary' : 'Lead Disposition Summary'} to CSV. File downloaded!`)}
-                  className="p-1.5 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-500 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer shadow-2xs bg-white"
-                  title="Download Report"
-                >
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                </button>
+                <ExportButton triggerToast={triggerToast} />
 
                 {/* Simulated Filter button */}
                 <button

@@ -58,6 +58,8 @@ export default function AllLeads() {
   const [timelineSearchQuery, setTimelineSearchQuery] = useState('')
   const [activeSavedTab, setActiveSavedTab] = useState('all')
   const [activeBlockFilter, setActiveBlockFilter] = useState('all')
+  const [dropdownFlipUp, setDropdownFlipUp] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState({ x: 0, y: 0 })
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState('1x')
   const [playbackProgress, setPlaybackProgress] = useState(30)
@@ -486,6 +488,8 @@ export default function AllLeads() {
         matchesBlock = lead.verified === true
       } else if (activeBlockFilter === 'unverified') {
         matchesBlock = lead.verified === false
+      } else if (activeBlockFilter === 'not_assigned') {
+        matchesBlock = lead.assignedTo === 'Unassigned'
       }
 
       return matchesSearch && matchesStatus && matchesSavedTab && matchesBlock
@@ -1078,11 +1082,11 @@ export default function AllLeads() {
             </div> */}
 
             {/* Summary KPI Block Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
               {/* Card 1: Total Leads */}
               <div
                 onClick={() => setActiveBlockFilter('all')}
-                className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'all'
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'all'
                   ? 'border-indigo-500 bg-indigo-50/50 shadow-md ring-1 ring-indigo-500/30'
                   : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
                   }`}
@@ -1103,7 +1107,7 @@ export default function AllLeads() {
               {/* Card 2: Primary Leads */}
               <div
                 onClick={() => setActiveBlockFilter('primary')}
-                className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'primary'
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'primary'
                   ? 'border-amber-500 bg-amber-50/50 shadow-md ring-1 ring-amber-500/30'
                   : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
                   }`}
@@ -1126,7 +1130,7 @@ export default function AllLeads() {
               {/* Card 3: Secondary Leads */}
               <div
                 onClick={() => setActiveBlockFilter('secondary')}
-                className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'secondary'
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'secondary'
                   ? 'border-sky-500 bg-sky-50/50 shadow-md ring-1 ring-sky-500/30'
                   : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
                   }`}
@@ -1147,7 +1151,7 @@ export default function AllLeads() {
               {/* Card 4: Tertiary Leads */}
               <div
                 onClick={() => setActiveBlockFilter('tertiary')}
-                className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'tertiary'
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'tertiary'
                   ? 'border-purple-500 bg-purple-50/50 shadow-md ring-1 ring-purple-500/30'
                   : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
                   }`}
@@ -1171,7 +1175,7 @@ export default function AllLeads() {
               {/* Card 5: Verified Leads */}
               <div
                 onClick={() => setActiveBlockFilter('verified')}
-                className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'verified'
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'verified'
                   ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-1 ring-emerald-500/30'
                   : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
                   }`}
@@ -1195,7 +1199,7 @@ export default function AllLeads() {
               {/* Card 6: Unverified Leads */}
               <div
                 onClick={() => setActiveBlockFilter('unverified')}
-                className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'unverified'
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'unverified'
                   ? 'border-rose-500 bg-rose-50/50 shadow-md ring-1 ring-rose-500/30'
                   : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
                   }`}
@@ -1213,6 +1217,31 @@ export default function AllLeads() {
                 </div>
                 <div className="mt-2">
 
+                </div>
+              </div>
+
+              {/* Card 7: Not Assigned — Admin/Manager only */}
+              <div
+                onClick={() => setActiveBlockFilter('not_assigned')}
+                className={`p-3.5 rounded-[4px] border transition-all duration-200 cursor-pointer flex flex-col justify-between h-[55px] relative overflow-hidden select-none text-left ${activeBlockFilter === 'not_assigned'
+                  ? 'border-orange-500 bg-orange-50/50 shadow-md ring-1 ring-orange-500/30'
+                  : 'border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-350 shadow-sm'
+                  }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className={`text-[10px] font-bold tracking-wider uppercase leading-tight ${activeBlockFilter === 'not_assigned' ? 'text-orange-700' : 'text-slate-500'}`}>
+                    Not Assigned
+                  </span>
+                  <span className="text-[18px] font-bold text-slate-800 leading-none">
+                    {leads.filter(l => l.assignedTo === 'Unassigned').length}
+                  </span>
+                  <span className={`material-symbols-outlined text-[18px] ${activeBlockFilter === 'not_assigned' ? 'text-orange-500' : 'text-slate-400'}`}>
+                    person_off
+                  </span>
+                </div>
+                {/* Admin/Manager badge */}
+                <div className="absolute bottom-1 right-1.5">
+                  <span className="text-[7px] font-bold text-orange-400 tracking-widest uppercase">Admin · Mgr</span>
                 </div>
               </div>
             </div>
@@ -1627,7 +1656,19 @@ export default function AllLeads() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveDropdownLeadId(activeDropdownLeadId === lead.id ? null : lead.id);
+                            if (activeDropdownLeadId === lead.id) {
+                              setActiveDropdownLeadId(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const flipUp = spaceBelow < 280;
+                              setDropdownFlipUp(flipUp);
+                              setDropdownPos({
+                                x: rect.right,
+                                y: flipUp ? rect.top : rect.bottom
+                              });
+                              setActiveDropdownLeadId(lead.id);
+                            }
                             setShowReassignSubId(null);
                           }}
                           className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-surface-container text-on-surface-variant'}`}
@@ -1648,12 +1689,20 @@ export default function AllLeads() {
                                 }}
                               />
 
-                              {/* Floating action dropdown menu */}
+                              {/* Floating action dropdown menu — fixed position to escape overflow:hidden */}
                               {(() => {
-                                const showUpwards = filteredAndSortedLeads.length - index <= 3;
+                                const showUpwards = dropdownFlipUp;
                                 return (
                                   <motion.div
-                                    className={`absolute right-3 w-48 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans ${showUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
+                                    style={{
+                                      position: 'fixed',
+                                      right: `${window.innerWidth - dropdownPos.x}px`,
+                                      ...(showUpwards
+                                        ? { bottom: `${window.innerHeight - dropdownPos.y}px`, top: 'auto' }
+                                        : { top: `${dropdownPos.y + 4}px`, bottom: 'auto' }
+                                      )
+                                    }}
+                                    className="w-48 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-[9999] text-left font-sans"
                                     initial={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
@@ -1686,6 +1735,7 @@ export default function AllLeads() {
                                       View Application
                                     </button>
 
+
                                     {/* Option 3: Re-assign Lead */}
                                     <div className="relative">
                                       <button
@@ -1712,22 +1762,103 @@ export default function AllLeads() {
                                             exit={{ opacity: 0, height: 0 }}
                                             transition={{ duration: 0.15 }}
                                           >
-                                            {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => (
-                                              <button
-                                                key={counselor}
-                                                onClick={() => {
-                                                  handleLeadCounselorChangeDirect(lead.id, counselor);
-                                                  setActiveDropdownLeadId(null);
-                                                  setShowReassignSubId(null);
-                                                }}
-                                                className="w-full flex items-center justify-between px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-white hover:text-blue-600 rounded-md transition-colors cursor-pointer text-left"
-                                              >
-                                                <span>{counselor}</span>
-                                                {lead.assignedTo === counselor && (
-                                                  <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
-                                                )}
-                                              </button>
-                                            ))}
+                                            {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => {
+                                              const counselorLeads = leads.filter(l => l.assignedTo === counselor);
+                                              const count = counselorLeads.length;
+                                              const isCurrentlyAssigned = lead.assignedTo === counselor;
+
+                                              // State for hover - use a local ref trick via data attributes
+                                              return (
+                                                <div key={counselor} className="relative group">
+                                                  <button
+                                                    onClick={() => {
+                                                      handleLeadCounselorChangeDirect(lead.id, counselor);
+                                                      setActiveDropdownLeadId(null);
+                                                      setShowReassignSubId(null);
+                                                    }}
+                                                    className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-left ${isCurrentlyAssigned
+                                                      ? 'bg-blue-50 text-blue-700'
+                                                      : 'text-slate-600 hover:bg-white hover:text-blue-600'
+                                                      }`}
+                                                  >
+                                                    <div className="flex items-center gap-1.5">
+                                                      <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-bold text-slate-600 shrink-0">
+                                                        {counselor === 'Unassigned' ? '—' : counselor.split(' ').map(p => p[0]).join('')}
+                                                      </div>
+                                                      <span>{counselor}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                      {counselor !== 'Unassigned' && (
+                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isCurrentlyAssigned ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                                          }`}>
+                                                          {count} lead{count !== 1 ? 's' : ''}
+                                                        </span>
+                                                      )}
+                                                      {isCurrentlyAssigned && (
+                                                        <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
+                                                      )}
+                                                    </div>
+                                                  </button>
+
+                                                  {/* Hover Card — appears to the LEFT of the dropdown to avoid clipping */}
+                                                  {counselor !== 'Unassigned' && (
+                                                    <div className="absolute right-full top-0 mr-2 z-[9999] hidden group-hover:block pointer-events-none">
+                                                      <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-left font-sans">
+                                                        {/* Card Header */}
+                                                        <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-slate-100">
+                                                          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700 shrink-0">
+                                                            {counselor.split(' ').map(p => p[0]).join('')}
+                                                          </div>
+                                                          <div>
+                                                            <p className="text-[11px] font-bold text-slate-800 leading-tight">{counselor}</p>
+                                                            <p className="text-[9px] text-slate-400 font-medium">{count} active lead{count !== 1 ? 's' : ''}</p>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* Lead List */}
+                                                        {counselorLeads.length > 0 ? (
+                                                          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                                            {counselorLeads.map(l => {
+                                                              const statusColors = {
+                                                                NEW: 'bg-blue-50 text-blue-700',
+                                                                CONTACTED: 'bg-orange-50 text-orange-700',
+                                                                QUALIFIED: 'bg-green-50 text-green-700',
+                                                                LOST: 'bg-red-50 text-red-700'
+                                                              };
+                                                              return (
+                                                                <div key={l.id} className="flex items-center justify-between gap-2">
+                                                                  <div className="flex items-center gap-1.5 min-w-0">
+                                                                    <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
+                                                                      {l.name.split(' ').map(p => p[0]).join('').slice(0, 2)}
+                                                                    </div>
+                                                                    <span className="text-[10.5px] text-slate-700 font-medium truncate">{l.name}</span>
+                                                                  </div>
+                                                                  <span className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusColors[l.status] || 'bg-slate-50 text-slate-600'}`}>
+                                                                    {l.status}
+                                                                  </span>
+                                                                </div>
+                                                              );
+                                                            })}
+                                                          </div>
+                                                        ) : (
+                                                          <p className="text-[10px] text-slate-400 italic text-center py-1">No leads assigned</p>
+                                                        )}
+
+                                                        {/* Score avg footer */}
+                                                        {counselorLeads.length > 0 && (
+                                                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                                                            <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Avg. Score</span>
+                                                            <span className="text-[10px] font-bold text-slate-700 font-mono">
+                                                              {Math.round(counselorLeads.reduce((s, l) => s + l.score, 0) / counselorLeads.length)}
+                                                            </span>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
                                           </motion.div>
                                         )}
                                       </AnimatePresence>

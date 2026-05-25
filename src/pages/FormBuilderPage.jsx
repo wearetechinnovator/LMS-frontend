@@ -1,11 +1,36 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormBuilder from './FormBuilder'
+import FormBuilderHeader from '../components/FormbuilderPage/FormBuilderHeader'
 
 export default function FormBuilderPage() {
   const [activeFormSchema, setActiveFormSchema] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [toastMessage, setToastMessage] = useState('')
+  const [hoveredForm, setHoveredForm] = useState(null)
+  const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 })
+  const hideTimer = useRef(null)
+
+  const showPreview = (form, e) => {
+    clearTimeout(hideTimer.current)
+    const rect = e.currentTarget.getBoundingClientRect()
+    setPreviewPos({ x: rect.right + 12, y: rect.top })
+    setHoveredForm(form)
+  }
+
+  const hidePreview = () => {
+    hideTimer.current = setTimeout(() => setHoveredForm(null), 150)
+  }
+
+  const keepPreview = () => {
+    clearTimeout(hideTimer.current)
+  }
+
+  const triggerToast = (msg) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(''), 3000)
+  }
 
   // Detailed mock forms data structures matching the uploaded screenshot
   const createdForms = [
@@ -111,19 +136,7 @@ export default function FormBuilderPage() {
             className="w-full space-y-5"
           >
             {/* Header: Title Block & Create Action */}
-            <div className="flex justify-between items-center border-b border-outline-variant pb-4">
-              <div className="text-left">
-                <h1 className="text-xl font-bold text-slate-800 leading-tight">Form Management</h1>
-                <p className="text-[12px] text-on-surface-variant font-medium mt-0.5">Manage lead capture forms and monitor conversion metrics.</p>
-              </div>
-              <button
-                onClick={handleCreateNewForm}
-                className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[12px] font-bold shadow-sm transition-all flex items-center gap-1 cursor-pointer select-none"
-              >
-                <span className="material-symbols-outlined text-[15px]">add</span>
-                Create New Form
-              </button>
-            </div>
+            <FormBuilderHeader handleCreateNewForm={handleCreateNewForm} triggerToast={triggerToast} />
 
             {/* Filter Bar */}
             <div className="flex items-center justify-between gap-4">
@@ -182,10 +195,12 @@ export default function FormBuilderPage() {
                       key={form.id}
                       className="border-b border-outline-variant hover:bg-slate-50/70 transition-colors"
                     >
-                      {/* Name & ID Cell */}
-                      <td className="px-5 py-3.5 text-left">
+                      {/* Name & ID Cell with hover preview */}
+                      <td className="px-5 py-3.5 text-left relative">
                         <button
                           onClick={() => setActiveFormSchema(form)}
+                          onMouseEnter={(e) => showPreview(form, e)}
+                          onMouseLeave={hidePreview}
                           className="font-bold text-[12.5px] text-slate-800 hover:text-primary hover:underline transition-colors text-left cursor-pointer"
                         >
                           {form.name}
@@ -197,8 +212,8 @@ export default function FormBuilderPage() {
                       <td className="px-5 py-3.5">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${form.status === 'PUBLISHED'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : 'bg-slate-50 text-slate-600 border-slate-200'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-slate-50 text-slate-600 border-slate-200'
                             }`}
                         >
                           {form.status}
@@ -264,6 +279,87 @@ export default function FormBuilderPage() {
               initialStatus={activeFormSchema.status.charAt(0).toUpperCase() + activeFormSchema.status.slice(1).toLowerCase()}
               onBack={() => setActiveFormSchema(null)}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Form Preview on Hover */}
+      <AnimatePresence>
+        {hoveredForm && (
+          <motion.div
+            key={hoveredForm.id}
+            initial={{ opacity: 0, scale: 0.95, x: -8 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.95, x: -8 }}
+            transition={{ duration: 0.15 }}
+            style={{ top: previewPos.y, left: previewPos.x }}
+            className="fixed z-50 w-[280px] bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden"
+            onMouseEnter={keepPreview}
+            onMouseLeave={hidePreview}
+          >
+            {/* Preview Header */}
+            <div className="px-4 py-3 bg-gradient-to-r from-primary/8 to-primary/4 border-b border-slate-100">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-bold text-slate-800 leading-snug truncate">{hoveredForm.name}</p>
+                  <p className="text-[9px] font-mono text-slate-400 mt-0.5">{hoveredForm.id}</p>
+                </div>
+                <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-bold border mt-0.5 ${hoveredForm.status === 'PUBLISHED'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-slate-50 text-slate-500 border-slate-200'
+                  }`}>
+                  {hoveredForm.status}
+                </span>
+              </div>
+              {hoveredForm.description && (
+                <p className="text-[10px] text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{hoveredForm.description}</p>
+              )}
+            </div>
+
+            {/* Fields List */}
+            <div className="px-4 py-3">
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Fields ({hoveredForm.fields?.length || 0})
+              </p>
+              <div className="space-y-1.5">
+                {hoveredForm.fields?.slice(0, 5).map((field, idx) => (
+                  <div key={field.id || idx} className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[13px] text-primary/70 shrink-0">
+                      {field.type === 'email' ? 'mail' : field.type === 'phone' ? 'phone' : field.type === 'select' ? 'arrow_drop_down_circle' : field.type === 'radio' ? 'radio_button_checked' : field.type === 'date' ? 'calendar_today' : field.type === 'checkbox' ? 'check_box' : 'text_fields'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-medium text-slate-700 truncate block">{field.label}</span>
+                    </div>
+                    <span className="text-[8px] font-mono text-slate-400 shrink-0">{field.type}</span>
+                    {field.required && <span className="text-rose-500 text-[10px] shrink-0">*</span>}
+                  </div>
+                ))}
+                {(hoveredForm.fields?.length || 0) > 5 && (
+                  <p className="text-[9px] text-slate-400 pt-1">+{hoveredForm.fields.length - 5} more fields…</p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer hint */}
+            <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[13px] text-slate-400">mouse</span>
+              <p className="text-[9px] text-slate-400">Click to open in Form Builder</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Toast Banner */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            className="fixed top-6 right-6 bg-success text-on-success border border-success-container px-4 py-2.5 rounded-lg shadow-xl z-50 flex items-center gap-2"
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          >
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+            <span className="text-[11px] font-semibold">{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ExportButton from '../components/ExportButton'
 
 // Static mockup of original records from the screenshot + a few extra for robust filtering
 const originalLogs = [
@@ -73,7 +74,7 @@ export default function AuditLogs() {
     const [selectedActionFilter, setSelectedActionFilter] = useState('All')
     const [selectedDateFilter, setSelectedDateFilter] = useState('Last 7 Days')
     const [searchTerm, setSearchTerm] = useState('')
-    
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1)
     const entriesPerPage = 5
@@ -81,6 +82,11 @@ export default function AuditLogs() {
     // Export animation/feedback state
     const [isExporting, setIsExporting] = useState(false)
     const [toastMessage, setToastMessage] = useState('')
+
+    const triggerToast = (msg) => {
+        setToastMessage(msg)
+        setTimeout(() => setToastMessage(''), 3000)
+    }
 
     // Available activity actions for filtering
     const actionFilters = ['All', 'New User Created', 'Created Lead', 'Lead Assigned', 'System Setting Updated', 'User Logout', 'User Login']
@@ -90,9 +96,9 @@ export default function AuditLogs() {
     const filteredLogs = logs.filter(log => {
         const matchAction = selectedActionFilter === 'All' || log.action.label === selectedActionFilter
         const matchSearch = log.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            log.targetEntity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            log.ipAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            log.details.toLowerCase().includes(searchTerm.toLowerCase())
+            log.targetEntity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            log.ipAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            log.details.toLowerCase().includes(searchTerm.toLowerCase())
         return matchAction && matchSearch
     })
 
@@ -121,7 +127,7 @@ export default function AuditLogs() {
 
     return (
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative">
-            
+
             {/* Premium Toast Banner */}
             <AnimatePresence>
                 {toastMessage && (
@@ -161,9 +167,8 @@ export default function AuditLogs() {
                         </div>
                         <button
                             onClick={() => setSelectedDateFilter('Custom Range')}
-                            className={`px-3 text-[11px] font-semibold hover:bg-surface-container transition-colors h-full ${
-                                selectedDateFilter === 'Custom Range' ? 'bg-primary/10 text-primary' : 'text-on-surface'
-                            }`}
+                            className={`px-3 text-[11px] font-semibold hover:bg-surface-container transition-colors h-full ${selectedDateFilter === 'Custom Range' ? 'bg-primary/10 text-primary' : 'text-on-surface'
+                                }`}
                         >
                             Custom Range
                         </button>
@@ -179,18 +184,7 @@ export default function AuditLogs() {
                     </button>
 
                     {/* Export CSV Button */}
-                    <button
-                        onClick={triggerExport}
-                        disabled={isExporting}
-                        className="px-3 h-8 bg-surface-container-lowest hover:bg-surface-container border border-outline-variant text-on-surface font-semibold rounded text-[11px] transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
-                    >
-                        {isExporting ? (
-                            <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <span className="material-symbols-outlined text-[16px]">download</span>
-                        )}
-                        {isExporting ? 'Exporting...' : 'Export CSV'}
-                    </button>
+                    <ExportButton triggerToast={triggerToast} />
                 </div>
             </div>
 
@@ -233,7 +227,7 @@ export default function AuditLogs() {
             {/* Active Filters tags bar */}
             <div className="flex items-center gap-2 text-[11px]">
                 <span className="font-bold text-on-surface-variant">Active Filters:</span>
-                
+
                 {/* Action tag */}
                 <div className="flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 rounded px-2 py-0.5 font-semibold">
                     <span>Activity Type: {selectedActionFilter}</span>
@@ -301,7 +295,7 @@ export default function AuditLogs() {
                             {currentEntries.length > 0 ? (
                                 currentEntries.map((log) => (
                                     <tr key={log.id} className="hover:bg-surface-container/30 transition-colors">
-                                        
+
                                         {/* Timestamp */}
                                         <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap align-middle">
                                             {log.timestamp}
@@ -313,9 +307,8 @@ export default function AuditLogs() {
                                                 <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[9px] font-bold shrink-0 ${log.user.color}`}>
                                                     {log.user.avatar}
                                                 </div>
-                                                <span className={`font-semibold align-middle ${
-                                                    log.user.isSystemAdmin ? 'text-red-600 font-bold' : 'text-on-background'
-                                                }`}>
+                                                <span className={`font-semibold align-middle ${log.user.isSystemAdmin ? 'text-red-600 font-bold' : 'text-on-background'
+                                                    }`}>
                                                     {log.user.name}
                                                 </span>
                                             </div>
@@ -382,17 +375,16 @@ export default function AuditLogs() {
                         >
                             <span className="material-symbols-outlined text-[16px]">chevron_left</span>
                         </button>
-                        
+
                         <div className="flex gap-0.5">
                             {[1, 2, 3].map(page => (
                                 <button
                                     key={page}
                                     onClick={() => setCurrentPage(page)}
-                                    className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${
-                                        currentPage === page
-                                            ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
-                                            : 'hover:bg-surface-container-lowest text-on-surface'
-                                    }`}
+                                    className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${currentPage === page
+                                        ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
+                                        : 'hover:bg-surface-container-lowest text-on-surface'
+                                        }`}
                                 >
                                     {page}
                                 </button>
@@ -402,11 +394,10 @@ export default function AuditLogs() {
                                     <span className="px-1 text-on-surface-variant self-end text-[10px]">...</span>
                                     <button
                                         onClick={() => setCurrentPage(250)}
-                                        className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${
-                                            currentPage === 250
-                                                ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
-                                                : 'hover:bg-surface-container-lowest text-on-surface'
-                                        }`}
+                                        className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${currentPage === 250
+                                            ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
+                                            : 'hover:bg-surface-container-lowest text-on-surface'
+                                            }`}
                                     >
                                         250
                                     </button>

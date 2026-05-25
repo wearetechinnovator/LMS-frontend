@@ -9,9 +9,11 @@ import OnboardingPage from './pages/Company/OnboardingPage'
 // Dashboard Components
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
+import Dashboard from './pages/Dashboard'
+import RoleUserManagement from './pages/RoleUserManagement'
 
 // Dashboard Pages - Lazy loaded
-const DashboardMain = React.lazy(() => import('./pages/DashboardMain'))
+// const DashboardMain = React.lazy(() => import('./pages/DashboardMain'))
 const AllLeadsPage = React.lazy(() => import('./pages/AllLeadsPage'))
 const FormBuilderPage = React.lazy(() => import('./pages/FormBuilderPage'))
 const TeamsPage = React.lazy(() => import('./pages/Team/TeamsPage'))
@@ -67,7 +69,8 @@ function DashboardLayout({ username, onLogout }) {
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Dashboard */}
-              <Route path="dashboard" element={<DashboardMain />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="roles" element={<RoleUserManagement />} />
 
               {/* Leads */}
               <Route path="leads" element={<AllLeadsPage />} />

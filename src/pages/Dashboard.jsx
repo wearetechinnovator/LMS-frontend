@@ -1,22 +1,30 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import Navbar from '../components/Navbar'
-import Sidebar from '../components/Sidebar'
-import AllLeads from './AllLeads'
-import FormBuilder from './FormBuilder'
-import Teams from './Teams'
-import Campaigns from './Campaigns'
-import ViewTeam from './ViewTeam'
-import ManageTeam from './ManageTeam'
+import { motion, AnimatePresence } from 'framer-motion'
+import '../assets/custom.css'
+import DasboardStatsCard from '../components/Dashboard/DasboardStatsCard'
+import DashboardGraphCard from '../components/Dashboard/DashboardGraphCard'
+import DashboardRecentLeads from '../components/Dashboard/DashboardRecentLeads'
+import ExportButton from '../components/ExportButton'
 
-export default function Dashboard({ username, onLogout }) {
-  const [activeNav, setActiveNav] = useState('dashboard')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState(null)
-  const [viewingTeamDetail, setViewingTeamDetail] = useState(false)
-  const [managingTeam, setManagingTeam] = useState(false)
+export default function Dashboard() {
+  const [toastMsg, setToastMsg] = useState(null)
+  const [showDateDropdown, setShowDateDropdown] = useState(false)
+  const [selectedDateRange, setSelectedDateRange] = useState('Last 30 Days')
 
-  // Mock data
+  const triggerToast = (msg) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(null), 3000)
+  }
+
+  const dateRanges = [
+    { label: 'Today', value: 'Today' },
+    { label: 'Yesterday', value: 'Yesterday' },
+    { label: 'Last 7 Days', value: 'Last 7 Days' },
+    { label: 'Last 30 Days', value: 'Last 30 Days' },
+    { label: 'Last 90 Days', value: 'Last 90 Days' },
+    { label: 'This Year', value: 'This Year' }
+  ]
+
   const stats = [
     { label: 'TOTAL LEADS', value: '2,451', change: '+18%', color: 'primary' },
     { label: 'CONVERSION RATE', value: '14.2%', change: '+1.1%', color: 'success' },
@@ -38,254 +46,108 @@ export default function Dashboard({ username, onLogout }) {
     { name: 'Other', percentage: 20, color: '#ABABAB' }
   ]
 
-  const getStatusColor = (status) => {
+  const getStatusClass = (status) => {
     switch (status) {
-      case 'NEW':
-        return 'bg-blue-100 text-blue-700'
-      case 'CONTACTED':
-        return 'bg-orange-100 text-orange-700'
-      case 'JNI':
-        return 'bg-red-100 text-red-700'
-      default:
-        return 'bg-gray-100 text-gray-600'
+      case 'NEW': return 'status-NEW'
+      case 'CONTACTED': return 'status-CONTACTED'
+      case 'JNI': return 'status-JNI'
+      default: return 'status-default'
     }
-  }
-
-  const handleNavigateToViewTeam = (dept, isManage = false) => {
-    setSelectedTeam(dept)
-    if (isManage) {
-      setManagingTeam(true)
-      setViewingTeamDetail(false)
-    } else {
-      setViewingTeamDetail(true)
-      setManagingTeam(false)
-    }
-  }
-
-  const handleBackFromViewTeam = () => {
-    setViewingTeamDetail(false)
-    setSelectedTeam(null)
-  }
-
-  const handleNavigateToManageTeam = () => {
-    setViewingTeamDetail(false)
-    setManagingTeam(true)
-  }
-
-  const handleBackFromManageTeam = () => {
-    setManagingTeam(false)
-    setSelectedTeam(null)
   }
 
   return (
-    <div className="bg-background h-screen flex overflow-hidden">
-      {/* Sidebar Component */}
-      <Sidebar
-        activeNav={activeNav}
-        setActiveNav={setActiveNav}
-        sidebarCollapsed={sidebarCollapsed}
-        setSidebarCollapsed={setSidebarCollapsed}
-        onLogout={onLogout}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Navbar */}
-        <Navbar username={username} onLogout={onLogout} currentPage={activeNav} />
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Dashboard View */}
-          {activeNav === 'dashboard' && (
-            <>
-              {/* Date Filter & Export */}
-              <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <span className="font-body-md text-body-md">Last 30 Days</span>
-                  <span className="material-symbols-outlined text-[18px]">expand_more</span>
-                </div>
-                <button className="flex items-center gap-2 px-4 h-8 border border-outline-variant rounded text-body-md font-body-md text-on-surface hover:bg-surface-container transition-colors">
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                  Export
-                </button>
-              </div>
-
-              {/* Stats Grid */}
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                {stats.map((stat, idx) => (
-                  <motion.div
-                    key={idx}
-                    className="bg-surface border border-black/20 rounded p-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + idx * 0.05 }}
-                  >
-                    <p className="font-label-caps text-label-caps text-on-surface-variant mb-2">{stat.label}</p>
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="font-headline-lg text-headline-lg text-on-background">{stat.value}</h3>
-                      <span className={`font-body-sm text-body-sm ${stat.change.includes('+') ? 'text-primary' : 'text-error'}`}>
-                        {stat.change}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {/* Charts Grid */}
-              <motion.div
-                className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                {/* Lead Volume Chart */}
-                <div className="lg:col-span-2 bg-surface border border-outline-variant rounded p-6">
-                  <h3 className="font-headline-md text-headline-md text-on-background mb-4">Lead Volume Over Time</h3>
-                  <div className="h-48 flex items-end justify-between gap-2 px-2">
-                    {[65, 59, 80, 81, 56, 55, 70, 60, 80, 75].map((height, idx) => (
-                      <motion.div
-                        key={idx}
-                        className="flex-1 bg-primary/30 border border-primary rounded-t"
-                        initial={{ height: 0 }}
-                        animate={{ height: `${height * 2}px` }}
-                        transition={{ delay: 0.3 + idx * 0.05, duration: 0.6 }}
-                        style={{ minHeight: '2px' }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Source Breakdown */}
-                <div className="bg-surface border border-outline-variant rounded p-6">
-                  <h3 className="font-headline-md text-headline-md text-on-background mb-4">Source Breakdown</h3>
-                  <div className="space-y-3">
-                    {sources.map((source, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 + idx * 0.05 }}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: source.color }}></div>
-                            <span className="font-body-md text-body-md text-on-surface">{source.name}</span>
-                          </div>
-                          <span className="font-body-md text-body-md text-on-surface-variant">{source.percentage}%</span>
-                        </div>
-                        <div className="h-2 bg-surface-container rounded-full overflow-hidden">
-                          <motion.div
-                            className="h-full rounded-full"
-                            style={{ backgroundColor: source.color }}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${source.percentage}%` }}
-                            transition={{ delay: 0.4 + idx * 0.1, duration: 0.8 }}
-                          />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Recent Leads */}
-              <motion.div
-                className="bg-surface border border-outline-variant rounded p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-headline-md text-headline-md text-on-background">Recent Leads</h3>
-                  <a href="#" className="text-primary font-body-md text-body-md hover:text-primary/80">
-                    View All
-                  </a>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-outline-variant">
-                        <th className="text-left px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Lead Name</th>
-                        <th className="text-left px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Source</th>
-                        <th className="text-left px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Status</th>
-                        <th className="text-left px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Assigned To</th>
-                        <th className="text-left px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leads.map((lead, idx) => (
-                        <motion.tr
-                          key={lead.id}
-                          className="border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.4 + idx * 0.05 }}
-                        >
-                          <td className="px-4 py-3 font-body-md text-body-md text-on-surface">{lead.name}</td>
-                          <td className="px-4 py-3 font-body-md text-body-md text-on-surface">{lead.source}</td>
-                          <td className="px-4 py-3">
-                            {lead.status && (
-                              <span className={`inline-block px-1 py-1 rounded font-body-sm text-body-sm ${getStatusColor(lead.status)}`}>
-                                {lead.status}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 font-body-md text-body-md text-on-surface">{lead.assignedTo}</td>
-                          <td className="px-4 py-3 font-body-md text-body-md text-on-surface-variant">{lead.date}</td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
-            </>
-          )}
-
-          {/* All Leads View */}
-          {activeNav === 'leads' && <AllLeads />}
-          {/* Form Builder View */}
-          {activeNav === 'form-builder' && <FormBuilder />}
-
-          {/* Teams View */}
-          {activeNav === 'teams' && <Teams />}
-
-          {/* Campaigns/Department Management View */}
-          {activeNav === 'campaigns' && (
-            <>
-              {!viewingTeamDetail && !managingTeam && (
-                <Campaigns onNavigateToViewTeam={handleNavigateToViewTeam} />
-              )}
-              {viewingTeamDetail && selectedTeam && (
-                <ViewTeam
-                  departmentId={selectedTeam.id}
-                  departmentName={selectedTeam.name}
-                  onBack={handleBackFromViewTeam}
-                  onManageTeam={handleNavigateToManageTeam}
-                />
-              )}
-              {managingTeam && selectedTeam && (
-                <ManageTeam
-                  departmentId={selectedTeam.id}
-                  departmentName={selectedTeam.name}
-                  onBack={handleBackFromManageTeam}
-                />
-              )}
-            </>
-          )}
-
-          {/* Add Lead - Placeholder */}
-          {activeNav === 'add-lead' && (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-on-surface-variant font-body-md text-body-md">Coming soon...</p>
+    <div className="dashboard-wrapper dashboard-page-scope w-full px-4">
+      {/* Export Toast Notification */}
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div
+            className="export-toast-container"
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: 'spring', duration: 0.4 }}
+          >
+            <div className="export-toast-content">
+              <span className="material-symbols-outlined export-toast-icon">check_circle</span>
+              <span className="export-toast-text">{toastMsg}</span>
             </div>
-          )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="dashboard-header mt-2">
+        <div className="date-filter-wrapper">
+          <div
+            className="date-filter flex items-center cursor-pointer"
+            onClick={() => setShowDateDropdown(!showDateDropdown)}
+          >
+            <span>{selectedDateRange}</span>
+            <span className={`material-symbols-outlined transition-transform duration-200 ${showDateDropdown ? 'rotate-180' : ''}`}>
+              expand_more
+            </span>
+          </div>
+
+          <AnimatePresence>
+            {showDateDropdown && (
+              <>
+                <div className="dropdown-click-outside" onClick={() => setShowDateDropdown(false)} />
+                <motion.div
+                  className="date-dropdown-menu"
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {dateRanges.map((range) => (
+                    <div
+                      key={range.value}
+                      className={`date-dropdown-item ${selectedDateRange === range.value ? 'active' : ''}`}
+                      onClick={() => {
+                        setSelectedDateRange(range.value)
+                        setShowDateDropdown(false)
+                        triggerToast(`Filtered dashboard data for ${range.label}`)
+                      }}
+                    >
+                      <span>{range.label}</span>
+                      {selectedDateRange === range.value && (
+                        <span className="material-symbols-outlined check-icon">check</span>
+                      )}
+                    </div>
+                  ))}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
+
+        <ExportButton triggerToast={triggerToast} />
+
       </div>
+
+      {/* Stats Grid */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        {stats.map((stat, idx) => (
+          <DasboardStatsCard
+            key={idx}
+            label={stat.label}
+            value={stat.value}
+            change={stat.change}
+            idx={idx}
+          />
+        ))}
+      </motion.div>
+
+      {/* Graph cards */}
+      <DashboardGraphCard sources={sources} />
+
+      <DashboardRecentLeads leads={leads} getStatusClass={getStatusClass} />
+
+
     </div>
   )
 }

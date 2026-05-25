@@ -13,7 +13,8 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
     { id: 'leads', label: 'All Leads', icon: 'people', path: '/leads' },
     { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/departments' },
     { id: 'teams', label: 'Teams', icon: 'group', path: '/teams' },
-    { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/audit-logs' }
+    { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/audit-logs' },
+    { id: 'roles', label: 'Role User Management', icon: 'perm_identity', path: '/roles' }
   ]
 
   const getActiveItem = () => {

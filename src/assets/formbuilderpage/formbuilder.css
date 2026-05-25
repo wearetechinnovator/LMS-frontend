@@ -1,0 +1,146 @@
+/* ==================================== */
+/* =========== FORM BUILDER =========== */
+/* ==================================== */
+
+.form-builder-scope {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Left Panel: Field Library */
+.form-builder-scope .field-library-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.form-builder-scope .field-library-section-title {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 4px !important;
+}
+
+.form-builder-scope .field-library-btn {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    padding: 6px 10px !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s !important;
+}
+
+.form-builder-scope .field-library-btn:hover {
+    border-color: #2563eb !important;
+    background-color: #eff6ff !important;
+}
+
+.form-builder-scope .field-library-btn span {
+    font-size: 13px !important;
+}
+
+/* Center Canvas: Form Title & Description */
+.form-builder-scope .canvas-status {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #2563eb !important;
+}
+
+.form-builder-scope .canvas-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+}
+
+.form-builder-scope .canvas-desc {
+    font-size: 9px !important;
+    color: #64748b !important;
+    line-height: 1.4 !important;
+}
+
+/* Form Fields */
+.form-builder-scope .field-card-label {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-bottom: 4px !important;
+}
+
+.form-builder-scope .field-card-input {
+    font-size: 9px !important;
+    height: 28px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background-color: #ffffff !important;
+}
+
+.form-builder-scope .field-card-helper {
+    font-size: 8px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+}
+
+/* Right Panel: Field Settings */
+.form-builder-scope .settings-pane-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.form-builder-scope .settings-type-header {
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    padding: 6px 10px !important;
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.form-builder-scope .settings-label {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+}
+
+.form-builder-scope .settings-input {
+    font-size: 9px !important;
+    height: 26px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background-color: #ffffff !important;
+}
+
+.form-builder-scope .settings-input::placeholder {
+    font-size: 8px !important;
+}
+
+.form-builder-scope .settings-section-title {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-bottom: 6px !important;
+}
+
+.form-builder-scope .settings-btn-delete {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    height: 26px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+}
