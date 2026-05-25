@@ -80,10 +80,10 @@ export default function Dashboard({ username, onLogout }) {
   return (
     <div className="bg-background h-screen flex overflow-hidden">
       {/* Sidebar Component */}
-      <Sidebar 
-        activeNav={activeNav} 
-        setActiveNav={setActiveNav} 
-        sidebarCollapsed={sidebarCollapsed} 
+      <Sidebar
+        activeNav={activeNav}
+        setActiveNav={setActiveNav}
+        sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}
         onLogout={onLogout}
       />
@@ -230,7 +230,7 @@ export default function Dashboard({ username, onLogout }) {
                           <td className="px-4 py-3 font-body-md text-body-md text-on-surface">{lead.source}</td>
                           <td className="px-4 py-3">
                             {lead.status && (
-                              <span className={`inline-block px-2 py-1 rounded font-body-sm text-body-sm ${getStatusColor(lead.status)}`}>
+                              <span className={`inline-block px-1 py-1 rounded font-body-sm text-body-sm ${getStatusColor(lead.status)}`}>
                                 {lead.status}
                               </span>
                             )}

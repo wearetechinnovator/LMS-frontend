@@ -37,6 +37,23 @@ export default function AllLeads() {
     campaign: false
   })
   const [showColumnDropdown, setShowColumnDropdown] = useState(false)
+
+  // -- NEW STATE HOOKS FOR LEAD ACTIONS POPUPS --
+  const [activeDropdownLeadId, setActiveDropdownLeadId] = useState(null)
+  const [showQueriesModal, setShowQueriesModal] = useState(false)
+  const [showApplicationModal, setShowApplicationModal] = useState(false)
+  const [activeModalLead, setActiveModalLead] = useState(null)
+  const [queriesAnswerText, setQueriesAnswerText] = useState('')
+  const [showReassignSubId, setShowReassignSubId] = useState(null)
+
+  // -- NEW STATE HOOKS FOR GLOBAL ACTIONS DROPDOWN & MODALS --
+  const [showGlobalActionsDropdown, setShowGlobalActionsDropdown] = useState(false)
+  const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
+  const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
+  const [quickLeadForm, setQuickLeadForm] = useState({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins' })
+  const [uploadingBulk, setUploadingBulk] = useState(false)
+  const [downloadingLeadsState, setDownloadingLeadsState] = useState(false)
   const [timelineFilter, setTimelineFilter] = useState('ALL')
   const [timelineSearchQuery, setTimelineSearchQuery] = useState('')
   const [activeSavedTab, setActiveSavedTab] = useState('all')
@@ -192,6 +209,109 @@ export default function AllLeads() {
     }
   ]
 
+  // Default Lead Application Profiles database templates
+  const getInitialApplication = (lead) => {
+    const apps = {
+      'LS-1021': {
+        appliedProgram: 'Enterprise CRM Integration Suite',
+        submissionDate: 'Oct 22, 2026',
+        companyName: 'Penthilgon Enterprises',
+        companySize: '500+ employees',
+        annualRevenue: '$25M - $50M',
+        useCase: 'Consolidating lead routing and phone record logs across 3 regional branches.',
+        notes: 'Requested expedited onboarding schedule due to legacy system contract expiry next month.'
+      },
+      'LS-1020': {
+        appliedProgram: 'Professional Tier (Monthly Plan)',
+        submissionDate: 'Oct 23, 2026',
+        companyName: 'Reed Consulting Group',
+        companySize: '15-49 employees',
+        annualRevenue: '$1.5M - $3M',
+        useCase: 'Outbound sales follow-ups and marketing attribution tracking.',
+        notes: 'Expressed interest in setting up webhooks to feed into Slack channel.'
+      },
+      'LS-1019': {
+        appliedProgram: 'Custom Enterprise Plan',
+        submissionDate: 'Oct 24, 2026',
+        companyName: 'Patel & Partners Design Studio',
+        companySize: '50-100 employees',
+        annualRevenue: '$8M - $12M',
+        useCase: 'Client portal synchronization and advanced analytics dashboard integration.',
+        notes: 'Highly focused on design aesthetics and responsive timeline views.'
+      },
+      'LS-1018': {
+        appliedProgram: 'Starter Solo Plan',
+        submissionDate: 'Oct 24, 2026',
+        companyName: 'Solarix Energy IE',
+        companySize: '2-9 employees',
+        annualRevenue: '$200k - $500k',
+        useCase: 'Tracking solar panel install sales pipelines in Dublin area.',
+        notes: 'Referred by direct mail promo code Q1_Direct_Mail.'
+      },
+      'LS-1017': {
+        appliedProgram: 'Professional CRM Bundle',
+        submissionDate: 'Oct 23, 2026',
+        companyName: 'Fintech HK Partners',
+        companySize: '100-249 employees',
+        annualRevenue: '$15M - $20M',
+        useCase: 'Tracking high-net-worth investor onboarding flows and webinars.',
+        notes: 'Requires dual language support (English/Cantonese) in communication drafts.'
+      },
+      'LS-1016': {
+        appliedProgram: 'Standard Professional Tier',
+        submissionDate: 'Oct 21, 2026',
+        companyName: 'RealTech Solutions LLC',
+        companySize: '10-24 employees',
+        annualRevenue: '$1M - $2M',
+        useCase: 'Replacing current Excel spreadsheet to track property investor contacts.',
+        notes: 'Lost lead - contact requested to be unsubscribed from further cold outreach.'
+      },
+      'LS-1015': {
+        appliedProgram: 'Custom Enterprise Plan',
+        submissionDate: 'Oct 24, 2026',
+        companyName: 'Patel Design Studio UK',
+        companySize: '50-100 employees',
+        annualRevenue: '$8M - $12M',
+        useCase: 'Duplicate profile created via different landing page form.',
+        notes: 'To be merged with LS-1019 primary profile.'
+      }
+    }
+    return apps[lead.id] || {
+      appliedProgram: 'Standard Professional Tier',
+      submissionDate: 'Oct 24, 2026',
+      companyName: lead.name + ' Corp',
+      companySize: '10-49 employees',
+      annualRevenue: '$1M - $3M',
+      useCase: 'Pipeline tracking and customer engagement trail.',
+      notes: 'No additional notes provided.'
+    }
+  }
+
+  // Default support inquiries and customer queries
+  const getInitialQueries = (lead) => {
+    const queries = {
+      'LS-1021': [
+        { id: 1, question: 'Do you offer custom SLA agreements for enterprise packages?', date: 'Oct 23, 2026', status: 'RESOLVED', response: 'Yes, we provide 99.9% uptime custom SLAs for contract values exceeding $10k/yr.' },
+        { id: 2, question: 'Is training included for all team members, or is it an add-on?', date: 'Oct 24, 2026', status: 'PENDING', response: null }
+      ],
+      'LS-1020': [
+        { id: 1, question: 'Can we integrate custom SIP phone numbers with the audio playback recorder?', date: 'Oct 24, 2026', status: 'PENDING', response: null }
+      ],
+      'LS-1019': [
+        { id: 1, question: 'Can we export timelines directly into CSV format for client invoicing?', date: 'Oct 24, 2026', status: 'RESOLVED', response: 'Absolutely. There is an Export button on the top-right of the Timeline panel.' }
+      ],
+      'LS-1018': [
+        { id: 1, question: 'Do you charge a setup fee for importing from Hubspot?', date: 'Oct 24, 2026', status: 'PENDING', response: null }
+      ],
+      'LS-1017': [
+        { id: 1, question: 'How do we request custom campaign tags for lead links?', date: 'Oct 24, 2026', status: 'RESOLVED', response: 'You can define custom parameters directly under the UTM Campaign setting tab.' }
+      ],
+      'LS-1016': [],
+      'LS-1015': []
+    }
+    return queries[lead.id] || []
+  }
+
   // Interactive local leads database array state
   const [leads, setLeads] = useState([
     { id: 'LS-1021', name: 'Eleanor Penthilgon', email: 'eleanor.p@enterprise.com', phone: '+1 (555) 617-2834', status: 'NEW', assignedTo: 'Sarah Jenkins', source: 'Website Organic', score: 92, location: 'Austin, TX', campaign: 'Q3_Tech_Promo', tier: 'Primary', verified: true },
@@ -203,7 +323,7 @@ export default function AllLeads() {
     { id: 'LS-1015', name: 'Amina Patel (Duplicate)', email: 'apatel.design@studio.co', phone: '+44 7890 99999', status: 'NEW', assignedTo: 'Marcus Chan', source: 'Cold Outreach', score: 62, location: 'Manchester, UK', campaign: 'Cold_Outreach_Q2', tier: 'Secondary', verified: false }
   ].map(lead => {
     // Dynamically inject custom initial timelines into database records
-    return { ...lead, timeline: [] }
+    return { ...lead, timeline: [], application: getInitialApplication(lead), queries: getInitialQueries(lead) }
   }).map((lead, idx) => {
     // Explicitly seed initialized logs
     const seed = [
@@ -537,6 +657,251 @@ export default function AllLeads() {
     }))
     triggerToast(`Assigned counselor changed to ${newCounselor}`)
   }
+
+  const handleLeadCounselorChangeDirect = (leadId, newCounselor) => {
+    setLeads(leads.map(lead => {
+      if (lead.id === leadId) {
+        const prevCounselor = lead.assignedTo;
+        const updatedTimeline = [
+          {
+            id: Date.now(),
+            type: 'ASSIGNMENT',
+            title: `Counselor Reassigned`,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+            body: `Assigned counselor changed from ${prevCounselor} to ${newCounselor}`,
+            user: 'Admin',
+            ip: '192.168.1.105',
+            icon: 'person_add',
+            color: 'blue-600'
+          },
+          ...lead.timeline
+        ];
+        return { ...lead, assignedTo: newCounselor, timeline: updatedTimeline };
+      }
+      return lead;
+    }));
+    triggerToast(`Assigned counselor changed to ${newCounselor}`);
+  }
+
+  const handleSendQueryResponse = (leadId, queryId, responseText) => {
+    if (!responseText.trim()) return;
+
+    setLeads(leads.map(lead => {
+      if (lead.id === leadId) {
+        const updatedQueries = lead.queries.map(q => {
+          if (q.id === queryId) {
+            return { ...q, status: 'RESOLVED', response: responseText };
+          }
+          return q;
+        });
+
+        const updatedTimeline = [
+          {
+            id: Date.now(),
+            type: 'COMMENT',
+            title: `Support query resolved`,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+            body: `Replied to query "${lead.queries.find(x => x.id === queryId).question}": "${responseText}"`,
+            user: 'Admin',
+            ip: '192.168.1.105',
+            icon: 'check_circle',
+            color: 'green-600'
+          },
+          ...lead.timeline
+        ];
+
+        const updatedLead = { ...lead, queries: updatedQueries, timeline: updatedTimeline };
+
+        // Sync active lead details if current is active
+        if (activeLeadDetails && activeLeadDetails.id === leadId) {
+          setActiveLeadDetails(updatedLead);
+        }
+        // Sync active modal lead so modal updates in real-time
+        if (activeModalLead && activeModalLead.id === leadId) {
+          setActiveModalLead(updatedLead);
+        }
+        return updatedLead;
+      }
+      return lead;
+    }));
+
+    setQueriesAnswerText('');
+    triggerToast('Inquiry response sent and ticket resolved!');
+  }
+
+  const handleAddQuickLead = (formData) => {
+    if (!formData.name.trim() || !formData.email.trim()) return;
+    const newLead = {
+      id: `LS-${1022 + leads.length}`,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || '--',
+      status: 'NEW',
+      assignedTo: formData.assignedTo || 'Unassigned',
+      source: 'Quick Add Form',
+      score: 50,
+      location: 'N/A',
+      campaign: 'Direct_Ingest',
+      tier: 'Secondary',
+      verified: false,
+      timeline: [
+        {
+          id: Date.now(),
+          type: 'CREATION',
+          title: 'Lead Created (Quick Add)',
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+          body: `Added manually by counselor. Initialized with Starter Score 50.`,
+          user: 'Admin',
+          ip: '192.168.1.105',
+          icon: 'add_circle',
+          color: 'blue-600'
+        }
+      ],
+      application: {
+        appliedProgram: 'Standard Professional Tier',
+        submissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        companyName: 'N/A',
+        companySize: 'N/A',
+        annualRevenue: 'N/A',
+        useCase: 'Manually added via Quick Add console.',
+        notes: 'Vetting pending.'
+      },
+      queries: []
+    };
+
+    setLeads([newLead, ...leads]);
+    setShowQuickLeadModal(false);
+    triggerToast(`Quick lead "${formData.name}" added successfully!`);
+  };
+
+  const handleBulkUploadCSV = () => {
+    setUploadingBulk(true);
+    setTimeout(() => {
+      const mockIngested = [
+        {
+          id: `LS-${1022 + leads.length}`,
+          name: 'Rohan Sharma',
+          email: 'rohan.sharma@techsolutions.in',
+          phone: '+91 98765 43210',
+          status: 'NEW',
+          assignedTo: 'Sarah Jenkins',
+          source: 'Bulk Offline CSV',
+          score: 85,
+          location: 'Mumbai, IN',
+          campaign: 'Offline_CSV_Q2',
+          tier: 'Primary',
+          verified: true,
+          timeline: [
+            {
+              id: Date.now(),
+              type: 'CREATION',
+              title: 'Lead Ingested (CSV Bulk)',
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+              body: 'Uploaded via Bulk Offline CSV Upload portal.',
+              user: 'Admin',
+              ip: '192.168.1.105',
+              icon: 'upload_file',
+              color: 'green-600'
+            }
+          ],
+          application: {
+            appliedProgram: 'Enterprise CRM Suite',
+            submissionDate: 'May 25, 2026',
+            companyName: 'Sharma Tech Solutions',
+            companySize: '250-499 employees',
+            annualRevenue: '$12M - $18M',
+            useCase: 'Ingested via CSV file offline import.',
+            notes: 'High potential priority client.'
+          },
+          queries: []
+        },
+        {
+          id: `LS-${1023 + leads.length}`,
+          name: 'Clara Oswald',
+          email: 'clara.oswald@tardis.co.uk',
+          phone: '+44 20 7946 0958',
+          status: 'NEW',
+          assignedTo: 'Marcus Chan',
+          source: 'Bulk Offline CSV',
+          score: 65,
+          location: 'London, UK',
+          campaign: 'Offline_CSV_Q2',
+          tier: 'Secondary',
+          verified: false,
+          timeline: [
+            {
+              id: Date.now() + 1,
+              type: 'CREATION',
+              title: 'Lead Ingested (CSV Bulk)',
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+              body: 'Uploaded via Bulk Offline CSV Upload portal.',
+              user: 'Admin',
+              ip: '192.168.1.105',
+              icon: 'upload_file',
+              color: 'green-600'
+            }
+          ],
+          application: {
+            appliedProgram: 'Starter Solo Plan',
+            submissionDate: 'May 25, 2026',
+            companyName: 'Oswald Ventures',
+            companySize: '1-9 employees',
+            annualRevenue: '$100k - $250k',
+            useCase: 'Ingested via CSV file offline import.',
+            notes: 'Follow up required to check credentials.'
+          },
+          queries: []
+        }
+      ];
+
+      setLeads(prev => [...mockIngested, ...prev]);
+      setUploadingBulk(false);
+      setShowBulkUploadModal(false);
+      triggerToast('Ingested 2 leads from CSV successfully!');
+    }, 1500);
+  };
+
+  const handleDownloadLeads = () => {
+    setDownloadingLeadsState(true);
+    setTimeout(() => {
+      setDownloadingLeadsState(false);
+      triggerToast('Generated leads CSV download link successfully!');
+    }, 1000);
+  };
+
+  const handleChangeLeadStageGlobal = () => {
+    if (selectedLeads.length === 0) {
+      triggerToast('Warning: Please select one or more leads in the table first!');
+      return;
+    }
+    setShowGlobalStageModal(true);
+  };
+
+  const handleApplyGlobalStage = (newStatus) => {
+    if (!newStatus) return;
+    setLeads(leads.map(lead => {
+      if (selectedLeads.includes(lead.id)) {
+        const updatedTimeline = [
+          {
+            id: Date.now() + Math.random(),
+            type: 'STATUS_CHANGE',
+            title: `Bulk Status updated to ${newStatus}`,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+            user: 'Admin',
+            ip: '192.168.1.105',
+            icon: 'swap_horiz',
+            color: newStatus === 'QUALIFIED' ? 'green-600' : newStatus === 'LOST' ? 'red-600' : 'orange-600'
+          },
+          ...lead.timeline
+        ];
+        return { ...lead, status: newStatus, timeline: updatedTimeline };
+      }
+      return lead;
+    }));
+    setSelectedLeads([]);
+    setShowGlobalStageModal(false);
+    triggerToast(`Bulk status updated to ${newStatus}`);
+  };
 
   // DUPLICATE RECORD MERGE EXECUTOR
   const handleMergeProfiles = () => {
@@ -943,17 +1308,99 @@ export default function AllLeads() {
                 </button>
               </div>
 
-              {/* Right side stats */}
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] font-bold text-slate-500 tracking-wider">
-                  TOTAL LEADS: <span className="text-slate-800 text-[13px]">{filteredAndSortedLeads.length}</span>
-                </span>
+              {/* Right side stats replaced by Actions dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowGlobalActionsDropdown(!showGlobalActionsDropdown)}
+                  className="flex items-center gap-1.5 px-3.5 h-8 bg-primary hover:bg-primary/95 text-[12px] font-bold text-white rounded-lg shadow-sm cursor-pointer select-none transition-all duration-150"
+                >
+                  {/* <span className="material-symbols-outlined text-[16px] text-white">bolt</span> */}
+                  Actions
+                  <span className="material-symbols-outlined text-[16px] text-white leading-none">expand_more</span>
+                </button>
+
+                <AnimatePresence>
+                  {showGlobalActionsDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setShowGlobalActionsDropdown(false)} />
+                      <motion.div
+                        className="absolute right-0 mt-1.5 w-52 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans"
+                        initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        {/* Group 1: Lead Ingestions */}
+                        <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Ingestions</div>
+                        <button
+                          onClick={() => {
+                            setShowBulkUploadModal(true);
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
+                          Bulk Offline Upload
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowQuickLeadModal(true);
+                            setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins' });
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
+                          Add Quick Lead
+                        </button>
+
+                        <hr className="border-slate-100 my-1" />
+
+                        {/* Group 2: Data Operations */}
+                        <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Data Operations</div>
+                        <button
+                          onClick={() => {
+                            handleDownloadLeads();
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
+                          Download Leads
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (leads.length > 0) {
+                              setActiveLeadDetails(leads[0]);
+                              setShowEmailModal(true);
+                            }
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">chat</span>
+                          Communicate
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleChangeLeadStageGlobal();
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">swap_horiz</span>
+                          Change Lead Stage
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
             {/* Table */}
             <motion.div
-              className="bg-surface rounded border border-outline-variant overflow-hidden"
+              className="bg-surface rounded border border-outline-variant overflow-visible"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -1176,10 +1623,147 @@ export default function AllLeads() {
                       )}
                       {visibleColumns.location && <td className="px-3 py-1.5 text-body-md font-body-md text-on-surface-variant text-[12px]">{lead.location || '--'}</td>}
                       {visibleColumns.campaign && <td className="px-3 py-1.5 text-body-md font-body-md text-on-surface-variant text-[12px]">{lead.campaign || '--'}</td>}
-                      <td className="px-3 py-1.5 text-center">
-                        <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
-                          <span className="material-symbols-outlined text-[18px] text-on-surface-variant">more_vert</span>
+                      <td className="px-3 py-1.5 text-center relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdownLeadId(activeDropdownLeadId === lead.id ? null : lead.id);
+                            setShowReassignSubId(null);
+                          }}
+                          className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-surface-container text-on-surface-variant'}`}
+                        >
+                          <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
                         </button>
+
+                        <AnimatePresence>
+                          {activeDropdownLeadId === lead.id && (
+                            <>
+                              {/* Invisible backdrop layer to click outside */}
+                              <div
+                                className="fixed inset-0 z-30 cursor-default"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveDropdownLeadId(null);
+                                  setShowReassignSubId(null);
+                                }}
+                              />
+
+                              {/* Floating action dropdown menu */}
+                              {(() => {
+                                const showUpwards = filteredAndSortedLeads.length - index <= 3;
+                                return (
+                                  <motion.div
+                                    className={`absolute right-3 w-48 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans ${showUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
+                                    initial={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
+                                    transition={{ duration: 0.15 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {/* Option 1: Communicate */}
+                                    <button
+                                      onClick={() => {
+                                        setActiveLeadDetails(lead);
+                                        setShowEmailModal(true);
+                                        setActiveDropdownLeadId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">chat</span>
+                                      Communicate
+                                    </button>
+
+                                    {/* Option 2: View Application */}
+                                    <button
+                                      onClick={() => {
+                                        setActiveModalLead(lead);
+                                        setShowApplicationModal(true);
+                                        setActiveDropdownLeadId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">assignment</span>
+                                      View Application
+                                    </button>
+
+                                    {/* Option 3: Re-assign Lead */}
+                                    <div className="relative">
+                                      <button
+                                        onClick={() => {
+                                          setShowReassignSubId(showReassignSubId === lead.id ? null : lead.id);
+                                        }}
+                                        className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-blue-50/60 hover:text-blue-700'}`}
+                                      >
+                                        <div className="flex items-center gap-2.5">
+                                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">supervisor_account</span>
+                                          Re-assign Lead
+                                        </div>
+                                        <span className="material-symbols-outlined text-[14px]">
+                                          {showReassignSubId === lead.id ? 'expand_less' : 'chevron_right'}
+                                        </span>
+                                      </button>
+
+                                      <AnimatePresence>
+                                        {showReassignSubId === lead.id && (
+                                          <motion.div
+                                            className="mt-1 mb-1 mx-1.5 p-1 bg-slate-50 border border-slate-100 rounded-lg space-y-0.5"
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.15 }}
+                                          >
+                                            {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => (
+                                              <button
+                                                key={counselor}
+                                                onClick={() => {
+                                                  handleLeadCounselorChangeDirect(lead.id, counselor);
+                                                  setActiveDropdownLeadId(null);
+                                                  setShowReassignSubId(null);
+                                                }}
+                                                className="w-full flex items-center justify-between px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-white hover:text-blue-600 rounded-md transition-colors cursor-pointer text-left"
+                                              >
+                                                <span>{counselor}</span>
+                                                {lead.assignedTo === counselor && (
+                                                  <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
+                                                )}
+                                              </button>
+                                            ))}
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+
+                                    {/* Option 4: View Queries */}
+                                    <button
+                                      onClick={() => {
+                                        setActiveModalLead(lead);
+                                        setShowQueriesModal(true);
+                                        setQueriesAnswerText('');
+                                        setActiveDropdownLeadId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">question_answer</span>
+                                      View Queries
+                                    </button>
+
+                                    {/* Option 5: View Activity */}
+                                    <button
+                                      onClick={() => {
+                                        setActiveLeadDetails(lead);
+                                        setActiveDropdownLeadId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">history</span>
+                                      View Activity
+                                    </button>
+                                  </motion.div>
+                                );
+                              })()}
+                            </>
+                          )}
+                        </AnimatePresence>
                       </td>
                     </motion.tr>
                   ))}
@@ -2186,6 +2770,490 @@ export default function AllLeads() {
                     </div>
                   )
                 })()
+              )}
+            </AnimatePresence>
+
+            {/* VIEW APPLICATION MODAL */}
+            <AnimatePresence>
+              {showApplicationModal && activeModalLead && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
+                  <motion.div
+                    className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                  >
+                    {/* Modal Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                      <div className="text-left">
+                        <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-blue-600">assignment</span>
+                          Lead Application Profile
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Submitted application data for vetting.</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowApplicationModal(false);
+                          setActiveModalLead(null);
+                        }}
+                        className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer flex items-center justify-center transition-colors select-none"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-4 text-left overflow-y-auto max-h-[70vh]">
+                      <div className="flex items-center gap-3 bg-blue-50/40 border border-blue-100/50 rounded-xl p-3.5 select-none">
+                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary text-sm font-bold">
+                          {getInitials(activeModalLead.name)}
+                        </div>
+                        <div>
+                          <h4 className="text-[13px] font-bold text-slate-800 leading-tight">{activeModalLead.name}</h4>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{activeModalLead.email} • {activeModalLead.phone || '--'}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Applied Plan</span>
+                          <span className="text-[12px] font-semibold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md inline-block">
+                            {activeModalLead.application?.appliedProgram}
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Submission Date</span>
+                          <span className="text-[12px] font-semibold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md inline-block">
+                            {activeModalLead.application?.submissionDate}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Company Name</span>
+                          <span className="text-[12.5px] font-semibold text-slate-800">{activeModalLead.application?.companyName}</span>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Company Size</span>
+                          <span className="text-[12.5px] font-semibold text-slate-800">{activeModalLead.application?.companySize}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 border-t border-slate-100 pt-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estimated Annual Revenue</span>
+                        <span className="text-[12.5px] font-semibold text-slate-800">{activeModalLead.application?.annualRevenue}</span>
+                      </div>
+
+                      <div className="space-y-1 border-t border-slate-100 pt-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Use Case & Objectives</span>
+                        <p className="text-[12px] text-slate-600 leading-relaxed font-sans">{activeModalLead.application?.useCase}</p>
+                      </div>
+
+                      <div className="space-y-1 border-t border-slate-100 pt-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Additional Vetting Notes</span>
+                        <p className="text-[12px] text-slate-600 leading-relaxed font-sans italic">{activeModalLead.application?.notes}</p>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center select-none">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        Status: ACTIVE VETTING
+                      </span>
+                      <button
+                        onClick={() => {
+                          setShowApplicationModal(false);
+                          setActiveModalLead(null);
+                        }}
+                        className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[11.5px] font-bold transition-colors cursor-pointer shadow-sm"
+                      >
+                        Close Profile
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* VIEW QUERIES MODAL */}
+            <AnimatePresence>
+              {showQueriesModal && activeModalLead && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
+                  <motion.div
+                    className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden flex flex-col"
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                  >
+                    {/* Modal Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                      <div className="text-left">
+                        <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-blue-600">question_answer</span>
+                          Support Queries & Inquiries
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Manage customer questions and ticket resolutions.</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowQueriesModal(false);
+                          setActiveModalLead(null);
+                          setQueriesAnswerText('');
+                        }}
+                        className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer flex items-center justify-center transition-colors select-none"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-4 text-left overflow-y-auto max-h-[60vh]">
+                      <div className="flex items-center gap-3 bg-blue-50/40 border border-blue-100/50 rounded-xl p-3.5 select-none">
+                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary text-sm font-bold">
+                          {getInitials(activeModalLead.name)}
+                        </div>
+                        <div>
+                          <h4 className="text-[13px] font-bold text-slate-800 leading-tight">{activeModalLead.name}</h4>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{activeModalLead.email}</p>
+                        </div>
+                      </div>
+
+                      {activeModalLead.queries && activeModalLead.queries.length > 0 ? (
+                        <div className="space-y-4">
+                          {activeModalLead.queries.map((query) => (
+                            <div key={query.id} className="border border-slate-150 rounded-xl overflow-hidden shadow-2xs bg-slate-50/40">
+                              {/* Query Header */}
+                              <div className="px-4 py-2 border-b border-slate-100 bg-slate-50 flex justify-between items-center select-none">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Ticket #Q-98{query.id} • {query.date}</span>
+                                <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold border ${query.status === 'RESOLVED'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                                  }`}>
+                                  {query.status}
+                                </span>
+                              </div>
+
+                              {/* Query Body */}
+                              <div className="p-4 space-y-3">
+                                <div>
+                                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Customer Question</span>
+                                  <p className="text-[12.5px] font-semibold text-slate-850 leading-relaxed font-sans">{query.question}</p>
+                                </div>
+
+                                {query.response ? (
+                                  <div className="bg-emerald-50/30 border border-emerald-100/50 rounded-lg p-3 mt-2">
+                                    <div className="flex items-center gap-1.5 mb-1.5 select-none">
+                                      <span className="material-symbols-outlined text-[14px] text-emerald-600 font-bold">check_circle</span>
+                                      <span className="text-[9px] font-extrabold text-emerald-750 uppercase tracking-wider">Counselor Response</span>
+                                    </div>
+                                    <p className="text-[12px] text-slate-700 leading-relaxed font-sans">{query.response}</p>
+                                  </div>
+                                ) : (
+                                  <div className="pt-2 border-t border-slate-100">
+                                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5 select-none">Submit Response to resolve ticket</span>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Type reply and mark resolved..."
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            handleSendQueryResponse(activeModalLead.id, query.id, e.target.value);
+                                          }
+                                        }}
+                                        className="flex-1 h-8 px-3 border border-slate-200 rounded-lg text-[12px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                      />
+                                      <button
+                                        onClick={(e) => {
+                                          const inputElem = e.currentTarget.previousSibling;
+                                          handleSendQueryResponse(activeModalLead.id, query.id, inputElem.value);
+                                        }}
+                                        className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-sm cursor-pointer select-none"
+                                      >
+                                        Reply
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-10 text-center select-none">
+                          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-2">
+                            <span className="material-symbols-outlined text-[24px]">sentiment_satisfied</span>
+                          </div>
+                          <p className="text-[12px] font-bold text-slate-600">No active inquiries from this lead.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Everything is resolved and up to date!</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-end select-none">
+                      <button
+                        onClick={() => {
+                          setShowQueriesModal(false);
+                          setActiveModalLead(null);
+                          setQueriesAnswerText('');
+                        }}
+                        className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[11.5px] font-bold transition-colors cursor-pointer shadow-sm"
+                      >
+                        Close Panel
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* BULK UPLOAD MODAL */}
+            <AnimatePresence>
+              {showBulkUploadModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
+                  <motion.div
+                    className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                  >
+                    {/* Modal Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                      <div className="text-left">
+                        <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-blue-600">upload_file</span>
+                          Bulk Offline Upload
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Ingest new leads dynamically from a CSV file.</p>
+                      </div>
+                      <button
+                        onClick={() => setShowBulkUploadModal(false)}
+                        className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer flex items-center justify-center transition-colors select-none"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-5 text-left">
+                      <div className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-8 text-center bg-slate-50/50 cursor-pointer transition-colors select-none">
+                        <span className="material-symbols-outlined text-[40px] text-slate-400 block mb-2">cloud_upload</span>
+                        <span className="text-[12.5px] font-bold text-slate-700 block">Drag & Drop CSV file here</span>
+                        <span className="text-[11px] text-slate-400 block mt-1">or click to browse local files</span>
+                      </div>
+
+                      {uploadingBulk ? (
+                        <div className="space-y-2 select-none">
+                          <div className="flex justify-between items-center text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+                            <span>Ingesting leads...</span>
+                            <span>85%</span>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-blue-600 rounded-full"
+                              initial={{ width: '0%' }}
+                              animate={{ width: '85%' }}
+                              transition={{ duration: 1.2 }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-blue-50/30 border border-blue-100/50 rounded-xl p-3.5 select-none text-[11.5px] text-slate-600 leading-relaxed font-sans">
+                          <strong>Simulate Ingestion:</strong> Click "Process CSV Upload" to simulate loading and importing 2 sample leads offline.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 select-none">
+                      <button
+                        onClick={() => setShowBulkUploadModal(false)}
+                        className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-[12px] font-bold transition-all cursor-pointer"
+                        disabled={uploadingBulk}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleBulkUploadCSV}
+                        className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                        disabled={uploadingBulk}
+                      >
+                        {uploadingBulk ? 'Processing...' : 'Process CSV Upload'}
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* ADD QUICK LEAD MODAL */}
+            <AnimatePresence>
+              {showQuickLeadModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
+                  <motion.div
+                    className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                  >
+                    {/* Modal Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                      <div className="text-left">
+                        <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-blue-600">person_add</span>
+                          Add Quick Lead
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Quickly inject a new lead into your local CRM database.</p>
+                      </div>
+                      <button
+                        onClick={() => setShowQuickLeadModal(false)}
+                        className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer flex items-center justify-center transition-colors select-none"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-4 text-left">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Lead Full Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. John Watson"
+                          value={quickLeadForm.name}
+                          onChange={(e) => setQuickLeadForm({ ...quickLeadForm, name: e.target.value })}
+                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Work Email Address</label>
+                        <input
+                          type="email"
+                          placeholder="e.g. watson@baker.co.uk"
+                          value={quickLeadForm.email}
+                          onChange={(e) => setQuickLeadForm({ ...quickLeadForm, email: e.target.value })}
+                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Phone Number</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. +44 7890 12345"
+                          value={quickLeadForm.phone}
+                          onChange={(e) => setQuickLeadForm({ ...quickLeadForm, phone: e.target.value })}
+                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Assign to Counselor</label>
+                        <select
+                          value={quickLeadForm.assignedTo}
+                          onChange={(e) => setQuickLeadForm({ ...quickLeadForm, assignedTo: e.target.value })}
+                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="Sarah Jenkins">Sarah Jenkins</option>
+                          <option value="Marcus Chan">Marcus Chan</option>
+                          <option value="Unassigned">Unassigned</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 select-none">
+                      <button
+                        onClick={() => setShowQuickLeadModal(false)}
+                        className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-[12px] font-bold transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleAddQuickLead(quickLeadForm)}
+                        className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition-all cursor-pointer shadow-sm"
+                      >
+                        Add Lead
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* GLOBAL CHANGE STAGE MODAL */}
+            <AnimatePresence>
+              {showGlobalStageModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
+                  <motion.div
+                    className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm overflow-hidden flex flex-col"
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                  >
+                    {/* Modal Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                      <div className="text-left">
+                        <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-blue-600">swap_horiz</span>
+                          Bulk Change Stage
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Change pipeline stage for {selectedLeads.length} leads.</p>
+                      </div>
+                      <button
+                        onClick={() => setShowGlobalStageModal(false)}
+                        className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer flex items-center justify-center transition-colors select-none"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-4 text-left">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Select New Pipeline Status</label>
+                        <select
+                          defaultValue="NEW"
+                          id="globalStageSelectInput"
+                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="NEW">NEW</option>
+                          <option value="CONTACTED">CONTACTED</option>
+                          <option value="QUALIFIED">QUALIFIED</option>
+                          <option value="LOST">LOST</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 select-none">
+                      <button
+                        onClick={() => setShowGlobalStageModal(false)}
+                        className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-[12px] font-bold transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          const val = document.getElementById('globalStageSelectInput').value;
+                          handleApplyGlobalStage(val);
+                        }}
+                        className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition-all cursor-pointer shadow-sm"
+                      >
+                        Apply Stage Update
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
               )}
             </AnimatePresence>
 
