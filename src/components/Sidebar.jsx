@@ -62,6 +62,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
         ))}
       </nav>
 
+
       {!sidebarCollapsed && (
         <div className="sidebar-footer">
           <button

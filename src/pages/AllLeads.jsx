@@ -48,6 +48,7 @@ export default function AllLeads() {
 
   // -- NEW STATE HOOKS FOR GLOBAL ACTIONS DROPDOWN & MODALS --
   const [showGlobalActionsDropdown, setShowGlobalActionsDropdown] = useState(false)
+  const [showDownloadFormats, setShowDownloadFormats] = useState(false)
   const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
@@ -865,11 +866,11 @@ export default function AllLeads() {
     }, 1500);
   };
 
-  const handleDownloadLeads = () => {
+  const handleDownloadLeads = (format = 'CSV') => {
     setDownloadingLeadsState(true);
     setTimeout(() => {
       setDownloadingLeadsState(false);
-      triggerToast('Generated leads CSV download link successfully!');
+      triggerToast(`Generated leads ${format} download link successfully!`);
     }, 1000);
   };
 
@@ -1387,16 +1388,75 @@ export default function AllLeads() {
 
                         {/* Group 2: Data Operations */}
                         <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Data Operations</div>
-                        <button
-                          onClick={() => {
-                            handleDownloadLeads();
-                            setShowGlobalActionsDropdown(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        {/* Download Leads with Format Submenu on Hover */}
+                        <div
+                          className="relative"
+                          onMouseEnter={() => setShowDownloadFormats(true)}
+                          onMouseLeave={() => setShowDownloadFormats(false)}
                         >
-                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
-                          Download Leads
-                        </button>
+                          <button
+                            className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
+                              Download Leads
+                            </div>
+                            <span className="material-symbols-outlined text-[14px] text-slate-400">chevron_left</span>
+                          </button>
+
+                          <AnimatePresence>
+                            {showDownloadFormats && (
+                              <motion.div
+                                className="absolute right-full top-0 w-36 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-50 text-left font-sans"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.15 }}
+                              >
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('CSV');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-green-600">table_view</span>
+                                  CSV Format
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('Excel (XLSX)');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-emerald-600">grid_on</span>
+                                  Excel (XLSX)
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('PDF');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-red-600">picture_as_pdf</span>
+                                  PDF Document
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('JSON');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-amber-600">code</span>
+                                  JSON Data
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                         <button
                           onClick={() => {
                             if (leads.length > 0) {
@@ -1977,13 +2037,14 @@ export default function AllLeads() {
                     <select
                       onChange={(e) => handleBulkStatusUpdate(e.target.value)}
                       defaultValue=""
-                      className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                      className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                      style={{ color: 'white' }}
                     >
-                      <option value="" disabled>Update...</option>
-                      <option value="NEW">NEW</option>
-                      <option value="CONTACTED">CONTACTED</option>
-                      <option value="QUALIFIED">QUALIFIED</option>
-                      <option value="LOST">LOST</option>
+                      <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
+                      <option value="NEW" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>NEW</option>
+                      <option value="CONTACTED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>CONTACTED</option>
+                      <option value="QUALIFIED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>QUALIFIED</option>
+                      <option value="LOST" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>LOST</option>
                     </select>
                   </div>
 
@@ -1993,12 +2054,13 @@ export default function AllLeads() {
                     <select
                       onChange={(e) => handleBulkAssignUpdate(e.target.value)}
                       defaultValue=""
-                      className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                      className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                      style={{ color: 'white' }}
                     >
-                      <option value="" disabled>Assign to...</option>
-                      <option value="Sarah Jenkins">Sarah Jenkins</option>
-                      <option value="Marcus Chan">Marcus Chan</option>
-                      <option value="Unassigned">Unassigned</option>
+                      <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Assign to...</option>
+                      <option value="Sarah Jenkins" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Sarah Jenkins</option>
+                      <option value="Marcus Chan" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Marcus Chan</option>
+                      <option value="Unassigned" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Unassigned</option>
                     </select>
                   </div>
 
