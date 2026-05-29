@@ -10,6 +10,8 @@ export default function FormBuilderPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [hoveredForm, setHoveredForm] = useState(null)
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 })
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [activePreviewTemplate, setActivePreviewTemplate] = useState(null)
   const hideTimer = useRef(null)
 
   const showPreview = (form, e) => {
@@ -33,7 +35,41 @@ export default function FormBuilderPage() {
   }
 
   // Detailed mock forms data structures matching the uploaded screenshot
-  const createdForms = [
+  const [formsList, setFormsList] = useState([
+    {
+      id: 'TMP-0001-C',
+      name: 'General Contact Inquiry',
+      status: 'TEMPLATE',
+      responses: null,
+      conversionRate: null,
+      createdBy: 'System Architect',
+      createdDate: '1 week ago',
+      description: 'A standard contact inquiry form to capture visitors\' basic contact information and their specific queries or interests.',
+      fields: [
+        { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', helperText: '', options: [] },
+        { id: 2, type: 'email', label: 'Email Address', required: true, placeholder: 'john@example.com', helperText: '', options: [] },
+        { id: 3, type: 'text', label: 'Inquiry Subject', required: true, placeholder: 'How can we help you?', helperText: '', options: [] },
+        { id: 4, type: 'text', label: 'Detailed Message', required: true, placeholder: 'Type your message details here...', helperText: '', options: [] }
+      ]
+    },
+    {
+      id: 'TMP-0002-J',
+      name: 'Job Application Portal',
+      status: 'TEMPLATE',
+      responses: null,
+      conversionRate: null,
+      createdBy: 'HR Department',
+      createdDate: '5 days ago',
+      description: 'An elegant application portal to gather prospective candidates\' resumes, details, portfolios, and job role preferences.',
+      fields: [
+        { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'Jane Smith', helperText: '', options: [] },
+        { id: 2, type: 'email', label: 'Email Address', required: true, placeholder: 'jane.smith@example.com', helperText: '', options: [] },
+        { id: 3, type: 'phone', label: 'Phone Number', required: true, placeholder: '+1 (555) 123-4567', helperText: '', options: [] },
+        { id: 4, type: 'select', label: 'Target Position', required: true, placeholder: 'Select...', options: ['Frontend Engineer', 'Backend Engineer', 'Product Designer', 'Product Manager'] },
+        { id: 5, type: 'text', label: 'Portfolio URL', required: false, placeholder: 'https://github.com/username or behance', helperText: '', options: [] },
+        { id: 6, type: 'text', label: 'Cover Letter / Brief Intro', required: false, placeholder: 'Tell us about yourself...', helperText: '', options: [] }
+      ]
+    },
     {
       id: 'FRM-8921-A',
       name: 'Q3 Enterprise Webinar Registration',
@@ -99,10 +135,10 @@ export default function FormBuilderPage() {
         { id: 2, type: 'checkbox', label: 'Interests', required: false, placeholder: '', helperText: '', options: ['Product Updates', 'Weekly Tips & Tricks', 'Partner Integrations', 'Case Studies'] }
       ]
     }
-  ]
+  ])
 
   // Filter forms based on search query and status option selection
-  const filteredForms = createdForms.filter(form => {
+  const filteredForms = formsList.filter(form => {
     const matchesSearch = form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       form.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = filterStatus === 'all' || form.status === filterStatus
@@ -122,6 +158,88 @@ export default function FormBuilderPage() {
     })
   }
 
+  // Handle template selection & clone to launch builder
+  const handleSelectTemplate = (template) => {
+    setActiveFormSchema({
+      title: `${template.name} (Copy)`,
+      description: template.description,
+      status: 'Draft',
+      fields: template.fields.map((field, idx) => ({
+        ...field,
+        id: idx + 1
+      }))
+    })
+    setShowTemplateModal(false)
+  }
+
+  // Duplicate form
+  const handleDuplicateForm = (form) => {
+    const duplicated = {
+      ...form,
+      id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-D`,
+      name: `${form.name} (Copy)`,
+      status: 'DRAFT',
+      responses: 0,
+      conversionRate: '0%',
+      createdBy: 'System Admin',
+      createdDate: 'Just now'
+    }
+    setFormsList([duplicated, ...formsList])
+    triggerToast(`Form "${form.name}" duplicated successfully!`)
+  }
+
+  // Save edited or created form
+  const handleSaveForm = (updatedData) => {
+    if (activeFormSchema.id) {
+      setFormsList(prev => prev.map(form => {
+        if (form.id === activeFormSchema.id) {
+          return {
+            ...form,
+            name: updatedData.title,
+            description: updatedData.description,
+            fields: updatedData.fields,
+            status: updatedData.status
+          }
+        }
+        return form
+      }))
+      triggerToast(`Form "${updatedData.title}" saved successfully!`)
+    } else {
+      const newForm = {
+        id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
+        name: updatedData.title,
+        description: updatedData.description,
+        fields: updatedData.fields,
+        status: updatedData.status,
+        responses: 0,
+        conversionRate: '0%',
+        createdBy: 'System Admin',
+        createdDate: 'Just now'
+      }
+      setFormsList([newForm, ...formsList])
+      triggerToast(`New form "${updatedData.title}" created successfully!`)
+    }
+    setActiveFormSchema(null)
+  }
+
+  // Save form as template
+  const handleSaveAsTemplate = (updatedData) => {
+    const templateForm = {
+      id: `TMP-${Math.floor(1000 + Math.random() * 9000)}-T`,
+      name: `${updatedData.title} (Template)`,
+      description: updatedData.description,
+      fields: updatedData.fields,
+      status: 'TEMPLATE',
+      responses: null,
+      conversionRate: null,
+      createdBy: 'System Admin',
+      createdDate: 'Just now'
+    }
+    setFormsList([templateForm, ...formsList])
+    triggerToast(`Form saved as template successfully!`)
+    setActiveFormSchema(null)
+  }
+
   return (
     <div className="p-6 h-full flex flex-col font-sans select-none overflow-y-auto">
       <AnimatePresence mode="wait">
@@ -135,8 +253,15 @@ export default function FormBuilderPage() {
             transition={{ duration: 0.25 }}
             className="w-full space-y-5"
           >
-            {/* Header: Title Block & Create Action */}
-            <FormBuilderHeader handleCreateNewForm={handleCreateNewForm} triggerToast={triggerToast} />
+            <FormBuilderHeader 
+              handleCreateFromScratch={handleCreateNewForm} 
+              handleOpenTemplateModal={() => {
+                const templates = formsList.filter(f => f.status === 'TEMPLATE')
+                setActivePreviewTemplate(templates[0] || null)
+                setShowTemplateModal(true)
+              }} 
+              triggerToast={triggerToast} 
+            />
 
             {/* Filter Bar */}
             <div className="flex items-center justify-between gap-4">
@@ -172,7 +297,7 @@ export default function FormBuilderPage() {
 
               {/* Total Forms Stat Counter */}
               <div className="text-[11px] font-bold text-slate-500 tracking-wider">
-                TOTAL FORMS: <span className="text-slate-800 text-[13px]">{createdForms.length}</span>
+                TOTAL FORMS: <span className="text-slate-800 text-[13px]">{formsList.length}</span>
               </div>
             </div>
 
@@ -212,8 +337,10 @@ export default function FormBuilderPage() {
                       <td className="px-5 py-3.5">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${form.status === 'PUBLISHED'
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                            : 'bg-slate-50 text-slate-600 border-slate-200'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : form.status === 'TEMPLATE'
+                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              : 'bg-slate-50 text-slate-600 border-slate-200'
                             }`}
                         >
                           {form.status}
@@ -246,6 +373,13 @@ export default function FormBuilderPage() {
                           >
                             <span className="material-symbols-outlined text-[16px]">edit</span>
                           </button>
+                          <button
+                            onClick={() => handleDuplicateForm(form)}
+                            className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                            title="Duplicate Form"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -276,8 +410,10 @@ export default function FormBuilderPage() {
               initialTitle={activeFormSchema.name || activeFormSchema.title}
               initialDescription={activeFormSchema.description}
               initialFields={activeFormSchema.fields}
-              initialStatus={activeFormSchema.status.charAt(0).toUpperCase() + activeFormSchema.status.slice(1).toLowerCase()}
+              initialStatus={activeFormSchema.status ? (activeFormSchema.status.charAt(0).toUpperCase() + activeFormSchema.status.slice(1).toLowerCase()) : 'Draft'}
               onBack={() => setActiveFormSchema(null)}
+              onSave={handleSaveForm}
+              onSaveAsTemplate={handleSaveAsTemplate}
             />
           </motion.div>
         )}
@@ -305,8 +441,8 @@ export default function FormBuilderPage() {
                   <p className="text-[9px] font-mono text-slate-400 mt-0.5">{hoveredForm.id}</p>
                 </div>
                 <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-bold border mt-0.5 ${hoveredForm.status === 'PUBLISHED'
-                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                    : 'bg-slate-50 text-slate-500 border-slate-200'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'bg-slate-50 text-slate-500 border-slate-200'
                   }`}>
                   {hoveredForm.status}
                 </span>
@@ -346,6 +482,188 @@ export default function FormBuilderPage() {
               <p className="text-[9px] text-slate-400">Click to open in Form Builder</p>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Template Selection Modal */}
+      <AnimatePresence>
+        {showTemplateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowTemplateModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
+              className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden relative z-10 flex flex-col max-h-[85vh] template-modal-scope"
+            >
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white">
+                <div>
+                  <h3 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-purple-600 text-[22px]">grid_view</span>
+                    Create from Template
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Select a pre-configured template blueprint below to start editing. All templates are fully customizable.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowTemplateModal(false)}
+                  className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Master-Detail Split Content */}
+              <div className="p-6 overflow-hidden flex-1 bg-slate-50/50 flex flex-col md:flex-row gap-5 h-[480px]">
+                {/* Left side: templates list */}
+                <div className="flex-1 md:w-5/12 overflow-y-auto pr-1 space-y-2 flex flex-col">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Available Blueprints
+                  </p>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    {formsList.filter(f => f.status === 'TEMPLATE').map(template => {
+                      const isActive = activePreviewTemplate?.id === template.id
+                      return (
+                        <div
+                          key={template.id}
+                          onMouseEnter={() => setActivePreviewTemplate(template)}
+                          onClick={() => handleSelectTemplate(template)}
+                          className={`w-full text-left p-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${
+                            isActive 
+                              ? 'border-purple-500 bg-purple-50/70 shadow-xs' 
+                              : 'border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className={`material-symbols-outlined text-[18px] shrink-0 ${isActive ? 'text-purple-600' : 'text-slate-400'}`}>
+                              article
+                            </span>
+                            <div className="min-w-0">
+                              <p className={`text-[11.5px] font-bold truncate ${isActive ? 'text-purple-950 font-bold' : 'text-slate-800'}`}>
+                                {template.name}
+                              </p>
+                              <p className="text-[9px] font-mono text-slate-400 mt-0.5">{template.id}</p>
+                            </div>
+                          </div>
+                          <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded border shrink-0 ${
+                            isActive 
+                              ? 'bg-purple-100/80 text-purple-800 border-purple-200' 
+                              : 'bg-slate-50 text-slate-500 border-slate-200'
+                          }`}>
+                            {template.fields?.length || 0} fields
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {formsList.filter(f => f.status === 'TEMPLATE').length === 0 && (
+                      <div className="py-8 text-center text-[12px] text-slate-400 italic">
+                        No templates found. Save a form as a template to see it here!
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right side: form details view on hover */}
+                <div className="flex-1 md:w-7/12 flex flex-col bg-white border border-slate-200 rounded-xl p-5 shadow-xs overflow-hidden">
+                  {activePreviewTemplate ? (
+                    <motion.div
+                      key={activePreviewTemplate.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex flex-col justify-between overflow-hidden flex-1 min-h-0"
+                    >
+                      <div className="space-y-3.5 overflow-y-auto pr-1 flex-1 min-h-0">
+                        {/* Title Block */}
+                        <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
+                          <div>
+                            <h4 className="font-bold text-[14px] text-slate-800 leading-snug">
+                              {activePreviewTemplate.name}
+                            </h4>
+                            <p className="text-[9px] font-mono text-slate-400 mt-0.5">Template ID: {activePreviewTemplate.id}</p>
+                          </div>
+                          <span className="bg-purple-50 text-purple-700 text-[9px] font-bold px-2.5 py-0.5 rounded border border-purple-100 shrink-0">
+                            {activePreviewTemplate.fields?.length || 0} fields
+                          </span>
+                        </div>
+
+                        {/* Description */}
+                        {activePreviewTemplate.description && (
+                          <div className="space-y-1">
+                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Description</p>
+                            <p className="text-[11px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100/50">
+                              {activePreviewTemplate.description}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Fields preview lists */}
+                        <div className="space-y-1.5 flex-1 min-h-0 flex flex-col">
+                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Fields Outline</p>
+                          <div className="bg-slate-50/70 border border-slate-100 rounded-lg p-3 space-y-2 shrink-0">
+                            {activePreviewTemplate.fields?.map((field, idx) => (
+                              <div key={field.id || idx} className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 last:border-b-0 last:pb-0 gap-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="material-symbols-outlined text-[13px] text-purple-600/70 shrink-0">
+                                    {field.type === 'email' ? 'mail' : field.type === 'phone' ? 'phone' : field.type === 'select' ? 'arrow_drop_down_circle' : field.type === 'radio' ? 'radio_button_checked' : field.type === 'date' ? 'calendar_today' : field.type === 'checkbox' ? 'check_box' : 'text_fields'}
+                                  </span>
+                                  <span className="text-[10.5px] font-semibold text-slate-700 truncate">{field.label}</span>
+                                  {field.required && <span className="text-rose-500 text-[10px] shrink-0 font-bold">*</span>}
+                                </div>
+                                <span className="text-[8px] font-mono text-slate-400 bg-white border border-slate-200/80 rounded px-1.5 py-0.5 shrink-0 uppercase tracking-wider">{field.type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CTA block */}
+                      <div className="mt-4 pt-3 border-t border-slate-100 shrink-0 flex items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] text-slate-400">Created by: {activePreviewTemplate.createdBy || 'System'}</span>
+                          <span className="text-[8px] text-slate-400 mt-0.5">{activePreviewTemplate.createdDate}</span>
+                        </div>
+                        <button
+                          onClick={() => handleSelectTemplate(activePreviewTemplate)}
+                          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[11.5px] font-bold rounded-lg shadow-sm transition-all duration-150 flex items-center gap-1.5 active:scale-98 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">auto_awesome</span>
+                          Use Template
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2">
+                      <span className="material-symbols-outlined text-[36px]">article</span>
+                      <p className="text-[12px] italic">Hover over a template to view details</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
+                <button
+                  onClick={() => setShowTemplateModal(false)}
+                  className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 rounded text-slate-600 text-[11.5px] font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

@@ -14,7 +14,8 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
     { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/departments' },
     { id: 'teams', label: 'Teams', icon: 'group', path: '/teams' },
     { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/audit-logs' },
-    { id: 'roles', label: 'Role User Management', icon: 'perm_identity', path: '/roles' }
+    { id: 'roles', label: 'Role Management', icon: 'perm_identity', path: '/roles' },
+    { id: 'form-embed', label: 'Form Embed', icon: 'integration_instructions', path: '/form-embed' },
   ]
 
   const getActiveItem = () => {

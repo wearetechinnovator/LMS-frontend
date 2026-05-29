@@ -153,6 +153,9 @@ export default function RoleUserManagement() {
     const [activeTab, setActiveTab] = useState('users') // 'users' or 'roles'
     const [users, setUsers] = useState(initialUsers)
     const [rolePermissions, setRolePermissions] = useState(initialRolePermissions)
+    const [customRoles, setCustomRoles] = useState(['System Admin', 'Campaign Manager', 'Admissions Counselor', 'Sales Executive', 'Auditor'])
+    const [showCreateRoleModal, setShowCreateRoleModal] = useState(false)
+    const [newRoleName, setNewRoleName] = useState('')
     
     // Sidebar selected role in Permissions tab
     const [selectedRole, setSelectedRole] = useState('Campaign Manager')
@@ -291,7 +294,87 @@ export default function RoleUserManagement() {
         triggerToast(`Permissions for role "${selectedRole}" updated successfully!`)
     }
 
-    const rolesList = ['System Admin', 'Campaign Manager', 'Admissions Counselor', 'Sales Executive', 'Auditor']
+    const handleSwitchToDefault = () => {
+        if (initialRolePermissions[selectedRole]) {
+            setRolePermissions(prev => ({
+                ...prev,
+                [selectedRole]: {
+                    ...initialRolePermissions[selectedRole]
+                }
+            }))
+            triggerToast(`Restored default permissions for role "${selectedRole}"!`)
+        } else {
+            // For custom roles that don't have default configurations, reset to fully false (blank) permissions
+            setRolePermissions(prev => ({
+                ...prev,
+                [selectedRole]: {
+                    dashboard: false,
+                    leads_view: false,
+                    leads_edit: false,
+                    leads_delete: false,
+                    leads_assign: false,
+                    forms_view: false,
+                    forms_create: false,
+                    forms_edit: false,
+                    forms_delete: false,
+                    campaigns_view: false,
+                    campaigns_create: false,
+                    campaigns_edit: false,
+                    campaigns_delete: false,
+                    auditLogs: false,
+                    settings: false
+                }
+            }))
+            triggerToast(`Reset custom role "${selectedRole}" permissions to blank!`)
+        }
+    }
+
+    const handleCreateRole = () => {
+        setNewRoleName('')
+        setShowCreateRoleModal(true)
+    }
+
+    const handleConfirmCreateRole = (e) => {
+        if (e) e.preventDefault()
+        if (!newRoleName.trim()) {
+            triggerToast('Error: Role name cannot be empty!')
+            return
+        }
+
+        const formattedRole = newRoleName.trim()
+        if (customRoles.includes(formattedRole)) {
+            triggerToast(`Error: Role "${formattedRole}" already exists!`)
+            return
+        }
+
+        setCustomRoles(prev => [...prev, formattedRole])
+        setRolePermissions(prev => ({
+            ...prev,
+            [formattedRole]: {
+                dashboard: false,
+                leads_view: false,
+                leads_edit: false,
+                leads_delete: false,
+                leads_assign: false,
+                forms_view: false,
+                forms_create: false,
+                forms_edit: false,
+                forms_delete: false,
+                campaigns_view: false,
+                campaigns_create: false,
+                campaigns_edit: false,
+                campaigns_delete: false,
+                auditLogs: false,
+                settings: false
+            }
+        }))
+        setSelectedRole(formattedRole)
+        setNewRoleName('')
+        setShowCreateRoleModal(false)
+        triggerToast(`Custom role "${formattedRole}" created successfully!`)
+    }
+
+    const rolesList = customRoles
     const statusTypes = ['Active', 'Suspended', 'Invited']
 
     return (
@@ -520,8 +603,15 @@ export default function RoleUserManagement() {
                     
                     {/* Left Pane Sidebar: Role Type Selector */}
                     <div className="w-[200px] border border-outline-variant bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col shadow-xs shrink-0">
-                        <div className="p-3 border-b border-outline-variant bg-surface-container/50">
+                        <div className="p-3 border-b border-outline-variant bg-surface-container/50 flex items-center justify-between gap-2">
                             <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Role Profiles</h3>
+                            <button
+                                onClick={handleCreateRole}
+                                className="p-1 hover:bg-slate-200/60 rounded text-primary hover:text-primary transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                                title="Create Custom Role"
+                            >
+                                <span className="material-symbols-outlined text-[15px] font-bold">add</span>
+                            </button>
                         </div>
                         <div className="flex-1 p-1.5 space-y-0.5 overflow-y-auto">
                             {rolesList.map((role) => (
@@ -556,13 +646,22 @@ export default function RoleUserManagement() {
                                 </p>
                             </div>
 
-                            <button
-                                onClick={handleSavePermissions}
-                                className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
-                            >
-                                <span className="material-symbols-outlined text-[14px]">save</span>
-                                Save Role Permissions
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleSwitchToDefault}
+                                    className="px-3 py-1.5 border border-outline-variant hover:bg-slate-50 text-slate-700 rounded text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">settings_backup_restore</span>
+                                    Switch to Default
+                                </button>
+                                <button
+                                    onClick={handleSavePermissions}
+                                    className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">save</span>
+                                    Save Role Permissions
+                                </button>
+                            </div>
                         </div>
 
                         {/* Scrollable Permissions checklist grid */}
@@ -893,6 +992,82 @@ export default function RoleUserManagement() {
                             </form>
                         </motion.div>
                     </>
+                )}
+            </AnimatePresence>
+
+            {/* Create Custom Role Input Modal Overlay */}
+            <AnimatePresence>
+                {showCreateRoleModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        {/* Backdrop overlay */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowCreateRoleModal(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+                        />
+
+                        {/* Modal Card */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            transition={{ type: 'spring', duration: 0.3, bounce: 0.15 }}
+                            className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden relative z-10 flex flex-col"
+                        >
+                            {/* Header */}
+                            <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white">
+                                <div>
+                                    <h3 className="text-[13px] font-bold text-slate-800 flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-primary text-[18px]">add_moderator</span>
+                                        Create Custom Role
+                                    </h3>
+                                    <p className="text-[9.5px] text-slate-500 mt-0.5">Define a new operational role and custom permission settings.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateRoleModal(false)}
+                                    className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+
+                            {/* Form Body */}
+                            <form onSubmit={handleConfirmCreateRole} className="p-5 space-y-4">
+                                <div className="space-y-1">
+                                    <label className="block text-[8px] font-bold text-slate-500 uppercase tracking-wider">Role Profile Title</label>
+                                    <input
+                                        type="text"
+                                        value={newRoleName}
+                                        onChange={(e) => setNewRoleName(e.target.value)}
+                                        placeholder="e.g. Regional Supervisor"
+                                        className="w-full h-8 px-2.5 border border-slate-200 rounded text-slate-800 bg-white placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+
+                                {/* Form Actions */}
+                                <div className="border-t border-slate-100 pt-3.5 flex justify-end gap-2 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateRoleModal(false)}
+                                        className="px-4.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-600 text-[11px] font-bold transition-all cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer"
+                                    >
+                                        Create Role
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
 

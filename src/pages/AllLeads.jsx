@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function AllLeads() {
+  const location = useLocation()
   const [selectedLeads, setSelectedLeads] = useState([])
   const [activeLeadDetails, setActiveLeadDetails] = useState(null)
 
@@ -31,12 +33,62 @@ export default function AllLeads() {
     status: true,
     assignedTo: true,
     source: true,
-    tier: true,
+
     verified: true,
     location: false,
     campaign: false
   })
   const [showColumnDropdown, setShowColumnDropdown] = useState(false)
+
+  // Double horizontal scrollbar state & refs
+  const tableContainerRef = React.useRef(null)
+  const topScrollbarRef = React.useRef(null)
+  const [tableScrollWidth, setTableScrollWidth] = React.useState(0)
+
+  const handleTopScroll = () => {
+    if (topScrollbarRef.current && tableContainerRef.current) {
+      tableContainerRef.current.scrollLeft = topScrollbarRef.current.scrollLeft
+    }
+  }
+
+  const handleTableScroll = () => {
+    if (topScrollbarRef.current && tableContainerRef.current) {
+      topScrollbarRef.current.scrollLeft = tableContainerRef.current.scrollLeft
+    }
+  }
+
+  React.useEffect(() => {
+    const updateWidth = () => {
+      if (tableContainerRef.current) {
+        setTableScrollWidth(tableContainerRef.current.scrollWidth)
+      }
+    }
+
+    updateWidth()
+
+    let resizeObserver = null
+    if (tableContainerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateWidth()
+      })
+      resizeObserver.observe(tableContainerRef.current)
+      const tableEl = tableContainerRef.current.querySelector('table')
+      if (tableEl) {
+        resizeObserver.observe(tableEl)
+      }
+    }
+
+    window.addEventListener('resize', updateWidth)
+    const timeoutId = setTimeout(updateWidth, 300)
+
+    return () => {
+      window.removeEventListener('resize', updateWidth)
+      clearTimeout(timeoutId)
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
+    }
+  }, [visibleColumns])
 
   // -- NEW STATE HOOKS FOR LEAD ACTIONS POPUPS --
   const [activeDropdownLeadId, setActiveDropdownLeadId] = useState(null)
@@ -340,6 +392,15 @@ export default function AllLeads() {
     ][idx]
     return { ...lead, timeline: getInitialTimeline(seed) }
   }))
+
+  React.useEffect(() => {
+    if (location.state && location.state.activeLeadId) {
+      const targetLead = leads.find(l => l.id === location.state.activeLeadId)
+      if (targetLead) {
+        setActiveLeadDetails(targetLead)
+      }
+    }
+  }, [location.state, leads])
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -1300,7 +1361,7 @@ export default function AllLeads() {
                           exit={{ opacity: 0, y: 10 }}
                           transition={{ duration: 0.15 }}
                         >
-                          <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">Toggle Columns</h4>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Toggle Columns</div>
                           <div className="space-y-1.5 text-[11.5px] font-semibold text-slate-750">
                             {Object.keys(visibleColumns).map((col) => (
                               <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1 rounded cursor-pointer capitalize">
@@ -1313,7 +1374,7 @@ export default function AllLeads() {
                                   })}
                                   className="w-3.5 h-3.5 cursor-pointer accent-primary"
                                 />
-                                {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Work Email' : col}
+                                {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
                               </label>
                             ))}
                           </div>
@@ -1457,7 +1518,7 @@ export default function AllLeads() {
                             )}
                           </AnimatePresence>
                         </div>
-                        <button
+                        {/* <button
                           onClick={() => {
                             if (leads.length > 0) {
                               setActiveLeadDetails(leads[0]);
@@ -1469,7 +1530,7 @@ export default function AllLeads() {
                         >
                           <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">chat</span>
                           Communicate
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => {
                             handleChangeLeadStageGlobal();
@@ -1488,8 +1549,21 @@ export default function AllLeads() {
             </div>
 
             {/* Table */}
+            {tableScrollWidth > (tableContainerRef.current?.clientWidth || 0) && (
+              <div
+                ref={topScrollbarRef}
+                onScroll={handleTopScroll}
+                className="w-full overflow-x-auto overflow-y-hidden h-2 mb-1.5 top-scrollbar"
+                style={{ scrollbarWidth: 'thin' }}
+              >
+                <div style={{ width: `${tableScrollWidth}px`, height: '1px' }} />
+              </div>
+            )}
+
             <motion.div
-              className="bg-surface rounded border border-outline-variant overflow-visible"
+              ref={tableContainerRef}
+              onScroll={handleTableScroll}
+              className="bg-surface rounded border border-outline-variant overflow-x-auto overflow-y-visible table-scroll-container"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -1512,7 +1586,7 @@ export default function AllLeads() {
                         className="px-3 py-1.5 text-left text-body-md font-body-md text-on-surface text-[10px] font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       >
                         <div className="flex items-center">
-                          Lead Name
+                          Name
                           {renderSortIndicator('name')}
                         </div>
                       </th>
@@ -1523,7 +1597,7 @@ export default function AllLeads() {
                         className="px-3 py-1.5 text-left text-body-md font-body-md text-on-surface text-[12px] font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       >
                         <div className="flex items-center">
-                          Work Email
+                          Email
                           {renderSortIndicator('email')}
                         </div>
                       </th>
@@ -1534,7 +1608,7 @@ export default function AllLeads() {
                         className="px-3 py-1.5 text-left text-body-md font-body-md text-on-surface text-[12px] font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       >
                         <div className="flex items-center">
-                          Phone Number
+                          Phone
                           {renderSortIndicator('phone')}
                         </div>
                       </th>
@@ -1545,7 +1619,7 @@ export default function AllLeads() {
                         className="px-3 py-1.5 text-left text-body-md font-body-md text-on-surface text-[12px] font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       >
                         <div className="flex items-center">
-                          Score
+                          Lead Score
                           {renderSortIndicator('score')}
                         </div>
                       </th>
@@ -1578,12 +1652,12 @@ export default function AllLeads() {
                         className="px-3 py-1.5 text-left text-body-md font-body-md text-on-surface text-[12px] font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       >
                         <div className="flex items-center">
-                          Lead Source
+                          Source
                           {renderSortIndicator('source')}
                         </div>
                       </th>
                     )}
-                    {visibleColumns.tier && (
+                    {/* {visibleColumns.tier && (
                       <th
                         onClick={() => requestSort('tier')}
                         className="px-3 py-1.5 text-left text-body-md font-body-md text-on-surface text-[12px] font-semibold cursor-pointer hover:bg-slate-100 transition-colors select-none"
@@ -1593,7 +1667,7 @@ export default function AllLeads() {
                           {renderSortIndicator('tier')}
                         </div>
                       </th>
-                    )}
+                    )} */}
                     {visibleColumns.verified && (
                       <th
                         onClick={() => requestSort('verified')}
@@ -1662,7 +1736,7 @@ export default function AllLeads() {
                       {visibleColumns.score && <td className="px-3 py-1.5 text-body-md font-bold font-mono text-slate-700 text-[12px]">{lead.score}</td>}
                       {visibleColumns.status && (
                         <td className="px-3 py-1.5">
-                          <span className={`inline-block px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wide border ${getStatusColor(lead.status)}`}>
+                          <span className={`inline-block px-1.5 py-0.5 rounded-full text-[9.5px] font-bold tracking-wide border ${getStatusColor(lead.status)}`}>
                             {lead.status}
                           </span>
                         </td>
@@ -1678,7 +1752,7 @@ export default function AllLeads() {
                         </td>
                       )}
                       {visibleColumns.source && <td className="px-3 py-1.5 text-body-md font-body-md text-on-surface-variant text-[12px]">{lead.source}</td>}
-                      {visibleColumns.tier && (
+                      {/* {visibleColumns.tier && (
                         <td className="px-3 py-1.5">
                           <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold border select-none ${lead.tier === 'Primary'
                             ? 'bg-amber-50 text-amber-700 border-amber-200/80 ring-1 ring-amber-500/5'
@@ -1694,17 +1768,17 @@ export default function AllLeads() {
                             {lead.tier}
                           </span>
                         </td>
-                      )}
+                      )} */}
                       {visibleColumns.verified && (
                         <td className="px-3 py-1.5">
                           {lead.verified ? (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 ring-1 ring-emerald-500/5 select-none">
-                              <span className="material-symbols-outlined text-[10.5px] font-bold text-emerald-600">check_circle</span>
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-green-10 text-green-700 border border-green-200/80 ring-1 ring-green-500/5 select-none">
+                              <span className="material-symbols-outlined text-[8.5px] font-bold text-green-600">check_circle</span>
                               Verified
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80 ring-1 ring-rose-500/5 select-none">
-                              <span className="material-symbols-outlined text-[10.5px] font-bold text-rose-600">cancel</span>
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-rose-10 text-rose-700 border border-rose-200/80 ring-1 ring-rose-500/5 select-none">
+                              <span className="material-symbols-outlined text-[8.5px] font-bold text-rose-600">cancel</span>
                               Unverified
                             </span>
                           )}
@@ -1770,7 +1844,7 @@ export default function AllLeads() {
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {/* Option 1: Communicate */}
-                                    <button
+                                    {/* <button
                                       onClick={() => {
                                         setActiveLeadDetails(lead);
                                         setShowEmailModal(true);
@@ -1780,7 +1854,7 @@ export default function AllLeads() {
                                     >
                                       <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">chat</span>
                                       Communicate
-                                    </button>
+                                    </button> */}
 
                                     {/* Option 2: View Application */}
                                     <button
@@ -1845,13 +1919,13 @@ export default function AllLeads() {
                                                       <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-bold text-slate-600 shrink-0">
                                                         {counselor === 'Unassigned' ? '—' : counselor.split(' ').map(p => p[0]).join('')}
                                                       </div>
-                                                      <span>{counselor}</span>
+                                                      <span className='text-[12px]'>{counselor}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
                                                       {counselor !== 'Unassigned' && (
                                                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isCurrentlyAssigned ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
                                                           }`}>
-                                                          {count} lead{count !== 1 ? 's' : ''}
+                                                          {count}
                                                         </span>
                                                       )}
                                                       {isCurrentlyAssigned && (
@@ -1924,19 +1998,7 @@ export default function AllLeads() {
                                       </AnimatePresence>
                                     </div>
 
-                                    {/* Option 4: View Queries */}
-                                    <button
-                                      onClick={() => {
-                                        setActiveModalLead(lead);
-                                        setShowQueriesModal(true);
-                                        setQueriesAnswerText('');
-                                        setActiveDropdownLeadId(null);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                                    >
-                                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">question_answer</span>
-                                      View Queries
-                                    </button>
+
 
                                     {/* Option 5: View Activity */}
                                     <button

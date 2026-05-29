@@ -22,6 +22,7 @@ const ManageTeamPage = React.lazy(() => import('./pages/Team/ManageTeamPage'))
 const CampaignsPage = React.lazy(() => import('./pages/CampaignsPage'))
 const AuditLogsPage = React.lazy(() => import('./pages/AuditLogs'))
 const LmsSettingsPage = React.lazy(() => import('./pages/LmsSettings'))
+const FormEmbed = React.lazy(() => import('./pages/FormEmbed'))
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -77,6 +78,7 @@ function DashboardLayout({ username, onLogout }) {
 
               {/* Forms */}
               <Route path="form-builder" element={<FormBuilderPage />} />
+              <Route path="form-embed" element={<FormEmbed />} />
 
               {/* Teams */}
               <Route path="teams" element={<TeamsPage />} />
