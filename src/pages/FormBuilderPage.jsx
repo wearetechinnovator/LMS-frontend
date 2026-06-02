@@ -52,41 +52,8 @@ export default function FormBuilderPage() {
         { id: 4, type: 'text', label: 'Detailed Message', required: true, placeholder: 'Type your message details here...', helperText: '', options: [] }
       ]
     },
-    {
-      id: 'TMP-0002-J',
-      name: 'Job Application Portal',
-      status: 'TEMPLATE',
-      responses: null,
-      conversionRate: null,
-      createdBy: 'HR Department',
-      createdDate: '5 days ago',
-      description: 'An elegant application portal to gather prospective candidates\' resumes, details, portfolios, and job role preferences.',
-      fields: [
-        { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'Jane Smith', helperText: '', options: [] },
-        { id: 2, type: 'email', label: 'Email Address', required: true, placeholder: 'jane.smith@example.com', helperText: '', options: [] },
-        { id: 3, type: 'phone', label: 'Phone Number', required: true, placeholder: '+1 (555) 123-4567', helperText: '', options: [] },
-        { id: 4, type: 'select', label: 'Target Position', required: true, placeholder: 'Select...', options: ['Frontend Engineer', 'Backend Engineer', 'Product Designer', 'Product Manager'] },
-        { id: 5, type: 'text', label: 'Portfolio URL', required: false, placeholder: 'https://github.com/username or behance', helperText: '', options: [] },
-        { id: 6, type: 'text', label: 'Cover Letter / Brief Intro', required: false, placeholder: 'Tell us about yourself...', helperText: '', options: [] }
-      ]
-    },
-    {
-      id: 'FRM-8921-A',
-      name: 'Q3 Enterprise Webinar Registration',
-      status: 'PUBLISHED',
-      responses: 1245,
-      conversionRate: '24.8%',
-      createdBy: 'Sarah Jenkins',
-      createdDate: '2 days ago',
-      description: 'Register now to reserve your spot for our upcoming Q3 executive webinar series. Learn industry best practices for lead pipeline optimizations.',
-      fields: [
-        { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', helperText: '', options: [] },
-        { id: 2, type: 'email', label: 'Work Email', required: true, placeholder: 'john.doe@company.com', helperText: '', options: [] },
-        { id: 3, type: 'text', label: 'Company Name', required: true, placeholder: 'Acme Corp', helperText: '', options: [] },
-        { id: 4, type: 'text', label: 'Job Title', required: false, placeholder: 'Director of Product', helperText: '', options: [] },
-        { id: 5, type: 'select', label: 'Company Size', required: true, placeholder: 'Select...', helperText: '', options: ['1-50 employees', '51-200 employees', '201-1000 employees', '1000+ employees'] }
-      ]
-    },
+    
+    
     {
       id: 'FRM-3320-B',
       name: 'SaaS Demo Request - Main Landing',
@@ -121,20 +88,7 @@ export default function FormBuilderPage() {
         { id: 5, type: 'text', label: 'Comments / Notes', required: false, placeholder: 'Describe your integration goals...', helperText: '', options: [] }
       ]
     },
-    {
-      id: 'FRM-0091-F',
-      name: 'Newsletter Signup - Footer',
-      status: 'PUBLISHED',
-      responses: 45192,
-      conversionRate: '3.2%',
-      createdBy: 'System Admin',
-      createdDate: '6 months ago',
-      description: 'Subscribe to our weekly newsletter to get the latest product release notes, tutorials, and success stories delivered straight to your inbox.',
-      fields: [
-        { id: 1, type: 'email', label: 'Email Address', required: true, placeholder: 'subscriber@domain.com', helperText: '', options: [] },
-        { id: 2, type: 'checkbox', label: 'Interests', required: false, placeholder: '', helperText: '', options: ['Product Updates', 'Weekly Tips & Tricks', 'Partner Integrations', 'Case Studies'] }
-      ]
-    }
+    
   ])
 
   // Filter forms based on search query and status option selection
