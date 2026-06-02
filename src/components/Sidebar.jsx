@@ -7,6 +7,43 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
   const navigate = useNavigate()
   const location = useLocation()
 
+  const [width, setWidth] = React.useState(() => {
+    const saved = localStorage.getItem('sidebarWidth')
+    return saved ? parseInt(saved, 10) : 240
+  })
+  const [isResizing, setIsResizing] = React.useState(false)
+
+  const startResizing = React.useCallback((e) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  const stopResizing = React.useCallback(() => {
+    setIsResizing(false)
+  }, [])
+
+  const resize = React.useCallback((e) => {
+    if (isResizing) {
+      const newWidth = e.clientX
+      // Set bounds for resizing
+      if (newWidth >= 160 && newWidth <= 400) {
+        setWidth(newWidth)
+        localStorage.setItem('sidebarWidth', newWidth.toString())
+      }
+    }
+  }, [isResizing])
+
+  React.useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize)
+      window.addEventListener('mouseup', stopResizing)
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize)
+      window.removeEventListener('mouseup', stopResizing)
+    }
+  }, [isResizing, resize, stopResizing])
+
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
     { id: 'form-builder', label: 'Form Builder', icon: 'build', path: '/form-builder' },
@@ -25,6 +62,11 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
   return (
     <motion.aside
       className={`sidebar-aside ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}
+      style={{
+        width: sidebarCollapsed ? '64px' : `${width}px`,
+        transition: isResizing ? 'none' : 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        position: 'relative'
+      }}
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -78,6 +120,13 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
             <span>Logout</span>
           </button>
         </div>
+      )}
+
+      {!sidebarCollapsed && (
+        <div
+          className={`sidebar-resize-handle ${isResizing ? 'resizing' : ''}`}
+          onMouseDown={startResizing}
+        />
       )}
     </motion.aside>
   )

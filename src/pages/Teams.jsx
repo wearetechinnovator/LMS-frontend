@@ -453,20 +453,65 @@ export default function Teams() {
                                     </div>
                                 </div>
 
-                                {/* Send Invite Checkbox */}
-                                <div className="flex items-center gap-2 pt-1">
-                                    <input
-                                        type="checkbox"
-                                        id="sendInvite"
-                                        checked={formData.sendInvite}
-                                        onChange={(e) => setFormData({ ...formData, sendInvite: e.target.checked })}
-                                        className="w-3 h-3 rounded border border-outline-variant checked:bg-primary checked:border-primary cursor-pointer"
-                                    />
-                                    <label htmlFor="sendInvite" className="text-[9px] text-on-surface cursor-pointer">
-                                        Send invitation email
-                                    </label>
-                                </div>
-                            </div>
+                                 {/* Send Invite Checkbox */}
+                                 <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                                     <div className="flex items-center gap-2">
+                                         <input
+                                             type="checkbox"
+                                             id="sendInvite"
+                                             checked={formData.sendInvite}
+                                             onChange={(e) => setFormData({ ...formData, sendInvite: e.target.checked })}
+                                             className="w-3 h-3 rounded border border-outline-variant checked:bg-primary checked:border-primary cursor-pointer"
+                                         />
+                                         <label htmlFor="sendInvite" className="text-[9px] text-on-surface cursor-pointer">
+                                             Send invitation email
+                                         </label>
+                                     </div>
+                                 </div>
+
+                                 {/* Quick Share Links */}
+                                 <div className="border-t border-outline-variant/60 pt-2.5 mt-2 text-left">
+                                     <label className="text-on-surface-variant text-[7px] font-bold mb-1.5 block tracking-wider uppercase">Quick Share Invite Link</label>
+                                     <div className="flex gap-1.5 justify-between">
+                                         <button
+                                             type="button"
+                                             onClick={() => {
+                                                 const inviteLink = `https://lms.company.com/invite?email=${encodeURIComponent(formData.email || 'join')}`;
+                                                 window.open(`mailto:?subject=Invitation to join LMS&body=Please join using this link: ${encodeURIComponent(inviteLink)}`);
+                                                 triggerToast('Mail client opened!');
+                                             }}
+                                             className="flex-1 py-0.5 px-1 border border-outline-variant hover:bg-slate-50 text-slate-700 rounded text-[7px] font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                                         >
+                                             <span className="material-symbols-outlined text-[10px] text-blue-600">mail</span>
+                                             Share with Mail
+                                         </button>
+                                         <button
+                                             type="button"
+                                             onClick={() => {
+                                                 const inviteLink = `https://lms.company.com/invite?email=${encodeURIComponent(formData.email || 'join')}`;
+                                                 window.open(`https://api.whatsapp.com/send?text=Please%20join%20our%20team%20using%20this%20link:%20${encodeURIComponent(inviteLink)}`);
+                                                 triggerToast('WhatsApp opened!');
+                                             }}
+                                             className="flex-1 py-0.5 px-1 border border-outline-variant hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 rounded text-[7px] font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                                         >
+                                             <span className="material-symbols-outlined text-[10px] text-emerald-500">chat</span>
+                                             WhatsApp
+                                         </button>
+                                         <button
+                                             type="button"
+                                             onClick={() => {
+                                                 const inviteLink = `https://lms.company.com/invite?email=${encodeURIComponent(formData.email || 'join')}`;
+                                                 navigator.clipboard.writeText(inviteLink);
+                                                 triggerToast('Invite link copied to clipboard!');
+                                             }}
+                                             className="flex-1 py-0.5 px-1 border border-outline-variant hover:bg-slate-50 text-slate-700 rounded text-[7px] font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                                         >
+                                             <span className="material-symbols-outlined text-[10px] text-slate-500">content_copy</span>
+                                             Copy Link
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
 
                             {/* Modal Footer */}
                             <div className="p-3 border-t border-outline-variant flex gap-2">

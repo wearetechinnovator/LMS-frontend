@@ -28,7 +28,7 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      className="bg-surface border-b border-outline-variant px-8 flex items-center justify-between h-11 sticky top-0 z-50"
+      className="bg-surface border-b border-outline-variant px-8 flex items-center justify-between h-11 sticky top-0 z-30"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}

@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormBuilder from './FormBuilder'
 import FormBuilderHeader from '../components/FormbuilderPage/FormBuilderHeader'
+import Toast from '../components/Toast'
 
 export default function FormBuilderPage() {
   const [activeFormSchema, setActiveFormSchema] = useState(null)
@@ -31,7 +32,6 @@ export default function FormBuilderPage() {
 
   const triggerToast = (msg) => {
     setToastMessage(msg)
-    setTimeout(() => setToastMessage(''), 3000)
   }
 
   // Detailed mock forms data structures matching the uploaded screenshot
@@ -260,12 +260,12 @@ export default function FormBuilderPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-outline-variant bg-surface-container/60">
-                    <th className="px-5 py-3 text-slate-500 text-[11px] font-bold tracking-wider">Form Name</th>
-                    <th className="px-5 py-3 text-slate-500 text-[11px] font-bold tracking-wider">Status</th>
-                    <th className="px-5 py-3 text-slate-500 text-[11px] font-bold tracking-wider text-right">Responses (Leads)</th>
-                    <th className="px-5 py-3 text-slate-500 text-[11px] font-bold tracking-wider text-right">Conversion Rate</th>
-                    <th className="px-5 py-3 text-slate-500 text-[11px] font-bold tracking-wider">Created By</th>
-                    <th className="px-5 py-3 text-slate-500 text-[11px] font-bold tracking-wider text-center">Actions</th>
+                    <th className="px-5 py-1 text-slate-500 text-[11px] font-bold tracking-wider">Form Name</th>
+                    <th className="px-5 py-1 text-slate-500 text-[11px] font-bold tracking-wider">Status</th>
+                    <th className="px-5 py-1 text-slate-500 text-[11px] font-bold tracking-wider text-right">Responses (Leads)</th>
+                    <th className="px-5 py-1 text-slate-500 text-[11px] font-bold tracking-wider text-right">Conversion Rate</th>
+                    <th className="px-5 py-1 text-slate-500 text-[11px] font-bold tracking-wider">Created By</th>
+                    <th className="px-5 py-1 text-slate-500 text-[11px] font-bold tracking-wider text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,7 +275,7 @@ export default function FormBuilderPage() {
                       className="border-b border-outline-variant hover:bg-slate-50/70 transition-colors"
                     >
                       {/* Name & ID Cell with hover preview */}
-                      <td className="px-5 py-3.5 text-left relative">
+                      <td className="px-5 py-1 text-left relative">
                         <button
                           onClick={() => setActiveFormSchema(form)}
                           onMouseEnter={(e) => showPreview(form, e)}
@@ -284,11 +284,11 @@ export default function FormBuilderPage() {
                         >
                           {form.name}
                         </button>
-                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {form.id}</p>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0">ID: {form.id}</p>
                       </td>
 
                       {/* Status Badges */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-1">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${form.status === 'PUBLISHED'
                             ? 'bg-green-50 text-green-700 border-green-200'
@@ -302,23 +302,23 @@ export default function FormBuilderPage() {
                       </td>
 
                       {/* Lead Responses Count */}
-                      <td className="px-5 py-3.5 text-right font-mono text-[12px] text-slate-700 font-medium">
+                      <td className="px-5 py-1 text-right font-mono text-[12px] text-slate-700 font-medium">
                         {form.responses !== null ? form.responses.toLocaleString() : '--'}
                       </td>
 
                       {/* Conversion Performance */}
-                      <td className="px-5 py-3.5 text-right font-mono text-[12px] text-slate-700 font-medium">
+                      <td className="px-5 py-1 text-right font-mono text-[12px] text-slate-700 font-medium">
                         {form.conversionRate || '--'}
                       </td>
 
                       {/* Author Details & Created Time */}
-                      <td className="px-5 py-3.5 text-left">
+                      <td className="px-5 py-1 text-left">
                         <span className="font-semibold text-[11.5px] text-slate-700">{form.createdBy}</span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{form.createdDate}</p>
+                        <p className="text-[10px] text-slate-400 mt-0">{form.createdDate}</p>
                       </td>
 
                       {/* Action Triggers */}
-                      <td className="px-5 py-3.5 text-center">
+                      <td className="px-5 py-1 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => setActiveFormSchema(form)}
@@ -621,20 +621,12 @@ export default function FormBuilderPage() {
         )}
       </AnimatePresence>
 
-      {/* Premium Toast Banner */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            className="fixed top-6 right-6 bg-success text-on-success border border-success-container px-4 py-2.5 rounded-lg shadow-xl z-50 flex items-center gap-2"
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          >
-            <span className="material-symbols-outlined text-[20px]">check_circle</span>
-            <span className="text-[11px] font-semibold">{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/*Toast Banner */}
+      <Toast 
+        message={toastMessage} 
+        isVisible={!!toastMessage} 
+        onClose={() => setToastMessage('')} 
+      />
     </div>
   )
 }

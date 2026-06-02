@@ -83,11 +83,10 @@ export default function ViewTeam({ departmentId, departmentName, onBack, onManag
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-2 py-1 text-[9px] font-semibold transition-colors border-b-2 ${
-                            activeTab === tab
+                        className={`px-2 py-1 text-[9px] font-semibold transition-colors border-b-2 ${activeTab === tab
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                        }`}
+                            }`}
                     >
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>

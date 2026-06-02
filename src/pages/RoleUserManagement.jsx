@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import TeamStatsCard from '../components/TeamStateCard'
+import Toast from '../components/Toast'
 
 // Detailed realistic mock users data
 const initialUsers = [
@@ -156,7 +158,7 @@ export default function RoleUserManagement() {
     const [customRoles, setCustomRoles] = useState(['System Admin', 'Campaign Manager', 'Admissions Counselor', 'Sales Executive', 'Auditor'])
     const [showCreateRoleModal, setShowCreateRoleModal] = useState(false)
     const [newRoleName, setNewRoleName] = useState('')
-    
+
     // Sidebar selected role in Permissions tab
     const [selectedRole, setSelectedRole] = useState('Campaign Manager')
 
@@ -183,13 +185,12 @@ export default function RoleUserManagement() {
 
     const triggerToast = (msg) => {
         setToastMessage(msg)
-        setTimeout(() => setToastMessage(''), 3000)
     }
 
     // Filter users logic
     const filteredUsers = users.filter(user => {
-        const matchSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchTerm.toLowerCase())
         const matchRole = roleFilter === 'All' || user.role === roleFilter
         const matchStatus = statusFilter === 'All' || user.status === statusFilter
         return matchSearch && matchRole && matchStatus
@@ -294,6 +295,30 @@ export default function RoleUserManagement() {
         triggerToast(`Permissions for role "${selectedRole}" updated successfully!`)
     }
 
+    const handleClearAllPermissions = () => {
+        setRolePermissions(prev => ({
+            ...prev,
+            [selectedRole]: {
+                dashboard: false,
+                leads_view: false,
+                leads_edit: false,
+                leads_delete: false,
+                leads_assign: false,
+                forms_view: false,
+                forms_create: false,
+                forms_edit: false,
+                forms_delete: false,
+                campaigns_view: false,
+                campaigns_create: false,
+                campaigns_edit: false,
+                campaigns_delete: false,
+                auditLogs: false,
+                settings: false
+            }
+        }))
+        triggerToast(`Cleared all permissions for role "${selectedRole}"!`)
+    }
+
     const handleSwitchToDefault = () => {
         if (initialRolePermissions[selectedRole]) {
             setRolePermissions(prev => ({
@@ -379,21 +404,13 @@ export default function RoleUserManagement() {
 
     return (
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative font-sans select-none">
-            
+
             {/* Premium Toast Banner */}
-            <AnimatePresence>
-                {toastMessage && (
-                    <motion.div
-                        className="fixed top-6 right-6 bg-success text-on-success border border-success-container px-4 py-2.5 rounded-lg shadow-xl z-50 flex items-center gap-2"
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    >
-                        <span className="material-symbols-outlined text-[20px]">check_circle</span>
-                        <span className="text-[11px] font-semibold">{toastMessage}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <Toast 
+                message={toastMessage} 
+                isVisible={!!toastMessage} 
+                onClose={() => setToastMessage('')} 
+            />
 
             {/* Header Block */}
             <div className="flex justify-between items-start border-b border-outline-variant pb-3">
@@ -406,17 +423,15 @@ export default function RoleUserManagement() {
                 <div className="flex bg-surface-container border border-outline-variant p-0.5 rounded-md gap-0.5 shadow-inner">
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-3.5 py-1.5 rounded text-[11px] font-bold transition-all ${
-                            activeTab === 'users' ? 'bg-white text-primary shadow-xs' : 'text-on-surface hover:text-on-background'
-                        }`}
+                        className={`px-3.5 py-1.5 rounded text-[11px] font-bold transition-all ${activeTab === 'users' ? 'bg-white text-primary shadow-xs' : 'text-on-surface hover:text-on-background'
+                            }`}
                     >
                         User Accounts
                     </button>
                     <button
                         onClick={() => setActiveTab('roles')}
-                        className={`px-3.5 py-1.5 rounded text-[11px] font-bold transition-all ${
-                            activeTab === 'roles' ? 'bg-white text-primary shadow-xs' : 'text-on-surface hover:text-on-background'
-                        }`}
+                        className={`px-3.5 py-1.5 rounded text-[11px] font-bold transition-all ${activeTab === 'roles' ? 'bg-white text-primary shadow-xs' : 'text-on-surface hover:text-on-background'
+                            }`}
                     >
                         Roles & Permissions
                     </button>
@@ -426,9 +441,37 @@ export default function RoleUserManagement() {
             {/* ======================= TAB 1: USERS PANEL ======================= */}
             {activeTab === 'users' && (
                 <div className="flex-1 flex flex-col min-h-0 space-y-3.5">
+                    {/* Team Stats Cards Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <TeamStatsCard 
+                            label="Total Users" 
+                            value={users.length} 
+                            change="+2 this week" 
+                            idx={0} 
+                        />
+                        <TeamStatsCard 
+                            label="Active Accounts" 
+                            value={users.filter(u => u.status === 'Active').length} 
+                            change="+1 active" 
+                            idx={1} 
+                        />
+                        <TeamStatsCard 
+                            label="Suspended Accounts" 
+                            value={users.filter(u => u.status === 'Suspended').length} 
+                            change="0 change" 
+                            idx={2} 
+                        />
+                        <TeamStatsCard 
+                            label="Pending Invites" 
+                            value={users.filter(u => u.status === 'Invited').length} 
+                            change="+1 pending" 
+                            idx={3} 
+                        />
+                    </div>
+
                     {/* Control / Filter Bar */}
                     <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-                        
+
                         {/* Search and Filters grouped */}
                         <div className="flex items-center gap-2.5 flex-1 w-full max-w-2xl">
                             {/* Search bar input */}
@@ -498,7 +541,7 @@ export default function RoleUserManagement() {
                                     {filteredUsers.length > 0 ? (
                                         filteredUsers.map((user) => (
                                             <tr key={user.id} className="hover:bg-surface-container/20 transition-colors">
-                                                
+
                                                 {/* User Identity cell */}
                                                 <td className="px-4 py-3 align-middle">
                                                     <div className="flex items-center gap-2.5">
@@ -530,13 +573,12 @@ export default function RoleUserManagement() {
 
                                                 {/* Premium Status tag */}
                                                 <td className="px-4 py-3 align-middle whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold border ${
-                                                        user.status === 'Active' 
-                                                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
-                                                            : user.status === 'Suspended'
-                                                                ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
-                                                                : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                                                    }`}>
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold border ${user.status === 'Active'
+                                                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                                                        : user.status === 'Suspended'
+                                                            ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                                                            : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                                        }`}>
                                                         {user.status}
                                                     </span>
                                                 </td>
@@ -544,25 +586,24 @@ export default function RoleUserManagement() {
                                                 {/* Actions block */}
                                                 <td className="px-4 py-3 align-middle text-center whitespace-nowrap">
                                                     <div className="flex items-center justify-center gap-1.5">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleOpenEditDrawer(user)}
                                                             className="p-1 hover:bg-surface-container rounded text-primary hover:text-primary transition-colors"
                                                             title="Edit Details"
                                                         >
                                                             <span className="material-symbols-outlined text-[15px]">edit</span>
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleToggleStatus(user)}
-                                                            className={`p-1 hover:bg-surface-container rounded transition-colors ${
-                                                                user.status === 'Active' ? 'text-rose-500' : 'text-emerald-500'
-                                                            }`}
+                                                            className={`p-1 hover:bg-surface-container rounded transition-colors ${user.status === 'Active' ? 'text-rose-500' : 'text-emerald-500'
+                                                                }`}
                                                             title={user.status === 'Active' ? 'Suspend User' : 'Activate User'}
                                                         >
                                                             <span className="material-symbols-outlined text-[15px]">
                                                                 {user.status === 'Active' ? 'block' : 'check_circle'}
                                                             </span>
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleDeleteUser(user.id, user.name)}
                                                             className="p-1 hover:bg-rose-100 hover:text-rose-600 rounded text-on-surface-variant transition-colors"
                                                             title="Remove User"
@@ -600,11 +641,11 @@ export default function RoleUserManagement() {
             {/* ======================= TAB 2: ROLES & PERMISSIONS PANEL ======================= */}
             {activeTab === 'roles' && (
                 <div className="flex-1 flex gap-4 min-h-0">
-                    
+
                     {/* Left Pane Sidebar: Role Type Selector */}
                     <div className="w-[200px] border border-outline-variant bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col shadow-xs shrink-0">
                         <div className="p-3 border-b border-outline-variant bg-surface-container/50 flex items-center justify-between gap-2">
-                            <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Role Profiles</h3>
+                            <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Role Profiles</h4>
                             <button
                                 onClick={handleCreateRole}
                                 className="p-1 hover:bg-slate-200/60 rounded text-primary hover:text-primary transition-colors cursor-pointer flex items-center justify-center shrink-0"
@@ -618,11 +659,10 @@ export default function RoleUserManagement() {
                                 <button
                                     key={role}
                                     onClick={() => setSelectedRole(role)}
-                                    className={`w-full text-left px-3 py-2 rounded text-[11px] font-bold transition-all flex items-center justify-between ${
-                                        selectedRole === role 
-                                            ? 'bg-primary/10 text-primary shadow-xs border-l-4 border-primary pl-2' 
-                                            : 'text-on-surface hover:bg-surface-container hover:text-on-background'
-                                    }`}
+                                    className={`w-full text-left px-3 py-2 rounded text-[11px] font-bold transition-all flex items-center justify-between ${selectedRole === role
+                                        ? 'bg-primary/10 text-primary shadow-xs border-l-4 border-primary pl-2'
+                                        : 'text-on-surface hover:bg-surface-container hover:text-on-background'
+                                        }`}
                                 >
                                     <span>{role}</span>
                                     <span className="material-symbols-outlined text-[14px]">chevron_right</span>
@@ -633,7 +673,7 @@ export default function RoleUserManagement() {
 
                     {/* Right Pane: Granular Permissions Checklist Matrix */}
                     <div className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-xs min-h-0">
-                        
+
                         {/* Selected Role Header Info */}
                         <div className="p-4 border-b border-outline-variant bg-surface-container/30 flex justify-between items-center">
                             <div>
@@ -646,19 +686,26 @@ export default function RoleUserManagement() {
                                 </p>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={handleClearAllPermissions}
+                                    className="px-2 py-1 border border-outline-variant hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded text-[9.5px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                >
+                                    <span className="material-symbols-outlined text-[13px]">clear_all</span>
+                                    Clear All
+                                </button>
                                 <button
                                     onClick={handleSwitchToDefault}
-                                    className="px-3 py-1.5 border border-outline-variant hover:bg-slate-50 text-slate-700 rounded text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                    className="px-2 py-1 border border-outline-variant hover:bg-slate-50 text-slate-700 rounded text-[9.5px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
-                                    <span className="material-symbols-outlined text-[14px]">settings_backup_restore</span>
+                                    <span className="material-symbols-outlined text-[13px]">settings_backup_restore</span>
                                     Switch to Default
                                 </button>
                                 <button
                                     onClick={handleSavePermissions}
-                                    className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                    className="px-2 py-1 bg-primary hover:bg-primary/95 text-white rounded text-[9.5px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
-                                    <span className="material-symbols-outlined text-[14px]">save</span>
+                                    <span className="material-symbols-outlined text-[13px]">save</span>
                                     Save Role Permissions
                                 </button>
                             </div>
@@ -666,7 +713,7 @@ export default function RoleUserManagement() {
 
                         {/* Scrollable Permissions checklist grid */}
                         <div className="flex-1 p-4 overflow-y-auto space-y-4 text-[11px]">
-                            
+
                             {/* Dashboard access panel card */}
                             <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
                                 <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">
@@ -674,7 +721,7 @@ export default function RoleUserManagement() {
                                     Core System Navigation
                                 </h3>
                                 <label className="flex items-center gap-2.5 py-1.5 cursor-pointer font-medium">
-                                    <input 
+                                    <input
                                         type="checkbox"
                                         checked={rolePermissions[selectedRole]?.dashboard || false}
                                         onChange={() => handleTogglePermission(selectedRole, 'dashboard')}
@@ -694,9 +741,9 @@ export default function RoleUserManagement() {
                                     Lead Management Controls
                                 </h3>
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-1">
-                                    
+
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_view || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_view')}
@@ -709,7 +756,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_edit || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_edit')}
@@ -722,7 +769,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_assign || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_assign')}
@@ -735,7 +782,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_delete || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_delete')}
@@ -757,9 +804,9 @@ export default function RoleUserManagement() {
                                     Interactive Form Builder Actions
                                 </h3>
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-1">
-                                    
+
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_view || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_view')}
@@ -772,7 +819,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_create || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_create')}
@@ -785,7 +832,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_edit || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_edit')}
@@ -798,7 +845,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_delete || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_delete')}
@@ -820,9 +867,9 @@ export default function RoleUserManagement() {
                                     Compliance & IT Configurations
                                 </h3>
                                 <div className="grid grid-cols-2 gap-6 py-1">
-                                    
+
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.auditLogs || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'auditLogs')}
@@ -835,7 +882,7 @@ export default function RoleUserManagement() {
                                     </label>
 
                                     <label className="flex items-start gap-2.5 cursor-pointer font-medium">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.settings || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'settings')}
@@ -894,7 +941,7 @@ export default function RoleUserManagement() {
 
                             {/* Form block */}
                             <form onSubmit={handleFormSubmit} className="flex-1 flex flex-col justify-between p-4 min-h-0 overflow-y-auto">
-                                
+
                                 <div className="space-y-4">
                                     {/* Input Name */}
                                     <div className="space-y-1">

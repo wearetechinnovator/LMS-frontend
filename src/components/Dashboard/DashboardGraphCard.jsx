@@ -86,7 +86,7 @@ export default function DashboardGraphCard({ sources = [] }) {
           <h3 className="chart-title" style={{ marginBottom: 0 }}>
             {activeTabObj.label} Over Time
           </h3>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Metric Tab Switcher */}
             <div className="chart-tabs-wrapper">
               {tabs.map(tab => {
@@ -364,10 +364,10 @@ export default function DashboardGraphCard({ sources = [] }) {
 
       {/* Source Breakdown Chart */}
       <div className="chart-card source-breakdown-card">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="chart-title" style={{ marginBottom: 0 }}>Source Breakdown</h3>
-          <span className="text-[9px] font-extrabold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+        <div className="flex justify-between items-center gap-1.5 mb-6">
+          <h3 className="chart-title text-[13px] whitespace-nowrap" style={{ marginBottom: 0 }}>Source Breakdown</h3>
+          <span className="text-[8px] font-extrabold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
             {(() => {
               const sourceCampaigns = {
                 'Google Ads': ['Google Brand Search', 'YouTube Review', 'Display Retargeting'],

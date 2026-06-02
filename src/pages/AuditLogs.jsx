@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ExportButton from '../components/ExportButton'
+import Toast from '../components/Toast'
 
 // Static mockup of original records from the screenshot + a few extra for robust filtering
 const originalLogs = [
@@ -85,7 +86,6 @@ export default function AuditLogs() {
 
     const triggerToast = (msg) => {
         setToastMessage(msg)
-        setTimeout(() => setToastMessage(''), 3000)
     }
 
     // Available activity actions for filtering
@@ -121,7 +121,6 @@ export default function AuditLogs() {
         setTimeout(() => {
             setIsExporting(false)
             setToastMessage('Audit logs exported to CSV successfully!')
-            setTimeout(() => setToastMessage(''), 3000)
         }, 1500)
     }
 
@@ -129,19 +128,11 @@ export default function AuditLogs() {
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative">
 
             {/* Premium Toast Banner */}
-            <AnimatePresence>
-                {toastMessage && (
-                    <motion.div
-                        className="fixed top-6 right-6 bg-success text-on-success border border-success-container px-4 py-2.5 rounded-lg shadow-xl z-50 flex items-center gap-2"
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    >
-                        <span className="material-symbols-outlined text-[20px]">check_circle</span>
-                        <span className="text-[11px] font-semibold">{toastMessage}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <Toast 
+                message={toastMessage} 
+                isVisible={!!toastMessage} 
+                onClose={() => setToastMessage('')} 
+            />
 
             {/* Header Block */}
             <div className="flex justify-between items-start border-b border-outline-variant pb-3">

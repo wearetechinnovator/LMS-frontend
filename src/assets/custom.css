@@ -1202,6 +1202,22 @@
     width: 10rem;
 }
 
+.sidebar-resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 50;
+    transition: background-color 0.2s;
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle.resizing {
+    background-color: var(--primary, #4f46e5);
+}
+
 .sidebar-header {
     padding: 0 0.75rem;
     border-bottom: 1px solid var(--border-outline-variant);

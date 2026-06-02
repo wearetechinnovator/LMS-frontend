@@ -24,11 +24,94 @@ export default function FormBuilder({
     const [isEditingDescription, setIsEditingDescription] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
     const [previewValues, setPreviewValues] = useState({})
+    const [showQuickAdd, setShowQuickAdd] = useState(false)
+    const [draggedIndex, setDraggedIndex] = useState(null)
+    const [isDraggingActive, setIsDraggingActive] = useState(false)
     const [toastMessage, setToastMessage] = useState(null)
     const triggerLocalToast = (msg) => {
         setToastMessage(msg)
         setTimeout(() => setToastMessage(null), 3000)
     }
+
+    const [leftWidth, setLeftWidth] = useState(() => {
+        const saved = localStorage.getItem('formBuilderLeftWidth')
+        return saved ? parseInt(saved, 10) : 220
+    })
+    const [isResizingLeft, setIsResizingLeft] = useState(false)
+
+    const [rightWidth, setRightWidth] = useState(() => {
+        const saved = localStorage.getItem('formBuilderRightWidth')
+        return saved ? parseInt(saved, 10) : 256
+    })
+    const [isResizingRight, setIsResizingRight] = useState(false)
+
+    const startResizingLeft = (e) => {
+        e.preventDefault()
+        setIsResizingLeft(true)
+    }
+
+    const stopResizingLeft = () => {
+        setIsResizingLeft(false)
+    }
+
+    const resizeLeft = React.useCallback((e) => {
+        if (isResizingLeft) {
+            const container = document.querySelector('.form-builder-scope')
+            if (container) {
+                const rect = container.getBoundingClientRect()
+                const newWidth = e.clientX - rect.left
+                if (newWidth >= 160 && newWidth <= 350) {
+                    setLeftWidth(newWidth)
+                    localStorage.setItem('formBuilderLeftWidth', newWidth.toString())
+                }
+            }
+        }
+    }, [isResizingLeft])
+
+    React.useEffect(() => {
+        if (isResizingLeft) {
+            window.addEventListener('mousemove', resizeLeft)
+            window.addEventListener('mouseup', stopResizingLeft)
+        }
+        return () => {
+            window.removeEventListener('mousemove', resizeLeft)
+            window.removeEventListener('mouseup', stopResizingLeft)
+        }
+    }, [isResizingLeft, resizeLeft])
+
+    const startResizingRight = (e) => {
+        e.preventDefault()
+        setIsResizingRight(true)
+    }
+
+    const stopResizingRight = () => {
+        setIsResizingRight(false)
+    }
+
+    const resizeRight = React.useCallback((e) => {
+        if (isResizingRight) {
+            const container = document.querySelector('.form-builder-scope')
+            if (container) {
+                const rect = container.getBoundingClientRect()
+                const newWidth = rect.right - e.clientX
+                if (newWidth >= 200 && newWidth <= 450) {
+                    setRightWidth(newWidth)
+                    localStorage.setItem('formBuilderRightWidth', newWidth.toString())
+                }
+            }
+        }
+    }, [isResizingRight])
+
+    React.useEffect(() => {
+        if (isResizingRight) {
+            window.addEventListener('mousemove', resizeRight)
+            window.addEventListener('mouseup', stopResizingRight)
+        }
+        return () => {
+            window.removeEventListener('mousemove', resizeRight)
+            window.removeEventListener('mouseup', stopResizingRight)
+        }
+    }, [isResizingRight, resizeRight])
 
     const isFieldVisible = (field, allFields, values, _visited = new Set()) => {
         if (!field.conditional || !field.conditional.enabled) return true;
@@ -149,7 +232,7 @@ export default function FormBuilder({
         { type: 'date', label: 'Date Picker', icon: 'calendar_today' },
         { type: 'select', label: 'Select Box', icon: 'arrow_drop_down' },
         { type: 'radio', label: 'Radio Button', icon: 'radio_button_checked' },
-        { type: 'text', label: 'City', icon: 'location_city' }
+        { type: 'city', label: 'City', icon: 'location_city' }
     ]
 
     const advancedFields = [
@@ -165,6 +248,46 @@ export default function FormBuilder({
 
     const addField = (type) => {
         const newId = Math.max(...formFields.map(f => f.id), 0) + 1
+        if (type === 'city') {
+            const stateId = newId
+            const cityId = newId + 1
+
+            const stateField = {
+                id: stateId,
+                type: 'select',
+                label: 'Select State',
+                required: true,
+                placeholder: 'Choose State...',
+                helperText: '',
+                options: ['California', 'Texas', 'New York'],
+                conditional: { enabled: false, dependentFieldId: '', operator: 'equals', value: '' }
+            }
+
+            const cityField = {
+                id: cityId,
+                type: 'select',
+                label: 'Select City',
+                required: true,
+                placeholder: 'Choose City...',
+                helperText: '',
+                options: [
+                    { label: 'Los Angeles', value: 'Los Angeles', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'California' },
+                    { label: 'Houston', value: 'Houston', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'Texas' },
+                    { label: 'New York City', value: 'New York City', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'New York' }
+                ],
+                conditional: {
+                    enabled: true,
+                    dependentFieldId: stateId.toString(),
+                    operator: 'not_empty',
+                    value: ''
+                }
+            }
+
+            setFormFields([...formFields, stateField, cityField])
+            setSelectedFieldId(cityId)
+            return
+        }
+
         const newField = {
             id: newId,
             type: type,
@@ -195,13 +318,208 @@ export default function FormBuilder({
         }
     }
 
+    const handleDragStart = (e, index) => {
+        setDraggedIndex(index)
+        setIsDraggingActive(true)
+        e.dataTransfer.effectAllowed = 'move'
+    }
+
+    const handleDragOver = (e) => {
+        e.preventDefault()
+    }
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null)
+        setIsDraggingActive(false)
+        // Clean up any remaining hover classes in the DOM
+        document.querySelectorAll('.drag-hover-active').forEach(el => {
+            el.classList.remove('drag-hover-active')
+        })
+    }
+
+    const handleDrop = (e, targetIndex) => {
+        e.preventDefault()
+        // Clean up class on drop
+        e.currentTarget.classList.remove('drag-hover-active')
+        const fieldType = e.dataTransfer.getData('fieldType')
+        if (fieldType) {
+            const newId = Math.max(...formFields.map(f => f.id), 0) + 1
+            if (fieldType === 'city') {
+                const stateId = newId
+                const cityId = newId + 1
+
+                const stateField = {
+                    id: stateId,
+                    type: 'select',
+                    label: 'Select State',
+                    required: true,
+                    placeholder: 'Choose State...',
+                    helperText: '',
+                    options: ['California', 'Texas', 'New York'],
+                    conditional: { enabled: false, dependentFieldId: '', operator: 'equals', value: '' }
+                }
+
+                const cityField = {
+                    id: cityId,
+                    type: 'select',
+                    label: 'Select City',
+                    required: true,
+                    placeholder: 'Choose City...',
+                    helperText: '',
+                    options: [
+                        { label: 'Los Angeles', value: 'Los Angeles', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'California' },
+                        { label: 'Houston', value: 'Houston', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'Texas' },
+                        { label: 'New York City', value: 'New York City', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'New York' }
+                    ],
+                    conditional: {
+                        enabled: true,
+                        dependentFieldId: stateId.toString(),
+                        operator: 'not_empty',
+                        value: ''
+                    }
+                }
+
+                const updatedFields = [...formFields]
+                updatedFields.splice(targetIndex, 0, stateField, cityField)
+                setFormFields(updatedFields)
+                setSelectedFieldId(cityId)
+            } else {
+                const newField = {
+                    id: newId,
+                    type: fieldType,
+                    label: `New ${fieldType === 'text' ? 'Field' : fieldType}`,
+                    required: false,
+                    placeholder: '',
+                    helperText: '',
+                    options: (fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') ? ['Option 1'] : [],
+                    conditional: {
+                        enabled: false,
+                        dependentFieldId: '',
+                        operator: 'equals',
+                        value: ''
+                    }
+                }
+                const updatedFields = [...formFields]
+                updatedFields.splice(targetIndex, 0, newField)
+                setFormFields(updatedFields)
+                setSelectedFieldId(newId)
+            }
+        } else if (draggedIndex !== null && draggedIndex !== targetIndex) {
+            const updatedFields = [...formFields]
+            const [movedField] = updatedFields.splice(draggedIndex, 1)
+            updatedFields.splice(targetIndex, 0, movedField)
+            setFormFields(updatedFields)
+        }
+        setDraggedIndex(null)
+        setIsDraggingActive(false)
+        document.querySelectorAll('.drag-hover-active').forEach(el => {
+            el.classList.remove('drag-hover-active')
+        })
+    }
+
+    const handleCanvasDrop = (e) => {
+        e.preventDefault()
+        const fieldType = e.dataTransfer.getData('fieldType')
+        if (fieldType) {
+            // Find target index based on drag mouse coordinate relative to existing cards
+            const cards = Array.from(e.currentTarget.querySelectorAll('.form-builder-card-item'))
+            let targetIndex = formFields.length // default to append at the end
+            
+            for (let i = 0; i < cards.length; i++) {
+                const rect = cards[i].getBoundingClientRect()
+                const cardMiddleY = rect.top + rect.height / 2
+                if (e.clientY < cardMiddleY) {
+                    targetIndex = i
+                    break
+                }
+            }
+
+            const newId = Math.max(...formFields.map(f => f.id), 0) + 1
+            if (fieldType === 'city') {
+                const stateId = newId
+                const cityId = newId + 1
+
+                const stateField = {
+                    id: stateId,
+                    type: 'select',
+                    label: 'Select State',
+                    required: true,
+                    placeholder: 'Choose State...',
+                    helperText: '',
+                    options: ['California', 'Texas', 'New York'],
+                    conditional: { enabled: false, dependentFieldId: '', operator: 'equals', value: '' }
+                }
+
+                const cityField = {
+                    id: cityId,
+                    type: 'select',
+                    label: 'Select City',
+                    required: true,
+                    placeholder: 'Choose City...',
+                    helperText: '',
+                    options: [
+                        { label: 'Los Angeles', value: 'Los Angeles', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'California' },
+                        { label: 'Houston', value: 'Houston', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'Texas' },
+                        { label: 'New York City', value: 'New York City', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'New York' }
+                    ],
+                    conditional: {
+                        enabled: true,
+                        dependentFieldId: stateId.toString(),
+                        operator: 'not_empty',
+                        value: ''
+                    }
+                }
+
+                const updatedFields = [...formFields]
+                updatedFields.splice(targetIndex, 0, stateField, cityField)
+                setFormFields(updatedFields)
+                setSelectedFieldId(cityId)
+            } else {
+                const newField = {
+                    id: newId,
+                    type: fieldType,
+                    label: `New ${fieldType === 'text' ? 'Field' : fieldType}`,
+                    required: false,
+                    placeholder: '',
+                    helperText: '',
+                    options: (fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') ? ['Option 1'] : [],
+                    conditional: {
+                        enabled: false,
+                        dependentFieldId: '',
+                        operator: 'equals',
+                        value: ''
+                    }
+                }
+                const updatedFields = [...formFields]
+                updatedFields.splice(targetIndex, 0, newField)
+                setFormFields(updatedFields)
+                setSelectedFieldId(newId)
+            }
+        }
+        setDraggedIndex(null)
+        setIsDraggingActive(false)
+        document.querySelectorAll('.drag-hover-active').forEach(el => {
+            el.classList.remove('drag-hover-active')
+        })
+    }
+
     return (
         <div className="w-full h-full flex bg-background border border-outline-variant rounded-lg overflow-hidden form-builder-scope">
 
-            <div className=" bg-surface-container-lowest border-r border-outline-variant flex flex-col shrink-0">
-                <div className="p-2 border-b border-outline-variant flex justify-between items-center">
-                    <h2 className="font-headline-md text-headline-md text-on-background text-[12px] field-library-title">Field Library</h2>
-                    <span className="material-symbols-outlined text-on-surface-variant text-[16px] cursor-pointer hover:text-on-surface">search</span>
+            <div
+                className="bg-surface-container-lowest border-r border-outline-variant flex flex-col shrink-0"
+                style={{
+                    width: `${leftWidth}px`,
+                    transition: isResizingLeft ? 'none' : 'width 0.2s',
+                    position: 'relative'
+                }}
+            >
+                <div className="p-2 border-b border-outline-variant flex flex-col items-start gap-0.5 justify-center">
+                    <div className="flex justify-between items-center w-full">
+                        <h2 className="font-headline-md text-headline-md text-on-background text-[12px] field-library-title">Field Library</h2>
+                        <span className="material-symbols-outlined text-on-surface-variant text-[16px] cursor-pointer hover:text-on-surface">search</span>
+                    </div>
+                    <span className="text-[8.5px] text-slate-400 font-semibold select-none leading-none mt-0.5">Click standard fields to add them to your form</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 space-y-3">
@@ -209,15 +527,22 @@ export default function FormBuilder({
                         <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">STANDARD FIELDS</h3>
                         <div className="space-y-1">
                             {standardFields.map(field => (
-                                <button
+                                <div
                                     key={field.label}
                                     onClick={() => addField(field.type)}
-                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn"
+                                    draggable={true}
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.setData('fieldType', field.type)
+                                        setIsDraggingActive(true)
+                                    }}
+                                    onDragEnd={handleDragEnd}
+                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
+                                    role="button"
                                 >
                                     <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
                                     <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
                                     <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -226,15 +551,22 @@ export default function FormBuilder({
                         <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">ADVANCED</h3>
                         <div className="space-y-1">
                             {advancedFields.map(field => (
-                                <button
+                                <div
                                     key={field.label}
                                     onClick={() => addField(field.type)}
-                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn"
+                                    draggable={true}
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.setData('fieldType', field.type)
+                                        setIsDraggingActive(true)
+                                    }}
+                                    onDragEnd={handleDragEnd}
+                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
+                                    role="button"
                                 >
                                     <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
                                     <span className="material-symbols-outlined text-tertiary text-[14px]">{field.icon}</span>
                                     <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -243,26 +575,39 @@ export default function FormBuilder({
                         <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">SECURITY & CUSTOM</h3>
                         <div className="space-y-1">
                             {securityFields.map(field => (
-                                <button
+                                <div
                                     key={field.label}
                                     onClick={() => addField(field.type)}
-                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn"
+                                    draggable={true}
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.setData('fieldType', field.type)
+                                        setIsDraggingActive(true)
+                                    }}
+                                    onDragEnd={handleDragEnd}
+                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
+                                    role="button"
                                 >
                                     <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
                                     <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
                                     <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
                 </div>
+
+                <div
+                    className={`panel-resize-handle absolute right-0 top-0 h-full ${isResizingLeft ? 'resizing' : ''}`}
+                    onMouseDown={startResizingLeft}
+                    style={{ width: '4px', right: '-2px' }}
+                />
             </div>
 
             <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3">
                 <div className="w-full max-w-[800px]">
 
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
-                        <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
+                        <div className="flex items-center gap-2 flex-1 min-w-[200px] max-w-full">
                             {onBack && (
                                 <button
                                     onClick={onBack}
@@ -360,17 +705,28 @@ export default function FormBuilder({
                             )}
                         </div>
 
-                        <div className="p-3 space-y-3">
-                            {formFields.map((field) => {
+                        <div 
+                            className="p-3 space-y-3"
+                            onDragOver={handleDragOver}
+                            onDrop={handleCanvasDrop}
+                        >
+                            {formFields.map((field, index) => {
                                 const isSelected = selectedFieldId === field.id
                                 return (
                                     <div
                                         key={field.id}
                                         onClick={() => setSelectedFieldId(field.id)}
-                                        className={`relative rounded transition-all cursor-pointer p-4 bg-white border ${isSelected
-                                            ? 'border-primary border-2'
+                                        draggable={true}
+                                        onDragStart={(e) => handleDragStart(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        onDragOver={handleDragOver}
+                                        onDragEnter={(e) => { e.preventDefault(); e.currentTarget.classList.add('drag-hover-active'); }}
+                                        onDragLeave={(e) => { e.currentTarget.classList.remove('drag-hover-active'); }}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        className={`form-builder-card-item relative rounded transition-all cursor-pointer p-4 bg-white border ${isSelected
+                                            ? 'border-primary border-2 shadow-xs'
                                             : 'border-outline-variant hover:border-slate-300'
-                                            }`}
+                                            } ${draggedIndex === index ? 'opacity-40' : ''}`}
                                     >
                                         {isSelected && (
                                             <>
@@ -394,7 +750,7 @@ export default function FormBuilder({
                                             </>
                                         )}
 
-                                        <div className="relative text-left">
+                                        <div className={`relative text-left ${isDraggingActive ? 'pointer-events-none' : ''}`}>
                                             <label className="flex items-center font-body-md text-body-md font-bold text-on-background mb-1.5 text-[11px] field-card-label">
                                                 {field.label} {field.required && <span className="text-error ml-0.5">*</span>}
                                             </label>
@@ -459,10 +815,43 @@ export default function FormBuilder({
                                 )
                             })}
 
-                            <div className="mt-4 border-2 border-dashed border-outline-variant rounded p-4 flex flex-col items-center justify-center text-on-surface-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
-                                <span className="material-symbols-outlined text-[20px] mb-1 text-outline-variant">add_circle</span>
-                                <span className="font-body-md text-body-md font-semibold text-[9px]">Drag and drop fields here</span>
-                            </div>
+                            {showQuickAdd ? (
+                                <div className="mt-4 border-2 border-dashed border-primary rounded p-4 bg-surface-container-low transition-colors select-none">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="font-body-md text-body-md font-semibold text-[10px] text-primary">Choose a field type to add:</span>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setShowQuickAdd(false); }}
+                                            className="text-on-surface-variant hover:text-on-surface text-[10px] font-bold border border-outline-variant rounded px-1.5 py-0.5 bg-surface-container-lowest transition-colors cursor-pointer"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {[...standardFields, ...advancedFields, ...securityFields].map(field => (
+                                            <button
+                                                key={field.label}
+                                                onClick={() => {
+                                                    addField(field.type);
+                                                    setShowQuickAdd(false);
+                                                }}
+                                                className="flex items-center gap-2 p-2 bg-surface-container-lowest border border-outline-variant rounded shadow-xs hover:border-primary hover:bg-surface-container-low transition-colors text-left cursor-pointer"
+                                            >
+                                                <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
+                                                <span className="font-body-md text-body-md text-on-surface text-[10px]">{field.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div 
+                                    onClick={() => setShowQuickAdd(true)}
+                                    className="mt-4 border-2 border-dashed border-outline-variant rounded p-4 flex flex-col items-center justify-center text-on-surface-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors select-none cursor-pointer"
+                                >
+                                    <span className="material-symbols-outlined text-[20px] mb-1 text-primary">add_circle</span>
+                                    <span className="font-body-md text-body-md font-semibold text-[10px]">Click standard fields on the left to add them here</span>
+                                    <span className="text-[8px] text-slate-400 mt-1">Or drag and drop standard fields to reorder</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="p-3 border-t border-outline-variant flex justify-end">
@@ -475,7 +864,19 @@ export default function FormBuilder({
                 </div>
             </div>
 
-            <div className="w-64 bg-surface-container-lowest border-l border-outline-variant flex flex-col h-full shrink-0">
+            <div
+                className="bg-surface-container-lowest border-l border-outline-variant flex flex-col h-full shrink-0"
+                style={{
+                    width: `${rightWidth}px`,
+                    transition: isResizingRight ? 'none' : 'width 0.2s',
+                    position: 'relative'
+                }}
+            >
+                <div
+                    className={`panel-resize-handle absolute left-0 top-0 h-full ${isResizingRight ? 'resizing' : ''}`}
+                    onMouseDown={startResizingRight}
+                    style={{ width: '4px', left: '-2px' }}
+                />
                 <div className="px-3 py-1.5 border-b border-outline-variant">
                     <h2 className="text-[12px] font-bold text-on-background settings-pane-title">Field Settings</h2>
                 </div>
@@ -523,6 +924,19 @@ export default function FormBuilder({
                                 />
                             </div>
 
+                            <div className="flex items-center gap-2 py-1">
+                                <input
+                                    type="checkbox"
+                                    id="field-required-toggle"
+                                    checked={!!selectedField.required}
+                                    onChange={(e) => updateField(selectedField.id, { required: e.target.checked })}
+                                    className="w-3.5 h-3.5 accent-primary rounded cursor-pointer"
+                                />
+                                <label htmlFor="field-required-toggle" className="font-body-md text-body-md text-on-surface text-[10px] font-bold cursor-pointer select-none">
+                                    Required Field
+                                </label>
+                            </div>
+
                             <hr className="border-outline-variant my-1.5" />
 
                             {selectedField.type === 'phone' && (
@@ -551,23 +965,32 @@ export default function FormBuilder({
 
                                              return (
                                                  <div key={index} className="flex flex-col gap-1 border-b border-outline-variant/30 pb-1.5 last:border-b-0 last:pb-0">
-                                                        {/* Label row */}
-                                                        <input
-                                                            type="text"
-                                                            value={optLabel}
-                                                            onChange={(e) => {
-                                                                const newOptions = [...(selectedField.options || [])];
-                                                                const rawOpt = newOptions[index];
-                                                                newOptions[index] = typeof rawOpt === 'object' && rawOpt 
-                                                                    ? { ...rawOpt, label: e.target.value } 
-                                                                    : { label: e.target.value, value: e.target.value };
-                                                                updateField(selectedField.id, { options: newOptions });
-                                                            }}
-                                                            placeholder={`Option ${index + 1}`}
-                                                            className="w-full h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
-                                                        />
-                                                        {/* Value + controls row */}
-                                                        <div className="flex items-center gap-1">
+                                                        <div className="flex items-center gap-1.5">
+                                                            {/* Label input */}
+                                                            <input
+                                                                type="text"
+                                                                value={optLabel}
+                                                                onChange={(e) => {
+                                                                    const newOptions = [...(selectedField.options || [])];
+                                                                    const rawOpt = newOptions[index];
+                                                                    const newLabel = e.target.value;
+                                                                    if (typeof rawOpt === 'object' && rawOpt) {
+                                                                        const shouldSyncValue = !rawOpt.value || rawOpt.value === rawOpt.label;
+                                                                        newOptions[index] = {
+                                                                            ...rawOpt,
+                                                                            label: newLabel,
+                                                                            value: shouldSyncValue ? newLabel : rawOpt.value
+                                                                        };
+                                                                    } else {
+                                                                        newOptions[index] = { label: newLabel, value: newLabel };
+                                                                    }
+                                                                    updateField(selectedField.id, { options: newOptions });
+                                                                }}
+                                                                placeholder={`Option ${index + 1}`}
+                                                                className="flex-[1.2] min-w-0 h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                                                            />
+
+                                                            {/* Value input */}
                                                             <input
                                                                 type="text"
                                                                 value={typeof option === 'object' && option ? (option.value || '') : (option || '')}
@@ -582,6 +1005,8 @@ export default function FormBuilder({
                                                                 placeholder="value"
                                                                 className="flex-1 min-w-0 h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                                                             />
+
+                                                            {/* Condition Toggle Button */}
                                                             <button
                                                                 onClick={() => {
                                                                     const newOptions = [...(selectedField.options || [])];
@@ -599,14 +1024,17 @@ export default function FormBuilder({
                                                                 title="Toggle Option-level Conditional Logic"
                                                             >
                                                                 <span className="material-symbols-outlined text-[13px]">
-                                                                    {conditionalEnabled ? 'radio_button_checked' : 'radio_button_unchecked'}
+                                                                    alt_route
                                                                 </span>
                                                             </button>
+
                                                             {index === 0 && (
                                                                 <span className="text-[7px] font-semibold text-on-surface-variant/50 shrink-0 select-none whitespace-nowrap">
                                                                     add condition
                                                                 </span>
                                                             )}
+
+                                                            {/* Delete Button */}
                                                             <button
                                                                 onClick={() => {
                                                                     const newOptions = selectedField.options.filter((_, i) => i !== index);
@@ -621,58 +1049,52 @@ export default function FormBuilder({
 
                                                      {/* Option-level Conditional Panel */}
                                                      {conditionalEnabled && (
-                                                         <div className="pl-2 pr-1 py-1.5 bg-surface-container/40 border border-outline-variant/60 rounded-md my-0.5 space-y-1 text-left transition-all">
-                                                             <div className="flex flex-col">
-                                                                 <span className="text-[7px] font-bold text-on-surface-variant/80 uppercase tracking-wider mb-0.5">Show when field</span>
-                                                                 <select
-                                                                     value={typeof option === 'object' && option ? (option.dependentFieldId || '') : ''}
-                                                                     onChange={(e) => {
-                                                                         const newOptions = [...(selectedField.options || [])];
-                                                                         const rawOpt = newOptions[index];
-                                                                         newOptions[index] = typeof rawOpt === 'object' && rawOpt
-                                                                             ? { ...rawOpt, dependentFieldId: e.target.value, conditionalValue: '' }
-                                                                             : { label: rawOpt || '', value: rawOpt || '', dependentFieldId: e.target.value, conditionalValue: '' };
-                                                                         updateField(selectedField.id, { options: newOptions });
-                                                                     }}
-                                                                     className="w-full h-6 px-1.5 border border-outline-variant rounded bg-surface-container-lowest text-[8px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-sans"
-                                                                 >
-                                                                     <option value="">Select a field...</option>
-                                                                     {formFields
-                                                                         .filter(f => f.id !== selectedField.id)
-                                                                         .map(f => (
-                                                                             <option key={f.id} value={f.id}>{f.label || `Field #${f.id}`}</option>
-                                                                         ))
-                                                                     }
-                                                                 </select>
-                                                             </div>
- 
+                                                         <div className="flex items-center gap-1.5 mt-1.5 pl-2 pr-1 py-1.5 bg-slate-50 rounded-md border border-slate-200/50 text-[8.5px] text-left transition-all overflow-x-auto">
+                                                             <span className="text-slate-400 font-bold shrink-0">Show if</span>
+                                                             <select
+                                                                 value={typeof option === 'object' && option ? (option.dependentFieldId || '') : ''}
+                                                                 onChange={(e) => {
+                                                                     const newOptions = [...(selectedField.options || [])];
+                                                                     const rawOpt = newOptions[index];
+                                                                     newOptions[index] = typeof rawOpt === 'object' && rawOpt
+                                                                         ? { ...rawOpt, dependentFieldId: e.target.value, conditionalValue: '' }
+                                                                         : { label: rawOpt || '', value: rawOpt || '', dependentFieldId: e.target.value, conditionalValue: '' };
+                                                                     updateField(selectedField.id, { options: newOptions });
+                                                                 }}
+                                                                 className="h-5 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary max-w-[85px] font-sans"
+                                                             >
+                                                                 <option value="">Field...</option>
+                                                                 {formFields
+                                                                     .filter(f => f.id !== selectedField.id)
+                                                                     .map(f => (
+                                                                         <option key={f.id} value={f.id}>{f.label || `Field #${f.id}`}</option>
+                                                                     ))
+                                                                 }
+                                                             </select>
+
                                                              {(typeof option === 'object' && option && option.dependentFieldId) && (
-                                                                 <div className="grid grid-cols-2 gap-1 mt-1">
-                                                                     <div className="flex flex-col">
-                                                                         <span className="text-[7px] font-bold text-on-surface-variant/80 uppercase tracking-wider mb-0.5">Operator</span>
-                                                                         <select
-                                                                             value={option.conditionalOperator || 'equals'}
-                                                                             onChange={(e) => {
-                                                                                 const newOptions = [...(selectedField.options || [])];
-                                                                                 newOptions[index] = {
-                                                                                     ...option,
-                                                                                     conditionalOperator: e.target.value
-                                                                                 };
-                                                                                 updateField(selectedField.id, { options: newOptions });
-                                                                             }}
-                                                                             className="w-full h-6 px-1 border border-outline-variant rounded bg-surface-container-lowest text-[8px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-sans"
-                                                                         >
-                                                                             <option value="equals">Equals</option>
-                                                                             <option value="not_equals">Not Equal</option>
-                                                                             <option value="contains">Contains</option>
-                                                                             <option value="empty">Empty</option>
-                                                                             <option value="not_empty">Not Empty</option>
-                                                                         </select>
-                                                                     </div>
- 
+                                                                 <>
+                                                                     <select
+                                                                         value={option.conditionalOperator || 'equals'}
+                                                                         onChange={(e) => {
+                                                                             const newOptions = [...(selectedField.options || [])];
+                                                                             newOptions[index] = {
+                                                                                 ...option,
+                                                                                 conditionalOperator: e.target.value
+                                                                             };
+                                                                             updateField(selectedField.id, { options: newOptions });
+                                                                         }}
+                                                                         className="h-5 px-0.5 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                                                                     >
+                                                                         <option value="equals">is</option>
+                                                                         <option value="not_equals">is not</option>
+                                                                         <option value="contains">contains</option>
+                                                                         <option value="empty">is empty</option>
+                                                                         <option value="not_empty">has value</option>
+                                                                     </select>
+
                                                                      {option.conditionalOperator !== 'empty' && option.conditionalOperator !== 'not_empty' && (
-                                                                         <div className="flex flex-col">
-                                                                             <span className="text-[7px] font-bold text-on-surface-variant/80 uppercase tracking-wider mb-0.5">Value</span>
+                                                                         <>
                                                                              {(() => {
                                                                                  const depField = formFields.find(f => f.id === Number(option.dependentFieldId));
                                                                                  if (depField && (depField.type === 'select' || depField.type === 'radio' || depField.type === 'checkbox') && depField.options && depField.options.length > 0) {
@@ -687,9 +1109,9 @@ export default function FormBuilder({
                                                                                                  };
                                                                                                  updateField(selectedField.id, { options: newOptions });
                                                                                              }}
-                                                                                             className="w-full h-6 px-1 border border-outline-variant rounded bg-surface-container-lowest text-[8px] focus:outline-none"
+                                                                                             className="h-5 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary max-w-[80px]"
                                                                                          >
-                                                                                             <option value="">Select...</option>
+                                                                                             <option value="">Value...</option>
                                                                                              {depField.options.map((opt, idx) => {
                                                                                                  const val = typeof opt === 'object' && opt ? opt.value : opt;
                                                                                                  const lbl = typeof opt === 'object' && opt ? opt.label : opt;
@@ -711,13 +1133,13 @@ export default function FormBuilder({
                                                                                              updateField(selectedField.id, { options: newOptions });
                                                                                          }}
                                                                                          placeholder="Value..."
-                                                                                         className="w-full h-6 px-1.5 border border-outline-variant rounded bg-surface-container-lowest text-[8px] focus:outline-none"
+                                                                                         className="h-5 w-16 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary"
                                                                                      />
                                                                                  );
                                                                              })()}
-                                                                         </div>
+                                                                         </>
                                                                      )}
-                                                                 </div>
+                                                                 </>
                                                              )}
                                                          </div>
                                                      )}
@@ -734,181 +1156,213 @@ export default function FormBuilder({
                                     >
                                         + Add Option
                                     </button>
-                                    <hr className="border-outline-variant my-1.5" />
+
+                                    <div className="mt-2.5 p-2 border border-dashed border-outline-variant rounded-md bg-slate-50 text-left">
+                                        <label className="block text-[8px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                            Bulk Import Options (Comma-separated)
+                                        </label>
+                                        <textarea
+                                            id="bulk-import-options"
+                                            placeholder="e.g. Option 1, Option 2, Option 3"
+                                            className="w-full h-12 p-1.5 border border-outline-variant rounded text-[9.5px] bg-white resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-sans"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const ta = document.getElementById('bulk-import-options');
+                                                if (ta && ta.value.trim()) {
+                                                    const rawList = ta.value.split(',');
+                                                    const parsed = rawList
+                                                        .map(item => item.trim())
+                                                        .filter(Boolean)
+                                                        .map(item => ({ label: item, value: item }));
+                                                    if (parsed.length > 0) {
+                                                        const currentOptions = selectedField.options || [];
+                                                        updateField(selectedField.id, {
+                                                            options: [...currentOptions, ...parsed]
+                                                        });
+                                                        ta.value = '';
+                                                        triggerLocalToast(`Added ${parsed.length} options from bulk import!`);
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full mt-1.5 h-6 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded text-[8px] flex items-center justify-center cursor-pointer transition-colors"
+                                        >
+                                            Bulk Import
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
-                                {/* ── Conditional Logic Section ── */}
-                                <div className="space-y-2">
-
-                                    {/* Header row with pill toggle */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="material-symbols-outlined text-[13px] text-on-surface-variant">rule</span>
-                                            <h4 className="text-[10px] font-bold text-on-background">Show/Hide Rules</h4>
-                                        </div>
-                                        {/* Pill toggle */}
-                                        <button
-                                            onClick={() => {
-                                                const enabled = !(selectedField.conditional?.enabled);
-                                                updateField(selectedField.id, {
-                                                    conditional: {
-                                                        ...(selectedField.conditional || { dependentFieldId: '', operator: 'equals', value: '' }),
-                                                        enabled
-                                                    }
-                                                });
-                                            }}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0 ${
-                                                selectedField.conditional?.enabled ? 'bg-primary' : 'bg-outline-variant'
-                                            }`}
-                                            title={selectedField.conditional?.enabled ? 'Disable rule' : 'Enable rule'}
-                                        >
-                                            <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
-                                                selectedField.conditional?.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-                                            }`} />
-                                        </button>
+                            {/* ── Conditional Logic Section ── */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[13px] text-primary">rule</span>
+                                        <h4 className="text-[10px] font-bold text-on-background uppercase tracking-wider">Show/Hide Rules</h4>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const enabled = !(selectedField.conditional?.enabled);
+                                            updateField(selectedField.id, {
+                                                conditional: {
+                                                    ...(selectedField.conditional || { dependentFieldId: '', operator: 'equals', value: '' }),
+                                                    enabled
+                                                }
+                                            });
+                                        }}
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0 ${
+                                            selectedField.conditional?.enabled ? 'bg-primary' : 'bg-outline-variant'
+                                        }`}
+                                        title={selectedField.conditional?.enabled ? 'Disable rule' : 'Enable rule'}
+                                    >
+                                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
+                                            selectedField.conditional?.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                                        }`} />
+                                    </button>
+                                </div>
 
-                                    {!selectedField.conditional?.enabled && (
-                                        <p className="text-[8.5px] text-on-surface-variant/70 leading-relaxed">
-                                            Turn on to make this field appear only under certain conditions.
-                                        </p>
-                                    )}
+                                {!selectedField.conditional?.enabled && (
+                                    <p className="text-[8.5px] text-on-surface-variant/70 leading-relaxed">
+                                        Show or hide this field dynamically based on other fields' responses.
+                                    </p>
+                                )}
 
-                                    {selectedField.conditional?.enabled && (() => {
-                                        const cond = selectedField.conditional;
-                                        const depField = formFields.find(f => f.id === Number(cond.dependentFieldId));
-                                        const hasOptions = depField && (depField.type === 'select' || depField.type === 'radio' || depField.type === 'checkbox') && depField.options?.length > 0;
-                                        const needsValue = cond.operator !== 'empty' && cond.operator !== 'not_empty';
+                                {selectedField.conditional?.enabled && (() => {
+                                    const cond = selectedField.conditional;
+                                    const depField = formFields.find(f => f.id === Number(cond.dependentFieldId));
+                                    const hasOptions = depField && (depField.type === 'select' || depField.type === 'radio' || depField.type === 'checkbox') && depField.options?.length > 0;
+                                    const needsValue = cond.operator !== 'empty' && cond.operator !== 'not_empty';
 
-                                        const operatorLabel = {
-                                            equals: 'is',
-                                            not_equals: 'is not',
-                                            contains: 'contains',
-                                            empty: 'is empty',
-                                            not_empty: 'has any value'
-                                        }[cond.operator || 'equals'];
+                                    const operatorLabel = {
+                                        equals: 'is',
+                                        not_equals: 'is not',
+                                        contains: 'contains',
+                                        empty: 'is empty',
+                                        not_empty: 'has any value'
+                                    }[cond.operator || 'equals'];
 
-                                        return (
-                                            <div className="rounded-lg border border-outline-variant/60 bg-surface-container/40 overflow-hidden">
+                                    return (
+                                        <div className="rounded-lg border border-outline-variant/60 bg-surface-container/40 overflow-hidden mt-1.5">
 
-                                                {/* Sentence builder */}
-                                                <div className="p-2.5 space-y-2">
-                                                    <p className="text-[8px] font-semibold text-on-surface-variant/80 uppercase tracking-wider">Show this field when…</p>
+                                            {/* Sentence builder */}
+                                            <div className="p-2.5 space-y-2">
+                                                <p className="text-[8px] font-semibold text-on-surface-variant/80 uppercase tracking-wider">Show this field when…</p>
 
-                                                    {/* Step 1: Which field */}
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-bold flex items-center justify-center">1</span>
-                                                        <select
-                                                            value={cond.dependentFieldId || ''}
-                                                            onChange={(e) => updateField(selectedField.id, {
-                                                                conditional: { ...cond, dependentFieldId: e.target.value, value: '' }
-                                                            })}
-                                                            className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
-                                                                cond.dependentFieldId ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
-                                                            }`}
-                                                        >
-                                                            <option value="">pick a field...</option>
-                                                            {formFields
-                                                                .filter(f => f.id !== selectedField.id)
-                                                                .map(f => (
-                                                                    <option key={f.id} value={f.id}>{f.label || `Field #${f.id}`}</option>
-                                                                ))
-                                                            }
-                                                        </select>
-                                                    </div>
-
-                                                    {cond.dependentFieldId && (
-                                                        <>
-                                                            {/* Step 2: Operator */}
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-bold flex items-center justify-center">2</span>
-                                                                <div className="flex-1 flex flex-wrap gap-1">
-                                                                    {[
-                                                                        { value: 'equals', label: 'is' },
-                                                                        { value: 'not_equals', label: 'is not' },
-                                                                        { value: 'contains', label: 'contains' },
-                                                                        { value: 'empty', label: 'is empty' },
-                                                                        { value: 'not_empty', label: 'has value' },
-                                                                    ].map(op => (
-                                                                        <button
-                                                                            key={op.value}
-                                                                            onClick={() => updateField(selectedField.id, {
-                                                                                conditional: { ...cond, operator: op.value }
-                                                                            })}
-                                                                            className={`px-2 py-0.5 rounded-full text-[8px] font-semibold border transition-colors ${
-                                                                                (cond.operator || 'equals') === op.value
-                                                                                    ? 'bg-primary text-on-primary border-primary'
-                                                                                    : 'bg-surface border-outline-variant text-on-surface-variant hover:border-primary/40 hover:text-primary'
-                                                                            }`}
-                                                                        >
-                                                                            {op.label}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Step 3: Value (only when needed) */}
-                                                            {needsValue && (
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-bold flex items-center justify-center">3</span>
-                                                                    {hasOptions ? (
-                                                                        <select
-                                                                            value={cond.value || ''}
-                                                                            onChange={(e) => updateField(selectedField.id, {
-                                                                                conditional: { ...cond, value: e.target.value }
-                                                                            })}
-                                                                            className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
-                                                                                cond.value ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
-                                                                            }`}
-                                                                        >
-                                                                            <option value="">pick a value...</option>
-                                                                            {depField.options.map((opt, idx) => {
-                                                                                const val = typeof opt === 'object' && opt ? opt.value : opt;
-                                                                                const lbl = typeof opt === 'object' && opt ? opt.label : opt;
-                                                                                return <option key={idx} value={val}>{lbl}</option>;
-                                                                            })}
-                                                                        </select>
-                                                                    ) : (
-                                                                        <input
-                                                                            type="text"
-                                                                            value={cond.value || ''}
-                                                                            onChange={(e) => updateField(selectedField.id, {
-                                                                                conditional: { ...cond, value: e.target.value }
-                                                                            })}
-                                                                            placeholder="type a value..."
-                                                                            className="flex-1 min-w-0 h-7 px-1.5 border border-outline-variant rounded text-[9px] bg-surface text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
+                                                {/* Step 1: Which field */}
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-bold flex items-center justify-center">1</span>
+                                                    <select
+                                                        value={cond.dependentFieldId || ''}
+                                                        onChange={(e) => updateField(selectedField.id, {
+                                                            conditional: { ...cond, dependentFieldId: e.target.value, value: '' }
+                                                        })}
+                                                        className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
+                                                            cond.dependentFieldId ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
+                                                        }`}
+                                                    >
+                                                        <option value="">pick a field...</option>
+                                                        {formFields
+                                                            .filter(f => f.id !== selectedField.id)
+                                                            .map(f => (
+                                                                <option key={f.id} value={f.id}>{f.label || `Field #${f.id}`}</option>
+                                                            ))
+                                                        }
+                                                    </select>
                                                 </div>
 
-                                                {/* Live summary card */}
                                                 {cond.dependentFieldId && (
-                                                    <div className={`px-2.5 py-2 border-t text-[8.5px] leading-relaxed flex items-start gap-1.5 ${
-                                                        (needsValue && cond.value) || !needsValue
-                                                            ? 'bg-primary/5 border-primary/20 text-primary'
-                                                            : 'bg-surface-container border-outline-variant/40 text-on-surface-variant'
-                                                    }`}>
-                                                        <span className="material-symbols-outlined text-[12px] shrink-0 mt-px">
-                                                            {((needsValue && cond.value) || !needsValue) ? 'check_circle' : 'info'}
-                                                        </span>
-                                                        <span>
-                                                            {((needsValue && cond.value) || !needsValue)
-                                                                ? <>This field will <strong>appear</strong> when <strong>{depField?.label}</strong> {operatorLabel}{needsValue && cond.value ? <> <strong>"{cond.value}"</strong></> : ''}</>
-                                                                : 'Complete the rule above to activate this condition'
-                                                            }
-                                                        </span>
-                                                    </div>
+                                                    <>
+                                                        {/* Step 2: Operator */}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-bold flex items-center justify-center">2</span>
+                                                            <div className="flex-1 flex flex-wrap gap-1">
+                                                                {[
+                                                                    { value: 'equals', label: 'is' },
+                                                                    { value: 'not_equals', label: 'is not' },
+                                                                    { value: 'contains', label: 'contains' },
+                                                                    { value: 'empty', label: 'is empty' },
+                                                                    { value: 'not_empty', label: 'has value' },
+                                                                ].map(op => (
+                                                                    <button
+                                                                        key={op.value}
+                                                                        onClick={() => updateField(selectedField.id, {
+                                                                            conditional: { ...cond, operator: op.value }
+                                                                        })}
+                                                                        className={`px-2 py-0.5 rounded-full text-[8px] font-semibold border transition-colors ${
+                                                                            (cond.operator || 'equals') === op.value
+                                                                                ? 'bg-primary text-on-primary border-primary'
+                                                                                : 'bg-surface border-outline-variant text-on-surface-variant hover:border-primary/40 hover:text-primary'
+                                                                        }`}
+                                                                    >
+                                                                        {op.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Step 3: Value (only when needed) */}
+                                                        {needsValue && (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[8px] font-bold flex items-center justify-center">3</span>
+                                                                {hasOptions ? (
+                                                                    <select
+                                                                        value={cond.value || ''}
+                                                                        onChange={(e) => updateField(selectedField.id, {
+                                                                            conditional: { ...cond, value: e.target.value }
+                                                                        })}
+                                                                        className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
+                                                                            cond.value ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
+                                                                        }`}
+                                                                    >
+                                                                        <option value="">pick a value...</option>
+                                                                        {depField.options.map((opt, idx) => {
+                                                                            const val = typeof opt === 'object' && opt ? opt.value : opt;
+                                                                            const lbl = typeof opt === 'object' && opt ? opt.label : opt;
+                                                                            return <option key={idx} value={val}>{lbl}</option>;
+                                                                        })}
+                                                                    </select>
+                                                                ) : (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={cond.value || ''}
+                                                                        onChange={(e) => updateField(selectedField.id, {
+                                                                            conditional: { ...cond, value: e.target.value }
+                                                                        })}
+                                                                        placeholder="type a value..."
+                                                                        className="flex-1 min-w-0 h-7 px-1.5 border border-outline-variant rounded text-[9px] bg-surface text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </>
                                                 )}
                                             </div>
-                                        );
-                                    })()}
-                                </div>
-                                <hr className="border-outline-variant my-1.5" />
+
+                                            {/* Live summary card */}
+                                            {cond.dependentFieldId && (
+                                                <div className={`px-2.5 py-2 border-t text-[8.5px] leading-relaxed flex items-start gap-1.5 ${
+                                                    (needsValue && cond.value) || !needsValue
+                                                        ? 'bg-primary/5 border-primary/20 text-primary'
+                                                        : 'bg-surface-container border-outline-variant/40 text-on-surface-variant'
+                                                }`}>
+                                                    <span className="material-symbols-outlined text-[12px] shrink-0 mt-px">
+                                                        {((needsValue && cond.value) || !needsValue) ? 'check_circle' : 'info'}
+                                                    </span>
+                                                    <span>
+                                                        {((needsValue && cond.value) || !needsValue)
+                                                            ? <>This field will <strong>appear</strong> when <strong>{depField?.label}</strong> {operatorLabel}{needsValue && cond.value ? <> <strong>"{cond.value}"</strong></> : ''}</>
+                                                            : 'Complete the rule above to activate this condition'
+                                                        }
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                            <hr className="border-outline-variant my-1.5" />
 
                             <div>
                                 <h4 className="font-headline-md text-headline-md text-on-background mb-1.5 text-[11px] settings-section-title">Advanced</h4>
