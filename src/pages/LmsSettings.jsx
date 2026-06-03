@@ -808,51 +808,73 @@ export default function LmsSettings() {
                   {/* Quick Connect Ecosystem Integrations */}
                   <div className="bg-surface border border-outline-variant rounded-xl p-5 space-y-3">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-800">Active Ecosystem Connectors</h3>
-                      <p className="text-[11.5px] text-slate-500 mt-0.5">Quickly integrate third-party ingestion and communication channels.</p>
+                      <h3 className="text-sm font-bold text-slate-800">Ecosystem Integrations</h3>
+                      <p className="text-[11.5px] text-slate-500 mt-0.5">Integrate third-party advertising platforms and lead capture pipelines.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Slack */}
+                      {/* Facebook */}
                       <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
                         <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Slack Alerts</span>
+                          <span className="text-[12px] font-bold text-slate-800">Facebook Integration</span>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Connected" />
                         </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Posts real-time alert logs to channel #lead-notifications on ingestion.</p>
+                        <p className="text-[9.5px] text-slate-500 leading-normal">Ingests leads generated from Facebook Lead Ads campaigns.</p>
                         <span className="text-[9px] font-bold text-slate-400 uppercase">Status: CONNECTED</span>
                       </div>
 
-                      {/* Facebook Lead Ads */}
+                      {/* Instagram */}
                       <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
                         <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Facebook Lead Ads</span>
+                          <span className="text-[12px] font-bold text-slate-800">Instagram Integration</span>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Connected" />
                         </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Syncs incoming ad form respondents to active database queues.</p>
+                        <p className="text-[9.5px] text-slate-500 leading-normal">Pulls prospective student profiles from IG Story/Reels forms.</p>
                         <span className="text-[9px] font-bold text-slate-400 uppercase">Status: CONNECTED</span>
                       </div>
 
-                      {/* Google Sheets */}
+                      {/* Google Ads */}
                       <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
                         <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Google Sheets Sync</span>
+                          <span className="text-[12px] font-bold text-slate-800">Google Ads Sync</span>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Connected" />
                         </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Pushes ingested leads sequentially into team tracking spreadsheet tables.</p>
+                        <p className="text-[9.5px] text-slate-500 leading-normal">Synchronizes Google conversion metrics and keyword search leads.</p>
                         <span className="text-[9px] font-bold text-slate-400 uppercase">Status: SYNC ACTIVE</span>
                       </div>
 
-                      {/* Zapier */}
+                      {/* LinkedIn */}
                       <div className="p-3 border border-slate-200 rounded-lg bg-white flex flex-col justify-between h-[90px] text-left">
                         <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Zapier Webhooks</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" title="Disconnected" />
+                          <span className="text-[12px] font-bold text-slate-800">LinkedIn Lead Gen</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350" title="Disconnected" />
                         </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Route lead logs triggers through 5,000+ custom automation apps.</p>
+                        <p className="text-[9.5px] text-slate-500 leading-normal">Import professional B2B profiles from corporate ads.</p>
                         <button className="text-[9.5px] text-left font-bold text-primary hover:underline bg-transparent border-none p-0 cursor-pointer self-start">
                           Connect Now →
                         </button>
+                      </div>
+
+                      {/* WhatsApp */}
+                      <div className="p-3 border border-slate-200 rounded-lg bg-white flex flex-col justify-between h-[90px] text-left">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[12px] font-bold text-slate-800">WhatsApp Business</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350" title="Disconnected" />
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 leading-normal">Integrate direct chat widget automation and alerts.</p>
+                        <button className="text-[9.5px] text-left font-bold text-primary hover:underline bg-transparent border-none p-0 cursor-pointer self-start">
+                          Connect Now →
+                        </button>
+                      </div>
+
+                      {/* Webhooks/API */}
+                      <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[12px] font-bold text-slate-800">Webhooks / API</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Active" />
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 leading-normal">Allows capturing external payloads dynamically via secure tokens.</p>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">Status: ACTIVE</span>
                       </div>
                     </div>
                   </div>

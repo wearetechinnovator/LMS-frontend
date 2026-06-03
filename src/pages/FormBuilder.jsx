@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Toast from '../components/Toast'
 import '../assets/formbuilderpage/formbuilder.css'
 
 export default function FormBuilder({
@@ -12,6 +13,7 @@ export default function FormBuilder({
         { id: 4, type: 'date', label: 'Preferred Appointment Date', required: false, placeholder: 'MM/DD/YYYY', helperText: '', options: [] }
     ],
     initialStatus = 'Draft',
+    initialId = 'new',
     onBack,
     onSave,
     onSaveAsTemplate
@@ -30,7 +32,104 @@ export default function FormBuilder({
     const [toastMessage, setToastMessage] = useState(null)
     const triggerLocalToast = (msg) => {
         setToastMessage(msg)
-        setTimeout(() => setToastMessage(null), 3000)
+    }
+
+    const [showPublishDropdown, setShowPublishDropdown] = useState(false)
+    const [showMoreMenu, setShowMoreMenu] = useState(false)
+    const [isFullscreen, setIsFullscreen] = useState(false)
+    const canvasRef = React.useRef(null)
+
+    const [formStatus, setFormStatus] = useState(initialStatus || 'Draft')
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const [lastSavedText, setLastSavedText] = useState('✓ Saved Just Now')
+    const [lastSavedTime, setLastSavedTime] = useState(Date.now())
+    const [savedSnapshot, setSavedSnapshot] = useState({
+        title: initialTitle,
+        description: initialDescription,
+        fields: JSON.stringify(initialFields),
+        status: initialStatus || 'Draft'
+    })
+
+    useEffect(() => {
+        if (!showMoreMenu) return
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.more-menu-container')) {
+                setShowMoreMenu(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showMoreMenu])
+
+    useEffect(() => {
+        const isChanged = formTitle !== savedSnapshot.title ||
+            formDescription !== savedSnapshot.description ||
+            JSON.stringify(formFields) !== savedSnapshot.fields ||
+            formStatus !== savedSnapshot.status;
+        setHasUnsavedChanges(isChanged);
+    }, [formTitle, formDescription, formFields, formStatus, savedSnapshot])
+
+    useEffect(() => {
+        if (hasUnsavedChanges) return;
+        const interval = setInterval(() => {
+            const diff = Math.floor((Date.now() - lastSavedTime) / 1000);
+            if (diff < 5) {
+                setLastSavedText('✓ Saved Just Now');
+            } else if (diff < 60) {
+                setLastSavedText(`✓ Saved ${diff} seconds ago`);
+            } else {
+                const mins = Math.floor(diff / 60);
+                setLastSavedText(`✓ Saved ${mins} minute${mins > 1 ? 's' : ''} ago`);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [lastSavedTime, hasUnsavedChanges]);
+
+    useEffect(() => {
+        if (!showPublishDropdown) return
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.publish-dropdown-container')) {
+                setShowPublishDropdown(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showPublishDropdown])
+
+    useEffect(() => {
+        const onFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement)
+        }
+        document.addEventListener('fullscreenchange', onFullscreenChange)
+        return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+    }, [])
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'q' || e.key === 'Q') {
+                const activeEl = document.activeElement
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+                    return
+                }
+                if (document.fullscreenElement) {
+                    document.exitFullscreen()
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [])
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            if (canvasRef.current) {
+                canvasRef.current.requestFullscreen().catch((err) => {
+                    console.error(`Error entering fullscreen: ${err.message}`)
+                })
+            }
+        } else {
+            document.exitFullscreen()
+        }
     }
 
     const [leftWidth, setLeftWidth] = useState(() => {
@@ -424,7 +523,7 @@ export default function FormBuilder({
             // Find target index based on drag mouse coordinate relative to existing cards
             const cards = Array.from(e.currentTarget.querySelectorAll('.form-builder-card-item'))
             let targetIndex = formFields.length // default to append at the end
-            
+
             for (let i = 0; i < cards.length; i++) {
                 const rect = cards[i].getBoundingClientRect()
                 const cardMiddleY = rect.top + rect.height / 2
@@ -503,8 +602,60 @@ export default function FormBuilder({
         })
     }
 
+    const statusBadges = {
+        'Draft': { bg: 'bg-amber-50 border-amber-300 text-amber-900 shadow-2xs', dot: 'bg-amber-500 animate-pulse', label: 'Draft' },
+        'Published': { bg: 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-2xs', dot: 'bg-indigo-500', label: 'Published' },
+        'Archived': { bg: 'bg-slate-50 border-slate-300 text-slate-700 shadow-2xs', dot: 'bg-slate-500', label: 'Archived' }
+    }
+
+    const handleSaveDraft = () => {
+        setFormStatus('Draft')
+        const updatedSnapshot = {
+            title: formTitle,
+            description: formDescription,
+            fields: JSON.stringify(formFields),
+            status: 'Draft'
+        }
+        setSavedSnapshot(updatedSnapshot)
+        setLastSavedTime(Date.now())
+        setLastSavedText('✓ Saved Just Now')
+        if (onSave) {
+            onSave({
+                title: formTitle,
+                description: formDescription,
+                fields: formFields,
+                status: 'DRAFT'
+            })
+        }
+        triggerLocalToast("✓ Draft saved successfully!")
+    }
+
+    const handlePublishForm = (e) => {
+        e.stopPropagation()
+        setFormStatus('Published')
+        const updatedSnapshot = {
+            title: formTitle,
+            description: formDescription,
+            fields: JSON.stringify(formFields),
+            status: 'Published'
+        }
+        setSavedSnapshot(updatedSnapshot)
+        setLastSavedTime(Date.now())
+        setLastSavedText('✓ Saved Just Now')
+        if (onSave) {
+            onSave({
+                title: formTitle,
+                description: formDescription,
+                fields: formFields,
+                status: 'PUBLISHED'
+            })
+        }
+        setShowPublishDropdown(!showPublishDropdown)
+        triggerLocalToast("✓ Form published successfully!")
+    }
+
     return (
-        <div className="w-full h-full flex bg-background border border-outline-variant rounded-lg overflow-hidden form-builder-scope">
+        <div ref={canvasRef} className="w-full h-full flex bg-background border border-outline-variant rounded-lg overflow-hidden form-builder-scope">
 
             <div
                 className="bg-surface-container-lowest border-r border-outline-variant flex flex-col shrink-0"
@@ -603,83 +754,337 @@ export default function FormBuilder({
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3">
-                <div className="w-full max-w-[800px]">
-
-                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
-                        <div className="flex items-center gap-2 flex-1 min-w-[200px] max-w-full">
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="p-1 hover:bg-surface-container rounded-full text-on-surface-variant cursor-pointer flex items-center justify-center mr-1 shrink-0"
-                                    title="Back to Form Management"
-                                >
-                                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                                </button>
-                            )}
-                            <div className="min-w-0">
-                                <span className="text-primary font-label-caps text-label-caps text-[9px] canvas-status">Status: {initialStatus}</span>
-                                {isEditingTitle ? (
-                                    <input
-                                        type="text"
-                                        value={formTitle}
-                                        onChange={(e) => setFormTitle(e.target.value)}
-                                        onBlur={() => setIsEditingTitle(false)}
-                                        onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-                                        autoFocus
-                                        className="w-full font-headline-lg text-headline-lg text-on-background border border-primary rounded px-2 py-0.5 mt-0.5 focus:outline-none text-[14px] canvas-title"
-                                    />
-                                ) : (
-                                    <h1
-                                        onClick={() => setIsEditingTitle(true)}
-                                        className="font-headline-lg text-headline-lg text-on-background mt-0.5 cursor-pointer text-[15px] font-bold canvas-title truncate"
-                                        title={formTitle}
+            <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3 form-builder-canvas">
+                <div className="w-full max-w-[880px] form-builder-content-container">
+                    <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
+                        {/* Redesigned Premium SaaS Header Actions Layout */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+                            {/* Left Section: Back, Title, and Status Badge */}
+                            <div className="flex items-center gap-2.5 flex-1 min-w-[240px]">
+                                {onBack && (
+                                    <button
+                                        onClick={onBack}
+                                        className="flex items-center gap-1 px-2.5 py-1 hover:bg-slate-100/80 active:bg-slate-200/50 rounded-lg text-slate-700 hover:text-slate-900 transition-all font-semibold text-[11px] cursor-pointer shrink-0 border border-slate-200/60 bg-white/50 shadow-2xs h-[30px]"
+                                        title="Back to Form Management"
                                     >
-                                        {formTitle}
-                                    </h1>
+                                        <span className="material-symbols-outlined text-[14px] font-bold">arrow_back</span>
+                                        Back
+                                    </button>
+                                )}
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {isEditingTitle ? (
+                                        <input
+                                            type="text"
+                                            value={formTitle}
+                                            onChange={(e) => setFormTitle(e.target.value)}
+                                            onBlur={() => setIsEditingTitle(false)}
+                                            onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+                                            autoFocus
+                                            className="font-bold text-[14px] text-slate-800 rounded-lg px-2 py-0.5 focus:outline-none canvas-title bg-white shadow-2xs"
+                                        />
+                                    ) : (
+                                        <h1
+                                            onClick={() => setIsEditingTitle(true)}
+                                            className="font-bold text-[14px] text-slate-800 cursor-pointer canvas-title truncate hover:bg-slate-50 px-1 rounded-md transition-colors"
+                                            title={formTitle}
+                                        >
+                                            {formTitle}
+                                        </h1>
+                                    )}
+
+                                    {/* Colored Badge */}
+                                    {(() => {
+                                        const badge = statusBadges[formStatus] || statusBadges['Draft'];
+                                        return (
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-medium tracking-wide ${badge.bg}`}>
+                                                <span className={`w-1 h-1 rounded-full ${badge.dot}`} />
+                                                {badge.label}
+                                            </span>
+                                        )
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Center Section: Auto-save state */}
+                            <div className="hidden lg:flex items-center justify-center flex-1">
+                                {hasUnsavedChanges ? (
+                                    <span className="text-amber-700 text-[11px] font-medium flex items-center gap-1.5 select-none">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                        Unsaved Changes
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-500 text-[11px] font-medium flex items-center gap-1.5 select-none">
+                                        <span className="material-symbols-outlined text-[14px] text-emerald-600 font-bold">check_circle</span>
+                                        {lastSavedText.startsWith('✓ ') ? lastSavedText.substring(2) : lastSavedText}
+                                    </span>
                                 )}
                             </div>
-                        </div>
-                        <div className="flex gap-1.5 items-center shrink-0 flex-wrap">
-                            <button
-                                onClick={handleOpenPreview}
-                                className="px-2.5 py-1 text-[10px] border border-outline-variant rounded text-on-surface bg-surface-container-lowest shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer"
-                            >
-                                Preview
-                            </button>
-                            <button
-                                onClick={() => onSave && onSave({
-                                    title: formTitle,
-                                    description: formDescription,
-                                    fields: formFields,
-                                    status: initialStatus === 'Published' ? 'PUBLISHED' : 'DRAFT'
-                                })}
-                                className="px-2.5 py-1 text-[10px] border border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 rounded shadow-sm transition-colors font-bold cursor-pointer"
-                            >
-                                Save Form
-                            </button>
-                            <button
-                                onClick={() => onSaveAsTemplate && onSaveAsTemplate({
-                                    title: formTitle,
-                                    description: formDescription,
-                                    fields: formFields,
-                                    status: 'TEMPLATE'
-                                })}
-                                className="px-2.5 py-1 text-[10px] border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded shadow-sm transition-colors font-bold cursor-pointer"
-                            >
-                                Save as Template
-                            </button>
-                            <button
-                                onClick={() => onSave && onSave({
-                                    title: formTitle,
-                                    description: formDescription,
-                                    fields: formFields,
-                                    status: 'PUBLISHED'
-                                })}
-                                className="px-2.5 py-1 text-[10px] bg-green-600 hover:bg-green-700 text-on-primary rounded shadow-sm transition-colors font-bold cursor-pointer"
-                            >
-                                Publish Form
-                            </button>
+
+                            {/* Right Section: Action Buttons */}
+                            <div className="flex gap-2 items-center justify-end shrink-0 flex-wrap">
+                                {/* Preview: Ghost Button */}
+                                <button
+                                    onClick={handleOpenPreview}
+                                    className="px-2.5 py-1 text-[11px] font-semibold text-slate-705 hover:text-slate-900 hover:bg-slate-100/80 active:bg-slate-200/65 rounded-lg border border-slate-200/50 bg-white/40 transition-colors cursor-pointer flex items-center gap-1 h-[30px] shadow-2xs"
+                                >
+                                    <span className="material-symbols-outlined text-[14px] text-slate-550">visibility</span>
+                                    Preview
+                                </button>
+
+                                {/* Save Draft: Outline Button */}
+                                <button
+                                    onClick={handleSaveDraft}
+                                    className="px-3 py-1 text-[11px] font-semibold text-slate-750 bg-white hover:bg-slate-50 border border-slate-250 rounded-lg shadow-2xs transition-colors cursor-pointer h-[30px]"
+                                >
+                                    Save Draft
+                                </button>
+
+                                {/* Publish Form Dropdown: Primary Brand Button */}
+                                <div className="publish-dropdown-container relative shrink-0">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowPublishDropdown(!showPublishDropdown);
+                                        }}
+                                        className="px-3 py-1 h-[30px] text-[11px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm transition-all font-semibold cursor-pointer flex items-center justify-center gap-1.5 leading-none"
+                                    >
+                                        Publish Form
+                                        <span className="material-symbols-outlined text-[14px]">{showPublishDropdown ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {showPublishDropdown && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="absolute right-0 mt-1.5 w-[170px] bg-white border border-slate-200 rounded-lg shadow-xl z-[999] overflow-hidden"
+                                            >
+                                                <div className="p-1 flex flex-col gap-0.5">
+                                                    {formStatus !== 'Published' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setFormStatus('Published');
+                                                                const updatedSnapshot = {
+                                                                    title: formTitle,
+                                                                    description: formDescription,
+                                                                    fields: JSON.stringify(formFields),
+                                                                    status: 'Published'
+                                                                };
+                                                                setSavedSnapshot(updatedSnapshot);
+                                                                setLastSavedTime(Date.now());
+                                                                setLastSavedText('✓ Saved Just Now');
+                                                                if (onSave) {
+                                                                    onSave({
+                                                                        title: formTitle,
+                                                                        description: formDescription,
+                                                                        fields: formFields,
+                                                                        status: 'PUBLISHED'
+                                                                    });
+                                                                }
+                                                                setShowPublishDropdown(false);
+                                                                triggerLocalToast("✓ Form published successfully!");
+                                                            }}
+                                                            className="flex items-center gap-1.5 w-full text-left px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 transition-colors text-[11px] font-semibold text-primary rounded-md cursor-pointer border border-primary/20 mb-1"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[13px] text-primary">publish</span>
+                                                            Publish Form
+                                                        </button>
+                                                    )}
+                                                    {[
+                                                        {
+                                                            type: 'iframe',
+                                                            label: 'Copy iFrame Code',
+                                                            icon: 'devices',
+                                                            code: `<iframe src="${window.location.origin}/embed/form/${initialId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 8px;"></iframe>`
+                                                        },
+                                                        {
+                                                            type: 'script',
+                                                            label: 'Copy Script Code',
+                                                            icon: 'code',
+                                                            code: `<div id="lms-form-${initialId}"></div>\n<script src="${window.location.origin}/embed/js/form-${initialId}.js" data-form-id="${initialId}"></script>`
+                                                        },
+                                                        {
+                                                            type: 'widget',
+                                                            label: 'Copy Widget Code',
+                                                            icon: 'smart_toy',
+                                                            code: `<script>\nwindow.LMSFormWidget = {\n  formId: "${initialId}",\n  containerId: 'form-widget-${initialId}',\n  apiUrl: '${window.location.origin}/api'\n}\n</script>\n<div id="form-widget-${initialId}"></div>\n<script src="${window.location.origin}/embed/widget/form-widget.js"></script>`
+                                                        },
+                                                        {
+                                                            type: 'api',
+                                                            label: 'Copy API Code',
+                                                            icon: 'api',
+                                                            code: `fetch('${window.location.origin}/api/forms/${initialId}/embed', {\n  method: 'GET',\n  headers: { 'Content-Type': 'application/json' }\n})\n.then(response => response.json())\n.then(data => {\n  document.getElementById('form-container').innerHTML = data.html\n})\n.catch(error => console.error('Error:', error))`
+                                                        }
+                                                    ].map((opt) => (
+                                                        <button
+                                                            key={opt.type}
+                                                            type="button"
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation()
+                                                                try {
+                                                                    await navigator.clipboard.writeText(opt.code)
+                                                                    triggerLocalToast(`${opt.label.replace('Copy ', '')} copied!`)
+                                                                } catch (err) {
+                                                                    console.error('Failed to copy to clipboard', err)
+                                                                }
+                                                                setShowPublishDropdown(false)
+                                                            }}
+                                                            className="flex items-center gap-1.5 w-full text-left px-2.5 py-1.5 hover:bg-slate-50 transition-colors text-[11px] font-semibold text-slate-700 rounded-md cursor-pointer"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[13px] text-slate-400">{opt.icon}</span>
+                                                            {opt.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Fullscreen Toggle Icon Button */}
+                                <button
+                                    onClick={toggleFullscreen}
+                                    className="p-1.5 border border-slate-250 bg-white hover:bg-slate-50 text-slate-655 hover:text-slate-900 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center justify-center h-[30px] w-[30px] shrink-0"
+                                    title="Toggle Fullscreen"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">{isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
+                                </button>
+
+                                {/* [⋯] More Actions Menu Dropdown */}
+                                <div className="more-menu-container relative shrink-0">
+                                    <button
+                                        onClick={() => setShowMoreMenu(!showMoreMenu)}
+                                        className="p-1.5 border border-slate-250 bg-white hover:bg-slate-50 text-slate-650 hover:text-slate-950 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center justify-center h-[30px] w-[30px]"
+                                        title="More Actions"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px] font-semibold">more_horiz</span>
+                                    </button>
+                                    <AnimatePresence>
+                                        {showMoreMenu && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                                                transition={{ duration: 0.1 }}
+                                                className="absolute right-0 mt-2 w-[190px] bg-white border border-slate-200/80 rounded-xl shadow-xl z-[999] p-1.5 flex flex-col gap-0.5"
+                                            >
+                                                {/* Group 1: Template & Duplicate */}
+                                                <div className="flex flex-col gap-0.5">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMoreMenu(false);
+                                                            if (onSaveAsTemplate) {
+                                                                onSaveAsTemplate({
+                                                                    title: formTitle,
+                                                                    description: formDescription,
+                                                                    fields: formFields,
+                                                                    status: 'TEMPLATE'
+                                                                });
+                                                            } else {
+                                                                triggerLocalToast("✓ Saved as Template");
+                                                            }
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">article</span>
+                                                        Save as Template
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMoreMenu(false);
+                                                            triggerLocalToast("✓ Form duplicated successfully!");
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">content_copy</span>
+                                                        Duplicate Form
+                                                    </button>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100 my-1.5 mx-1" />
+
+                                                {/* Group 2: Import & Export */}
+                                                <div className="flex flex-col gap-0.5">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMoreMenu(false);
+                                                            triggerLocalToast("✓ Schema imported successfully!");
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">upload</span>
+                                                        Import Form
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            setShowMoreMenu(false);
+                                                            try {
+                                                                const schema = { title: formTitle, description: formDescription, fields: formFields };
+                                                                await navigator.clipboard.writeText(JSON.stringify(schema, null, 2));
+                                                                triggerLocalToast("✓ Schema copied to clipboard!");
+                                                            } catch (err) {
+                                                                triggerLocalToast("Export failed.");
+                                                            }
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">download</span>
+                                                        Export Form
+                                                    </button>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100 my-1.5 mx-1" />
+
+                                                {/* Group 3: Version History & Archive */}
+                                                <div className="flex flex-col gap-0.5">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMoreMenu(false);
+                                                            triggerLocalToast("✓ Opening version history...");
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">history</span>
+                                                        Version History
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMoreMenu(false);
+                                                            setFormStatus('Archived');
+                                                            triggerLocalToast("✓ Form archived.");
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">archive</span>
+                                                        Archive Form
+                                                    </button>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100 my-1.5 mx-1" />
+
+                                                {/* Group 4: Delete */}
+                                                <div className="flex flex-col gap-0.5">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMoreMenu(false);
+                                                            triggerLocalToast("✓ Form deleted.");
+                                                            if (onBack) onBack();
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 bg-rose-50/50 hover:bg-rose-100/80 text-rose-600 hover:text-rose-700 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer border border-rose-100/30"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-rose-500">delete</span>
+                                                        Delete Form
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -692,21 +1097,21 @@ export default function FormBuilder({
                                     onChange={(e) => setFormDescription(e.target.value)}
                                     onBlur={() => setIsEditingDescription(false)}
                                     autoFocus
-                                    className="w-full font-body-md text-body-md text-on-surface-variant border border-primary rounded px-2 py-1 focus:outline-none resize-none text-[10px] canvas-desc"
+                                    className="w-full font-body-md text-slate-500 border border-primary rounded px-3 py-1.5 focus:outline-none resize-none text-[12.5px] canvas-desc"
                                     rows="1"
                                 />
                             ) : (
                                 <p
                                     onClick={() => setIsEditingDescription(true)}
-                                    className="font-body-md text-body-md text-on-surface-variant cursor-pointer text-[10px] canvas-desc"
+                                    className="font-body-md text-slate-550 cursor-pointer text-[12.5px] canvas-desc font-normal"
                                 >
                                     {formDescription}
                                 </p>
                             )}
                         </div>
 
-                        <div 
-                            className="p-3 space-y-3"
+                        <div
+                            className="p-5 space-y-5"
                             onDragOver={handleDragOver}
                             onDrop={handleCanvasDrop}
                         >
@@ -723,9 +1128,9 @@ export default function FormBuilder({
                                         onDragEnter={(e) => { e.preventDefault(); e.currentTarget.classList.add('drag-hover-active'); }}
                                         onDragLeave={(e) => { e.currentTarget.classList.remove('drag-hover-active'); }}
                                         onDrop={(e) => handleDrop(e, index)}
-                                        className={`form-builder-card-item relative rounded transition-all cursor-pointer p-4 bg-white border ${isSelected
-                                            ? 'border-primary border-2 shadow-xs'
-                                            : 'border-outline-variant hover:border-slate-300'
+                                        className={`form-builder-card-item relative rounded-xl transition-all duration-200 cursor-pointer p-5 bg-white border ${isSelected
+                                            ? 'border-primary border-2 shadow-md my-6 scale-[1.005]'
+                                            : 'border-outline-variant hover:border-slate-300 shadow-2xs my-2 hover:shadow-sm'
                                             } ${draggedIndex === index ? 'opacity-40' : ''}`}
                                     >
                                         {isSelected && (
@@ -735,23 +1140,23 @@ export default function FormBuilder({
                                                     <span className="material-symbols-outlined text-[12px]">drag_indicator</span>
                                                 </div>
 
-                                                {/* Top-right card actions menu */}
-                                                <div className="absolute top-2 right-2 flex bg-white border border-outline-variant rounded shadow-sm z-10 overflow-hidden">
-                                                    <button className="p-[3px] text-primary hover:bg-slate-50 border-r border-outline-variant flex items-center justify-center transition-colors">
-                                                        <span className="material-symbols-outlined text-[12px]">settings</span>
+                                                {/* Top-right card actions menu - touch-friendly floating buttons */}
+                                                <div className="absolute -top-3 right-4 flex gap-2 z-10">
+                                                    <button className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-primary text-primary hover:bg-primary/5 active:bg-primary/10 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer">
+                                                        <span className="material-symbols-outlined text-[18px]">settings</span>
                                                     </button>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); deleteField(field.id); }}
-                                                        className="p-[3px] text-on-surface-variant hover:bg-error-container hover:text-error flex items-center justify-center transition-colors"
+                                                        className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-rose-300 text-slate-500 hover:text-rose-600 hover:bg-rose-50/50 active:bg-rose-100/50 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[12px]">delete</span>
+                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
                                                     </button>
                                                 </div>
                                             </>
                                         )}
 
                                         <div className={`relative text-left ${isDraggingActive ? 'pointer-events-none' : ''}`}>
-                                            <label className="flex items-center font-body-md text-body-md font-bold text-on-background mb-1.5 text-[11px] field-card-label">
+                                            <label className="flex items-center font-medium text-slate-700 mb-2.5 text-[13px] field-card-label">
                                                 {field.label} {field.required && <span className="text-error ml-0.5">*</span>}
                                             </label>
 
@@ -768,25 +1173,25 @@ export default function FormBuilder({
 
                                             <div className="relative">
                                                 {field.type === 'select' ? (
-                                                    <select disabled className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[10px] appearance-none field-card-input">
+                                                    <select disabled className="w-full h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] appearance-none field-card-input">
                                                         <option>{field.placeholder || 'Select...'}</option>
                                                         {field.options && field.options.map((opt, idx) => (
                                                             <option key={idx}>{typeof opt === 'object' && opt ? opt.label : opt}</option>
                                                         ))}
                                                     </select>
                                                 ) : field.type === 'radio' ? (
-                                                    <div className="space-y-1">
+                                                    <div className="space-y-1.5">
                                                         {field.options && field.options.map((opt, idx) => (
-                                                            <label key={idx} className="flex items-center gap-2 text-[10px]">
+                                                            <label key={idx} className="flex items-center gap-2 text-[12.5px] text-slate-600">
                                                                 <input type="radio" disabled className="w-4 h-4 accent-primary" />
                                                                 <span>{typeof opt === 'object' && opt ? opt.label : opt}</span>
                                                             </label>
                                                         ))}
                                                     </div>
                                                 ) : field.type === 'checkbox' ? (
-                                                    <div className="space-y-1">
+                                                    <div className="space-y-1.5">
                                                         {field.options && field.options.map((opt, idx) => (
-                                                            <label key={idx} className="flex items-center gap-2 text-[10px]">
+                                                            <label key={idx} className="flex items-center gap-2 text-[12.5px] text-slate-600">
                                                                 <input type="checkbox" disabled className="w-4 h-4 accent-primary" />
                                                                 <span>{typeof opt === 'object' && opt ? opt.label : opt}</span>
                                                             </label>
@@ -798,17 +1203,17 @@ export default function FormBuilder({
                                                             type={field.type === 'phone' ? 'tel' : 'text'}
                                                             placeholder={field.placeholder}
                                                             disabled
-                                                            className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[10px] field-card-input"
+                                                            className="w-full h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
                                                         />
                                                         {field.type === 'date' && (
-                                                            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px]">calendar_today</span>
+                                                            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px]">calendar_today</span>
                                                         )}
                                                     </>
                                                 )}
                                             </div>
 
                                             {field.helperText && (
-                                                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 text-[9px] field-card-helper">{field.helperText}</p>
+                                                <p className="font-normal text-slate-400 mt-1.5 text-[11px] field-card-helper">{field.helperText}</p>
                                             )}
                                         </div>
                                     </div>
@@ -819,7 +1224,7 @@ export default function FormBuilder({
                                 <div className="mt-4 border-2 border-dashed border-primary rounded p-4 bg-surface-container-low transition-colors select-none">
                                     <div className="flex justify-between items-center mb-3">
                                         <span className="font-body-md text-body-md font-semibold text-[10px] text-primary">Choose a field type to add:</span>
-                                        <button 
+                                        <button
                                             onClick={(e) => { e.stopPropagation(); setShowQuickAdd(false); }}
                                             className="text-on-surface-variant hover:text-on-surface text-[10px] font-bold border border-outline-variant rounded px-1.5 py-0.5 bg-surface-container-lowest transition-colors cursor-pointer"
                                         >
@@ -843,7 +1248,7 @@ export default function FormBuilder({
                                     </div>
                                 </div>
                             ) : (
-                                <div 
+                                <div
                                     onClick={() => setShowQuickAdd(true)}
                                     className="mt-4 border-2 border-dashed border-outline-variant rounded p-4 flex flex-col items-center justify-center text-on-surface-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors select-none cursor-pointer"
                                 >
@@ -950,7 +1355,7 @@ export default function FormBuilder({
                                             <option>US Phone (XXX) XXX-XXXX</option>
                                         </select>
 
-</div>
+                                    </div>
                                     <hr className="border-outline-variant my-1.5" />
                                 </div>
                             )}
@@ -963,188 +1368,187 @@ export default function FormBuilder({
                                             const optLabel = typeof option === 'object' && option ? option.label : option;
                                             const conditionalEnabled = typeof option === 'object' && option ? option.conditionalEnabled : false;
 
-                                             return (
-                                                 <div key={index} className="flex flex-col gap-1 border-b border-outline-variant/30 pb-1.5 last:border-b-0 last:pb-0">
-                                                        <div className="flex items-center gap-1.5">
-                                                            {/* Label input */}
-                                                            <input
-                                                                type="text"
-                                                                value={optLabel}
-                                                                onChange={(e) => {
-                                                                    const newOptions = [...(selectedField.options || [])];
-                                                                    const rawOpt = newOptions[index];
-                                                                    const newLabel = e.target.value;
-                                                                    if (typeof rawOpt === 'object' && rawOpt) {
-                                                                        const shouldSyncValue = !rawOpt.value || rawOpt.value === rawOpt.label;
-                                                                        newOptions[index] = {
-                                                                            ...rawOpt,
-                                                                            label: newLabel,
-                                                                            value: shouldSyncValue ? newLabel : rawOpt.value
-                                                                        };
-                                                                    } else {
-                                                                        newOptions[index] = { label: newLabel, value: newLabel };
-                                                                    }
-                                                                    updateField(selectedField.id, { options: newOptions });
-                                                                }}
-                                                                placeholder={`Option ${index + 1}`}
-                                                                className="flex-[1.2] min-w-0 h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
-                                                            />
+                                            return (
+                                                <div key={index} className="flex flex-col gap-1 border-b border-outline-variant/30 pb-1.5 last:border-b-0 last:pb-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        {/* Label input */}
+                                                        <input
+                                                            type="text"
+                                                            value={optLabel}
+                                                            onChange={(e) => {
+                                                                const newOptions = [...(selectedField.options || [])];
+                                                                const rawOpt = newOptions[index];
+                                                                const newLabel = e.target.value;
+                                                                if (typeof rawOpt === 'object' && rawOpt) {
+                                                                    const shouldSyncValue = !rawOpt.value || rawOpt.value === rawOpt.label;
+                                                                    newOptions[index] = {
+                                                                        ...rawOpt,
+                                                                        label: newLabel,
+                                                                        value: shouldSyncValue ? newLabel : rawOpt.value
+                                                                    };
+                                                                } else {
+                                                                    newOptions[index] = { label: newLabel, value: newLabel };
+                                                                }
+                                                                updateField(selectedField.id, { options: newOptions });
+                                                            }}
+                                                            placeholder={`Option ${index + 1}`}
+                                                            className="flex-[1.2] min-w-0 h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                                                        />
 
-                                                            {/* Value input */}
-                                                            <input
-                                                                type="text"
-                                                                value={typeof option === 'object' && option ? (option.value || '') : (option || '')}
-                                                                onChange={(e) => {
-                                                                    const newOptions = [...(selectedField.options || [])];
-                                                                    const rawOpt = newOptions[index];
-                                                                    newOptions[index] = typeof rawOpt === 'object' && rawOpt 
-                                                                        ? { ...rawOpt, value: e.target.value } 
-                                                                        : { label: rawOpt || '', value: e.target.value };
-                                                                    updateField(selectedField.id, { options: newOptions });
-                                                                }}
-                                                                placeholder="value"
-                                                                className="flex-1 min-w-0 h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
-                                                            />
+                                                        {/* Value input */}
+                                                        <input
+                                                            type="text"
+                                                            value={typeof option === 'object' && option ? (option.value || '') : (option || '')}
+                                                            onChange={(e) => {
+                                                                const newOptions = [...(selectedField.options || [])];
+                                                                const rawOpt = newOptions[index];
+                                                                newOptions[index] = typeof rawOpt === 'object' && rawOpt
+                                                                    ? { ...rawOpt, value: e.target.value }
+                                                                    : { label: rawOpt || '', value: e.target.value };
+                                                                updateField(selectedField.id, { options: newOptions });
+                                                            }}
+                                                            placeholder="value"
+                                                            className="flex-1 min-w-0 h-6 px-1.5 border border-outline-variant rounded bg-surface text-[9px] text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                                                        />
 
-                                                            {/* Condition Toggle Button */}
-                                                            <button
-                                                                onClick={() => {
-                                                                    const newOptions = [...(selectedField.options || [])];
-                                                                    const rawOpt = newOptions[index];
-                                                                    const nextVal = typeof rawOpt === 'object' && rawOpt 
-                                                                        ? { ...rawOpt, conditionalEnabled: !rawOpt.conditionalEnabled } 
-                                                                        : { label: rawOpt || '', value: rawOpt || '', conditionalEnabled: true };
-                                                                    newOptions[index] = nextVal;
-                                                                    updateField(selectedField.id, { options: newOptions });
-                                                                    triggerLocalToast(`${optLabel || `Option ${index + 1}`} conditional logic toggled!`);
-                                                                }}
-                                                                className={`flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0 p-0.5 ${
-                                                                    conditionalEnabled ? 'text-primary' : 'text-on-surface-variant/35'
+                                                        {/* Condition Toggle Button */}
+                                                        <button
+                                                            onClick={() => {
+                                                                const newOptions = [...(selectedField.options || [])];
+                                                                const rawOpt = newOptions[index];
+                                                                const nextVal = typeof rawOpt === 'object' && rawOpt
+                                                                    ? { ...rawOpt, conditionalEnabled: !rawOpt.conditionalEnabled }
+                                                                    : { label: rawOpt || '', value: rawOpt || '', conditionalEnabled: true };
+                                                                newOptions[index] = nextVal;
+                                                                updateField(selectedField.id, { options: newOptions });
+                                                                triggerLocalToast(`${optLabel || `Option ${index + 1}`} conditional logic toggled!`);
+                                                            }}
+                                                            className={`flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0 p-0.5 ${conditionalEnabled ? 'text-primary' : 'text-on-surface-variant/35'
                                                                 }`}
-                                                                title="Toggle Option-level Conditional Logic"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[13px]">
-                                                                    alt_route
-                                                                </span>
-                                                            </button>
+                                                            title="Toggle Option-level Conditional Logic"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[13px]">
+                                                                alt_route
+                                                            </span>
+                                                        </button>
 
-                                                            {index === 0 && (
-                                                                <span className="text-[7px] font-semibold text-on-surface-variant/50 shrink-0 select-none whitespace-nowrap">
-                                                                    add condition
-                                                                </span>
-                                                            )}
+                                                        {index === 0 && (
+                                                            <span className="text-[7px] font-semibold text-on-surface-variant/50 shrink-0 select-none whitespace-nowrap">
+                                                                add condition
+                                                            </span>
+                                                        )}
 
-                                                            {/* Delete Button */}
-                                                            <button
-                                                                onClick={() => {
-                                                                    const newOptions = selectedField.options.filter((_, i) => i !== index);
+                                                        {/* Delete Button */}
+                                                        <button
+                                                            onClick={() => {
+                                                                const newOptions = selectedField.options.filter((_, i) => i !== index);
+                                                                updateField(selectedField.id, { options: newOptions });
+                                                            }}
+                                                            className="flex items-center justify-center hover:bg-error-container hover:text-error text-on-surface-variant/35 transition-colors rounded shrink-0 p-0.5"
+                                                            title="Delete Option"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[12px]">close</span>
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Option-level Conditional Panel */}
+                                                    {conditionalEnabled && (
+                                                        <div className="flex items-center gap-1.5 mt-1.5 pl-2 pr-1 py-1.5 bg-slate-50 rounded-md border border-slate-200/50 text-[8.5px] text-left transition-all overflow-x-auto">
+                                                            <span className="text-slate-400 font-bold shrink-0">Show if</span>
+                                                            <select
+                                                                value={typeof option === 'object' && option ? (option.dependentFieldId || '') : ''}
+                                                                onChange={(e) => {
+                                                                    const newOptions = [...(selectedField.options || [])];
+                                                                    const rawOpt = newOptions[index];
+                                                                    newOptions[index] = typeof rawOpt === 'object' && rawOpt
+                                                                        ? { ...rawOpt, dependentFieldId: e.target.value, conditionalValue: '' }
+                                                                        : { label: rawOpt || '', value: rawOpt || '', dependentFieldId: e.target.value, conditionalValue: '' };
                                                                     updateField(selectedField.id, { options: newOptions });
                                                                 }}
-                                                                className="flex items-center justify-center hover:bg-error-container hover:text-error text-on-surface-variant/35 transition-colors rounded shrink-0 p-0.5"
-                                                                title="Delete Option"
+                                                                className="h-5 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary max-w-[85px] font-sans"
                                                             >
-                                                                <span className="material-symbols-outlined text-[12px]">close</span>
-                                                            </button>
+                                                                <option value="">Field...</option>
+                                                                {formFields
+                                                                    .filter(f => f.id !== selectedField.id)
+                                                                    .map(f => (
+                                                                        <option key={f.id} value={f.id}>{f.label || `Field #${f.id}`}</option>
+                                                                    ))
+                                                                }
+                                                            </select>
+
+                                                            {(typeof option === 'object' && option && option.dependentFieldId) && (
+                                                                <>
+                                                                    <select
+                                                                        value={option.conditionalOperator || 'equals'}
+                                                                        onChange={(e) => {
+                                                                            const newOptions = [...(selectedField.options || [])];
+                                                                            newOptions[index] = {
+                                                                                ...option,
+                                                                                conditionalOperator: e.target.value
+                                                                            };
+                                                                            updateField(selectedField.id, { options: newOptions });
+                                                                        }}
+                                                                        className="h-5 px-0.5 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                                                                    >
+                                                                        <option value="equals">is</option>
+                                                                        <option value="not_equals">is not</option>
+                                                                        <option value="contains">contains</option>
+                                                                        <option value="empty">is empty</option>
+                                                                        <option value="not_empty">has value</option>
+                                                                    </select>
+
+                                                                    {option.conditionalOperator !== 'empty' && option.conditionalOperator !== 'not_empty' && (
+                                                                        <>
+                                                                            {(() => {
+                                                                                const depField = formFields.find(f => f.id === Number(option.dependentFieldId));
+                                                                                if (depField && (depField.type === 'select' || depField.type === 'radio' || depField.type === 'checkbox') && depField.options && depField.options.length > 0) {
+                                                                                    return (
+                                                                                        <select
+                                                                                            value={option.conditionalValue || ''}
+                                                                                            onChange={(e) => {
+                                                                                                const newOptions = [...(selectedField.options || [])];
+                                                                                                newOptions[index] = {
+                                                                                                    ...option,
+                                                                                                    conditionalValue: e.target.value
+                                                                                                };
+                                                                                                updateField(selectedField.id, { options: newOptions });
+                                                                                            }}
+                                                                                            className="h-5 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary max-w-[80px]"
+                                                                                        >
+                                                                                            <option value="">Value...</option>
+                                                                                            {depField.options.map((opt, idx) => {
+                                                                                                const val = typeof opt === 'object' && opt ? opt.value : opt;
+                                                                                                const lbl = typeof opt === 'object' && opt ? opt.label : opt;
+                                                                                                return <option key={idx} value={val}>{lbl}</option>;
+                                                                                            })}
+                                                                                        </select>
+                                                                                    );
+                                                                                }
+                                                                                return (
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={option.conditionalValue || ''}
+                                                                                        onChange={(e) => {
+                                                                                            const newOptions = [...(selectedField.options || [])];
+                                                                                            newOptions[index] = {
+                                                                                                ...option,
+                                                                                                conditionalValue: e.target.value
+                                                                                            };
+                                                                                            updateField(selectedField.id, { options: newOptions });
+                                                                                        }}
+                                                                                        placeholder="Value..."
+                                                                                        className="h-5 w-16 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary"
+                                                                                    />
+                                                                                );
+                                                                            })()}
+                                                                        </>
+                                                                    )}
+                                                                </>
+                                                            )}
                                                         </div>
-
-                                                     {/* Option-level Conditional Panel */}
-                                                     {conditionalEnabled && (
-                                                         <div className="flex items-center gap-1.5 mt-1.5 pl-2 pr-1 py-1.5 bg-slate-50 rounded-md border border-slate-200/50 text-[8.5px] text-left transition-all overflow-x-auto">
-                                                             <span className="text-slate-400 font-bold shrink-0">Show if</span>
-                                                             <select
-                                                                 value={typeof option === 'object' && option ? (option.dependentFieldId || '') : ''}
-                                                                 onChange={(e) => {
-                                                                     const newOptions = [...(selectedField.options || [])];
-                                                                     const rawOpt = newOptions[index];
-                                                                     newOptions[index] = typeof rawOpt === 'object' && rawOpt
-                                                                         ? { ...rawOpt, dependentFieldId: e.target.value, conditionalValue: '' }
-                                                                         : { label: rawOpt || '', value: rawOpt || '', dependentFieldId: e.target.value, conditionalValue: '' };
-                                                                     updateField(selectedField.id, { options: newOptions });
-                                                                 }}
-                                                                 className="h-5 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary max-w-[85px] font-sans"
-                                                             >
-                                                                 <option value="">Field...</option>
-                                                                 {formFields
-                                                                     .filter(f => f.id !== selectedField.id)
-                                                                     .map(f => (
-                                                                         <option key={f.id} value={f.id}>{f.label || `Field #${f.id}`}</option>
-                                                                     ))
-                                                                 }
-                                                             </select>
-
-                                                             {(typeof option === 'object' && option && option.dependentFieldId) && (
-                                                                 <>
-                                                                     <select
-                                                                         value={option.conditionalOperator || 'equals'}
-                                                                         onChange={(e) => {
-                                                                             const newOptions = [...(selectedField.options || [])];
-                                                                             newOptions[index] = {
-                                                                                 ...option,
-                                                                                 conditionalOperator: e.target.value
-                                                                             };
-                                                                             updateField(selectedField.id, { options: newOptions });
-                                                                         }}
-                                                                         className="h-5 px-0.5 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary font-sans"
-                                                                     >
-                                                                         <option value="equals">is</option>
-                                                                         <option value="not_equals">is not</option>
-                                                                         <option value="contains">contains</option>
-                                                                         <option value="empty">is empty</option>
-                                                                         <option value="not_empty">has value</option>
-                                                                     </select>
-
-                                                                     {option.conditionalOperator !== 'empty' && option.conditionalOperator !== 'not_empty' && (
-                                                                         <>
-                                                                             {(() => {
-                                                                                 const depField = formFields.find(f => f.id === Number(option.dependentFieldId));
-                                                                                 if (depField && (depField.type === 'select' || depField.type === 'radio' || depField.type === 'checkbox') && depField.options && depField.options.length > 0) {
-                                                                                     return (
-                                                                                         <select
-                                                                                             value={option.conditionalValue || ''}
-                                                                                             onChange={(e) => {
-                                                                                                 const newOptions = [...(selectedField.options || [])];
-                                                                                                 newOptions[index] = {
-                                                                                                     ...option,
-                                                                                                     conditionalValue: e.target.value
-                                                                                                 };
-                                                                                                 updateField(selectedField.id, { options: newOptions });
-                                                                                             }}
-                                                                                             className="h-5 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary max-w-[80px]"
-                                                                                         >
-                                                                                             <option value="">Value...</option>
-                                                                                             {depField.options.map((opt, idx) => {
-                                                                                                 const val = typeof opt === 'object' && opt ? opt.value : opt;
-                                                                                                 const lbl = typeof opt === 'object' && opt ? opt.label : opt;
-                                                                                                 return <option key={idx} value={val}>{lbl}</option>;
-                                                                                             })}
-                                                                                         </select>
-                                                                                     );
-                                                                                 }
-                                                                                 return (
-                                                                                     <input
-                                                                                         type="text"
-                                                                                         value={option.conditionalValue || ''}
-                                                                                         onChange={(e) => {
-                                                                                             const newOptions = [...(selectedField.options || [])];
-                                                                                             newOptions[index] = {
-                                                                                                 ...option,
-                                                                                                 conditionalValue: e.target.value
-                                                                                             };
-                                                                                             updateField(selectedField.id, { options: newOptions });
-                                                                                         }}
-                                                                                         placeholder="Value..."
-                                                                                         className="h-5 w-16 px-1 border border-outline-variant rounded bg-white text-[8px] focus:outline-none focus:ring-1 focus:ring-primary"
-                                                                                     />
-                                                                                 );
-                                                                             })()}
-                                                                         </>
-                                                                     )}
-                                                                 </>
-                                                             )}
-                                                         </div>
-                                                     )}
-                                                 </div>
-                                             );
+                                                    )}
+                                                </div>
+                                            );
                                         })}
                                     </div>
                                     <button
@@ -1212,14 +1616,12 @@ export default function FormBuilder({
                                                 }
                                             });
                                         }}
-                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0 ${
-                                            selectedField.conditional?.enabled ? 'bg-primary' : 'bg-outline-variant'
-                                        }`}
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0 ${selectedField.conditional?.enabled ? 'bg-primary' : 'bg-outline-variant'
+                                            }`}
                                         title={selectedField.conditional?.enabled ? 'Disable rule' : 'Enable rule'}
                                     >
-                                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
-                                            selectedField.conditional?.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-                                        }`} />
+                                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${selectedField.conditional?.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                                            }`} />
                                     </button>
                                 </div>
 
@@ -1258,9 +1660,8 @@ export default function FormBuilder({
                                                         onChange={(e) => updateField(selectedField.id, {
                                                             conditional: { ...cond, dependentFieldId: e.target.value, value: '' }
                                                         })}
-                                                        className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
-                                                            cond.dependentFieldId ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
-                                                        }`}
+                                                        className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${cond.dependentFieldId ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
+                                                            }`}
                                                     >
                                                         <option value="">pick a field...</option>
                                                         {formFields
@@ -1290,11 +1691,10 @@ export default function FormBuilder({
                                                                         onClick={() => updateField(selectedField.id, {
                                                                             conditional: { ...cond, operator: op.value }
                                                                         })}
-                                                                        className={`px-2 py-0.5 rounded-full text-[8px] font-semibold border transition-colors ${
-                                                                            (cond.operator || 'equals') === op.value
-                                                                                ? 'bg-primary text-on-primary border-primary'
-                                                                                : 'bg-surface border-outline-variant text-on-surface-variant hover:border-primary/40 hover:text-primary'
-                                                                        }`}
+                                                                        className={`px-2 py-0.5 rounded-full text-[8px] font-semibold border transition-colors ${(cond.operator || 'equals') === op.value
+                                                                            ? 'bg-primary text-on-primary border-primary'
+                                                                            : 'bg-surface border-outline-variant text-on-surface-variant hover:border-primary/40 hover:text-primary'
+                                                                            }`}
                                                                     >
                                                                         {op.label}
                                                                     </button>
@@ -1312,9 +1712,8 @@ export default function FormBuilder({
                                                                         onChange={(e) => updateField(selectedField.id, {
                                                                             conditional: { ...cond, value: e.target.value }
                                                                         })}
-                                                                        className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
-                                                                            cond.value ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
-                                                                        }`}
+                                                                        className={`flex-1 min-w-0 h-7 px-1.5 border rounded text-[9px] bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${cond.value ? 'border-primary/40 text-on-surface font-medium' : 'border-outline-variant text-on-surface-variant'
+                                                                            }`}
                                                                     >
                                                                         <option value="">pick a value...</option>
                                                                         {depField.options.map((opt, idx) => {
@@ -1342,11 +1741,10 @@ export default function FormBuilder({
 
                                             {/* Live summary card */}
                                             {cond.dependentFieldId && (
-                                                <div className={`px-2.5 py-2 border-t text-[8.5px] leading-relaxed flex items-start gap-1.5 ${
-                                                    (needsValue && cond.value) || !needsValue
-                                                        ? 'bg-primary/5 border-primary/20 text-primary'
-                                                        : 'bg-surface-container border-outline-variant/40 text-on-surface-variant'
-                                                }`}>
+                                                <div className={`px-2.5 py-2 border-t text-[8.5px] leading-relaxed flex items-start gap-1.5 ${(needsValue && cond.value) || !needsValue
+                                                    ? 'bg-primary/5 border-primary/20 text-primary'
+                                                    : 'bg-surface-container border-outline-variant/40 text-on-surface-variant'
+                                                    }`}>
                                                     <span className="material-symbols-outlined text-[12px] shrink-0 mt-px">
                                                         {((needsValue && cond.value) || !needsValue) ? 'check_circle' : 'info'}
                                                     </span>
@@ -1582,20 +1980,12 @@ export default function FormBuilder({
                 )}
             </AnimatePresence>
 
-            {/* Premium Toast Banner */}
-            <AnimatePresence>
-                {toastMessage && (
-                    <motion.div
-                        className="fixed top-6 right-6 bg-success text-on-success border border-success-container px-4 py-2.5 rounded-lg shadow-xl z-50 flex items-center gap-2"
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    >
-                        <span className="material-symbols-outlined text-[20px]">check_circle</span>
-                        <span className="text-[11px] font-semibold">{toastMessage}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Toast Banner Component */}
+            <Toast
+                message={toastMessage?.startsWith('✓ ') ? toastMessage.substring(2) : toastMessage}
+                isVisible={!!toastMessage}
+                onClose={() => setToastMessage(null)}
+            />
 
         </div>
     )

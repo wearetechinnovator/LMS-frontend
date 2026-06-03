@@ -2,8 +2,9 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import '../../assets/dashboard/dashboardstatscard.css'
 
-export default function DasboardStatsCard({ label, value, change, idx }) {
-    const isPositive = change && change.includes('+')
+export default function DasboardStatsCard({ label, value, change, trend = 'positive', idx }) {
+    const isPositive = trend === 'positive'
+    const isNegative = trend === 'negative'
 
     return (
         <motion.div
@@ -14,12 +15,12 @@ export default function DasboardStatsCard({ label, value, change, idx }) {
         >
             <p className="stats-card-label">{label}</p>
             <div className="stats-card-value-container">
-
                 <h3 className="stats-card-value">{value}</h3>
-                <span className={`stats-card-change ${isPositive ? 'positive' : 'negative'}`}>
-                    {change}
-                </span>
-
+                {change && (
+                    <span className={`stats-card-change ${isPositive ? 'positive' : isNegative ? 'negative' : 'neutral'}`}>
+                        {change}
+                    </span>
+                )}
             </div>
         </motion.div>
     )

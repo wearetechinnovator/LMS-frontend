@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 export default function Toast({ message, isVisible, onClose }) {
   React.useEffect(() => {
     if (isVisible) {
-      const timer = setTimeout(onClose, 3000)
+      const timer = setTimeout(onClose, 2000)
       return () => clearTimeout(timer)
     }
   }, [isVisible, onClose])

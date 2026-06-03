@@ -13,6 +13,7 @@ export default function FormBuilderPage() {
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 })
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [activePreviewTemplate, setActivePreviewTemplate] = useState(null)
+  const [publishedForm, setPublishedForm] = useState(null)
   const hideTimer = useRef(null)
 
   const showPreview = (form, e) => {
@@ -102,6 +103,7 @@ export default function FormBuilderPage() {
   // Set up action to open fresh blank form builder
   const handleCreateNewForm = () => {
     setActiveFormSchema({
+      id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
       title: 'New Lead Capture Form',
       description: 'Please fill out the form fields below. The sales team will be notified upon submission.',
       status: 'Draft',
@@ -115,6 +117,7 @@ export default function FormBuilderPage() {
   // Handle template selection & clone to launch builder
   const handleSelectTemplate = (template) => {
     setActiveFormSchema({
+      id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
       title: `${template.name} (Copy)`,
       description: template.description,
       status: 'Draft',
@@ -144,23 +147,27 @@ export default function FormBuilderPage() {
 
   // Save edited or created form
   const handleSaveForm = (updatedData) => {
-    if (activeFormSchema.id) {
+    let savedForm = null
+    const isExisting = activeFormSchema.id && formsList.some(form => form.id === activeFormSchema.id)
+    if (isExisting) {
       setFormsList(prev => prev.map(form => {
         if (form.id === activeFormSchema.id) {
-          return {
+          const updated = {
             ...form,
             name: updatedData.title,
             description: updatedData.description,
             fields: updatedData.fields,
             status: updatedData.status
           }
+          savedForm = updated
+          return updated
         }
         return form
       }))
       triggerToast(`Form "${updatedData.title}" saved successfully!`)
     } else {
       const newForm = {
-        id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
+        id: activeFormSchema.id || `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
         name: updatedData.title,
         description: updatedData.description,
         fields: updatedData.fields,
@@ -170,9 +177,11 @@ export default function FormBuilderPage() {
         createdBy: 'System Admin',
         createdDate: 'Just now'
       }
+      savedForm = newForm
       setFormsList([newForm, ...formsList])
       triggerToast(`New form "${updatedData.title}" created successfully!`)
     }
+
     setActiveFormSchema(null)
   }
 
@@ -365,6 +374,7 @@ export default function FormBuilderPage() {
               initialDescription={activeFormSchema.description}
               initialFields={activeFormSchema.fields}
               initialStatus={activeFormSchema.status ? (activeFormSchema.status.charAt(0).toUpperCase() + activeFormSchema.status.slice(1).toLowerCase()) : 'Draft'}
+              initialId={activeFormSchema.id || 'new'}
               onBack={() => setActiveFormSchema(null)}
               onSave={handleSaveForm}
               onSaveAsTemplate={handleSaveAsTemplate}

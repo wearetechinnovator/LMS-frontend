@@ -23,7 +23,7 @@ export default function FormEmbed() {
         { id: 4, name: 'Scholarship Application', type: 'Application', status: 'Draft', created: '2026-04-28', fields: 25 }
     ]
 
-    const generateEmbedCode = (formId, type) => {
+    const generateEmbedCode = (formId, type, shouldCopy = false) => {
         const form = forms.find(f => f.id === formId)
         let code = ''
 
@@ -32,30 +32,13 @@ export default function FormEmbed() {
                 code = `<iframe src="${window.location.origin}/embed/form/${formId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 8px;"></iframe>`
                 break
             case 'script':
-                code = `<div id="lms-form-${formId}"></div>
-<script src="${window.location.origin}/embed/js/form-${formId}.js" data-form-id="${formId}"></script>`
+                code = `<div id="lms-form-${formId}"></div>\n<script src="${window.location.origin}/embed/js/form-${formId}.js" data-form-id="${formId}"></script>`
                 break
             case 'api':
-                code = `fetch('${window.location.origin}/api/forms/${formId}/embed', {
-  method: 'GET',
-  headers: { 'Content-Type': 'application/json' }
-})
-.then(response => response.json())
-.then(data => {
-  document.getElementById('form-container').innerHTML = data.html
-})
-.catch(error => console.error('Error:', error))`
+                code = `fetch('${window.location.origin}/api/forms/${formId}/embed', {\n  method: 'GET',\n  headers: { 'Content-Type': 'application/json' }\n})\n.then(response => response.json())\n.then(data => {\n  document.getElementById('form-container').innerHTML = data.html\n})\n.catch(error => console.error('Error:', error))`
                 break
             case 'widget':
-                code = `<script>
-window.LMSFormWidget = {
-  formId: ${formId},
-  containerId: 'form-widget-${formId}',
-  apiUrl: '${window.location.origin}/api'
-}
-</script>
-<div id="form-widget-${formId}"></div>
-<script src="${window.location.origin}/embed/widget/form-widget.js"></script>`
+                code = `<script>\nwindow.LMSFormWidget = {\n  formId: ${formId},\n  containerId: 'form-widget-${formId}',\n  apiUrl: '${window.location.origin}/api'\n}\n</script>\n<div id="form-widget-${formId}"></div>\n<script src="${window.location.origin}/embed/widget/form-widget.js"></script>`
                 break
             default:
                 code = ''
@@ -63,7 +46,15 @@ window.LMSFormWidget = {
 
         setEmbedCode(code)
         setSelectedForm(form)
-        triggerToast(`${type.toUpperCase()} embed code generated for "${form.name}"`)
+
+        if (shouldCopy && code) {
+            navigator.clipboard.writeText(code)
+            setCopiedCode(true)
+            triggerToast(`${type.toUpperCase()} embed code copied to clipboard!`)
+            setTimeout(() => setCopiedCode(false), 2000)
+        } else {
+            triggerToast(`${type.toUpperCase()} embed code generated for "${form.name}"`)
+        }
     }
 
     const copyToClipboard = () => {
@@ -144,7 +135,7 @@ window.LMSFormWidget = {
                                         className={`form-embed-type-tab ${embedType === item.type ? 'active' : ''}`}
                                         onClick={() => {
                                             setEmbedType(item.type)
-                                            generateEmbedCode(selectedForm.id, item.type)
+                                            generateEmbedCode(selectedForm.id, item.type, true)
                                         }}
                                     >
                                         <span className="material-symbols-outlined form-embed-tab-icon">

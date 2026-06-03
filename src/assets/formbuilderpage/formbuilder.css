@@ -198,4 +198,16 @@
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
 }
 
+/* Fullscreen styling for form builder scope (includes library and settings) */
+.form-builder-scope:fullscreen {
+    background-color: #f8fafc !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+}
+
+.form-builder-scope:fullscreen .form-builder-content-container {
+    max-width: 100% !important;
+}
+
 

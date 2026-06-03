@@ -5,6 +5,7 @@ import DasboardStatsCard from '../components/Dashboard/DasboardStatsCard'
 import DashboardGraphCard from '../components/Dashboard/DashboardGraphCard'
 import DashboardRecentLeads from '../components/Dashboard/DashboardRecentLeads'
 import ExportButton from '../components/ExportButton'
+import DeepDiveAnalytics from '../components/Dashboard/DeepDiveAnalytics'
 
 export default function Dashboard() {
   const [toastMsg, setToastMsg] = useState(null)
@@ -144,6 +145,9 @@ export default function Dashboard() {
 
       {/* Graph cards */}
       <DashboardGraphCard sources={sources} />
+
+      {/* Deep Dive Counselor/Daily/Channel Analytics */}
+      <DeepDiveAnalytics triggerToast={triggerToast} />
 
       <DashboardRecentLeads leads={leads} getStatusClass={getStatusClass} />
 

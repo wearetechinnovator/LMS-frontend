@@ -12,6 +12,8 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
     return saved ? parseInt(saved, 10) : 240
   })
   const [isResizing, setIsResizing] = React.useState(false)
+  const [hoveredItem, setHoveredItem] = React.useState(null)
+  const [tooltipTop, setTooltipTop] = React.useState(0)
 
   const startResizing = React.useCallback((e) => {
     e.preventDefault()
@@ -60,7 +62,8 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
   }
 
   return (
-    <motion.aside
+    <>
+      <motion.aside
       className={`sidebar-aside ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}
       style={{
         width: sidebarCollapsed ? '64px' : `${width}px`,
@@ -96,7 +99,14 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
           <button
             key={item.id}
             onClick={() => navigate(item.path)}
-            title={sidebarCollapsed ? item.label : ''}
+            onMouseEnter={(e) => {
+              if (sidebarCollapsed) {
+                const rect = e.currentTarget.getBoundingClientRect()
+                setTooltipTop(rect.top + rect.height / 2)
+                setHoveredItem(item.label)
+              }
+            }}
+            onMouseLeave={() => setHoveredItem(null)}
             className={`nav-item ${getActiveItem() === item.id ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
           >
             <span className="material-symbols-outlined icon">{item.icon}</span>
@@ -128,6 +138,23 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
           onMouseDown={startResizing}
         />
       )}
-    </motion.aside>
+
+      </motion.aside>
+
+      {sidebarCollapsed && hoveredItem && (
+        <div
+          style={{
+            position: 'fixed',
+            left: '72px',
+            top: `${tooltipTop}px`,
+            transform: 'translateY(-50%)',
+            zIndex: 9999,
+          }}
+          className="bg-slate-900/95 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-md border border-slate-800 flex items-center select-none whitespace-nowrap leading-none tracking-wide"
+        >
+          {hoveredItem}
+        </div>
+      )}
+    </>
   )
 }
