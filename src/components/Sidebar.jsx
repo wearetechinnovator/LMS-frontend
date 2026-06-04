@@ -50,6 +50,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
     { id: 'form-builder', label: 'Form Builder', icon: 'build', path: '/form-builder' },
     { id: 'leads', label: 'All Leads', icon: 'people', path: '/leads' },
+    { id: 'analytics', label: 'Analytics', icon: 'analytics', path: '/analytics' },
     { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/departments' },
     { id: 'teams', label: 'Teams', icon: 'group', path: '/teams' },
     { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/audit-logs' },

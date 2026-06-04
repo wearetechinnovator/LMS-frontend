@@ -23,6 +23,7 @@ const CampaignsPage = React.lazy(() => import('./pages/CampaignsPage'))
 const AuditLogsPage = React.lazy(() => import('./pages/AuditLogs'))
 const LmsSettingsPage = React.lazy(() => import('./pages/LmsSettings'))
 const FormEmbed = React.lazy(() => import('./pages/FormEmbed'))
+const AnalyticsPage = React.lazy(() => import('./pages/Analytics'))
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -95,6 +96,9 @@ function DashboardLayout({ username, onLogout }) {
 
               {/* LMS Settings */}
               <Route path="settings" element={<LmsSettingsPage />} />
+
+              {/* Analytics */}
+              <Route path="analytics" element={<AnalyticsPage />} />
 
               {/* Default redirect */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />

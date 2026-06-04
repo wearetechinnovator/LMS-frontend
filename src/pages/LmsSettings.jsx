@@ -1,58 +1,134 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+const COUNSELORS = ['Sarah Jenkins', 'Marcus Chan', 'Michael Chen', 'Unassigned']
+const SOURCES = ['Website Organic', 'Paid Search', 'Referral', 'Webinar', 'Cold Outreach', 'Direct Mail', 'Bulk Offline CSV']
+
 export default function LmsSettings() {
-  const [activeTab, setActiveTab] = useState('routing')
+  const [activeSettingsTab, setActiveSettingsTab] = useState('session') // 'session' | 'import' | 'export'
   const [toastMsg, setToastMsg] = useState(null)
 
-  // -- TAB 1: ROUTING RULES STATE --
-  const [routingMode, setRoutingMode] = useState('RULE_BASED') // ROUND_ROBIN, WEIGHTED, RULE_BASED
-  const [counselorWeights, setCounselorWeights] = useState([
-    { name: 'Sarah Jenkins', weight: 40, activeLeads: 12 },
-    { name: 'Marcus Chan', weight: 40, activeLeads: 9 },
-    { name: 'Michael Chen', weight: 20, activeLeads: 15 }
-  ])
-  const [routingRules, setRoutingRules] = useState([
-    { id: 1, parameter: 'Lead Source', operator: 'equals', value: 'Paid Search', assignee: 'Marcus Chan', active: true },
-    { id: 2, parameter: 'Score', operator: 'greater_than', value: '80', assignee: 'Sarah Jenkins', active: true },
-    { id: 3, parameter: 'Location', operator: 'equals', value: 'London, UK', assignee: 'Sarah Jenkins', active: true },
-    { id: 4, parameter: 'Campaign', operator: 'equals', value: 'Q3_Tech_Promo', assignee: 'Michael Chen', active: false }
-  ])
+  // -- TAB 1: Session Creation States --
+  const [sessionOption, setSessionOption] = useState('yes') // 'yes' | 'inline_two'
+  const [sessionPhone, setSessionPhone] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpVerified, setOtpVerified] = useState(false)
+  const [otpError, setOtpError] = useState(null)
+  const [currentSessionDate, setCurrentSessionDate] = useState('01/15/2020 - 02/21/2020')
+  const [newSessionDate, setNewSessionDate] = useState('06/04/2026 - 07/04/2026')
+  const [creatingSession, setCreatingSession] = useState(false)
 
-  // New Rule Form State
-  const [newRule, setNewRule] = useState({
-    parameter: 'Lead Source',
-    operator: 'equals',
-    value: '',
-    assignee: 'Sarah Jenkins'
+  // -- TAB 2: Import Leads States --
+  const [assignedTo, setAssignedTo] = useState('Sarah Jenkins')
+  const [leadSource, setLeadSource] = useState('Website Organic')
+  const [file, setFile] = useState(null)
+  const [parsedData, setParsedData] = useState([])
+  const [parseError, setParseError] = useState(null)
+  const [dragActive, setDragActive] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const fileInputRef = useRef(null)
+
+  // -- TAB 3: Export Leads States --
+  const [exportFormat, setExportFormat] = useState('CSV') // 'CSV' | 'JSON'
+  const [filterCounselor, setFilterCounselor] = useState('All Counselors')
+  const [filterSource, setFilterSource] = useState('All Sources')
+  const [filterStatus, setFilterStatus] = useState('All Statuses')
+  const [exporting, setExporting] = useState(false)
+
+  // -- TAB 4: Bulk Messaging States --
+  const [campaignTitle, setCampaignTitle] = useState('')
+  const [deliveryChannel, setDeliveryChannel] = useState('both') // 'email' | 'sms' | 'both'
+  const [campaignSubject, setCampaignSubject] = useState('')
+  const [campaignMessage, setCampaignMessage] = useState('')
+  const [targetMode, setTargetMode] = useState('database') // 'database' | 'manual'
+  const [minScore, setMinScore] = useState('0')
+  const [maxScore, setMaxScore] = useState('100')
+  const [targetCounselor, setTargetCounselor] = useState('All Counselors')
+  const [manualRecipients, setManualRecipients] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const [sendingProgress, setSendingProgress] = useState(0)
+
+  // -- Leads Database Sync state (for Export preview) --
+  const [leadsList, setLeadsList] = useState(() => {
+    const localLeads = localStorage.getItem('lms_leads_database')
+    if (localLeads) {
+      try {
+        return JSON.parse(localLeads)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    return []
   })
-  const [showAddRuleForm, setShowAddRuleForm] = useState(false)
 
-  // -- TAB 2: SCORING ENGINE STATE --
-  const [scoringRules, setScoringRules] = useState([
-    { id: '1', event: 'Web Form Submission', points: 25, active: true, category: 'Conversion' },
-    { id: '2', event: 'Email Link Click', points: 10, active: true, category: 'Engagement' },
-    { id: '3', event: 'Email Opened', points: 5, active: true, category: 'Engagement' },
-    { id: '4', event: 'Phone Call Connected', points: 20, active: true, category: 'Call' },
-    { id: '5', event: 'Phone Call No Answer', points: -5, active: true, category: 'Call' },
-    { id: '6', event: 'Meeting Attended', points: 40, active: true, category: 'Meeting' }
-  ])
-  const [newScoringEvent, setNewScoringEvent] = useState({ event: '', points: 10, category: 'Engagement' })
-  const [showAddScoringForm, setShowAddScoringForm] = useState(false)
+  // Sync leads from localStorage when event fires
+  useEffect(() => {
+    const handleLeadsUpdate = () => {
+      const localLeads = localStorage.getItem('lms_leads_database')
+      if (localLeads) {
+        try {
+          setLeadsList(JSON.parse(localLeads))
+        } catch (err) {
+          console.error(err)
+        }
+      }
+    }
+    window.addEventListener('lms-leads-updated', handleLeadsUpdate)
+    return () => {
+      window.removeEventListener('lms-leads-updated', handleLeadsUpdate)
+    }
+  }, [])
 
-  // -- TAB 3: INTEGRATIONS & WEBHOOKS STATE --
-  const [webhookToken, setWebhookToken] = useState('tis_lms_prod_9021a3b8cd2b17f8a')
-  const [webhookCopied, setWebhookCopied] = useState(false)
-  const [testingPayload, setTestingPayload] = useState(false)
-  const [webhookPayload, setWebhookPayload] = useState(JSON.stringify({
-    name: "Alex Mercer",
-    email: "alex.m@biotech.com",
-    phone: "+1 (555) 789-0122",
-    source: "Webhook Ingest API",
-    score: 85,
-    location: "Austin, TX",
-    campaign: "Q3_Tech_Promo"
-  }, null, 2))
+  // Memoize filtered leads for the Export tab preview
+  const filteredLeads = useMemo(() => {
+    return leadsList.filter(lead => {
+      const matchCounselor = filterCounselor === 'All Counselors' || lead.assignedTo === filterCounselor
+      const matchSource = filterSource === 'All Sources' || lead.source === filterSource
+      const matchStatus = filterStatus === 'All Statuses' || lead.status === filterStatus
+      return matchCounselor && matchSource && matchStatus
+    })
+  }, [leadsList, filterCounselor, filterSource, filterStatus])
+
+  // Memoize targeted leads for bulk messaging selection
+  const bulkTargetedLeads = useMemo(() => {
+    return leadsList.filter(lead => {
+      const matchCounselor = targetCounselor === 'All Counselors' || lead.assignedTo === targetCounselor
+      const score = lead.score ?? 0
+      const parsedMin = parseInt(minScore) || 0
+      const parsedMax = parseInt(maxScore) || 100
+      const matchScore = score >= parsedMin && score <= parsedMax
+      return matchCounselor && matchScore
+    })
+  }, [leadsList, targetCounselor, minScore, maxScore])
+
+  // Helper to parse manual input into lists of valid emails and phone numbers
+  const parsedManualRecipients = useMemo(() => {
+    if (!manualRecipients) return { emails: [], phones: [], total: 0 }
+    
+    // Split by comma, newline, or whitespace
+    const tokens = manualRecipients.split(/[\s,\n\r]+/).map(t => t.trim()).filter(Boolean)
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const phoneRegex = /^\+?[\d\s\-()]{7,20}$/
+    
+    const emails = []
+    const phones = []
+    
+    tokens.forEach(token => {
+      if (emailRegex.test(token)) {
+        emails.push(token)
+      } else if (phoneRegex.test(token) && token.replace(/\D/g, '').length >= 7) {
+        phones.push(token)
+      }
+    })
+    
+    return {
+      emails,
+      phones,
+      total: emails.length + phones.length
+    }
+  }, [manualRecipients])
 
   const triggerToast = (msg) => {
     setToastMsg(msg)
@@ -61,121 +137,449 @@ export default function LmsSettings() {
     }, 3500)
   }
 
-  // Handle Weight Slider adjustments
-  const handleWeightChange = (index, value) => {
-    const updated = [...counselorWeights]
-    updated[index].weight = parseInt(value) || 0
-    setCounselorWeights(updated)
-  }
-
-  const totalWeight = counselorWeights.reduce((sum, item) => sum + item.weight, 0)
-
-  // Add Routing Rule
-  const handleAddRoutingRule = (e) => {
+  // --- BULK MESSAGING HANDLER ---
+  const handleBulkMessageSubmit = (e) => {
     e.preventDefault()
-    if (!newRule.value.trim()) {
-      triggerToast('Please provide a condition value for the routing rule')
+    
+    if (!campaignTitle.trim()) {
+      triggerToast("Error: Campaign title is required.")
       return
     }
-    const rule = {
-      id: Date.now(),
-      parameter: newRule.parameter,
-      operator: newRule.operator,
-      value: newRule.value,
-      assignee: newRule.assignee,
-      active: true
+    if ((deliveryChannel === 'email' || deliveryChannel === 'both') && !campaignSubject.trim()) {
+      triggerToast("Error: Subject is required for email delivery.")
+      return
     }
-    setRoutingRules([...routingRules, rule])
-    setNewRule({ parameter: 'Lead Source', operator: 'equals', value: '', assignee: 'Sarah Jenkins' })
-    setShowAddRuleForm(false)
-    triggerToast('New conditional routing rule successfully registered')
-  }
+    if (!campaignMessage.trim()) {
+      triggerToast("Error: Message body is required.")
+      return
+    }
 
-  // Toggle Rule Status
-  const toggleRuleActive = (id) => {
-    setRoutingRules(routingRules.map(r => r.id === id ? { ...r, active: !r.active } : r))
-  }
+    let recipientsCount = 0
+    let targets = []
+    if (targetMode === 'database') {
+      targets = bulkTargetedLeads
+      recipientsCount = targets.length
+    } else {
+      recipientsCount = parsedManualRecipients.total
+    }
 
-  // Delete Routing Rule
-  const deleteRoutingRule = (id) => {
-    setRoutingRules(routingRules.filter(r => r.id !== id))
-    triggerToast('Routing rule deleted')
-  }
+    if (recipientsCount === 0) {
+      triggerToast("Error: No valid recipients found.")
+      return
+    }
 
-  // Scoring Rule adjustments
-  const adjustScorePoints = (id, amount) => {
-    setScoringRules(scoringRules.map(rule => {
-      if (rule.id === id) {
-        return { ...rule, points: rule.points + amount }
+    setIsSending(true)
+    setSendingProgress(0)
+
+    // Simulate progress sending
+    const duration = 2000 // 2 seconds
+    const intervalTime = 100
+    const steps = duration / intervalTime
+    let currentStep = 0
+
+    const timer = setInterval(() => {
+      currentStep++
+      const progress = Math.min(Math.round((currentStep / steps) * 100), 100)
+      setSendingProgress(progress)
+
+      if (currentStep >= steps) {
+        clearInterval(timer)
+        
+        // If targeting database leads, append activity log to their timelines
+        if (targetMode === 'database' && targets.length > 0) {
+          const localLeads = localStorage.getItem('lms_leads_database')
+          let dbLeads = []
+          if (localLeads) {
+            try {
+              dbLeads = JSON.parse(localLeads)
+            } catch (err) {
+              console.error(err)
+            }
+          }
+
+          // Build a set of matching lead IDs for efficient lookup
+          const targetedIds = new Set(targets.map(l => l.id))
+          
+          const updatedDbLeads = dbLeads.map(lead => {
+            if (targetedIds.has(lead.id)) {
+              // Prepend new activity item
+              const newActivity = {
+                id: Date.now() + Math.random(),
+                type: 'OUTBOUND',
+                title: `Bulk Message: ${campaignTitle}`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+                body: `Channel: ${deliveryChannel.toUpperCase()}\nSubject: ${campaignSubject || 'N/A'}\nMessage: ${campaignMessage}`,
+                user: 'Admin',
+                ip: '192.168.1.100',
+                icon: deliveryChannel === 'email' ? 'mail' : deliveryChannel === 'sms' ? 'sms' : 'chat',
+                color: 'blue-600'
+              }
+              return {
+                ...lead,
+                timeline: [newActivity, ...(lead.timeline || [])],
+                activityCount: (lead.activityCount || 0) + 1,
+                lastContacted: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              }
+            }
+            return lead
+          })
+
+          localStorage.setItem('lms_leads_database', JSON.stringify(updatedDbLeads))
+          window.dispatchEvent(new CustomEvent('lms-leads-updated'))
+        }
+
+        setIsSending(false)
+        triggerToast(`Bulk campaign '${campaignTitle}' successfully sent to ${recipientsCount} recipients!`)
+        
+        // Reset bulk form
+        setCampaignTitle('')
+        setCampaignSubject('')
+        setCampaignMessage('')
+        setManualRecipients('')
       }
-      return rule
-    }))
+    }, intervalTime)
   }
 
-  const toggleScoringActive = (id) => {
-    setScoringRules(scoringRules.map(rule => {
-      if (rule.id === id) {
-        return { ...rule, active: !rule.active }
-      }
-      return rule
-    }))
+  // --- OTP HANDLERS (Session Creation) ---
+  const handleSendOtp = () => {
+    if (!sessionPhone.trim()) {
+      setOtpError("Please enter a valid mobile number.")
+      return
+    }
+    setOtpError(null)
+    setOtpSent(true)
+    triggerToast("Verification code dispatched! Hint: Enter mock OTP '1234'.")
   }
 
-  const handleAddScoringRule = (e) => {
+  const handleVerifyOtp = () => {
+    if (otpCode === '1234') {
+      setOtpError(null)
+      setOtpVerified(true)
+      triggerToast("Mobile verification completed!")
+    } else {
+      setOtpError("Invalid verification code. Use '1234'.")
+    }
+  }
+
+  const handleCreateSessionSubmit = (e) => {
     e.preventDefault()
-    if (!newScoringEvent.event.trim()) {
-      triggerToast('Please provide a custom event name')
+    if (!otpVerified) {
+      triggerToast("Error: OTP must be verified to start a session.")
       return
     }
-    const newRule = {
-      id: String(Date.now()),
-      event: newScoringEvent.event,
-      points: parseInt(newScoringEvent.points) || 10,
-      active: true,
-      category: newScoringEvent.category
-    }
-    setScoringRules([...scoringRules, newRule])
-    setNewScoringEvent({ event: '', points: 10, category: 'Engagement' })
-    setShowAddScoringForm(false)
-    triggerToast(`Scoring rule added for ${newRule.event}`)
-  }
-
-  const handleCopyWebhook = () => {
-    const url = `https://api.tisindia.lms.com/v1/inbound?token=${webhookToken}`
-    navigator.clipboard.writeText(url)
-    setWebhookCopied(true)
-    triggerToast('Webhook Endpoint URL copied to clipboard!')
-    setTimeout(() => setWebhookCopied(false), 2000)
-  }
-
-  const handleRegenerateToken = () => {
-    const rand = Math.random().toString(16).substring(2, 10) + Math.random().toString(16).substring(2, 10)
-    setWebhookToken(`tis_lms_prod_${rand}`)
-    triggerToast('Generated a secure new endpoint key token')
-  }
-
-  const handleTriggerWebhookTest = () => {
-    let parsed
-    try {
-      parsed = JSON.parse(webhookPayload)
-    } catch (err) {
-      triggerToast('Error: Webhook payload is not valid JSON')
-      return
-    }
-    setTestingPayload(true)
+    setCreatingSession(true)
     setTimeout(() => {
-      setTestingPayload(false)
-      triggerToast(`Webhook Ingested successfully! Lead ID: LS-${Math.floor(1000 + Math.random() * 9000)} (${parsed.name || 'Anonymous'}) routed to ${parsed.assignedTo || 'Sarah Jenkins'} via routing rules`)
+      setCurrentSessionDate(newSessionDate)
+      triggerToast(`Session successfully created! Range: ${newSessionDate}`)
+      
+      // Reset Verification
+      setOtpSent(false)
+      setOtpVerified(false)
+      setOtpCode('')
+      setSessionPhone('')
+      setNewSessionDate('06/04/2026 - 07/04/2026')
+      setCreatingSession(false)
+    }, 1200)
+  }
+
+  // --- CSV PARSING HANDLERS (Lead Import) ---
+  const parseCSVText = (text) => {
+    const lines = text.split(/\r?\n/)
+    if (lines.length === 0 || !lines[0].trim()) {
+      throw new Error("The file is empty or invalid.")
+    }
+    
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase())
+    const required = ['name', 'email', 'phone']
+    const missing = required.filter(r => !headers.includes(r))
+    if (missing.length > 0) {
+      throw new Error(`Missing required headers: ${missing.join(', ')}`)
+    }
+
+    const records = []
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+      
+      const values = []
+      let currentVal = ''
+      let insideQuotes = false
+      
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j]
+        if (char === '"' || char === "'") {
+          insideQuotes = !insideQuotes
+        } else if (char === ',' && !insideQuotes) {
+          values.push(currentVal.trim().replace(/^["']|["']$/g, ''))
+          currentVal = ''
+        } else {
+          currentVal += char
+        }
+      }
+      values.push(currentVal.trim().replace(/^["']|["']$/g, ''))
+      
+      const record = {}
+      headers.forEach((header, idx) => {
+        record[header] = values[idx] || ''
+      })
+      
+      if (record.name || record.email || record.phone) {
+        records.push(record)
+      }
+    }
+    return records
+  }
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files ? e.target.files[0] : null
+    processSelectedFile(selectedFile)
+  }
+
+  const processSelectedFile = (selectedFile) => {
+    if (!selectedFile) return
+    if (!selectedFile.name.endsWith('.csv')) {
+      setParseError("Invalid file type. Please upload a valid .csv file.")
+      setFile(null)
+      setParsedData([])
+      return
+    }
+    
+    setFile(selectedFile)
+    setParseError(null)
+    
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result
+        const data = parseCSVText(text)
+        setParsedData(data)
+      } catch (err) {
+        setParseError(err.message || "Failed to parse the CSV file.")
+        setParsedData([])
+      }
+    }
+    reader.onerror = () => {
+      setParseError("Error reading file.")
+      setParsedData([])
+    }
+    reader.readAsText(selectedFile)
+  }
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processSelectedFile(e.dataTransfer.files[0])
+    }
+  }
+
+  const handleRemoveFile = () => {
+    setFile(null)
+    setParsedData([])
+    setParseError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleDownloadSample = () => {
+    const csvContent = 
+      "name,email,phone,location,campaign,score\n" +
+      "John Doe,john.doe@example.com,+1 (555) 123-4567,\"Chicago, IL\",Summer_Admissions_2026,82\n" +
+      "Aisha Sharma,aisha.s@techcorp.in,+91 98765 43210,\"Mumbai, IN\",Webinar_Signups,95\n" +
+      "Chloe Dupont,chloe.d@edu.fr,+33 6 1234 5678,\"Paris, FR\",International_Referral,72"
+      
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'lms_sample_leads_template.csv')
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    triggerToast("Sample CSV Template downloaded!")
+  }
+
+  const handleImportLeadsSubmit = (e) => {
+    e.preventDefault()
+    if (!file || parsedData.length === 0) {
+      triggerToast("Error: Please provide a valid parsed CSV file before importing.")
+      return
+    }
+
+    setImporting(true)
+    setTimeout(() => {
+      // Load current leads from localStorage
+      const localLeads = localStorage.getItem('lms_leads_database')
+      let leadsList = []
+      if (localLeads) {
+        try {
+          leadsList = JSON.parse(localLeads)
+        } catch (err) {
+          console.error(err)
+        }
+      }
+
+      let nextIdNumber = 1022
+      if (leadsList.length > 0) {
+        const ids = leadsList.map(l => parseInt(l.id.replace('LS-', ''))).filter(n => !isNaN(n))
+        if (ids.length > 0) {
+          nextIdNumber = Math.max(...ids) + 1
+        }
+      }
+
+      const newLeads = parsedData.map((row, index) => {
+        const idNum = nextIdNumber + index
+        const leadId = `LS-${idNum}`
+        const scoreValue = parseInt(row.score) || Math.floor(40 + Math.random() * 45)
+        
+        return {
+          id: leadId,
+          name: row.name || 'Anonymous Lead',
+          email: row.email || 'no-email@domain.com',
+          phone: row.phone || 'N/A',
+          status: 'NEW',
+          assignedTo: assignedTo,
+          source: leadSource,
+          score: scoreValue,
+          location: row.location || 'Unknown',
+          campaign: row.campaign || 'CSV_Ingestion',
+          tier: scoreValue >= 80 ? 'Primary' : scoreValue >= 50 ? 'Secondary' : 'Tertiary',
+          verified: Math.random() > 0.3,
+          formName: 'Bulk Offline CSV',
+          createdToday: true,
+          lastContacted: 'None',
+          nextFollowUp: 'None',
+          age: '1 day',
+          priority: scoreValue >= 80 ? 'High' : scoreValue >= 50 ? 'Medium' : 'Low',
+          tags: ['CSV Import'],
+          activityCount: 0,
+          conversionProb: scoreValue,
+          leadType: 'Offline',
+          timeline: [
+            {
+              id: Date.now() + index,
+              type: 'CREATION',
+              title: 'Lead Ingested (CSV Import)',
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+              body: `Uploaded via Lead Import under Source: ${leadSource}`,
+              user: 'Admin',
+              ip: '192.168.1.100',
+              icon: 'upload_file',
+              color: 'green-600'
+            }
+          ],
+          application: {
+            appliedProgram: 'Starter Solo Plan',
+            submissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            companyName: 'N/A',
+            companySize: 'Unknown',
+            annualRevenue: 'N/A',
+            useCase: `CSV Lead Import`,
+            notes: `Lead assigned to counselor ${assignedTo}`
+          },
+          queries: []
+        }
+      })
+
+      const updatedLeads = [...newLeads, ...leadsList]
+      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads))
+      
+      // Dispatch custom storage update event to alert any mounted lead tables
+      window.dispatchEvent(new CustomEvent('lms-leads-updated'))
+
+      setImporting(false)
+      triggerToast(`Successfully imported ${parsedData.length} leads!`)
+      
+      // Reset Import Tab Form
+      setFile(null)
+      setParsedData([])
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }, 1500)
   }
 
+  // --- EXPORT HANDLERS ---
+  const handleExportSubmit = (e) => {
+    e.preventDefault()
+    if (filteredLeads.length === 0) {
+      triggerToast("Warning: No leads found matching the selected export filter options.")
+      return
+    }
+    setExporting(true)
+
+    setTimeout(() => {
+      let fileContent = ''
+      let fileType = 'text/plain'
+      let fileName = 'lms_leads_export'
+
+      if (exportFormat === 'CSV') {
+        const headers = ['ID', 'Name', 'Email', 'Phone', 'Status', 'Assigned To', 'Source', 'Score', 'Location', 'Campaign']
+        const rows = filteredLeads.map(l => [
+          l.id,
+          `"${l.name.replace(/"/g, '""')}"`,
+          l.email,
+          l.phone,
+          l.status,
+          `"${l.assignedTo.replace(/"/g, '""')}"`,
+          `"${l.source.replace(/"/g, '""')}"`,
+          l.score,
+          `"${l.location.replace(/"/g, '""')}"`,
+          `"${l.campaign.replace(/"/g, '""')}"`
+        ])
+        fileContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+        fileType = 'text/csv;charset=utf-8;'
+        fileName += '.csv'
+      } else {
+        // JSON Export
+        fileContent = JSON.stringify(filteredLeads, null, 2)
+        fileType = 'application/json;charset=utf-8;'
+        fileName += '.json'
+      }
+
+      const blob = new Blob([fileContent], { type: fileType })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.setAttribute('href', url)
+      link.setAttribute('download', fileName)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      setExporting(false)
+      triggerToast(`Export successful! Downloaded ${filteredLeads.length} matching leads.`)
+    }, 1000)
+  }
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
   return (
-    <div className="w-full relative h-full flex flex-col font-sans select-none p-6 text-left">
+    <div className="w-full relative h-full flex flex-col font-sans select-none p-6 bg-white text-left">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMsg && (
           <motion.div
-            className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 border border-slate-800"
+            className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 border border-slate-800"
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -187,387 +591,533 @@ export default function LmsSettings() {
         )}
       </AnimatePresence>
 
-      {/* Header Block */}
-      <div className="flex justify-between items-center border-b border-outline-variant pb-4 mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 leading-tight">LMS Settings & Automation</h1>
-          <p className="text-[12px] text-on-surface-variant font-medium mt-0.5">Configure automated routing engines, lead scoring setups, and developer webhook ingestions.</p>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-full text-[11px] font-bold text-slate-600">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          LMS Engine v2.4 (Active)
-        </div>
-      </div>
-
-      {/* Settings Navigation Tabs */}
-      <div className="flex border-b border-outline-variant gap-4 mb-6 select-none">
+      {/* Tab Navigation Menu */}
+      <div className="flex border-b border-slate-100 gap-6 mb-5 select-none">
         <button
-          onClick={() => setActiveTab('routing')}
-          className={`pb-3 font-semibold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'routing' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
+          onClick={() => setActiveSettingsTab('session')}
+          className={`pb-2.5 font-bold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeSettingsTab === 'session' ? 'border-[#2f7d9e] text-[#2f7d9e]' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">rule</span>
-          Lead Distribution & Routing
+          <span className="material-symbols-outlined text-[17px]">event_note</span>
+          Session Creation
         </button>
         <button
-          onClick={() => setActiveTab('scoring')}
-          className={`pb-3 font-semibold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'scoring' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
+          onClick={() => setActiveSettingsTab('import')}
+          className={`pb-2.5 font-bold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeSettingsTab === 'import' ? 'border-[#2f7d9e] text-[#2f7d9e]' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">grade</span>
-          Lead Scoring Engine
+          <span className="material-symbols-outlined text-[17px]">publish</span>
+          Import Leads
         </button>
         <button
-          onClick={() => setActiveTab('integrations')}
-          className={`pb-3 font-semibold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'integrations' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
+          onClick={() => setActiveSettingsTab('export')}
+          className={`pb-2.5 font-bold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeSettingsTab === 'export' ? 'border-[#2f7d9e] text-[#2f7d9e]' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">webhook</span>
-          Integrations & Inbound Webhooks
+          <span className="material-symbols-outlined text-[17px]">download</span>
+          Export Leads
+        </button>
+        <button
+          onClick={() => setActiveSettingsTab('bulk')}
+          className={`pb-2.5 font-bold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeSettingsTab === 'bulk' ? 'border-[#2f7d9e] text-[#2f7d9e]' : 'border-transparent text-slate-400 hover:text-slate-700'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[17px]">chat</span>
+          Bulk Messaging
         </button>
       </div>
 
-      {/* Tab Panel Content */}
-      <div className="flex-1">
-        <AnimatePresence mode="wait">
-          
-          {/* TAB 1: LEAD ROUTING */}
-          {activeTab === 'routing' && (
-            <motion.div
-              key="routing"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <AnimatePresence mode="wait">
+        {/* TAB 1: SESSION CREATION */}
+        {activeSettingsTab === 'session' && (
+          <motion.form
+            key="session-form"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
+            onSubmit={handleCreateSessionSubmit}
+            className="max-w-[650px] space-y-3"
+          >
+            {/* ROW 1: Current Session (Read-Only) */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Current Session
+              </div>
+              <div className="col-span-8">
+                <input
+                  type="text"
+                  readOnly
+                  value={currentSessionDate}
+                  className="w-full h-8 px-3 rounded border-none bg-[#e2e8f0] text-[#4a5568] text-[12px] font-medium outline-none"
+                />
+              </div>
+            </div>
+
+            {/* ROW 2: Do you want to create a new session? */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-start">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-0.5">
+                Do you want to create a new session?
+              </div>
+              <div className="col-span-8 space-y-1">
+                <div className="flex items-center gap-4 mt-0.5">
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="createNewSession"
+                      checked={sessionOption === 'yes'}
+                      onChange={() => setSessionOption('yes')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="createNewSession"
+                      checked={sessionOption === 'inline_two'}
+                      onChange={() => setSessionOption('inline_two')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    Inline Two
+                  </label>
+                </div>
                 
-                {/* Distribution Mode Block */}
-                <div className="lg:col-span-1 bg-surface border border-outline-variant rounded-xl p-5 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800">Routing Engines</h3>
-                    <p className="text-[11.5px] text-slate-500 mt-0.5">Determine how incoming leads are distributed among counselors.</p>
+                <p className="text-[10px] text-[#718096] leading-normal max-w-[500px] font-medium pt-0.5">
+                  Please use this option very carefully as this is going to create a new session and you won't be able to view the current session's data.
+                </p>
+              </div>
+            </div>
+
+            {/* Verification Inputs */}
+            {sessionOption !== '' && (
+              <div className="space-y-3">
+                {/* ROW 3: New Session From (editable/changeable) */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-center">
+                  <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                    New Session From
                   </div>
+                  <div className="col-span-8">
+                    <input
+                      type="text"
+                      value={newSessionDate}
+                      onChange={(e) => setNewSessionDate(e.target.value)}
+                      placeholder="MM/DD/YYYY - MM/DD/YYYY"
+                      className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
 
-                  <div className="space-y-3">
-                    {/* Mode 1: Round Robin */}
-                    <div
-                      onClick={() => setRoutingMode('ROUND_ROBIN')}
-                      className={`p-3 border rounded-xl cursor-pointer transition-all hover:bg-slate-50 flex items-start gap-3 ${
-                        routingMode === 'ROUND_ROBIN' ? 'border-primary bg-blue-50/20' : 'border-slate-200 bg-white'
-                      }`}
-                    >
+                {/* ROW 4: Send OTP */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-center">
+                  <div className="col-span-4" />
+                  <div className="col-span-8">
+                    <div className="flex rounded overflow-hidden">
                       <input
-                        type="radio"
-                        checked={routingMode === 'ROUND_ROBIN'}
-                        onChange={() => setRoutingMode('ROUND_ROBIN')}
-                        className="mt-0.5"
+                        type="tel"
+                        disabled={otpVerified}
+                        value={sessionPhone}
+                        onChange={(e) => setSessionPhone(e.target.value)}
+                        placeholder="8456822XXX"
+                        className="flex-1 h-8 px-3 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none border border-r-0 border-slate-200 focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed font-mono"
                       />
-                      <div>
-                        <span className="text-[12px] font-bold text-slate-800">Round Robin</span>
-                        <p className="text-[10px] text-slate-500 mt-0.5">Distributes leads equally and sequentially to all online counselors.</p>
-                      </div>
-                    </div>
-
-                    {/* Mode 2: Weighted */}
-                    <div
-                      onClick={() => setRoutingMode('WEIGHTED')}
-                      className={`p-3 border rounded-xl cursor-pointer transition-all hover:bg-slate-50 flex items-start gap-3 ${
-                        routingMode === 'WEIGHTED' ? 'border-primary bg-blue-50/20' : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        checked={routingMode === 'WEIGHTED'}
-                        onChange={() => setRoutingMode('WEIGHTED')}
-                        className="mt-0.5"
-                      />
-                      <div>
-                        <span className="text-[12px] font-bold text-slate-800">Weighted Allocation</span>
-                        <p className="text-[10px] text-slate-500 mt-0.5">Allocates leads dynamically based on adjustable assignee weight percentage variables.</p>
-                      </div>
-                    </div>
-
-                    {/* Mode 3: Conditional Rules */}
-                    <div
-                      onClick={() => setRoutingMode('RULE_BASED')}
-                      className={`p-3 border rounded-xl cursor-pointer transition-all hover:bg-slate-50 flex items-start gap-3 ${
-                        routingMode === 'RULE_BASED' ? 'border-primary bg-blue-50/20' : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        checked={routingMode === 'RULE_BASED'}
-                        onChange={() => setRoutingMode('RULE_BASED')}
-                        className="mt-0.5"
-                      />
-                      <div>
-                        <span className="text-[12px] font-bold text-slate-800">Advanced Rule-Based</span>
-                        <p className="text-[10px] text-slate-500 mt-0.5">Triggers route assignments based on complex fields logic rules (Campaign, Source, Location, etc.)</p>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={otpVerified || !sessionPhone}
+                        className="h-8 px-4 bg-[#3182ce] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[11.5px] font-bold flex items-center justify-center transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        Send OTP
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Detailed Controls Dashboard (Col span 2) */}
-                <div className="lg:col-span-2 bg-surface border border-outline-variant rounded-xl p-5 space-y-4">
-                  {routingMode === 'ROUND_ROBIN' && (
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-800">Round Robin Allocation Queue</h3>
-                        <p className="text-[11px] text-slate-500">Online assignees will receive leads in the order listed below.</p>
+                {/* ROW 5: Verify OTP */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-center">
+                  <div className="col-span-4" />
+                  <div className="col-span-8">
+                    <div className="flex rounded overflow-hidden">
+                      <input
+                        type="text"
+                        disabled={otpVerified || !otpSent}
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value)}
+                        placeholder="Enter OTP"
+                        className="flex-1 h-8 px-3 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none border border-r-0 border-slate-200 focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={otpVerified || !otpSent || !otpCode}
+                        className="h-8 px-4 bg-[#3182ce] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[11.5px] font-bold flex items-center justify-center transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        Verify OTP
+                      </button>
+                    </div>
+                    {otpError && (
+                      <p className="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-0.5">
+                        <span className="material-symbols-outlined text-[13px]">error</span>
+                        {otpError}
+                      </p>
+                    )}
+                    {otpVerified && (
+                      <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-0.5">
+                        <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                        Mobile Verified! Ready to create session.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Create Action Button */}
+            <div className="grid grid-cols-12 gap-3 pt-2">
+              <div className="col-span-4" />
+              <div className="col-span-8">
+                <button
+                  type="submit"
+                  disabled={creatingSession || !otpVerified}
+                  className="h-8 px-6 bg-[#2f7d9e] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[12px] font-bold rounded-full shadow flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  {creatingSession ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Creating Session...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.form>
+        )}
+
+        {/* TAB 2: IMPORT LEADS */}
+        {activeSettingsTab === 'import' && (
+          <motion.form
+            key="import-form"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
+            onSubmit={handleImportLeadsSubmit}
+            className="max-w-[650px] space-y-3"
+          >
+            {/* Counselor Assignment */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Assign Leads To
+              </div>
+              <div className="col-span-8">
+                <select
+                  value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                >
+                  {COUNSELORS.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Source Tag Selection */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Lead Source
+              </div>
+              <div className="col-span-8">
+                <select
+                  value={leadSource}
+                  onChange={(e) => setLeadSource(e.target.value)}
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                >
+                  {SOURCES.map(source => (
+                    <option key={source} value={source}>{source}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* CSV File Upload dropzone */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-start">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-0.5">
+                Upload CSV File
+              </div>
+              <div className="col-span-8 space-y-1.5">
+                <div
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`w-full min-h-[75px] border border-dashed rounded flex flex-col items-center justify-center p-3 transition-all cursor-pointer bg-[#f7fafc] ${
+                    dragActive ? 'border-sky-500 bg-sky-50/20' : 'border-slate-355 hover:border-sky-500'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept=".csv"
+                  />
+                  {!file ? (
+                    <div className="text-center space-y-0.5">
+                      <span className="material-symbols-outlined text-[20px] text-slate-400">upload_file</span>
+                      <p className="text-[11px] font-bold text-slate-700">Click or Drag CSV leads file here</p>
+                      <p className="text-[9.5px] text-slate-400">Requires name, email, phone columns</p>
+                    </div>
+                  ) : (
+                    <div className="w-full flex items-center justify-between p-1 bg-white border border-slate-200 rounded shadow-xs" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px] text-green-600">check_circle</span>
+                        <span className="text-[11px] font-bold text-slate-700 truncate max-w-[200px]">{file.name}</span>
+                        <span className="text-[9px] text-slate-500 font-mono">({formatFileSize(file.size)})</span>
                       </div>
-                      
-                      <div className="border border-slate-200 rounded-lg overflow-hidden">
-                        <table className="w-full text-left border-collapse text-[12px]">
-                          <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                              <th className="px-4 py-2.5">Position</th>
-                              <th className="px-4 py-2.5">Counselor</th>
-                              <th className="px-4 py-2.5">Current Cap</th>
-                              <th className="px-4 py-2.5">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            <tr>
-                              <td className="px-4 py-3 font-mono font-bold">1st</td>
-                              <td className="px-4 py-3 font-bold text-slate-800">Sarah Jenkins</td>
-                              <td className="px-4 py-3 text-slate-600">12 / 20 leads</td>
-                              <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">Online</span></td>
-                            </tr>
-                            <tr>
-                              <td className="px-4 py-3 font-mono font-bold">2nd</td>
-                              <td className="px-4 py-3 font-bold text-slate-800">Marcus Chan</td>
-                              <td className="px-4 py-3 text-slate-600">9 / 20 leads</td>
-                              <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">Online</span></td>
-                            </tr>
-                            <tr>
-                              <td className="px-4 py-3 font-mono font-bold">3rd</td>
-                              <td className="px-4 py-3 font-bold text-slate-800">Michael Chen</td>
-                              <td className="px-4 py-3 text-slate-600">15 / 30 leads</td>
-                              <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">Online</span></td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="p-3.5 bg-blue-50/40 border border-blue-100 rounded-lg flex items-start gap-2.5">
-                        <span className="material-symbols-outlined text-blue-600 text-[18px] mt-0.5">info</span>
-                        <p className="text-[10.5px] text-blue-800 leading-relaxed">
-                          Incoming leads trigger sequential assignments automatically. Under-capacity or idle counselors are dynamically weighted to receive primary assignments first.
-                        </p>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="w-5.5 h-5.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center border-none bg-transparent cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
                     </div>
                   )}
+                </div>
+                {parseError && (
+                  <p className="text-[10px] text-red-500 font-bold flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-[13px]">error</span>
+                    {parseError}
+                  </p>
+                )}
+                
+                {/* CSV Template Helpers */}
+                <div className="flex justify-between items-center bg-[#f7fafc] border border-slate-100 p-2 rounded text-[10px] text-[#4a5568] font-semibold">
+                  <span>CSV structure: name, email, phone</span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadSample}
+                    className="text-sky-600 hover:underline flex items-center gap-0.5 border-none bg-transparent cursor-pointer font-bold text-[10px]"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">download</span>
+                    Download Sample Template
+                  </button>
+                </div>
+              </div>
+            </div>
 
-                  {routingMode === 'WEIGHTED' && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-800">Counselor Weight Allocations</h3>
-                          <p className="text-[11px] text-slate-500">Drag sliders to adjust lead distribution ratio priorities.</p>
-                        </div>
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
-                          totalWeight === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200 animate-pulse'
-                        }`}>
-                          Total Weight: {totalWeight}%
-                        </span>
-                      </div>
-
-                      <div className="space-y-4">
-                        {counselorWeights.map((counselor, idx) => (
-                          <div key={counselor.name} className="space-y-1.5">
-                            <div className="flex justify-between text-[11.5px] font-bold text-slate-700">
-                              <span>{counselor.name}</span>
-                              <span className="font-mono text-primary">{counselor.weight}% allocation</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                step="5"
-                                value={counselor.weight}
-                                onChange={(e) => handleWeightChange(idx, e.target.value)}
-                                className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {totalWeight !== 100 && (
-                        <div className="p-3.5 bg-red-50/50 border border-red-100 rounded-lg flex items-start gap-2 text-red-800 text-[10.5px]">
-                          <span className="material-symbols-outlined text-[16px] mt-0.5">warning</span>
-                          <p>
-                            <strong>Validation Error:</strong> Cumulative weight ratios must sum exactly to 100%. Adjust sliders to distribute remaining {100 - totalWeight}% variables.
-                          </p>
-                        </div>
-                      )}
+            {/* Ingest preview count & data preview */}
+            {parsedData.length > 0 && (
+              <div className="grid grid-cols-12 gap-3 py-1 items-start">
+                <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-1">
+                  Preview Leads Data
+                </div>
+                <div className="col-span-8 space-y-2">
+                  <span className="inline-block px-2 py-0.5 rounded bg-green-50 text-green-700 text-[10.5px] font-bold border border-green-200">
+                    Successfully parsed {parsedData.length} records.
+                  </span>
+                  
+                  <div className="w-full border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shadow-sm max-w-full">
+                    <div className="bg-[#edf2f7] px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Parsed CSV Preview (First 5 Rows)</span>
                     </div>
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full text-left border-collapse text-[10px]">
+                        <thead>
+                          <tr className="bg-[#edf2f7] border-b border-slate-200 text-slate-500 font-semibold uppercase">
+                            <th className="py-1.5 px-2 font-bold">Name</th>
+                            <th className="py-1.5 px-2 font-bold">Email</th>
+                            <th className="py-1.5 px-2 font-bold">Phone</th>
+                            <th className="py-1.5 px-2 font-bold">Location</th>
+                            <th className="py-1.5 px-2 font-bold">Campaign</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {parsedData.slice(0, 5).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50 text-slate-700 font-medium">
+                              <td className="py-1.5 px-2 truncate max-w-[100px]" title={row.name}>{row.name || 'N/A'}</td>
+                              <td className="py-1.5 px-2 truncate max-w-[120px]" title={row.email}>{row.email || 'N/A'}</td>
+                              <td className="py-1.5 px-2 truncate max-w-[100px]" title={row.phone}>{row.phone || 'N/A'}</td>
+                              <td className="py-1.5 px-2 truncate max-w-[80px]" title={row.location}>{row.location || 'N/A'}</td>
+                              <td className="py-1.5 px-2 truncate max-w-[80px]" title={row.campaign}>{row.campaign || 'N/A'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action button */}
+            <div className="grid grid-cols-12 gap-3 pt-2">
+              <div className="col-span-4" />
+              <div className="col-span-8">
+                <button
+                  type="submit"
+                  disabled={importing || !file || parsedData.length === 0}
+                  className="h-8 px-6 bg-[#2f7d9e] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[12px] font-bold rounded-full shadow flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  {importing ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Importing Leads...
+                    </>
+                  ) : (
+                    "Import"
                   )}
+                </button>
+              </div>
+            </div>
+          </motion.form>
+        )}
 
-                  {routingMode === 'RULE_BASED' && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-800">Advanced Rule Assignments</h3>
-                          <p className="text-[11px] text-slate-500 font-medium">Leads are matched sequentially top-to-bottom. If no rules match, leads fall back to Unassigned.</p>
-                        </div>
-                        <button
-                          onClick={() => setShowAddRuleForm(true)}
-                          className="h-7 px-3 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold shadow-xs flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">add</span>
-                          Add Rule
-                        </button>
+        {/* TAB 3: EXPORT LEADS */}
+        {activeSettingsTab === 'export' && (
+          <motion.form
+            key="export-form"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
+            onSubmit={handleExportSubmit}
+            className="max-w-[650px] space-y-3"
+          >
+            {/* Export Format */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Export Format
+              </div>
+              <div className="col-span-8">
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                >
+                  <option value="CSV">CSV Format (.csv)</option>
+                  <option value="JSON">JSON File (.json)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Counselor */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Filter by Assignee
+              </div>
+              <div className="col-span-8">
+                <select
+                  value={filterCounselor}
+                  onChange={(e) => setFilterCounselor(e.target.value)}
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                >
+                  <option value="All Counselors">All Counselors</option>
+                  {COUNSELORS.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Source */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Filter by Source
+              </div>
+              <div className="col-span-8">
+                <select
+                  value={filterSource}
+                  onChange={(e) => setFilterSource(e.target.value)}
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                >
+                  <option value="All Sources">All Sources</option>
+                  {SOURCES.map(source => (
+                    <option key={source} value={source}>{source}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Status */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Filter by Status
+              </div>
+              <div className="col-span-8">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                >
+                  <option value="All Statuses">All Statuses</option>
+                  <option value="NEW">NEW</option>
+                  <option value="CONTACTED">CONTACTED</option>
+                  <option value="QUALIFIED">QUALIFIED</option>
+                  <option value="LOST">LOST</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Export Leads Data Preview */}
+            <div className="grid grid-cols-12 gap-3 py-2 items-start">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-1">
+                Preview Matching Data
+              </div>
+              <div className="col-span-8 space-y-2">
+                {filteredLeads.length > 0 ? (
+                  <>
+                    <span className="inline-block px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10.5px] font-bold border border-blue-200">
+                      Ready to export: {filteredLeads.length} leads match filters.
+                    </span>
+
+                    <div className="w-full border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shadow-sm max-w-full">
+                      <div className="bg-[#edf2f7] px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Export Preview (First 5 Rows)</span>
                       </div>
-
-                      {/* Add rule inline form modal */}
-                      <AnimatePresence>
-                        {showAddRuleForm && (
-                          <motion.form
-                            onSubmit={handleAddRoutingRule}
-                            className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                          >
-                            <div className="flex justify-between items-center pb-1 border-b border-slate-200 mb-2">
-                              <h4 className="text-[11.5px] font-bold text-slate-700">Create New Route Rule</h4>
-                              <button
-                                type="button"
-                                onClick={() => setShowAddRuleForm(false)}
-                                className="p-0.5 hover:bg-slate-200 rounded text-slate-400"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">close</span>
-                              </button>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
-                              <div>
-                                <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Parameter</label>
-                                <select
-                                  value={newRule.parameter}
-                                  onChange={(e) => setNewRule({ ...newRule, parameter: e.target.value })}
-                                  className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                                >
-                                  <option value="Lead Source">Lead Source</option>
-                                  <option value="Score">Score</option>
-                                  <option value="Location">Location</option>
-                                  <option value="Campaign">Campaign</option>
-                                </select>
-                              </div>
-                              
-                              <div>
-                                <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Operator</label>
-                                <select
-                                  value={newRule.operator}
-                                  onChange={(e) => setNewRule({ ...newRule, operator: e.target.value })}
-                                  className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                                >
-                                  <option value="equals">equals</option>
-                                  <option value="contains">contains</option>
-                                  <option value="greater_than">greater than</option>
-                                  <option value="less_than">less than</option>
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Target Value</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={newRule.value}
-                                  onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                  placeholder="e.g. Website Organic"
-                                  className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Assign Lead To</label>
-                                <select
-                                  value={newRule.assignee}
-                                  onChange={(e) => setNewRule({ ...newRule, assignee: e.target.value })}
-                                  className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                                >
-                                  <option value="Sarah Jenkins">Sarah Jenkins</option>
-                                  <option value="Marcus Chan">Marcus Chan</option>
-                                  <option value="Michael Chen">Michael Chen</option>
-                                  <option value="Unassigned">Unassigned</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
-                              <button
-                                type="button"
-                                onClick={() => setShowAddRuleForm(false)}
-                                className="px-3 h-6 border border-slate-300 hover:bg-slate-100 rounded text-[10px] font-semibold"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                className="px-3 h-6 bg-primary hover:bg-primary/95 text-white rounded text-[10px] font-bold"
-                              >
-                                Add Rule
-                              </button>
-                            </div>
-                          </motion.form>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Rules Listing Grid */}
-                      <div className="border border-slate-200 rounded-lg overflow-hidden">
-                        <table className="w-full text-left border-collapse text-[12px]">
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left border-collapse text-[10px]">
                           <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold select-none">
-                              <th className="px-4 py-2.5">Priority</th>
-                              <th className="px-4 py-2.5">Condition Expression</th>
-                              <th className="px-4 py-2.5">Assignee Destination</th>
-                              <th className="px-4 py-2.5">State</th>
-                              <th className="px-4 py-2.5 text-center">Action</th>
+                            <tr className="bg-[#edf2f7] border-b border-slate-200 text-slate-500 font-semibold uppercase">
+                              <th className="py-1.5 px-2 font-bold">ID</th>
+                              <th className="py-1.5 px-2 font-bold">Name</th>
+                              <th className="py-1.5 px-2 font-bold">Email</th>
+                              <th className="py-1.5 px-2 font-bold">Assignee</th>
+                              <th className="py-1.5 px-2 font-bold">Source</th>
+                              <th className="py-1.5 px-2 font-bold">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {routingRules.map((rule, idx) => (
-                              <tr key={rule.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-4 py-3 font-mono font-semibold">#{idx + 1}</td>
-                                <td className="px-4 py-3 font-semibold text-slate-800">
-                                  {rule.parameter} <span className="text-[11px] font-mono text-primary bg-primary/10 border border-primary/20 px-1 rounded mx-0.5">{rule.operator.replace('_', ' ')}</span> "{rule.value}"
-                                </td>
-                                <td className="px-4 py-3 text-slate-700">
-                                  <div className="flex items-center gap-1.5">
-                                    <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
-                                      {rule.assignee.charAt(0)}
-                                    </div>
-                                    <span className="font-bold">{rule.assignee}</span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3 select-none">
-                                  <button
-                                    onClick={() => toggleRuleActive(rule.id)}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                      rule.active
-                                        ? 'bg-green-50 text-green-700 border-green-200'
-                                        : 'bg-slate-50 text-slate-500 border-slate-200'
-                                    }`}
-                                  >
-                                    {rule.active ? 'ACTIVE' : 'INACTIVE'}
-                                  </button>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <button
-                                    onClick={() => deleteRoutingRule(rule.id)}
-                                    className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px]">delete</span>
-                                  </button>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {filteredLeads.slice(0, 5).map((lead) => (
+                              <tr key={lead.id} className="hover:bg-slate-50 text-slate-700 font-medium">
+                                <td className="py-1.5 px-2 text-slate-500 font-mono">{lead.id}</td>
+                                <td className="py-1.5 px-2 truncate max-w-[90px]" title={lead.name}>{lead.name}</td>
+                                <td className="py-1.5 px-2 truncate max-w-[110px]" title={lead.email}>{lead.email}</td>
+                                <td className="py-1.5 px-2 truncate max-w-[90px]" title={lead.assignedTo}>{lead.assignedTo}</td>
+                                <td className="py-1.5 px-2 truncate max-w-[80px]" title={lead.source}>{lead.source}</td>
+                                <td className="py-1.5 px-2">
+                                  <span className={`px-1 rounded text-[9px] font-bold ${
+                                    lead.status === 'NEW' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
+                                    lead.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                    lead.status === 'QUALIFIED' ? 'bg-green-50 text-green-700 border border-green-200' :
+                                    'bg-red-50 text-red-700 border border-red-200'
+                                  }`}>
+                                    {lead.status}
+                                  </span>
                                 </td>
                               </tr>
                             ))}
@@ -575,358 +1125,368 @@ export default function LmsSettings() {
                         </table>
                       </div>
                     </div>
-                  )}
-                </div>
-
+                  </>
+                ) : (
+                  <span className="inline-block px-2 py-0.5 rounded bg-red-50 text-red-700 text-[10.5px] font-bold border border-red-200">
+                    No leads match the selected export filter options.
+                  </span>
+                )}
               </div>
-            </motion.div>
-          )}
+            </div>
 
-          {/* TAB 2: LEAD SCORING */}
-          {activeTab === 'scoring' && (
-            <motion.div
-              key="scoring"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-6"
-            >
-              <div className="bg-surface border border-outline-variant rounded-xl p-5 space-y-4">
-                
-                {/* Scoring Header */}
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800">Lead Scoring Engine Config</h3>
-                    <p className="text-[11.5px] text-slate-500 mt-0.5">Define points added or deducted automatically from a lead score on system events.</p>
-                  </div>
-                  <button
-                    onClick={() => setShowAddScoringForm(true)}
-                    className="h-7 px-3 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold shadow-xs flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[15px]">add</span>
-                    Create Scoring Rule
-                  </button>
-                </div>
-
-                {/* Add Custom Scoring Trigger inline */}
-                <AnimatePresence>
-                  {showAddScoringForm && (
-                    <motion.form
-                      onSubmit={handleAddScoringRule}
-                      className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 max-w-2xl"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                    >
-                      <div className="flex justify-between items-center pb-1 border-b border-slate-200 mb-2">
-                        <h4 className="text-[11.5px] font-bold text-slate-700">Add Scoring Rule Action</h4>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddScoringForm(false)}
-                          className="p-0.5 hover:bg-slate-200 rounded text-slate-400"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">close</span>
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Event Trigger</label>
-                          <input
-                            type="text"
-                            required
-                            value={newScoringEvent.event}
-                            onChange={(e) => setNewScoringEvent({ ...newScoringEvent, event: e.target.value })}
-                            placeholder="e.g. WhatsApp Reply, Video Opened"
-                            className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Score Value (Points)</label>
-                          <input
-                            type="number"
-                            required
-                            value={newScoringEvent.points}
-                            onChange={(e) => setNewScoringEvent({ ...newScoringEvent, points: parseInt(e.target.value) || 0 })}
-                            className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-500 block mb-0.5 uppercase">Category</label>
-                          <select
-                            value={newScoringEvent.category}
-                            onChange={(e) => setNewScoringEvent({ ...newScoringEvent, category: e.target.value })}
-                            className="w-full h-7 px-2 border border-slate-300 rounded bg-white text-[11px] outline-none"
-                          >
-                            <option value="Engagement">Engagement</option>
-                            <option value="Conversion">Conversion</option>
-                            <option value="Call">Call</option>
-                            <option value="Meeting">Meeting</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => setShowAddScoringForm(false)}
-                          className="px-3 h-6 border border-slate-300 hover:bg-slate-100 rounded text-[10px] font-semibold"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="px-3 h-6 bg-primary hover:bg-primary/95 text-white rounded text-[10px] font-bold"
-                        >
-                          Save Scoring Event
-                        </button>
-                      </div>
-                    </motion.form>
+            {/* Action button */}
+            <div className="grid grid-cols-12 gap-3 pt-2">
+              <div className="col-span-4" />
+              <div className="col-span-8">
+                <button
+                  type="submit"
+                  disabled={exporting || filteredLeads.length === 0}
+                  className="h-8 px-6 bg-[#2f7d9e] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[12px] font-bold rounded-full shadow flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  {exporting ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Exporting...
+                    </>
+                  ) : (
+                    "Export"
                   )}
-                </AnimatePresence>
-
-                {/* Score Rules Table */}
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-left border-collapse text-[12px]">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold select-none">
-                        <th className="px-4 py-2.5">Trigger Event</th>
-                        <th className="px-4 py-2.5">Category</th>
-                        <th className="px-4 py-2.5 text-center w-36">Points Adjustment</th>
-                        <th className="px-4 py-2.5">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {scoringRules.map((rule) => (
-                        <tr key={rule.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-4 py-3 font-semibold text-slate-800">{rule.event}</td>
-                          <td className="px-4 py-3 text-slate-500">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] border border-slate-200/60 font-semibold">{rule.category}</span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => adjustScorePoints(rule.id, -5)}
-                                className="w-5 h-5 rounded bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-colors cursor-pointer select-none text-[12px]"
-                              >
-                                -
-                              </button>
-                              <span className={`w-10 font-bold font-mono text-[13px] text-center ${
-                                rule.points > 0 ? 'text-green-600' : rule.points < 0 ? 'text-red-500' : 'text-slate-500'
-                              }`}>
-                                {rule.points > 0 ? `+${rule.points}` : rule.points}
-                              </span>
-                              <button
-                                onClick={() => adjustScorePoints(rule.id, 5)}
-                                className="w-5 h-5 rounded bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition-colors cursor-pointer select-none text-[12px]"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 select-none">
-                            <button
-                              onClick={() => toggleScoringActive(rule.id)}
-                              className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                rule.active
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : 'bg-slate-50 text-slate-400 border-slate-200'
-                              }`}
-                            >
-                              {rule.active ? 'ACTIVE' : 'DISABLED'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
+                </button>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </motion.form>
+        )}
 
-          {/* TAB 3: INTEGRATIONS & WEBHOOKS */}
-          {activeTab === 'integrations' && (
-            <motion.div
-              key="integrations"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Left side integrations list */}
-                <div className="space-y-6">
-                  
-                  {/* Webhook Endpoint URLs */}
-                  <div className="bg-surface border border-outline-variant rounded-xl p-5 space-y-4 text-left">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-800">Developer Inbound Webhook</h3>
-                      <p className="text-[11.5px] text-slate-500 mt-0.5">Submit HTTP POST requests directly to capture and route external leads instantly.</p>
-                    </div>
-
-                    <div className="space-y-3 font-sans">
-                      <div className="space-y-1">
-                        <label className="text-[9.5px] font-bold text-slate-400 block tracking-wider uppercase">Ingest Endpoint URL</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={`https://api.tisindia.lms.com/v1/inbound?token=${webhookToken}`}
-                            className="flex-1 h-8 px-2.5 border border-slate-200 rounded-lg bg-slate-50 text-[11px] font-mono text-slate-600 outline-none select-all truncate"
-                          />
-                          <button
-                            onClick={handleCopyWebhook}
-                            className="h-8 px-3 border border-slate-350 hover:bg-slate-50 rounded-lg flex items-center justify-center text-[11.5px] font-bold text-slate-700 bg-white transition-colors cursor-pointer select-none"
-                          >
-                            <span className="material-symbols-outlined text-[16px] mr-0.5">
-                              {webhookCopied ? 'check' : 'content_copy'}
-                            </span>
-                            {webhookCopied ? 'Copied' : 'Copy'}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end select-none">
-                        <button
-                          onClick={handleRegenerateToken}
-                          className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5 cursor-pointer bg-transparent border-none"
-                        >
-                          <span className="material-symbols-outlined text-[13px]">refresh</span>
-                          Regenerate Secure Key Token
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Connect Ecosystem Integrations */}
-                  <div className="bg-surface border border-outline-variant rounded-xl p-5 space-y-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-800">Ecosystem Integrations</h3>
-                      <p className="text-[11.5px] text-slate-500 mt-0.5">Integrate third-party advertising platforms and lead capture pipelines.</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Facebook */}
-                      <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Facebook Integration</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Connected" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Ingests leads generated from Facebook Lead Ads campaigns.</p>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Status: CONNECTED</span>
-                      </div>
-
-                      {/* Instagram */}
-                      <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Instagram Integration</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Connected" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Pulls prospective student profiles from IG Story/Reels forms.</p>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Status: CONNECTED</span>
-                      </div>
-
-                      {/* Google Ads */}
-                      <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Google Ads Sync</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Connected" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Synchronizes Google conversion metrics and keyword search leads.</p>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Status: SYNC ACTIVE</span>
-                      </div>
-
-                      {/* LinkedIn */}
-                      <div className="p-3 border border-slate-200 rounded-lg bg-white flex flex-col justify-between h-[90px] text-left">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">LinkedIn Lead Gen</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350" title="Disconnected" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Import professional B2B profiles from corporate ads.</p>
-                        <button className="text-[9.5px] text-left font-bold text-primary hover:underline bg-transparent border-none p-0 cursor-pointer self-start">
-                          Connect Now →
-                        </button>
-                      </div>
-
-                      {/* WhatsApp */}
-                      <div className="p-3 border border-slate-200 rounded-lg bg-white flex flex-col justify-between h-[90px] text-left">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">WhatsApp Business</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350" title="Disconnected" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Integrate direct chat widget automation and alerts.</p>
-                        <button className="text-[9.5px] text-left font-bold text-primary hover:underline bg-transparent border-none p-0 cursor-pointer self-start">
-                          Connect Now →
-                        </button>
-                      </div>
-
-                      {/* Webhooks/API */}
-                      <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/50 flex flex-col justify-between h-[90px] text-left">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-slate-800">Webhooks / API</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Active" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500 leading-normal">Allows capturing external payloads dynamically via secure tokens.</p>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Status: ACTIVE</span>
-                      </div>
-                    </div>
-                  </div>
-
+        {/* TAB 4: BULK MESSAGING */}
+        {activeSettingsTab === 'bulk' && (
+          <motion.form
+            key="bulk-form"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
+            onSubmit={handleBulkMessageSubmit}
+            className="max-w-[650px] space-y-3 relative"
+          >
+            {/* Sending Progress Overlay */}
+            {isSending && (
+              <div className="absolute inset-0 bg-white/80 z-25 flex flex-col items-center justify-center space-y-3 rounded-lg backdrop-blur-xs">
+                <span className="material-symbols-outlined text-[36px] text-[#2f7d9e] animate-bounce">chat</span>
+                <p className="text-[12px] font-bold text-slate-800">Dispatching Bulk Messages...</p>
+                <div className="w-[200px] h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <div 
+                    className="h-full bg-[#2f7d9e] transition-all duration-100" 
+                    style={{ width: `${sendingProgress}%` }}
+                  />
                 </div>
+                <span className="text-[10px] font-mono text-slate-500 font-bold">{sendingProgress}%</span>
+              </div>
+            )}
 
-                {/* Right side JSON Sandbox Tester */}
-                <div className="bg-surface border border-outline-variant rounded-xl p-5 space-y-4 flex flex-col text-left">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800">Inbound HTTP Webhook Tester</h3>
-                    <p className="text-[11.5px] text-slate-500 mt-0.5">Trigger mock HTTP requests to debug rule executions, active scoring, and team reassignments.</p>
+            {/* Campaign Title */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Campaign Title
+              </div>
+              <div className="col-span-8">
+                <input
+                  type="text"
+                  value={campaignTitle}
+                  onChange={(e) => setCampaignTitle(e.target.value)}
+                  placeholder="e.g. Summer Outreach 2026"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                />
+              </div>
+            </div>
+
+            {/* Delivery Channel */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Delivery Channel
+              </div>
+              <div className="col-span-8">
+                <div className="flex items-center gap-4 mt-0.5">
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="deliveryChannel"
+                      value="both"
+                      checked={deliveryChannel === 'both'}
+                      onChange={() => setDeliveryChannel('both')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    Both (Email & SMS)
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="deliveryChannel"
+                      value="email"
+                      checked={deliveryChannel === 'email'}
+                      onChange={() => setDeliveryChannel('email')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    Email Only
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="deliveryChannel"
+                      value="sms"
+                      checked={deliveryChannel === 'sms'}
+                      onChange={() => setDeliveryChannel('sms')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    SMS Only
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Email Subject (Conditional) */}
+            {(deliveryChannel === 'email' || deliveryChannel === 'both') && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="grid grid-cols-12 gap-3 py-1 items-center overflow-hidden"
+              >
+                <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                  Email Subject
+                </div>
+                <div className="col-span-8">
+                  <input
+                    type="text"
+                    value={campaignSubject}
+                    onChange={(e) => setCampaignSubject(e.target.value)}
+                    placeholder="Enter email subject header"
+                    className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Message Body */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-start">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-1">
+                Message Body
+              </div>
+              <div className="col-span-8">
+                <textarea
+                  value={campaignMessage}
+                  onChange={(e) => setCampaignMessage(e.target.value)}
+                  placeholder="Write your campaign message contents here... Use {name} for personalization."
+                  rows={4}
+                  className="w-full p-2.5 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 resize-none font-sans"
+                />
+              </div>
+            </div>
+
+            {/* Target Mode */}
+            <div className="grid grid-cols-12 gap-3 py-1 items-center">
+              <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                Target Recipients
+              </div>
+              <div className="col-span-8">
+                <div className="flex items-center gap-4 mt-0.5">
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="targetMode"
+                      value="database"
+                      checked={targetMode === 'database'}
+                      onChange={() => setTargetMode('database')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    Lead Database Range
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[#2d3748] text-[12px] font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="targetMode"
+                      value="manual"
+                      checked={targetMode === 'manual'}
+                      onChange={() => setTargetMode('manual')}
+                      className="w-3.5 h-3.5 text-primary border-slate-350 focus:ring-0 cursor-pointer"
+                    />
+                    Manual Input List
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Database Recipient Mode */}
+            {targetMode === 'database' && (
+              <div className="space-y-3 border-t border-slate-100 pt-3">
+                {/* Score Range Selector */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-center">
+                  <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                    Lead Score Range
                   </div>
-
-                  <div className="flex-1 flex flex-col space-y-2">
-                    <label className="text-[9.5px] font-bold text-slate-400 block tracking-wider uppercase">HTTP POST Request Payload (JSON)</label>
-                    <textarea
-                      value={webhookPayload}
-                      onChange={(e) => setWebhookPayload(e.target.value)}
-                      rows="8"
-                      className="w-full flex-1 p-3 bg-slate-900 border border-slate-800 rounded-lg font-mono text-[11.5px] text-green-400 leading-relaxed outline-none focus:border-primary resize-none"
+                  <div className="col-span-8 flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={minScore}
+                      onChange={(e) => setMinScore(e.target.value)}
+                      placeholder="Min Score"
+                      className="w-[80px] h-8 px-2 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 font-mono text-center"
+                    />
+                    <span className="text-[12px] text-slate-400 font-bold">to</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={maxScore}
+                      onChange={(e) => setMaxScore(e.target.value)}
+                      placeholder="Max Score"
+                      className="w-[80px] h-8 px-2 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 font-mono text-center"
                     />
                   </div>
-
-                  <button
-                    onClick={handleTriggerWebhookTest}
-                    disabled={testingPayload}
-                    className="w-full h-8.5 bg-primary hover:bg-primary/95 disabled:bg-primary/80 text-white rounded-lg font-bold text-[12px] shadow-sm flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer"
-                  >
-                    {testingPayload ? (
-                      <>
-                        <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Simulating POST Payload...
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined text-[16px]">send</span>
-                        Test Payload Ingest
-                      </>
-                    )}
-                  </button>
                 </div>
 
+                {/* Counselor Filter */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-center">
+                  <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                    Assigned Counselor
+                  </div>
+                  <div className="col-span-8">
+                    <select
+                      value={targetCounselor}
+                      onChange={(e) => setTargetCounselor(e.target.value)}
+                      className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                    >
+                      <option value="All Counselors">All Counselors</option>
+                      {COUNSELORS.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Database Leads Preview */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-start">
+                  <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-1">
+                    Matching Targets
+                  </div>
+                  <div className="col-span-8 space-y-2">
+                    {bulkTargetedLeads.length > 0 ? (
+                      <>
+                        <span className="inline-block px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10.5px] font-bold border border-blue-200">
+                          Ready to target: {bulkTargetedLeads.length} leads matched.
+                        </span>
+                        
+                        <div className="w-full border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shadow-sm max-w-full">
+                          <div className="bg-[#edf2f7] px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Target Preview (First 5 Rows)</span>
+                          </div>
+                          <div className="overflow-x-auto w-full">
+                            <table className="w-full text-left border-collapse text-[10px]">
+                              <thead>
+                                <tr className="bg-[#edf2f7] border-b border-slate-200 text-slate-500 font-semibold uppercase">
+                                  <th className="py-1.5 px-2 font-bold">ID</th>
+                                  <th className="py-1.5 px-2 font-bold">Name</th>
+                                  <th className="py-1.5 px-2 font-bold">Email</th>
+                                  <th className="py-1.5 px-2 font-bold">Phone</th>
+                                  <th className="py-1.5 px-2 font-bold">Score</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 bg-white">
+                                {bulkTargetedLeads.slice(0, 5).map((lead) => (
+                                  <tr key={lead.id} className="hover:bg-slate-50 text-slate-700 font-medium">
+                                    <td className="py-1.5 px-2 text-slate-500 font-mono">{lead.id}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[100px]" title={lead.name}>{lead.name}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[110px]" title={lead.email}>{lead.email}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[100px]" title={lead.phone}>{lead.phone}</td>
+                                    <td className="py-1.5 px-2 font-bold text-sky-600 font-mono">{lead.score}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <span className="inline-block px-2 py-0.5 rounded bg-red-50 text-red-700 text-[10.5px] font-bold border border-red-200">
+                        No leads matched the selected filter criteria.
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          )}
+            )}
 
-        </AnimatePresence>
-      </div>
+            {/* Manual Recipient Mode */}
+            {targetMode === 'manual' && (
+              <div className="space-y-3 border-t border-slate-100 pt-3">
+                {/* Manual List Input */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-start">
+                  <div className="col-span-4 text-[#1a202c] font-semibold text-[12px] pt-1">
+                    Recipients Input List
+                  </div>
+                  <div className="col-span-8 space-y-1.5">
+                    <textarea
+                      value={manualRecipients}
+                      onChange={(e) => setManualRecipients(e.target.value)}
+                      placeholder="Paste target emails and numbers (separated by commas, spaces, or lines)&#10;e.g. support@domain.com, +15550199, client@email.org"
+                      rows={3}
+                      className="w-full p-2.5 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 resize-none font-mono"
+                    />
+                    <p className="text-[10px] text-slate-400 font-semibold leading-normal">
+                      The parser extracts valid email formats and 7-20 digit phone numbers automatically.
+                    </p>
+                  </div>
+                </div>
 
+                {/* Parsing Results Preview */}
+                <div className="grid grid-cols-12 gap-3 py-1 items-center">
+                  <div className="col-span-4 text-[#1a202c] font-semibold text-[12px]">
+                    Parsing Status
+                  </div>
+                  <div className="col-span-8 flex flex-wrap gap-2">
+                    <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold border ${
+                      parsedManualRecipients.emails.length > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-50 text-slate-400 border-slate-200'
+                    }`}>
+                      {parsedManualRecipients.emails.length} Valid Emails
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold border ${
+                      parsedManualRecipients.phones.length > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-50 text-slate-400 border-slate-200'
+                    }`}>
+                      {parsedManualRecipients.phones.length} Valid Phone Numbers
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action button */}
+            <div className="grid grid-cols-12 gap-3 pt-4 border-t border-slate-100">
+              <div className="col-span-4" />
+              <div className="col-span-8">
+                <button
+                  type="submit"
+                  disabled={
+                    isSending ||
+                    !campaignTitle.trim() ||
+                    !campaignMessage.trim() ||
+                    ((deliveryChannel === 'email' || deliveryChannel === 'both') && !campaignSubject.trim()) ||
+                    (targetMode === 'database' && bulkTargetedLeads.length === 0) ||
+                    (targetMode === 'manual' && parsedManualRecipients.total === 0)
+                  }
+                  className="h-8 px-6 bg-[#2f7d9e] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[12px] font-bold rounded-full shadow flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[15px]">send</span>
+                  Send Bulk Campaign
+                </button>
+              </div>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

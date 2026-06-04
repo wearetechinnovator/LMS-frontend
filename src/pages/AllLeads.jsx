@@ -21,20 +21,19 @@ export default function AllLeads() {
     // Hide tooltip while cursor is active/moving
     setShowTooltip(false)
 
-    // Trigger show only after cursor remains still for 2 seconds
+    // Trigger show only after cursor remains still for 2 seconds (2000ms)
     const showTimer = setTimeout(() => {
       setShowTooltip(true)
-    }, 500)
+    }, 2000)
 
     return () => clearTimeout(showTimer)
   }, [hoveredLeadId, tooltipPos])
 
-  // Limit tooltip visibility to 3 seconds once shown
+  // Limit tooltip visibility to 3 seconds (3000ms) once shown
   useEffect(() => {
     if (showTooltip) {
       const hideTimer = setTimeout(() => {
         setShowTooltip(false)
-        setHoveredLeadId(null)
       }, 3000)
       return () => clearTimeout(hideTimer)
     }
@@ -428,41 +427,78 @@ export default function AllLeads() {
   }
 
   // Interactive local leads database array state
-  const [leads, setLeads] = useState([
-    { id: 'LS-1021', name: 'Eleanor Penthilgon', email: 'eleanor.p@enterprise.com', phone: '+1 (555) 617-2834', status: 'NEW', assignedTo: 'Sarah Jenkins', source: 'Website Organic', score: 92, location: 'Austin, TX', campaign: 'Q3_Tech_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true },
-    { id: 'LS-1020', name: 'Jackson Reed', email: 'j.reed88@gmail.com', phone: '+1 (555) 837-1126', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Paid Search', score: 74, location: 'Houston, TX', campaign: 'Q3_Tech_Promo', tier: 'Secondary', verified: true, formName: 'MBA Scholarship Form', createdToday: false, followUpToday: true },
-    { id: 'LS-1019', name: 'Amina Patel', email: 'apatel.design@studio.co', phone: '+44 7890 90877', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins', source: 'Referral', score: 95, location: 'London, UK', campaign: 'Referral_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true },
-    { id: 'LS-1018', name: "Liam O'Connor", email: 'liam.o@solarix.ie', phone: '+353 1 234 5678', status: 'NEW', assignedTo: 'Unassigned', source: 'Direct Mail', score: 40, location: 'Dublin, IE', campaign: 'Q1_Direct_Mail', tier: 'Tertiary', verified: false, formName: 'General Inquiry Form', createdToday: false },
-    { id: 'LS-1017', name: 'Sophia Wong', email: 's.wong@fintech.com', phone: '+852 9123 4567', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Webinar', score: 81, location: 'Hong Kong, HK', campaign: 'Q3_Fintech_Webinar', tier: 'Primary', verified: false, formName: 'MBA Scholarship Form', createdToday: true, followUpToday: true },
-    { id: 'LS-1016', name: 'David Miller', email: 'dmiller@realtech.io', phone: '+1 (555) 908-1212', status: 'LOST', assignedTo: 'Sarah Jenkins', source: 'Cold Outreach', score: 15, location: 'Boston, MA', campaign: 'Cold_Outreach_Q2', tier: 'Tertiary', verified: true, formName: 'General Inquiry Form', createdToday: false },
-    { id: 'LS-1015', name: 'Amina Patel (Duplicate)', email: 'apatel.design@studio.co', phone: '+44 7890 99999', status: 'NEW', assignedTo: 'Marcus Chan', source: 'Cold Outreach', score: 62, location: 'Manchester, UK', campaign: 'Cold_Outreach_Q2', tier: 'Secondary', verified: false, formName: 'B.Tech Admissions Form', createdToday: true }
-  ].map(lead => {
-    // Define realistic default CRM fields
-    const defaultCRMFields = {
-      lastContacted: lead.status === 'NEW' ? 'None' : (lead.id === 'LS-1020' ? 'May 30, 2026' : (lead.id === 'LS-1019' ? 'May 31, 2026' : 'May 28, 2026')),
-      nextFollowUp: lead.status === 'LOST' ? 'None' : (lead.id === 'LS-1020' ? 'Jun 03, 2026' : (lead.id === 'LS-1017' ? 'Jun 03, 2026' : 'Jun 10, 2026')),
-      age: lead.createdToday ? '1 day' : (lead.id === 'LS-1016' ? '24 days' : '12 days'),
-      priority: lead.score >= 80 ? 'High' : lead.score >= 50 ? 'Medium' : 'Low',
-      tags: lead.tier === 'Primary' ? ['Enterprise', 'Hot'] : (lead.id === 'LS-1015' ? ['Duplicate', 'B.Tech'] : ['Inquiry']),
-      activityCount: lead.id === 'LS-1016' ? 4 : 9,
-      conversionProb: lead.score,
-      leadType: ['Direct Mail', 'Cold Outreach', 'Bulk Offline CSV'].includes(lead.source) ? 'Offline' : 'Online'
+  const [leads, setLeads] = useState(() => {
+    const localData = localStorage.getItem('lms_leads_database')
+    if (localData) {
+      try {
+        return JSON.parse(localData)
+      } catch (e) {
+        console.error("Error parsing leads database from localStorage:", e)
+      }
     }
-    // Dynamically inject custom initial timelines into database records
-    return { ...lead, ...defaultCRMFields, timeline: [], application: getInitialApplication(lead), queries: getInitialQueries(lead) }
-  }).map((lead, idx) => {
-    // Explicitly seed initialized logs
-    const seed = [
-      { id: 'LS-1021', name: 'Sarah Miller', status: 'NEW', assignedTo: 'Sarah Jenkins' },
-      { id: 'LS-1020', name: 'Jackson Reed', status: 'CONTACTED', assignedTo: 'Marcus Chan' },
-      { id: 'LS-1019', name: 'Amina Patel', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins' },
-      { id: 'LS-1018', name: "Liam O'Connor", status: 'NEW', assignedTo: 'Unassigned' },
-      { id: 'LS-1017', name: 'Sophia Wong', status: 'CONTACTED', assignedTo: 'Marcus Chan' },
-      { id: 'LS-1016', name: 'David Miller', status: 'LOST', assignedTo: 'Sarah Jenkins' },
-      { id: 'LS-1015', name: 'Amina Patel (Duplicate)', status: 'NEW', assignedTo: 'Marcus Chan' }
-    ][idx]
-    return { ...lead, timeline: getInitialTimeline(seed) }
-  }))
+    const initial = [
+      { id: 'LS-1021', name: 'Eleanor Penthilgon', email: 'eleanor.p@enterprise.com', phone: '+1 (555) 617-2834', status: 'NEW', assignedTo: 'Sarah Jenkins', source: 'Website Organic', score: 92, location: 'Austin, TX', campaign: 'Q3_Tech_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true },
+      { id: 'LS-1020', name: 'Jackson Reed', email: 'j.reed88@gmail.com', phone: '+1 (555) 837-1126', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Paid Search', score: 74, location: 'Houston, TX', campaign: 'Q3_Tech_Promo', tier: 'Secondary', verified: true, formName: 'MBA Scholarship Form', createdToday: false, followUpToday: true },
+      { id: 'LS-1019', name: 'Amina Patel', email: 'apatel.design@studio.co', phone: '+44 7890 90877', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins', source: 'Referral', score: 95, location: 'London, UK', campaign: 'Referral_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true },
+      { id: 'LS-1018', name: "Liam O'Connor", email: 'liam.o@solarix.ie', phone: '+353 1 234 5678', status: 'NEW', assignedTo: 'Unassigned', source: 'Direct Mail', score: 40, location: 'Dublin, IE', campaign: 'Q1_Direct_Mail', tier: 'Tertiary', verified: false, formName: 'General Inquiry Form', createdToday: false },
+      { id: 'LS-1017', name: 'Sophia Wong', email: 's.wong@fintech.com', phone: '+852 9123 4567', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Webinar', score: 81, location: 'Hong Kong, HK', campaign: 'Q3_Fintech_Webinar', tier: 'Primary', verified: false, formName: 'MBA Scholarship Form', createdToday: true, followUpToday: true },
+      { id: 'LS-1016', name: 'David Miller', email: 'dmiller@realtech.io', phone: '+1 (555) 908-1212', status: 'LOST', assignedTo: 'Sarah Jenkins', source: 'Cold Outreach', score: 15, location: 'Boston, MA', campaign: 'Cold_Outreach_Q2', tier: 'Tertiary', verified: true, formName: 'General Inquiry Form', createdToday: false },
+      { id: 'LS-1015', name: 'Amina Patel (Duplicate)', email: 'apatel.design@studio.co', phone: '+44 7890 99999', status: 'NEW', assignedTo: 'Marcus Chan', source: 'Cold Outreach', score: 62, location: 'Manchester, UK', campaign: 'Cold_Outreach_Q2', tier: 'Secondary', verified: false, formName: 'B.Tech Admissions Form', createdToday: true }
+    ].map(lead => {
+      // Define realistic default CRM fields
+      const defaultCRMFields = {
+        lastContacted: lead.status === 'NEW' ? 'None' : (lead.id === 'LS-1020' ? 'May 30, 2026' : (lead.id === 'LS-1019' ? 'May 31, 2026' : 'May 28, 2026')),
+        nextFollowUp: lead.status === 'LOST' ? 'None' : (lead.id === 'LS-1020' ? 'Jun 03, 2026' : (lead.id === 'LS-1017' ? 'Jun 03, 2026' : 'Jun 10, 2026')),
+        age: lead.createdToday ? '1 day' : (lead.id === 'LS-1016' ? '24 days' : '12 days'),
+        priority: lead.score >= 80 ? 'High' : lead.score >= 50 ? 'Medium' : 'Low',
+        tags: lead.tier === 'Primary' ? ['Enterprise', 'Hot'] : (lead.id === 'LS-1015' ? ['Duplicate', 'B.Tech'] : ['Inquiry']),
+        activityCount: lead.id === 'LS-1016' ? 4 : 9,
+        conversionProb: lead.score,
+        leadType: ['Direct Mail', 'Cold Outreach', 'Bulk Offline CSV'].includes(lead.source) ? 'Offline' : 'Online'
+      }
+      // Dynamically inject custom initial timelines into database records
+      return { ...lead, ...defaultCRMFields, timeline: [], application: getInitialApplication(lead), queries: getInitialQueries(lead) }
+    }).map((lead, idx) => {
+      // Explicitly seed initialized logs
+      const seed = [
+        { id: 'LS-1021', name: 'Sarah Miller', status: 'NEW', assignedTo: 'Sarah Jenkins' },
+        { id: 'LS-1020', name: 'Jackson Reed', status: 'CONTACTED', assignedTo: 'Marcus Chan' },
+        { id: 'LS-1019', name: 'Amina Patel', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins' },
+        { id: 'LS-1018', name: "Liam O'Connor", status: 'NEW', assignedTo: 'Unassigned' },
+        { id: 'LS-1017', name: 'Sophia Wong', status: 'CONTACTED', assignedTo: 'Marcus Chan' },
+        { id: 'LS-1016', name: 'David Miller', status: 'LOST', assignedTo: 'Sarah Jenkins' },
+        { id: 'LS-1015', name: 'Amina Patel (Duplicate)', status: 'NEW', assignedTo: 'Marcus Chan' }
+      ][idx]
+      return { ...lead, timeline: getInitialTimeline(seed) }
+    })
+    localStorage.setItem('lms_leads_database', JSON.stringify(initial))
+    return initial
+  })
+
+  // Synchronize leads array state to localStorage when changes occur
+  useEffect(() => {
+    localStorage.setItem('lms_leads_database', JSON.stringify(leads))
+  }, [leads])
+
+  // Listen for storage or custom update events to synchronize lead changes instantly
+  useEffect(() => {
+    const handleLeadsUpdated = () => {
+      const localData = localStorage.getItem('lms_leads_database')
+      if (localData) {
+        try {
+          setLeads(JSON.parse(localData))
+        } catch (e) {
+          console.error("Error parsing updated leads database:", e)
+        }
+      }
+    }
+    window.addEventListener('lms-leads-updated', handleLeadsUpdated)
+    window.addEventListener('storage', handleLeadsUpdated)
+    return () => {
+      window.removeEventListener('lms-leads-updated', handleLeadsUpdated)
+      window.removeEventListener('storage', handleLeadsUpdated)
+    }
+  }, [])
 
   // Form filter state and dynamic counts
   const [selectedFormFilter, setSelectedFormFilter] = useState('ALL')
@@ -1604,11 +1640,11 @@ export default function AllLeads() {
         </div>
 
         {/* Consolidated Filters Toolbar */}
-        <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
-          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[200px]">
+        <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
             {/* Search Bar */}
             <div className="relative w-full sm:w-64">
-              <span className="material-symbols-outlined text-[16px] text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 select-none">
+              <span className="material-symbols-outlined text-[15px] text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 select-none">
                 search
               </span>
               <input
@@ -1616,7 +1652,7 @@ export default function AllLeads() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, owner..."
-                className="w-full h-9 pl-9 pr-3 border border-slate-250 bg-white rounded-lg text-[12px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
+                className="w-full h-8 pl-8 pr-2.5 border border-slate-250 bg-white rounded-lg text-[11px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
               />
             </div>
 
@@ -1625,7 +1661,7 @@ export default function AllLeads() {
               <select
                 value={dateRangeFilter}
                 onChange={(e) => setDateRangeFilter(e.target.value)}
-                className="h-9 px-3 border border-slate-250 bg-white rounded-lg text-[12px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="all">Date Range: All Time</option>
                 <option value="today">Created: Today</option>
@@ -1639,7 +1675,7 @@ export default function AllLeads() {
               <select
                 value={leadOwnerFilter}
                 onChange={(e) => setLeadOwnerFilter(e.target.value)}
-                className="h-9 px-3 border border-slate-250 bg-white rounded-lg text-[12px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="all">Owner: All</option>
                 <option value="Sarah Jenkins">Sarah Jenkins</option>
@@ -1653,7 +1689,7 @@ export default function AllLeads() {
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value)}
-                className="h-9 px-3 border border-slate-250 bg-white rounded-lg text-[12px] font-bold text-slate-755 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-755 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="all">Source: All</option>
                 <option value="Website Organic">Website Organic</option>
@@ -1672,7 +1708,7 @@ export default function AllLeads() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-9 px-3 border border-slate-250 bg-white rounded-lg text-[12px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="all">Status: All Active</option>
                 <option value="NEW">NEW</option>
@@ -1687,7 +1723,7 @@ export default function AllLeads() {
               <select
                 value={verificationFilter}
                 onChange={(e) => setVerificationFilter(e.target.value)}
-                className="h-9 px-3 border border-slate-250 bg-white rounded-lg text-[12px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="all">Verification: All</option>
                 <option value="verified">Verified Only</option>
@@ -1699,9 +1735,9 @@ export default function AllLeads() {
             <div className="relative">
               <button
                 onClick={() => setShowColumnDropdown(!showColumnDropdown)}
-                className="flex items-center gap-1.5 px-3 h-9 border border-slate-250 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-705 rounded-lg cursor-pointer select-none transition-colors"
+                className="flex items-center gap-1 px-2 h-8 border border-slate-250 bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-705 rounded-lg cursor-pointer select-none transition-colors"
               >
-                <span className="material-symbols-outlined text-[16px] text-slate-400">table_chart</span>
+                <span className="material-symbols-outlined text-[15px] text-slate-400">table_chart</span>
                 Columns
               </button>
               <AnimatePresence>
@@ -1763,10 +1799,10 @@ export default function AllLeads() {
           <div className="relative">
             <button
               onClick={() => setShowGlobalActionsDropdown(!showGlobalActionsDropdown)}
-              className="flex items-center gap-1.5 px-3.5 h-9 bg-primary hover:bg-primary/95 text-[12px] font-bold text-white rounded-lg shadow-sm cursor-pointer select-none transition-all duration-150"
+              className="flex items-center gap-1 px-2.5 h-8 bg-primary hover:bg-primary/95 text-[11px] font-bold text-white rounded-lg shadow-sm cursor-pointer select-none transition-all duration-150"
             >
               Actions
-              <span className="material-symbols-outlined text-[16px] text-white leading-none">expand_more</span>
+              <span className="material-symbols-outlined text-[15px] text-white leading-none">expand_more</span>
             </button>
 
             <AnimatePresence>
@@ -2245,80 +2281,29 @@ export default function AllLeads() {
                     )}
                     <td className="px-3 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center min-h-[28px]">
-                        <AnimatePresence mode="wait">
-                          {hoveredLeadId === lead.id ? (
-                            <motion.div
-                              key="hover-actions"
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{ duration: 0.1 }}
-                              className="flex items-center justify-center gap-1.5"
-                            >
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                                  triggerToast('Voice call simulator initialized!');
-                                }}
-                                className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200 transition-all cursor-pointer shadow-2xs"
-                                title="Call Lead"
-                              >
-                                <span className="material-symbols-outlined text-[15px]">call</span>
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveLeadDetails(lead);
-                                  setShowEmailModal(true);
-                                }}
-                                className="w-7 h-7 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center border border-emerald-200 transition-all cursor-pointer shadow-2xs"
-                                title="Send Email"
-                              >
-                                <span className="material-symbols-outlined text-[15px]">mail</span>
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveLeadDetails(lead);
-                                }}
-                                className="w-7 h-7 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-650 flex items-center justify-center border border-amber-200 transition-all cursor-pointer shadow-2xs"
-                                title="View/Edit Details"
-                              >
-                                <span className="material-symbols-outlined text-[15px]">edit</span>
-                              </button>
-                            </motion.div>
-                          ) : (
-                            <motion.button
-                              key="more-btn"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.1 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (activeDropdownLeadId === lead.id) {
-                                  setActiveDropdownLeadId(null);
-                                } else {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  const spaceBelow = window.innerHeight - rect.bottom;
-                                  const flipUp = spaceBelow < 280;
-                                  setDropdownFlipUp(flipUp);
-                                  setDropdownPos({
-                                    x: rect.right,
-                                    y: flipUp ? rect.top : rect.bottom
-                                  });
-                                  setActiveDropdownLeadId(lead.id);
-                                }
-                                setShowReassignSubId(null);
-                              }}
-                              className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 text-slate-500'
-                                }`}
-                            >
-                              <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
-                            </motion.button>
-                          )}
-                        </AnimatePresence>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (activeDropdownLeadId === lead.id) {
+                              setActiveDropdownLeadId(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const flipUp = spaceBelow < 280;
+                              setDropdownFlipUp(flipUp);
+                              setDropdownPos({
+                                x: rect.right,
+                                y: flipUp ? rect.top : rect.bottom
+                              });
+                              setActiveDropdownLeadId(lead.id);
+                            }
+                            setShowReassignSubId(null);
+                          }}
+                          className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 text-slate-500'
+                            }`}
+                        >
+                          <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
+                        </button>
                       </div>
 
                       <AnimatePresence>
@@ -2355,24 +2340,49 @@ export default function AllLeads() {
                                   <button
                                     onClick={() => {
                                       setActiveLeadDetails(lead);
-                                      setDetailsActiveTab('overview');
                                       setActiveDropdownLeadId(null);
                                     }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
                                   >
-                                    <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">assignment</span>
-                                    View Application
+                                    <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
+                                    View/Edit Details
                                   </button>
+
+                                  <button
+                                    onClick={() => {
+                                      handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
+                                      triggerToast('Voice call simulator initialized!');
+                                      setActiveDropdownLeadId(null);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                  >
+                                    <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">call</span>
+                                    Call Lead
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      setActiveLeadDetails(lead);
+                                      setShowEmailModal(true);
+                                      setActiveDropdownLeadId(null);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                  >
+                                    <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
+                                    Send Email
+                                  </button>
+
+                                  <div className="h-px bg-slate-100 my-1" />
 
                                   <div className="relative">
                                     <button
                                       onClick={() => {
                                         setShowReassignSubId(showReassignSubId === lead.id ? null : lead.id);
                                       }}
-                                      className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-blue-50/60 hover:text-blue-700'}`}
+                                      className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
                                     >
                                       <div className="flex items-center gap-2.5">
-                                        <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">supervisor_account</span>
+                                        <span className="material-symbols-outlined text-[16px] text-indigo-500 font-medium">supervisor_account</span>
                                         Re-assign Lead
                                       </div>
                                       <span className="material-symbols-outlined text-[14px]">
@@ -2492,10 +2502,22 @@ export default function AllLeads() {
                                       setDetailsActiveTab('timeline');
                                       setActiveDropdownLeadId(null);
                                     }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
                                   >
-                                    <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">history</span>
+                                    <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">history</span>
                                     View Activity
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      setActiveLeadDetails(lead);
+                                      setDetailsActiveTab('overview');
+                                      setActiveDropdownLeadId(null);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                  >
+                                    <span className="material-symbols-outlined text-[16px] text-teal-500 font-medium">assignment</span>
+                                    View Application
                                   </button>
                                 </motion.div>
                               );
