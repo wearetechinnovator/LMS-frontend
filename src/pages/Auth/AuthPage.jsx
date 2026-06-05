@@ -30,8 +30,20 @@ export default function AuthPage({ onAuthSuccess }) {
   const validateForm = () => {
     const newErrors = {}
     if (isLogin) {
-      if (!formData.number.trim()) newErrors.number = 'Number is required'
-      if (!formData.password.trim()) newErrors.password = 'Password is required'
+      const email = (formData.number || '').trim().toLowerCase()
+      const password = formData.password
+
+      if (!email) {
+        newErrors.number = 'Email address is required'
+      } else if (email !== 'admin@gmail.com' && email !== 'counselor@gmail.com' && email !== 'vendor@gmail.com') {
+        newErrors.number = 'Invalid email address'
+      }
+
+      if (!password) {
+        newErrors.password = 'Password is required'
+      } else if (password !== '1234') {
+        newErrors.password = 'Incorrect password'
+      }
     } else {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
@@ -47,12 +59,14 @@ export default function AuthPage({ onAuthSuccess }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (validateForm()) {
+    const isValid = validateForm()
+    if (isValid) {
       setSuccessMessage(isLogin ? 'Login successful!' : 'Account created successfully!')
       setTimeout(() => {
         onAuthSuccess({ username: formData.number, isNewUser: !isLogin })
       }, 1500)
     }
+    return isValid
   }
 
   if (!mounted) {

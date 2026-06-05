@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import '../assets/custom.css'
-import DasboardStatsCard from '../components/Dashboard/DasboardStatsCard'
-import DashboardGraphCard from '../components/Dashboard/DashboardGraphCard'
-import DashboardRecentLeads from '../components/Dashboard/DashboardRecentLeads'
-import ExportButton from '../components/ExportButton'
-import DeepDiveAnalytics from '../components/Dashboard/DeepDiveAnalytics'
+import '../../assets/custom.css'
+import DasboardStatsCard from '../../components/Dashboard/DasboardStatsCard'
+import DashboardGraphCard from '../../components/Dashboard/DashboardGraphCard'
+import DashboardRecentLeads from '../../components/Dashboard/DashboardRecentLeads'
+import ExportButton from '../../components/ExportButton'
+import DeepDiveAnalytics from '../../components/Dashboard/DeepDiveAnalytics'
 
 export default function Dashboard() {
   const [toastMsg, setToastMsg] = useState(null)

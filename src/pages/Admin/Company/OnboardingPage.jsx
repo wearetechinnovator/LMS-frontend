@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import CompanyProfile from './steps/CompanyProfile'
 import InitialConfig from './steps/InitialConfig'
-import '../../assets/custom.css'
+import '../../../assets/custom.css'
 
 export default function OnboardingPage({ username, onLogout, onComplete }) {
   const [currentStep, setCurrentStep] = useState(1)

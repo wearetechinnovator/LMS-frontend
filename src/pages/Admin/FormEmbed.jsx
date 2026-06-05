@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import Toast from '../components/Toast'
-import '../assets/formebed/formebed.css'
+import Toast from '../../components/Toast'
+import '../../assets/formebed/formebed.css'
 
 export default function FormEmbed() {
     const [selectedForm, setSelectedForm] = useState(null)

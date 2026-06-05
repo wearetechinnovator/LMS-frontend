@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import TeamStatsCard from '../components/TeamStateCard'
-import Toast from '../components/Toast'
+import TeamStatsCard from '../../components/TeamStateCard'
+import Toast from '../../components/Toast'
 
 // Detailed realistic mock users data
 const initialUsers = [
@@ -406,10 +406,10 @@ export default function RoleUserManagement() {
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative font-sans select-none">
 
             {/* Premium Toast Banner */}
-            <Toast 
-                message={toastMessage} 
-                isVisible={!!toastMessage} 
-                onClose={() => setToastMessage('')} 
+            <Toast
+                message={toastMessage}
+                isVisible={!!toastMessage}
+                onClose={() => setToastMessage('')}
             />
 
             {/* Header Block */}
@@ -443,29 +443,29 @@ export default function RoleUserManagement() {
                 <div className="flex-1 flex flex-col min-h-0 space-y-3.5">
                     {/* Team Stats Cards Row */}
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                        <TeamStatsCard 
-                            label="Total Users" 
-                            value={users.length} 
-                            change="+2 this week" 
-                            idx={0} 
+                        <TeamStatsCard
+                            label="Total Users"
+                            value={users.length}
+                            change="+2 this week"
+                            idx={0}
                         />
-                        <TeamStatsCard 
-                            label="Active Accounts" 
-                            value={users.filter(u => u.status === 'Active').length} 
-                            change="+1 active" 
-                            idx={1} 
+                        <TeamStatsCard
+                            label="Active Accounts"
+                            value={users.filter(u => u.status === 'Active').length}
+                            change="+1 active"
+                            idx={1}
                         />
-                        <TeamStatsCard 
-                            label="Suspended Accounts" 
-                            value={users.filter(u => u.status === 'Suspended').length} 
-                            change="0 change" 
-                            idx={2} 
+                        <TeamStatsCard
+                            label="Suspended Accounts"
+                            value={users.filter(u => u.status === 'Suspended').length}
+                            change="0 change"
+                            idx={2}
                         />
-                        <TeamStatsCard 
-                            label="Pending Invites" 
-                            value={users.filter(u => u.status === 'Invited').length} 
-                            change="+1 pending" 
-                            idx={3} 
+                        <TeamStatsCard
+                            label="Pending Invites"
+                            value={users.filter(u => u.status === 'Invited').length}
+                            change="+1 pending"
+                            idx={3}
                         />
                     </div>
 

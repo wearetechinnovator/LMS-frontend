@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import '../../../assets/custom.css'
+import '../../../../assets/custom.css'
 
 export default function InitialConfig() {
   const [selectedIndustry, setSelectedIndustry] = useState('')

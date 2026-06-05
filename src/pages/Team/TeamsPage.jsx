@@ -1,5 +1,5 @@
 import React from 'react'
-import Teams from '../Teams'
+import Teams from '../Admin/Teams'
 
 export default function TeamsPage() {
   return (

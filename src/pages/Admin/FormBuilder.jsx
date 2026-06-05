@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Toast from '../components/Toast'
-import '../assets/formbuilderpage/formbuilder.css'
+import Toast from '../../components/Toast'
+import '../../assets/formbuilderpage/formbuilder.css'
 
 export default function FormBuilder({
     initialTitle = 'Doctor Appointment Inquiry',

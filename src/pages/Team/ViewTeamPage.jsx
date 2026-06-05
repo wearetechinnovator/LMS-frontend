@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import ViewTeam from '../ViewTeam'
+import ViewTeam from '../Admin/ViewTeam'
 
 export default function ViewTeamPage() {
   const { id } = useParams()

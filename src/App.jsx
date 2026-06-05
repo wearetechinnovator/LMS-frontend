@@ -1,31 +1,11 @@
-import React, { useState, Suspense } from 'react'
+import React, { useState, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-
-// Auth Pages
 import AuthPage from './pages/Auth/AuthPage'
-import OnboardingPage from './pages/Company/OnboardingPage'
+import OnboardingPage from './pages/Admin/Company/OnboardingPage'
+import { UnProtectRoute } from './components/ProtectRoute'
+import { RoleRoutes } from './routes/routesConfig'
+import Unauthorized from './pages/Unauthorized'
 
-
-// Dashboard Components
-import Navbar from './components/Navbar'
-import Sidebar from './components/Sidebar'
-import Dashboard from './pages/Dashboard'
-import RoleUserManagement from './pages/RoleUserManagement'
-
-// Dashboard Pages - Lazy loaded
-// const DashboardMain = React.lazy(() => import('./pages/DashboardMain'))
-const AllLeadsPage = React.lazy(() => import('./pages/AllLeadsPage'))
-const FormBuilderPage = React.lazy(() => import('./pages/FormBuilderPage'))
-const TeamsPage = React.lazy(() => import('./pages/Team/TeamsPage'))
-const ViewTeamPage = React.lazy(() => import('./pages/Team/ViewTeamPage'))
-const ManageTeamPage = React.lazy(() => import('./pages/Team/ManageTeamPage'))
-const CampaignsPage = React.lazy(() => import('./pages/CampaignsPage'))
-const AuditLogsPage = React.lazy(() => import('./pages/AuditLogs'))
-const LmsSettingsPage = React.lazy(() => import('./pages/LmsSettings'))
-const FormEmbed = React.lazy(() => import('./pages/FormEmbed'))
-const AnalyticsPage = React.lazy(() => import('./pages/Analytics'))
-
-// Loading Fallback
 const LoadingSpinner = () => (
   <div className="grid place-items-center w-full min-h-screen bg-background">
     <div className="flex flex-row gap-2">
@@ -36,13 +16,13 @@ const LoadingSpinner = () => (
   </div>
 )
 
-// Dashboard Layout Wrapper
-function DashboardLayout({ username, onLogout }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [onboardingComplete, setOnboardingComplete] = useState(false)
+  const [username, setUsername] = useState('')
   const navigate = useNavigate()
 
-  // Escape key to go back
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         navigate(-1)
@@ -51,70 +31,6 @@ function DashboardLayout({ username, onLogout }) {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [navigate])
-
-  return (
-    <div className="bg-background h-screen flex overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar
-        sidebarCollapsed={sidebarCollapsed}
-        setSidebarCollapsed={setSidebarCollapsed}
-        onLogout={onLogout}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Navbar */}
-        <Navbar username={username} onLogout={onLogout} />
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              {/* Dashboard */}
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="roles" element={<RoleUserManagement />} />
-
-              {/* Leads */}
-              <Route path="leads" element={<AllLeadsPage />} />
-
-              {/* Forms */}
-              <Route path="form-builder" element={<FormBuilderPage />} />
-              <Route path="form-embed" element={<FormEmbed />} />
-
-              {/* Teams */}
-              <Route path="teams" element={<TeamsPage />} />
-              <Route path="teams/:id" element={<ViewTeamPage />} />
-              <Route path="teams/:id/manage" element={<ManageTeamPage />} />
-
-              {/* Departments */}
-              <Route path="departments" element={<CampaignsPage />} />
-              <Route path="departments/:id" element={<ViewTeamPage />} />
-              <Route path="departments/:id/manage" element={<ManageTeamPage />} />
-
-              {/* Audit Logs */}
-              <Route path="audit-logs" element={<AuditLogsPage />} />
-
-              {/* LMS Settings */}
-              <Route path="settings" element={<LmsSettingsPage />} />
-
-              {/* Analytics */}
-              <Route path="analytics" element={<AnalyticsPage />} />
-
-              {/* Default redirect */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Suspense>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [onboardingComplete, setOnboardingComplete] = useState(false)
-  const [username, setUsername] = useState('')
 
   const handleAuthSuccess = (user) => {
     setUsername(user.username)
@@ -129,26 +45,42 @@ function App() {
     setIsAuthenticated(false)
     setOnboardingComplete(false)
     setUsername('')
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('userRole')
+  }
+
+  const getRedirectPath = () => {
+    const role = localStorage.getItem('userRole')
+    if (role === 'admin') {
+      return '/admin/dashboard'
+    }
+    if (role === 'counselor') {
+      return '/counselor/overview'
+    }
+    if (role === 'vendor') {
+      return '/vendor/portal'
+    }
+    return '/dashboard'
   }
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
-        {/* Auth Route */}
         <Route
           path="/"
           element={
             !isAuthenticated ? (
-              <AuthPage onAuthSuccess={handleAuthSuccess} />
+              <UnProtectRoute login={true}>
+                <AuthPage onAuthSuccess={handleAuthSuccess} />
+              </UnProtectRoute>
             ) : onboardingComplete ? (
-              <Navigate to="/dashboard" replace />
+              <Navigate to={getRedirectPath()} replace />
             ) : (
               <OnboardingPage username={username} onLogout={handleLogout} onComplete={handleOnboardingComplete} />
             )
           }
         />
 
-        {/* Onboarding Route */}
         <Route
           path="/onboarding"
           element={
@@ -160,17 +92,10 @@ function App() {
           }
         />
 
-        {/* Dashboard Routes */}
-        <Route
-          path="/*"
-          element={
-            isAuthenticated && onboardingComplete ? (
-              <DashboardLayout username={username} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
+        {RoleRoutes({ username, handleLogout })}
+
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   )

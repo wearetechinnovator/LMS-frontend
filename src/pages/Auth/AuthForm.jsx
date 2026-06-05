@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import '../../assets/custom.css'
 
@@ -16,12 +17,58 @@ export default function AuthForm({
   onSubmit,
   onToggleMode
 }) {
+  const navigate = useNavigate()
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    let selectedRole = 'admin'
+    if (isLogin) {
+      const email = (formData.number || '').trim().toLowerCase()
+      const password = formData.password
+      if (email === 'admin@gmail.com' && password === '1234') {
+        selectedRole = 'admin'
+      } else if (email === 'counselor@gmail.com' && password === '1234') {
+        selectedRole = 'counselor'
+      } else if (email === 'vendor@gmail.com' && password === '1234') {
+        selectedRole = 'vendor'
+      } else {
+        if (onSubmit) {
+          onSubmit(e)
+        }
+        return
+      }
+    } else {
+      selectedRole = formData.role || 'admin'
+    }
+
+    if (onSubmit) {
+      const isValid = onSubmit(e)
+      if (!isValid) return
+    }
+
+    localStorage.setItem('authToken', 'mock-jwt-token')
+    localStorage.setItem('userRole', selectedRole)
+
+    setTimeout(() => {
+      if (selectedRole === 'admin') {
+        navigate('/admin/dashboard')
+      } else if (selectedRole === 'counselor') {
+        navigate('/counselor/overview')
+      } else if (selectedRole === 'vendor') {
+        navigate('/vendor/portal')
+      }
+    }, 1500)
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={isLogin ? 'lf' : 'rf'}
         className="auth-container"
-        initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }}
+        initial={{ x: 40, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: -40, opacity: 0 }}
         transition={{ duration: 0.32 }}
       >
         <h1 className="auth-title">
@@ -33,81 +80,124 @@ export default function AuthForm({
         </p>
 
         {successMessage && (
-          <motion.div className="auth-success"
-            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div
+            className="auth-success"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             ✓ {successMessage}
           </motion.div>
         )}
 
-        <form onSubmit={onSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
-
             <motion.div className="auth-form-grid" custom={0} variants={inputV} initial="hidden" animate="visible">
               <div className="auth-form-group">
                 <label className="auth-label">First name</label>
-                <input type="text" name="firstName" value={formData.firstName} onChange={onFormChange}
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={onFormChange}
                   className={`auth-input ${errors.firstName ? 'error' : ''}`}
-                  placeholder="John" />
+                  placeholder="John"
+                />
                 {errors.firstName && <p className="auth-error-text">{errors.firstName}</p>}
               </div>
               <div className="auth-form-group">
                 <label className="auth-label">Last name</label>
-                <input type="text" name="lastName" value={formData.lastName} onChange={onFormChange}
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={onFormChange}
                   className={`auth-input ${errors.lastName ? 'error' : ''}`}
-                  placeholder="Doe" />
+                  placeholder="Doe"
+                />
                 {errors.lastName && <p className="auth-error-text">{errors.lastName}</p>}
               </div>
             </motion.div>
-
           )}
 
           <motion.div className="auth-form-group" custom={isLogin ? 0 : 1} variants={inputV} initial="hidden" animate="visible">
-            <label className="auth-label">NUMBER</label>
-            <input type="tel" name="number" value={formData.number || ''} onChange={onFormChange}
+            <label className="auth-label">{isLogin ? 'EMAIL ADDRESS' : 'NUMBER'}</label>
+            <input
+              type={isLogin ? 'email' : 'tel'}
+              name="number"
+              value={formData.number || ''}
+              onChange={onFormChange}
               className={`auth-input ${errors.number ? 'error' : ''}`}
-              placeholder={isLogin ? 'Number' : '9xxxxxxxx'} />
+              placeholder={isLogin ? 'Email Address' : '9xxxxxxxx'}
+            />
             {errors.number && <p className="auth-error-text">{errors.number}</p>}
           </motion.div>
 
-          {/* {!isLogin && (
+          {!isLogin && (
             <motion.div className="auth-form-group" custom={2} variants={inputV} initial="hidden" animate="visible">
-              <label className="auth-label">USERNAME (4–20 CHARACTERS)</label>
-              <input type="text" name="username" value={formData.username} onChange={onFormChange}
-                className={`auth-input ${errors.username ? 'error' : ''}`}
-                placeholder="johndoe" />
-              {errors.username && <p className="auth-error-text">{errors.username}</p>}
+              <label className="auth-label">ROLE</label>
+              <select
+                name="role"
+                value={formData.role || 'admin'}
+                onChange={onFormChange}
+                className="auth-input"
+              >
+                <option value="admin">Admin</option>
+                <option value="counselor">Counselor</option>
+                <option value="vendor">Vendor</option>
+              </select>
             </motion.div>
-          )} */}
+          )}
 
           <motion.div className="auth-form-group" custom={isLogin ? 1 : 3} variants={inputV} initial="hidden" animate="visible">
             <label className="auth-label">PASSWORD</label>
-            <input type="password" name="password" value={formData.password} onChange={onFormChange}
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={onFormChange}
               className={`auth-input ${errors.password ? 'error' : ''}`}
-              placeholder="••••••••" />
+              placeholder="••••••••"
+            />
             {errors.password && <p className="auth-error-text">{errors.password}</p>}
           </motion.div>
 
           {!isLogin && (
             <motion.div className="auth-form-group" custom={4} variants={inputV} initial="hidden" animate="visible">
               <label className="auth-label">CONFIRM PASSWORD</label>
-              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={onFormChange}
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={onFormChange}
                 className={`auth-input ${errors.confirmPassword ? 'error' : ''}`}
-                placeholder="••••••••" />
+                placeholder="••••••••"
+              />
               {errors.confirmPassword && <p className="auth-error-text">{errors.confirmPassword}</p>}
             </motion.div>
           )}
 
           {isLogin && (
             <motion.div className="auth-checkbox-group" custom={2} variants={inputV} initial="hidden" animate="visible">
-              <input type="checkbox" name="rememberMe" checked={formData.rememberMe} onChange={onFormChange}
-                id="rememberMe" className="auth-checkbox" />
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={onFormChange}
+                id="rememberMe"
+                className="auth-checkbox"
+              />
               <label htmlFor="rememberMe" className="auth-checkbox-label">Remember me</label>
             </motion.div>
           )}
 
-          <motion.button type="submit"
-            custom={isLogin ? 3 : 5} variants={inputV} initial="hidden" animate="visible"
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          <motion.button
+            type="submit"
+            custom={isLogin ? 3 : 5}
+            variants={inputV}
+            initial="hidden"
+            animate="visible"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
             className="auth-submit-btn"
           >
             {isLogin ? 'Log In' : 'Create my account'}
@@ -115,7 +205,7 @@ export default function AuthForm({
 
           <motion.div custom={isLogin ? 4 : 6} variants={inputV} initial="hidden" animate="visible" className="auth-divider-container">
             <div className="auth-divider-line-wrapper">
-              <div className="auth-divider-line"></div>
+              <div className="auth-divider-line" />
             </div>
             <div className="auth-divider-text-wrapper">
               <span className="auth-divider-text">Or continue with</span>
@@ -123,7 +213,8 @@ export default function AuthForm({
           </motion.div>
 
           <motion.div custom={isLogin ? 5 : 7} variants={inputV} initial="hidden" animate="visible" className="auth-oauth-group">
-            <button type="button"
+            <button
+              type="button"
               onClick={() => console.log('Google OAuth')}
               className="auth-oauth-btn"
             >
@@ -135,7 +226,8 @@ export default function AuthForm({
               </svg>
               <span className="auth-oauth-text">Google</span>
             </button>
-            <button type="button"
+            <button
+              type="button"
               onClick={() => console.log('LinkedIn OAuth')}
               className="auth-oauth-btn"
             >
@@ -150,8 +242,11 @@ export default function AuthForm({
         <motion.div className="auth-footer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
           <p className="auth-footer-text">
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            <button type="button" onClick={onToggleMode}
-              className="auth-footer-link">
+            <button
+              type="button"
+              onClick={onToggleMode}
+              className="auth-footer-link"
+            >
               {isLogin ? 'Sign up here' : 'Log In'}
             </button>
           </p>

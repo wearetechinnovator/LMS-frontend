@@ -5,7 +5,23 @@ const COUNSELORS = ['Sarah Jenkins', 'Marcus Chan', 'Michael Chen', 'Unassigned'
 const SOURCES = ['Website Organic', 'Paid Search', 'Referral', 'Webinar', 'Cold Outreach', 'Direct Mail', 'Bulk Offline CSV']
 
 export default function LmsSettings() {
-  const [activeSettingsTab, setActiveSettingsTab] = useState('session') // 'session' | 'import' | 'export'
+  const role = localStorage.getItem('userRole')
+  const isMasked = role === 'counselor' || role === 'vendor'
+  const maskEmail = (email) => {
+    if (!email) return ''
+    const atIdx = email.indexOf('@')
+    if (atIdx <= 0) return email
+    const local = email.substring(0, atIdx)
+    const domain = email.substring(atIdx)
+    return local.charAt(0) + '***' + domain
+  }
+  const maskPhone = (phone) => {
+    if (!phone) return ''
+    const str = String(phone).trim()
+    if (str.length <= 4) return '******'
+    return str.slice(0, 2) + '******' + str.slice(-2)
+  }
+  const [activeSettingsTab, setActiveSettingsTab] = useState('session')
   const [toastMsg, setToastMsg] = useState(null)
 
   // -- TAB 1: Session Creation States --
@@ -653,7 +669,7 @@ export default function LmsSettings() {
                   type="text"
                   readOnly
                   value={currentSessionDate}
-                  className="w-full h-8 px-3 rounded border-none bg-[#e2e8f0] text-[#4a5568] text-[12px] font-medium outline-none"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-medium outline-none placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -707,7 +723,7 @@ export default function LmsSettings() {
                       value={newSessionDate}
                       onChange={(e) => setNewSessionDate(e.target.value)}
                       placeholder="MM/DD/YYYY - MM/DD/YYYY"
-                      className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                      className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -723,7 +739,7 @@ export default function LmsSettings() {
                         value={sessionPhone}
                         onChange={(e) => setSessionPhone(e.target.value)}
                         placeholder="8456822XXX"
-                        className="flex-1 h-8 px-3 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none border border-r-0 border-slate-200 focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed font-mono"
+                        className="flex-1 h-8 px-3 bg-white text-slate-800 text-[12px] font-semibold outline-none border border-r-0 border-slate-200 focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed font-mono placeholder:text-slate-400"
                       />
                       <button
                         type="button"
@@ -748,7 +764,7 @@ export default function LmsSettings() {
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value)}
                         placeholder="Enter OTP"
-                        className="flex-1 h-8 px-3 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none border border-r-0 border-slate-200 focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed font-mono"
+                        className="flex-1 h-8 px-3 bg-white text-slate-800 text-[12px] font-semibold outline-none border border-r-0 border-slate-200 focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed font-mono placeholder:text-slate-400"
                       />
                       <button
                         type="button"
@@ -822,7 +838,7 @@ export default function LmsSettings() {
                 <select
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 >
                   {COUNSELORS.map(name => (
                     <option key={name} value={name}>{name}</option>
@@ -840,7 +856,7 @@ export default function LmsSettings() {
                 <select
                   value={leadSource}
                   onChange={(e) => setLeadSource(e.target.value)}
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 >
                   {SOURCES.map(source => (
                     <option key={source} value={source}>{source}</option>
@@ -947,8 +963,8 @@ export default function LmsSettings() {
                           {parsedData.slice(0, 5).map((row, idx) => (
                             <tr key={idx} className="hover:bg-slate-50 text-slate-700 font-medium">
                               <td className="py-1.5 px-2 truncate max-w-[100px]" title={row.name}>{row.name || 'N/A'}</td>
-                              <td className="py-1.5 px-2 truncate max-w-[120px]" title={row.email}>{row.email || 'N/A'}</td>
-                              <td className="py-1.5 px-2 truncate max-w-[100px]" title={row.phone}>{row.phone || 'N/A'}</td>
+                              <td className="py-1.5 px-2 truncate max-w-[120px]" title={isMasked ? maskEmail(row.email) : row.email}>{isMasked ? maskEmail(row.email) : (row.email || 'N/A')}</td>
+                              <td className="py-1.5 px-2 truncate max-w-[100px]" title={isMasked ? maskPhone(row.phone) : row.phone}>{isMasked ? maskPhone(row.phone) : (row.phone || 'N/A')}</td>
                               <td className="py-1.5 px-2 truncate max-w-[80px]" title={row.location}>{row.location || 'N/A'}</td>
                               <td className="py-1.5 px-2 truncate max-w-[80px]" title={row.campaign}>{row.campaign || 'N/A'}</td>
                             </tr>
@@ -1007,7 +1023,7 @@ export default function LmsSettings() {
                 <select
                   value={exportFormat}
                   onChange={(e) => setExportFormat(e.target.value)}
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 >
                   <option value="CSV">CSV Format (.csv)</option>
                   <option value="JSON">JSON File (.json)</option>
@@ -1024,7 +1040,7 @@ export default function LmsSettings() {
                 <select
                   value={filterCounselor}
                   onChange={(e) => setFilterCounselor(e.target.value)}
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 >
                   <option value="All Counselors">All Counselors</option>
                   {COUNSELORS.map(name => (
@@ -1043,7 +1059,7 @@ export default function LmsSettings() {
                 <select
                   value={filterSource}
                   onChange={(e) => setFilterSource(e.target.value)}
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 >
                   <option value="All Sources">All Sources</option>
                   {SOURCES.map(source => (
@@ -1062,7 +1078,7 @@ export default function LmsSettings() {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 >
                   <option value="All Statuses">All Statuses</option>
                   <option value="NEW">NEW</option>
@@ -1106,7 +1122,7 @@ export default function LmsSettings() {
                               <tr key={lead.id} className="hover:bg-slate-50 text-slate-700 font-medium">
                                 <td className="py-1.5 px-2 text-slate-500 font-mono">{lead.id}</td>
                                 <td className="py-1.5 px-2 truncate max-w-[90px]" title={lead.name}>{lead.name}</td>
-                                <td className="py-1.5 px-2 truncate max-w-[110px]" title={lead.email}>{lead.email}</td>
+                                <td className="py-1.5 px-2 truncate max-w-[110px]" title={isMasked ? maskEmail(lead.email) : lead.email}>{isMasked ? maskEmail(lead.email) : lead.email}</td>
                                 <td className="py-1.5 px-2 truncate max-w-[90px]" title={lead.assignedTo}>{lead.assignedTo}</td>
                                 <td className="py-1.5 px-2 truncate max-w-[80px]" title={lead.source}>{lead.source}</td>
                                 <td className="py-1.5 px-2">
@@ -1197,7 +1213,7 @@ export default function LmsSettings() {
                   value={campaignTitle}
                   onChange={(e) => setCampaignTitle(e.target.value)}
                   placeholder="e.g. Summer Outreach 2026"
-                  className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                  className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -1263,7 +1279,7 @@ export default function LmsSettings() {
                     value={campaignSubject}
                     onChange={(e) => setCampaignSubject(e.target.value)}
                     placeholder="Enter email subject header"
-                    className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                    className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                   />
                 </div>
               </motion.div>
@@ -1280,7 +1296,7 @@ export default function LmsSettings() {
                   onChange={(e) => setCampaignMessage(e.target.value)}
                   placeholder="Write your campaign message contents here... Use {name} for personalization."
                   rows={4}
-                  className="w-full p-2.5 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 resize-none font-sans"
+                  className="w-full p-2.5 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 resize-none font-sans placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -1334,7 +1350,7 @@ export default function LmsSettings() {
                       value={minScore}
                       onChange={(e) => setMinScore(e.target.value)}
                       placeholder="Min Score"
-                      className="w-[80px] h-8 px-2 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 font-mono text-center"
+                      className="w-[80px] h-8 px-2 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 font-mono text-center placeholder:text-slate-400"
                     />
                     <span className="text-[12px] text-slate-400 font-bold">to</span>
                     <input
@@ -1344,7 +1360,7 @@ export default function LmsSettings() {
                       value={maxScore}
                       onChange={(e) => setMaxScore(e.target.value)}
                       placeholder="Max Score"
-                      className="w-[80px] h-8 px-2 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 font-mono text-center"
+                      className="w-[80px] h-8 px-2 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 font-mono text-center placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -1358,7 +1374,7 @@ export default function LmsSettings() {
                     <select
                       value={targetCounselor}
                       onChange={(e) => setTargetCounselor(e.target.value)}
-                      className="w-full h-8 px-3 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500"
+                      className="w-full h-8 px-3 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 placeholder:text-slate-400"
                     >
                       <option value="All Counselors">All Counselors</option>
                       {COUNSELORS.map(name => (
@@ -1400,8 +1416,8 @@ export default function LmsSettings() {
                                   <tr key={lead.id} className="hover:bg-slate-50 text-slate-700 font-medium">
                                     <td className="py-1.5 px-2 text-slate-500 font-mono">{lead.id}</td>
                                     <td className="py-1.5 px-2 truncate max-w-[100px]" title={lead.name}>{lead.name}</td>
-                                    <td className="py-1.5 px-2 truncate max-w-[110px]" title={lead.email}>{lead.email}</td>
-                                    <td className="py-1.5 px-2 truncate max-w-[100px]" title={lead.phone}>{lead.phone}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[110px]" title={isMasked ? maskEmail(lead.email) : lead.email}>{isMasked ? maskEmail(lead.email) : lead.email}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[100px]" title={isMasked ? maskPhone(lead.phone) : lead.phone}>{isMasked ? maskPhone(lead.phone) : lead.phone}</td>
                                     <td className="py-1.5 px-2 font-bold text-sky-600 font-mono">{lead.score}</td>
                                   </tr>
                                 ))}
@@ -1434,7 +1450,7 @@ export default function LmsSettings() {
                       onChange={(e) => setManualRecipients(e.target.value)}
                       placeholder="Paste target emails and numbers (separated by commas, spaces, or lines)&#10;e.g. support@domain.com, +15550199, client@email.org"
                       rows={3}
-                      className="w-full p-2.5 rounded border border-slate-200 bg-[#e2e8f0] text-[#2d3748] text-[12px] font-semibold outline-none focus:border-sky-500 resize-none font-mono"
+                      className="w-full p-2.5 rounded border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500 resize-none font-mono placeholder:text-slate-400"
                     />
                     <p className="text-[10px] text-slate-400 font-semibold leading-normal">
                       The parser extracts valid email formats and 7-20 digit phone numbers automatically.

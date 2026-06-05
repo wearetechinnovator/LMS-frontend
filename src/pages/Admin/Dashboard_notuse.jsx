@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import Navbar from '../components/Navbar'
-import Sidebar from '../components/Sidebar'
+import Navbar from '../../components/Navbar'
+import Sidebar from '../../components/Sidebar'
 import AllLeads from './AllLeads'
-import FormBuilder from './FormBuilder'
-import Teams from './Teams'
+import FormBuilder from '../FormBuilder'
+import Teams from '../Teams'
 import Campaigns from './Campaigns'
-import ViewTeam from './ViewTeam'
-import ManageTeam from './ManageTeam'
-import DasboardStatsCard from '../components/Dashboard/DasboardStatsCard'
+import ViewTeam from '../ViewTeam'
+import ManageTeam from '../ManageTeam'
+import DasboardStatsCard from '../../components/Dashboard/DasboardStatsCard'
 
 export default function Dashboard({ username, onLogout }) {
   const [activeNav, setActiveNav] = useState('dashboard')

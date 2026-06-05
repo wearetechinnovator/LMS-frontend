@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Toast from '../components/Toast'
-import '../assets/brainstorm/brainstorm.css'
+import Toast from '../../components/Toast'
+import '../../assets/brainstorm/brainstorm.css'
 
 export default function Brainstorm() {
     const canvasRef = useRef(null)

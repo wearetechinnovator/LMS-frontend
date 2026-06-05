@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import ManageTeam from '../ManageTeam'
+import ManageTeam from '../Admin/ManageTeam'
 
 export default function ManageTeamPage() {
   const { id } = useParams()

@@ -1,29 +1,45 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom'
 
-// Check if user is authenticated
 const isAuthenticated = () => {
   const token = localStorage.getItem('authToken')
   return !!token
 }
 
-// Protected Route - Only authenticated users can access
-export const ProtectRoute = ({ children }) => {
-  if (!isAuthenticated()) {
+export const ProtectRoute = ({ children, allowedRoles }) => {
+  const token = localStorage.getItem('authToken')
+  const role = localStorage.getItem('userRole')
+
+  if (!token) {
     return <Navigate to="/" replace />
   }
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/unauthorized" replace />
+  }
+
   return children
 }
 
-// Unprotected Route - Only unauthenticated users can access (auth pages)
 export const UnProtectRoute = ({ children, login }) => {
-  if (login && isAuthenticated()) {
+  const token = localStorage.getItem('authToken')
+  const role = localStorage.getItem('userRole')
+
+  if (login && token) {
+    if (role === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />
+    }
+    if (role === 'counselor') {
+      return <Navigate to="/counselor/overview" replace />
+    }
+    if (role === 'vendor') {
+      return <Navigate to="/vendor/portal" replace />
+    }
     return <Navigate to="/dashboard" replace />
   }
   return children
 }
 
-// Company Protection - Check if user has company selected
 const ProtectCP = ({ children }) => {
   const companyId = localStorage.getItem('companyId')
   if (!companyId) {

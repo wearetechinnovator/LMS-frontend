@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormBuilder from './FormBuilder'
-import FormBuilderHeader from '../components/FormbuilderPage/FormBuilderHeader'
-import Toast from '../components/Toast'
+import FormBuilderHeader from '../../components/FormbuilderPage/FormBuilderHeader'
+import Toast from '../../components/Toast'
 
 export default function FormBuilderPage() {
   const [activeFormSchema, setActiveFormSchema] = useState(null)
@@ -53,8 +53,8 @@ export default function FormBuilderPage() {
         { id: 4, type: 'text', label: 'Detailed Message', required: true, placeholder: 'Type your message details here...', helperText: '', options: [] }
       ]
     },
-    
-    
+
+
     {
       id: 'FRM-3320-B',
       name: 'SaaS Demo Request - Main Landing',
@@ -89,7 +89,7 @@ export default function FormBuilderPage() {
         { id: 5, type: 'text', label: 'Comments / Notes', required: false, placeholder: 'Describe your integration goals...', helperText: '', options: [] }
       ]
     },
-    
+
   ])
 
   // Filter forms based on search query and status option selection
@@ -216,14 +216,14 @@ export default function FormBuilderPage() {
             transition={{ duration: 0.25 }}
             className="w-full space-y-5"
           >
-            <FormBuilderHeader 
-              handleCreateFromScratch={handleCreateNewForm} 
+            <FormBuilderHeader
+              handleCreateFromScratch={handleCreateNewForm}
               handleOpenTemplateModal={() => {
                 const templates = formsList.filter(f => f.status === 'TEMPLATE')
                 setActivePreviewTemplate(templates[0] || null)
                 setShowTemplateModal(true)
-              }} 
-              triggerToast={triggerToast} 
+              }}
+              triggerToast={triggerToast}
             />
 
             {/* Filter Bar */}
@@ -504,11 +504,10 @@ export default function FormBuilderPage() {
                           key={template.id}
                           onMouseEnter={() => setActivePreviewTemplate(template)}
                           onClick={() => handleSelectTemplate(template)}
-                          className={`w-full text-left p-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${
-                            isActive 
-                              ? 'border-purple-500 bg-purple-50/70 shadow-xs' 
+                          className={`w-full text-left p-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${isActive
+                              ? 'border-purple-500 bg-purple-50/70 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span className={`material-symbols-outlined text-[18px] shrink-0 ${isActive ? 'text-purple-600' : 'text-slate-400'}`}>
@@ -521,11 +520,10 @@ export default function FormBuilderPage() {
                               <p className="text-[9px] font-mono text-slate-400 mt-0.5">{template.id}</p>
                             </div>
                           </div>
-                          <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded border shrink-0 ${
-                            isActive 
-                              ? 'bg-purple-100/80 text-purple-800 border-purple-200' 
+                          <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded border shrink-0 ${isActive
+                              ? 'bg-purple-100/80 text-purple-800 border-purple-200'
                               : 'bg-slate-50 text-slate-500 border-slate-200'
-                          }`}>
+                            }`}>
                             {template.fields?.length || 0} fields
                           </span>
                         </div>
@@ -632,10 +630,10 @@ export default function FormBuilderPage() {
       </AnimatePresence>
 
       {/*Toast Banner */}
-      <Toast 
-        message={toastMessage} 
-        isVisible={!!toastMessage} 
-        onClose={() => setToastMessage('')} 
+      <Toast
+        message={toastMessage}
+        isVisible={!!toastMessage}
+        onClose={() => setToastMessage('')}
       />
     </div>
   )

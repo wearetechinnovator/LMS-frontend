@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import ExportButton from '../components/ExportButton'
-import Toast from '../components/Toast'
+import ExportButton from '../../components/ExportButton'
+import Toast from '../../components/Toast'
 
 // Static mockup of original records from the screenshot + a few extra for robust filtering
 const originalLogs = [
@@ -128,10 +128,10 @@ export default function AuditLogs() {
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative">
 
             {/* Premium Toast Banner */}
-            <Toast 
-                message={toastMessage} 
-                isVisible={!!toastMessage} 
-                onClose={() => setToastMessage('')} 
+            <Toast
+                message={toastMessage}
+                isVisible={!!toastMessage}
+                onClose={() => setToastMessage('')}
             />
 
             {/* Header Block */}

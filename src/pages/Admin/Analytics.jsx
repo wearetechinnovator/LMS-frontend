@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import '../assets/analytics.css'
+import '../../assets/analytics.css'
 
 export default function Analytics() {
   // Global View Type: 'graph' | 'report'

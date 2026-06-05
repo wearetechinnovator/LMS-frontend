@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import LeadDetailsDrawer from '../components/LeadDetailsDrawer'
+import LeadDetailsDrawer from '../../components/LeadDetailsDrawer'
 
 export default function AllLeads() {
   const location = useLocation()
@@ -10,6 +10,22 @@ export default function AllLeads() {
   const [hoveredLeadId, setHoveredLeadId] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [showTooltip, setShowTooltip] = useState(false)
+  const role = localStorage.getItem('userRole')
+  const isMasked = role === 'counselor' || role === 'vendor'
+  const maskEmail = (email) => {
+    if (!email) return ''
+    const atIdx = email.indexOf('@')
+    if (atIdx <= 0) return email
+    const local = email.substring(0, atIdx)
+    const domain = email.substring(atIdx)
+    return local.charAt(0) + '***' + domain
+  }
+  const maskPhone = (phone) => {
+    if (!phone) return ''
+    const str = String(phone).trim()
+    if (str.length <= 4) return '******'
+    return str.slice(0, 2) + '******' + str.slice(-2)
+  }
 
   // Detect when cursor stops moving for 2 seconds to show tooltip
   useEffect(() => {
@@ -1441,8 +1457,8 @@ export default function AllLeads() {
         )}
       </AnimatePresence>
 
-      {/* LEADS TABLE LIST VIEW */}
-      <div className="w-full">
+      {!(activeLeadDetails && role === 'admin') && (
+        <div className="w-full">
         {/* Saved Views Quick Tabs */}
         {/* <div className="flex border-b border-outline-variant gap-4 mb-5 select-none text-left">
               <button
@@ -2142,13 +2158,15 @@ export default function AllLeads() {
                 {filteredAndSortedLeads.map((lead, index) => (
                   <motion.tr
                     key={lead.id}
-                    className="border-b border-slate-200 hover:bg-slate-50/70 transition-colors cursor-pointer"
+                    className={`border-b border-slate-200 hover:bg-slate-50/70 transition-colors ${role === 'admin' ? 'cursor-pointer' : ''}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.04 }}
                     onClick={() => {
-                      setActiveLeadDetails(lead)
-                      setHoveredLeadId(null)
+                      if (role === 'admin') {
+                        setActiveLeadDetails(lead)
+                        setHoveredLeadId(null)
+                      }
                     }}
                     onMouseEnter={() => setHoveredLeadId(lead.id)}
                     onMouseLeave={() => setHoveredLeadId(null)}
@@ -2173,14 +2191,14 @@ export default function AllLeads() {
                               {lead.name}
                             </span>
                             <span className="text-[10px] text-slate-450 truncate">
-                              {lead.email}
+                              {isMasked ? maskEmail(lead.email) : lead.email}
                             </span>
                           </div>
                         </div>
                       </td>
                     )}
                     {visibleColumns.phone && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{lead.phone || '--'}</td>
+                      <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
                     )}
                     {visibleColumns.score && (
                       <td className="px-3 py-4">
@@ -2337,16 +2355,18 @@ export default function AllLeads() {
                                   transition={{ duration: 0.15 }}
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
-                                    View/Edit Details
-                                  </button>
+                                  {role === 'admin' && (
+                                     <button
+                                       onClick={() => {
+                                         setActiveLeadDetails(lead);
+                                         setActiveDropdownLeadId(null);
+                                       }}
+                                       className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                     >
+                                       <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
+                                       View/Edit Details
+                                     </button>
+                                   )}
 
                                   <button
                                     onClick={() => {
@@ -2567,8 +2587,12 @@ export default function AllLeads() {
           {filteredAndSortedLeads.map((lead) => (
             <div
               key={lead.id}
-              onClick={() => setActiveLeadDetails(lead)}
-              className="bg-white border border-slate-200 rounded-xl p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all cursor-pointer text-left"
+              onClick={() => {
+                if (role === 'admin') {
+                  setActiveLeadDetails(lead)
+                }
+              }}
+              className={`bg-white border border-slate-200 rounded-xl p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${role === 'admin' ? 'cursor-pointer' : ''}`}
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -2580,7 +2604,7 @@ export default function AllLeads() {
                       {lead.name}
                     </span>
                     <span className="text-[10px] text-slate-450 truncate">
-                      {lead.email}
+                      {isMasked ? maskEmail(lead.email) : lead.email}
                     </span>
                   </div>
                 </div>
@@ -2592,7 +2616,7 @@ export default function AllLeads() {
               <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-[11px] border-t border-slate-100 pt-3 text-slate-600 font-medium">
                 <div>
                   <span className="text-slate-400 block text-[9.5px]">Phone</span>
-                  <span className="font-semibold text-slate-700">{lead.phone || '--'}</span>
+                  <span className="font-semibold text-slate-700">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[9.5px]">Score</span>
@@ -2639,15 +2663,17 @@ export default function AllLeads() {
                   <span className="material-symbols-outlined text-[12px]">mail</span>
                   Email
                 </button>
-                <button
-                  onClick={() => {
-                    setActiveLeadDetails(lead);
-                  }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-650 border border-amber-150 text-[10px] font-bold transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[12px]">edit</span>
-                  View Details
-                </button>
+                {role === 'admin' && (
+                  <button
+                    onClick={() => {
+                      setActiveLeadDetails(lead);
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-650 border border-amber-150 text-[10px] font-bold transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">edit</span>
+                    View Details
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -2746,50 +2772,50 @@ export default function AllLeads() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+      )}
 
-        <AnimatePresence>
-          {activeLeadDetails && (
-            <LeadDetailsDrawer
-              activeLeadDetails={activeLeadDetails}
-              setActiveLeadDetails={setActiveLeadDetails}
-              triggerToast={triggerToast}
-              playingRecording={playingRecording}
-              setPlayingRecording={setPlayingRecording}
-              audioPlaying={audioPlaying}
-              setAudioPlaying={setAudioPlaying}
-              playbackSpeed={playbackSpeed}
-              setPlaybackSpeed={setPlaybackSpeed}
-              playbackProgress={playbackProgress}
-              setPlaybackProgress={setPlaybackProgress}
-              mergeSelectedProps={mergeSelectedProps}
-              handlePropSelection={handlePropSelection}
-              handleMergeProfiles={handleMergeProfiles}
-              handleLeadStatusChange={handleLeadStatusChange}
-              handleLeadCounselorChange={handleLeadCounselorChange}
-              handleLeadScoreChange={handleLeadScoreChange}
-              editingScore={editingScore}
-              setEditingScore={setEditingScore}
-              newComment={newComment}
-              setNewComment={setNewComment}
-              interactionType={interactionType}
-              setInteractionType={setInteractionType}
-              handleLogInteraction={handleLogInteraction}
-              handleTogglePinEvent={handleTogglePinEvent}
-              handleSendQueryResponse={handleSendQueryResponse}
-              timelineFilter={timelineFilter}
-              setTimelineFilter={setTimelineFilter}
-              timelineSearchQuery={timelineSearchQuery}
-              setTimelineSearchQuery={setTimelineSearchQuery}
-              filteredTimeline={filteredTimeline}
-              detailsActiveTab={detailsActiveTab}
-              setDetailsActiveTab={setDetailsActiveTab}
-              getInitials={getInitials}
-              getStatusColor={getStatusColor}
-              getDuplicateRecord={getDuplicateRecord}
-              setShowEmailModal={setShowEmailModal}
-            />
-          )}
-        </AnimatePresence>
+      {activeLeadDetails && role === 'admin' && (
+        <LeadDetailsDrawer
+          activeLeadDetails={activeLeadDetails}
+          setActiveLeadDetails={setActiveLeadDetails}
+          triggerToast={triggerToast}
+          playingRecording={playingRecording}
+          setPlayingRecording={setPlayingRecording}
+          audioPlaying={audioPlaying}
+          setAudioPlaying={setAudioPlaying}
+          playbackSpeed={playbackSpeed}
+          setPlaybackSpeed={setPlaybackSpeed}
+          playbackProgress={playbackProgress}
+          setPlaybackProgress={setPlaybackProgress}
+          mergeSelectedProps={mergeSelectedProps}
+          handlePropSelection={handlePropSelection}
+          handleMergeProfiles={handleMergeProfiles}
+          handleLeadStatusChange={handleLeadStatusChange}
+          handleLeadCounselorChange={handleLeadCounselorChange}
+          handleLeadScoreChange={handleLeadScoreChange}
+          editingScore={editingScore}
+          setEditingScore={setEditingScore}
+          newComment={newComment}
+          setNewComment={setNewComment}
+          interactionType={interactionType}
+          setInteractionType={setInteractionType}
+          handleLogInteraction={handleLogInteraction}
+          handleTogglePinEvent={handleTogglePinEvent}
+          handleSendQueryResponse={handleSendQueryResponse}
+          timelineFilter={timelineFilter}
+          setTimelineFilter={setTimelineFilter}
+          timelineSearchQuery={timelineSearchQuery}
+          setTimelineSearchQuery={setTimelineSearchQuery}
+          filteredTimeline={filteredTimeline}
+          detailsActiveTab={detailsActiveTab}
+          setDetailsActiveTab={setDetailsActiveTab}
+          getInitials={getInitials}
+          getStatusColor={getStatusColor}
+          getDuplicateRecord={getDuplicateRecord}
+          setShowEmailModal={setShowEmailModal}
+        />
+      )}
 
         {/* VIEW APPLICATION MODAL */}
         <AnimatePresence>
@@ -2830,7 +2856,7 @@ export default function AllLeads() {
                     </div>
                     <div>
                       <h4 className="text-[13px] font-bold text-slate-800 leading-tight">{activeModalLead.name}</h4>
-                      <p className="text-[11px] text-slate-505 mt-0.5">{activeModalLead.email} • {activeModalLead.phone || '--'}</p>
+                      <p className="text-[11px] text-slate-505 mt-0.5">{isMasked ? maskEmail(activeModalLead.email) : activeModalLead.email} • {isMasked ? maskPhone(activeModalLead.phone) : (activeModalLead.phone || '--')}</p>
                     </div>
                   </div>
 
@@ -2934,7 +2960,7 @@ export default function AllLeads() {
                     </div>
                     <div>
                       <h4 className="text-[13px] font-bold text-slate-800 leading-tight">{activeModalLead.name}</h4>
-                      <p className="text-[11px] text-slate-505 mt-0.5">{activeModalLead.email}</p>
+                      <p className="text-[11px] text-slate-505 mt-0.5">{isMasked ? maskEmail(activeModalLead.email) : activeModalLead.email}</p>
                     </div>
                   </div>
 
@@ -3335,7 +3361,10 @@ export default function AllLeads() {
                     Email Details
                   </h3>
                   <button
-                    onClick={() => setShowEmailModal(false)}
+                    onClick={() => {
+                      setShowEmailModal(false)
+                      setActiveLeadDetails(null)
+                    }}
                     className="p-1 hover:bg-surface-container-high rounded-full text-on-surface-variant cursor-pointer flex items-center justify-center select-none"
                   >
                     <span className="material-symbols-outlined text-[18px]">close</span>
@@ -3349,7 +3378,7 @@ export default function AllLeads() {
                     <span className="col-span-5 font-medium">John Doe &lt;john.doe@leadpro.com&gt;</span>
 
                     <span className="col-span-1 text-slate-400 font-semibold">To:</span>
-                    <span className="col-span-5 font-medium">{activeLeadDetails.name} &lt;{activeLeadDetails.email}&gt;</span>
+                    <span className="col-span-5 font-medium">{activeLeadDetails.name} &lt;{isMasked ? maskEmail(activeLeadDetails.email) : activeLeadDetails.email}&gt;</span>
 
                     <span className="col-span-1 text-slate-400 font-semibold">Subject:</span>
                     <span className="col-span-5 font-bold text-slate-900">Introduction to LeadPro CRM</span>
@@ -3375,7 +3404,10 @@ export default function AllLeads() {
                 {/* Modal Footer */}
                 <div className="px-5 py-3 border-t border-outline-variant bg-surface-container flex justify-end">
                   <button
-                    onClick={() => setShowEmailModal(false)}
+                    onClick={() => {
+                      setShowEmailModal(false)
+                      setActiveLeadDetails(null)
+                    }}
                     className="px-3.5 py-1.5 bg-primary text-white rounded text-[11px] font-bold hover:bg-primary/95 transition-colors cursor-pointer select-none"
                   >
                     Close
@@ -3407,7 +3439,6 @@ export default function AllLeads() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
     </div>
   )
 }
