@@ -53,7 +53,7 @@ export const counselorNavItems = [
 ]
 
 export const vendorNavItems = [
-  { id: 'portal', label: 'Portal', icon: 'dashboard', path: '/vendor/portal' },
+  { id: 'Dashboard', label: 'Dashboard', icon: 'dashboard', path: '/vendor/dashboard' },
   { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/vendor/campaigns' },
   { id: 'leads', label: 'All Leads', icon: 'people', path: '/vendor/leads' },
 ]
@@ -127,11 +127,11 @@ export const RoleRoutes = ({ username, handleLogout }) => {
           </ProtectRoute>
         }
       >
-        <Route path="portal" element={<VendorDashboard />} />
+        <Route path="dashboard" element={<VendorDashboard />} />
         <Route path="campaigns" element={<VendorCampaignsPage />} />
         <Route path="leads" element={<VendorAllLeadsPage />} />
         <Route path="settings" element={<VendorLmsSettingsPage />} />
-        <Route path="*" element={<Navigate to="portal" replace />} />
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
     </>
   )

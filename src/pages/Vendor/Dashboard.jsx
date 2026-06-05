@@ -7,7 +7,7 @@ import DashboardRecentLeads from '../../components/Dashboard/DashboardRecentLead
 import ExportButton from '../../components/ExportButton'
 import DeepDiveAnalytics from '../../components/Dashboard/DeepDiveAnalytics'
 
-export default function Dashboard() {
+export default function VendorDashboard() {
   const [toastMsg, setToastMsg] = useState(null)
   const [showDateDropdown, setShowDateDropdown] = useState(false)
   const [selectedDateRange, setSelectedDateRange] = useState('Last 30 Days')

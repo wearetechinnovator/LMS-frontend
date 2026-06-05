@@ -290,7 +290,7 @@ export default function Campaigns() {
     setCampaigns(prev => prev.map(c => {
       if (c.id === id) {
         const nextStatus = c.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE'
-        
+
         // Log activity
         const newAct = {
           id: activities.length + Math.random(),
@@ -341,7 +341,7 @@ export default function Campaigns() {
   const handleSaveEdit = (e) => {
     e.preventDefault()
     setCampaigns(prev => prev.map(c => c.id === editingCampaign.id ? editingCampaign : c))
-    
+
     // Log activity
     const newAct = {
       id: activities.length + Math.random(),
@@ -419,13 +419,13 @@ export default function Campaigns() {
       notes: '',
       customParams: ''
     })
-    setGeneratedUrlVal('https://lms.edu/enroll')
+    setGeneratedUrlVal('https://')
     setActiveTab('CAMPAIGNS')
     triggerToast(`Campaign "${created.name}" launched successfully!`)
   }
 
   const handleGenerateUrl = () => {
-    const baseUrl = 'https://lms.edu/enroll'
+    const baseUrl = 'https://'
     const params = new URLSearchParams()
     if (newCampaign.utmSource) params.append('utm_source', newCampaign.utmSource.toLowerCase().replace(/\s+/g, '_'))
     if (newCampaign.utmMedium) params.append('utm_medium', newCampaign.utmMedium.toLowerCase().replace(/\s+/g, '_'))
@@ -478,7 +478,7 @@ export default function Campaigns() {
     if (cpl > 40 && c.leads > 0) {
       indicators.push({ label: '⚠ High CPL', style: 'bg-rose-50 border-rose-100 text-rose-700' })
     }
-    
+
     // Check if ending soon (within 30 days of 2026-06-04)
     if (c.endDate) {
       const end = new Date(c.endDate)
@@ -494,7 +494,7 @@ export default function Campaigns() {
 
   return (
     <div className="w-full relative h-full flex flex-col font-sans select-none bg-[#f8fafc] p-4 sm:p-5 space-y-4 overflow-y-auto">
-      
+
       {/* Toast Alert */}
       <AnimatePresence>
         {toastMsg && (
@@ -511,35 +511,52 @@ export default function Campaigns() {
       </AnimatePresence>
 
       {/* TOP HEADER & ACTION BUTTONS */}
-      <div className="flex flex-row justify-between items-center bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs">
-        <div className="text-left">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded tracking-widest uppercase">
-              CRM Portal
-            </span>
-            {activeTab === 'DETAILS' && (
-              <button 
-                onClick={() => setActiveTab(prevTab)}
-                className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-                Back
-              </button>
-            )}
-            {activeTab === 'CREATE_CAMPAIGN' && (
-              <button 
-                onClick={() => { setActiveTab(prevTab); }}
-                className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-                Back
-              </button>
-            )}
-          </div>
-          <h1 className="text-lg font-black text-slate-800 mt-1">Campaign Lifecycle Management</h1>
-          <p className="text-[11px] text-slate-400 font-medium">
-            Monitor spend efficiency, source conversion funnels, round-robin rules, and ROI analytics.
-          </p>
+      <div className="flex items-center gap-2">
+
+        {activeTab === 'DETAILS' && (
+          <button
+            onClick={() => setActiveTab(prevTab)}
+            className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+            Back
+          </button>
+        )}
+        {activeTab === 'CREATE_CAMPAIGN' && (
+          <button
+            onClick={() => { setActiveTab(prevTab); }}
+            className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+            Back
+          </button>
+        )}
+      </div>
+
+
+      {/* TABS NAVIGATION GROUP */}
+      <div className="flex justify-between items-center bg-white border border-slate-200/80 rounded-xl p-1.5 shadow-2xs">
+        <div className="flex bg-slate-50 border border-slate-200/60 rounded-lg p-1 gap-1">
+          {[
+            { id: 'DASHBOARD', label: 'Campaign Dashboard', icon: 'dashboard' },
+            { id: 'CAMPAIGNS', label: 'Campaigns', icon: 'campaign' },
+            { id: 'REPORTS', label: 'Reports', icon: 'assessment' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id)
+                setPrevTab(tab.id)
+              }}
+              className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === tab.id
+                ? 'bg-white shadow-2xs text-indigo-600 border border-slate-200'
+                : 'text-slate-500 hover:text-slate-800'
+                }`}
+            >
+              <span className="material-symbols-outlined text-[14px]">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Primary CTA on top-right */}
@@ -557,44 +574,13 @@ export default function Campaigns() {
         )}
       </div>
 
-      {/* TABS NAVIGATION GROUP */}
-      <div className="flex justify-between items-center bg-white border border-slate-200/80 rounded-xl p-1.5 shadow-2xs">
-        <div className="flex bg-slate-50 border border-slate-200/60 rounded-lg p-1 gap-1">
-          {[
-            { id: 'DASHBOARD', label: 'Campaign Dashboard', icon: 'dashboard' },
-            { id: 'CAMPAIGNS', label: 'Campaigns', icon: 'campaign' },
-            { id: 'REPORTS', label: 'Reports', icon: 'assessment' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id)
-                setPrevTab(tab.id)
-              }}
-              className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === tab.id
-                  ? 'bg-white shadow-2xs text-indigo-600 border border-slate-200'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[14px]">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="text-[10px] font-bold text-slate-450 px-2 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          System Sync Active
-        </div>
-      </div>
-
       {/* MAIN VIEW CONDITIONAL RENDERING */}
       <div className="w-full">
-        
+
         {/* TAB 1: CAMPAIGN DASHBOARD */}
         {activeTab === 'DASHBOARD' && (
           <div className="space-y-4">
-            
+
             {/* Section 1: KPI Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 text-left">
               <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-2xs">
@@ -634,57 +620,9 @@ export default function Campaigns() {
               </div>
             </div>
 
-            {/* Section 2: Campaign Health Center */}
-            <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs text-left">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-indigo-600">health_and_safety</span>
-                  <h3 className="text-xs font-black text-slate-800">Campaign Health Center</h3>
-                </div>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Prioritize Actions</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div className="bg-amber-50/50 border border-amber-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-amber-600 mt-0.5">hourglass_top</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-amber-800 block">2 Campaigns Ending Soon</span>
-                    <p className="text-[9px] text-amber-600 font-medium mt-0.5">MBA Lookalike & Q3 outreach. Extended budgets recommended.</p>
-                    <button onClick={() => { setActiveTab('CAMPAIGNS'); setFilterStatus('ACTIVE'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Review Timelines</button>
-                  </div>
-                </div>
-
-                <div className="bg-rose-50/50 border border-rose-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-rose-600 mt-0.5">running_with_errors</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-rose-800 block">Campaign Budget 90% Consumed</span>
-                    <p className="text-[9px] text-rose-600 font-medium mt-0.5">Google Ads has spent $14,200 of $15,000 allocation.</p>
-                    <button onClick={() => { setSelectedCampaignId('CMP-001'); setActiveTab('DETAILS'); setDetailsSubTab('SETTINGS'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Add Budget</button>
-                  </div>
-                </div>
-
-                <div className="bg-rose-50/50 border border-rose-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-rose-600 mt-0.5">trending_up</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-rose-800 block">CPL Increased 15%</span>
-                    <p className="text-[9px] text-rose-600 font-medium mt-0.5">Meta Ads CPC surge raised Cost Per Lead to $16.90.</p>
-                    <button onClick={() => { setSelectedCampaignId('CMP-002'); setActiveTab('DETAILS'); setDetailsSubTab('ANALYTICS'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Review CPL Trend</button>
-                  </div>
-                </div>
-
-                <div className="bg-emerald-50/50 border border-emerald-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-emerald-600 mt-0.5">local_fire_department</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-emerald-800 block">Best Performing Campaign</span>
-                    <p className="text-[9px] text-emerald-600 font-medium mt-0.5">Scholarship Admissions Drive achieves 11,600% ROI.</p>
-                    <button onClick={() => { setSelectedCampaignId('CMP-004'); setActiveTab('DETAILS'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Scale Campaign</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Section 3 & 4 Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 text-left">
-              
+
               {/* Section 3: Master Funnel */}
               <div className="lg:col-span-3 bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs flex flex-col justify-between">
                 <div>
@@ -794,7 +732,7 @@ export default function Campaigns() {
                 </div>
 
                 <div className="border-t border-slate-100 pt-2 text-center">
-                  <button 
+                  <button
                     onClick={() => setActiveTab('CAMPAIGNS')}
                     className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 transition-colors flex items-center justify-center gap-0.5 mx-auto"
                   >
@@ -812,7 +750,7 @@ export default function Campaigns() {
         {/* TAB 2: CAMPAIGNS LIST */}
         {activeTab === 'CAMPAIGNS' && (
           <div className="space-y-4">
-            
+
             {/* SEARCH AND FILTERS */}
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 border border-slate-200/80 rounded-xl shadow-2xs text-left">
               <div className="relative flex-1">
@@ -882,7 +820,7 @@ export default function Campaigns() {
                       const convRate = c.leads > 0 ? (c.convertedLeads / c.leads) * 100 : 0
                       const roi = c.budget > 0 ? (((c.revenue || c.convertedLeads * 1500) - c.budget) / c.budget) * 1500 / 15 : 0 // Safe mock calculation
                       const indicators = getCampaignIndicators(c)
-                      
+
                       return (
                         <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-4 py-3">
@@ -906,11 +844,10 @@ export default function Campaigns() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`inline-block px-2 py-0.5 rounded text-[8.5px] font-extrabold border ${
-                              c.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                            <span className={`inline-block px-2 py-0.5 rounded text-[8.5px] font-extrabold border ${c.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
                               c.status === 'PAUSED' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                              'bg-slate-100 border-slate-200 text-slate-500'
-                            }`}>{c.status}</span>
+                                'bg-slate-100 border-slate-200 text-slate-500'
+                              }`}>{c.status}</span>
                           </td>
                           <td className="px-4 py-3 text-center font-mono font-bold text-slate-800">
                             ${c.budget.toLocaleString()}
@@ -944,8 +881,8 @@ export default function Campaigns() {
                             {/* Dropdown Action Menu */}
                             {activeActionMenuId === c.id && (
                               <>
-                                <div 
-                                  className="fixed inset-0 z-10" 
+                                <div
+                                  className="fixed inset-0 z-10"
                                   onClick={() => setActiveActionMenuId(null)}
                                 ></div>
                                 <div className="absolute right-4 mt-1 w-36 bg-white border border-slate-200 rounded-lg shadow-lg py-1.5 z-20 text-left font-sans text-xs">
@@ -1013,7 +950,7 @@ export default function Campaigns() {
         {/* TAB 3: REPORTS */}
         {activeTab === 'REPORTS' && (
           <div className="space-y-4">
-            
+
             {/* KPI SUMMARY spend/revenue/ROI */}
             <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-left">
               <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-2xs">
@@ -1050,42 +987,42 @@ export default function Campaigns() {
 
             {/* CHARTS TREND PANELS */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-left">
-              
+
               {/* Chart 1: Lead & Conversion Trend */}
               <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xs font-black text-slate-800">Lead & Conversion Volume Trends</h3>
                   <span className="text-[9px] font-bold text-slate-400">Monthly scale</span>
                 </div>
-                
+
                 {/* SVG Mock Trend Line Chart */}
                 <div className="relative h-44 border border-slate-100 rounded-lg p-2 bg-slate-50/50">
                   <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="leadGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25"/>
-                        <stop offset="100%" stopColor="#4f46e5" stopOpacity="0"/>
+                        <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
                       </linearGradient>
                       <linearGradient id="convGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25"/>
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0"/>
+                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    
+
                     {/* Grid Lines */}
                     <line x1="0" y1="37" x2="400" y2="37" stroke="#e2e8f0" strokeDasharray="3,3" />
                     <line x1="0" y1="75" x2="400" y2="75" stroke="#e2e8f0" strokeDasharray="3,3" />
                     <line x1="0" y1="112" x2="400" y2="112" stroke="#e2e8f0" strokeDasharray="3,3" />
-                    
+
                     {/* Lead Trend Area & Line */}
                     <path d="M 0 120 Q 80 80 160 95 T 320 40 T 400 25 L 400 150 L 0 150 Z" fill="url(#leadGrad)" />
                     <path d="M 0 120 Q 80 80 160 95 T 320 40 T 400 25" fill="none" stroke="#4f46e5" strokeWidth="2.5" />
-                    
+
                     {/* Conversion Trend Area & Line */}
                     <path d="M 0 140 Q 80 120 160 125 T 320 110 T 400 90 L 400 150 L 0 150 Z" fill="url(#convGrad)" />
                     <path d="M 0 140 Q 80 120 160 125 T 320 110 T 400 90" fill="none" stroke="#10b981" strokeWidth="2.5" />
                   </svg>
-                  
+
                   {/* Axis Legend labels */}
                   <div className="absolute bottom-1 left-2 right-2 flex justify-between text-[8px] font-bold text-slate-400 font-mono">
                     <span>Jan 2026</span>
@@ -1108,14 +1045,14 @@ export default function Campaigns() {
                   <h3 className="text-xs font-black text-slate-800">CPL Efficiency vs ROI Yield</h3>
                   <span className="text-[9px] font-bold text-slate-400">Weekly cohort</span>
                 </div>
-                
+
                 {/* SVG line and bar chart */}
                 <div className="relative h-44 border border-slate-100 rounded-lg p-2 bg-slate-50/50">
                   <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="roiGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#059669" stopOpacity="0.2"/>
-                        <stop offset="100%" stopColor="#059669" stopOpacity="0"/>
+                        <stop offset="0%" stopColor="#059669" stopOpacity="0.2" />
+                        <stop offset="100%" stopColor="#059669" stopOpacity="0" />
                       </linearGradient>
                     </defs>
                     {/* Grid Lines */}
@@ -1205,7 +1142,7 @@ export default function Campaigns() {
         {/* DETAILS SCREEN (Drill-down from clicks on campaigns) */}
         {activeTab === 'DETAILS' && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 text-left">
-            
+
             {/* Left Sidebar: Selector */}
             <div className="lg:col-span-1 bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs space-y-3.5 flex flex-col">
               <div className="border-b border-slate-100 pb-2">
@@ -1216,11 +1153,10 @@ export default function Campaigns() {
                   <button
                     key={c.id}
                     onClick={() => setSelectedCampaignId(c.id)}
-                    className={`w-full px-3 py-2 text-[11px] font-bold rounded-lg text-left transition-all border ${
-                      selectedCampaignId === c.id
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                        : 'text-slate-600 hover:bg-slate-50 border-transparent'
-                    }`}
+                    className={`w-full px-3 py-2 text-[11px] font-bold rounded-lg text-left transition-all border ${selectedCampaignId === c.id
+                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                      : 'text-slate-600 hover:bg-slate-50 border-transparent'
+                      }`}
                   >
                     <span className="block truncate font-bold text-[11.5px]">{c.name}</span>
                     <div className="flex justify-between items-center mt-1">
@@ -1234,7 +1170,7 @@ export default function Campaigns() {
 
             {/* Right Column: Detailed Performance Cockpit */}
             <div className="lg:col-span-3 space-y-4">
-              
+
               {/* Campaign Profile Header */}
               <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -1243,9 +1179,8 @@ export default function Campaigns() {
                       <span className="text-[8.5px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded uppercase">
                         {activeCampaign.type}
                       </span>
-                      <span className={`inline-block px-1.5 py-0.2 rounded text-[7.5px] font-black border ${
-                        activeCampaign.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-slate-50 border-slate-100 text-slate-500'
-                      }`}>
+                      <span className={`inline-block px-1.5 py-0.2 rounded text-[7.5px] font-black border ${activeCampaign.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-slate-50 border-slate-100 text-slate-500'
+                        }`}>
                         {activeCampaign.status}
                       </span>
                     </div>
@@ -1265,9 +1200,8 @@ export default function Campaigns() {
                       <button
                         key={sub.id}
                         onClick={() => setDetailsSubTab(sub.id)}
-                        className={`px-2.5 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
-                          detailsSubTab === sub.id ? 'bg-white shadow-2xs text-slate-800' : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                        className={`px-2.5 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${detailsSubTab === sub.id ? 'bg-white shadow-2xs text-slate-800' : 'text-slate-500 hover:text-slate-800'
+                          }`}
                       >
                         {sub.label}
                       </button>
@@ -1342,7 +1276,7 @@ export default function Campaigns() {
 
               {/* Sub tabs Rendering */}
               <div className="w-full">
-                
+
                 {/* SUB TAB: OVERVIEW */}
                 {detailsSubTab === 'OVERVIEW' && (
                   <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1405,20 +1339,18 @@ export default function Campaigns() {
                                 {isMasked ? maskEmail(lead.email) : lead.email}
                               </td>
                               <td className="px-4 py-2 text-center font-mono">
-                                <span className={`inline-block px-1.5 py-0.2 rounded font-bold text-[9px] ${
-                                  lead.score >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                <span className={`inline-block px-1.5 py-0.2 rounded font-bold text-[9px] ${lead.score >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                                   lead.score >= 50 ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
-                                  'bg-slate-50 text-slate-500 border border-slate-200'
-                                }`}>
+                                    'bg-slate-50 text-slate-500 border border-slate-200'
+                                  }`}>
                                   {lead.score} pts
                                 </span>
                               </td>
                               <td className="px-4 py-2 text-center">
-                                <span className={`inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold ${
-                                  lead.status === 'Converted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                <span className={`inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold ${lead.status === 'Converted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                                   lead.status === 'Qualified' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
-                                  'bg-slate-100 text-slate-600 border border-slate-200'
-                                }`}>{lead.status}</span>
+                                    'bg-slate-100 text-slate-600 border border-slate-200'
+                                  }`}>{lead.status}</span>
                               </td>
                               <td className="px-4 py-2 text-center text-slate-550">{lead.assignedTo}</td>
                               <td className="px-4 py-2 text-center text-slate-400 font-medium text-[10px]">{lead.lastActivity}</td>
@@ -1479,7 +1411,7 @@ export default function Campaigns() {
                 {detailsSubTab === 'ANALYTICS' && (
                   <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      
+
                       {/* Trend lines */}
                       <div className="border border-slate-150 rounded-lg p-3">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Lead generation velocity</span>
@@ -1487,8 +1419,8 @@ export default function Campaigns() {
                           <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
                             <defs>
                               <linearGradient id="anaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.2"/>
-                                <stop offset="100%" stopColor="#4f46e5" stopOpacity="0"/>
+                                <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.2" />
+                                <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
                               </linearGradient>
                             </defs>
                             <path d="M0 80 Q 75 50 150 40 T 300 15 L 300 100 L 0 100 Z" fill="url(#anaGrad)" />
@@ -1509,8 +1441,8 @@ export default function Campaigns() {
                           <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
                             <defs>
                               <linearGradient id="anaGrad2" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#10b981" stopOpacity="0.2"/>
-                                <stop offset="100%" stopColor="#10b981" stopOpacity="0"/>
+                                <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                               </linearGradient>
                             </defs>
                             <path d="M0 90 L 75 60 L 150 70 L 225 45 L 300 35 L 300 100 L 0 100 Z" fill="url(#anaGrad2)" />
@@ -1597,14 +1529,14 @@ export default function Campaigns() {
         {/* TAB 4: CREATE CAMPAIGN SETUP FORM */}
         {activeTab === 'CREATE_CAMPAIGN' && (
           <div className="bg-white border border-slate-200/80 rounded-xl p-6 shadow-xs max-w-2xl mx-auto text-left space-y-6">
-            
+
             <div className="border-b border-slate-100 pb-3">
               <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">Campaign Ingest & Inbound Tracking Setup</h2>
               <p className="text-[11px] text-slate-400 mt-1">Configure lead attribution parameters and UTM query string parameters.</p>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleLaunchCampaign(); }} className="space-y-6">
-              
+
               {/* SECTION 1: CAMPAIGN INFORMATION */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
@@ -1614,7 +1546,7 @@ export default function Campaigns() {
                 <p className="text-[10px] text-slate-400 font-medium">
                   Define the campaign that will be used for lead attribution and tracking.
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-bold text-slate-600 block mb-1">Campaign Type *</label>
@@ -1800,38 +1732,38 @@ export default function Campaigns() {
                           className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
                         />
                       </div>
-                                 <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-1">Description / Target Goal</label>
-                      <textarea
-                        value={newCampaign.description}
-                        onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
-                        rows={2}
-                        placeholder="Target goals, ad groups or campaign brief..."
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
-                      />
-                    </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-1">Description / Target Goal</label>
+                        <textarea
+                          value={newCampaign.description}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
+                          rows={2}
+                          placeholder="Target goals, ad groups or campaign brief..."
+                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-1">Notes</label>
-                      <textarea
-                        value={newCampaign.notes || ''}
-                        onChange={(e) => setNewCampaign({ ...newCampaign, notes: e.target.value })}
-                        rows={2}
-                        placeholder="Internal comments, team notes..."
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
-                      />
-                    </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-1">Notes</label>
+                        <textarea
+                          value={newCampaign.notes || ''}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, notes: e.target.value })}
+                          rows={2}
+                          placeholder="Internal comments, team notes..."
+                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-1">Custom Tracking Parameters</label>
-                      <input
-                        type="text"
-                        value={newCampaign.customParams || ''}
-                        onChange={(e) => setNewCampaign({ ...newCampaign, customParams: e.target.value })}
-                        placeholder="e.g. utm_content=banner_v1&utm_term=engineering"
-                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
-                      />
-                    </div>          </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-1">Custom Tracking Parameters</label>
+                        <input
+                          type="text"
+                          value={newCampaign.customParams || ''}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, customParams: e.target.value })}
+                          placeholder="e.g. utm_content=banner_v1&utm_term=engineering"
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
+                        />
+                      </div>          </div>
                   </div>
                 )}
               </div>

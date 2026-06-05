@@ -155,7 +155,7 @@ const initialActivities = [
 ]
 
 export default function Campaigns() {
-  const role = localStorage.getItem('userRole') || 'vendor'
+  const role = localStorage.getItem('userRole') || 'admin'
   const isMasked = role === 'counselor' || role === 'vendor'
   const maskEmail = (email) => {
     if (!email) return ''
@@ -262,7 +262,7 @@ export default function Campaigns() {
 
   // Generated UTM URL preview
   const generatedUrl = useMemo(() => {
-    const baseUrl = 'https://'
+    const baseUrl = 'https://lms.edu/enroll'
     const params = new URLSearchParams()
     if (newCampaign.utmSource) params.append('utm_source', newCampaign.utmSource.toLowerCase().replace(/\s+/g, '_'))
     if (newCampaign.utmMedium) params.append('utm_medium', newCampaign.utmMedium.toLowerCase().replace(/\s+/g, '_'))
@@ -419,13 +419,13 @@ export default function Campaigns() {
       notes: '',
       customParams: ''
     })
-    setGeneratedUrlVal('https://lms.edu/enroll')
+    setGeneratedUrlVal('https://')
     setActiveTab('CAMPAIGNS')
     triggerToast(`Campaign "${created.name}" launched successfully!`)
   }
 
   const handleGenerateUrl = () => {
-    const baseUrl = 'https://lms.edu/enroll'
+    const baseUrl = 'https://'
     const params = new URLSearchParams()
     if (newCampaign.utmSource) params.append('utm_source', newCampaign.utmSource.toLowerCase().replace(/\s+/g, '_'))
     if (newCampaign.utmMedium) params.append('utm_medium', newCampaign.utmMedium.toLowerCase().replace(/\s+/g, '_'))
@@ -475,7 +475,7 @@ export default function Campaigns() {
     if (roi > 100) {
       indicators.push({ label: '💰 High ROI', style: 'bg-emerald-50 border-emerald-100 text-emerald-700' })
     }
-    if (cpl > 45 && c.leads > 0) {
+    if (cpl > 40 && c.leads > 0) {
       indicators.push({ label: '⚠ High CPL', style: 'bg-rose-50 border-rose-100 text-rose-700' })
     }
 
@@ -502,7 +502,7 @@ export default function Campaigns() {
             initial={{ opacity: 0, y: -20, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-6 left-1/2 z-50 bg-slate-955 text-white px-4 py-2.5 rounded-lg shadow-xl border border-slate-800 flex items-center gap-2 text-xs font-bold font-sans"
+            className="fixed top-6 left-1/2 z-50 bg-slate-950 text-white px-4 py-2.5 rounded-lg shadow-xl border border-slate-800 flex items-center gap-2 text-xs font-bold font-sans"
           >
             <span className="material-symbols-outlined text-[16px] text-green-400">check_circle</span>
             {toastMsg}
@@ -511,37 +511,30 @@ export default function Campaigns() {
       </AnimatePresence>
 
       {/* TOP HEADER & ACTION BUTTONS */}
-      {/* <div className="flex flex-row justify-between items-center  rounded-xl p-2 "> */}
-      <div className="text-left">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
 
-          {activeTab === 'DETAILS' && (
-            <button
-              onClick={() => setActiveTab(prevTab)}
-              className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-              Back
-            </button>
-          )}
-          {activeTab === 'CREATE_CAMPAIGN' && (
-            <button
-              onClick={() => { setActiveTab(prevTab); }}
-              className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-              Back
-            </button>
-          )}
-        </div>
-
-        {/* </div> */}
-
-        {/* Primary CTA on top-right */}
-
+        {activeTab === 'DETAILS' && (
+          <button
+            onClick={() => setActiveTab(prevTab)}
+            className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+            Back
+          </button>
+        )}
+        {activeTab === 'CREATE_CAMPAIGN' && (
+          <button
+            onClick={() => { setActiveTab(prevTab); }}
+            className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+            Back
+          </button>
+        )}
       </div>
 
 
+      {/* TABS NAVIGATION GROUP */}
       <div className="flex justify-between items-center bg-white border border-slate-200/80 rounded-xl p-1.5 shadow-2xs">
         <div className="flex bg-slate-50 border border-slate-200/60 rounded-lg p-1 gap-1">
           {[
@@ -565,7 +558,8 @@ export default function Campaigns() {
             </button>
           ))}
         </div>
-        {/* TABS NAVIGATION GROUP */}
+
+        {/* Primary CTA on top-right */}
         {activeTab !== 'CREATE_CAMPAIGN' && (
           <button
             onClick={() => {
@@ -626,54 +620,6 @@ export default function Campaigns() {
               </div>
             </div>
 
-            {/* Section 2: Campaign Health Center */}
-            <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs text-left">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-indigo-650">health_and_safety</span>
-                  <h3 className="text-xs font-black text-slate-800">Campaign Health Center</h3>
-                </div>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Prioritize Actions</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div className="bg-amber-50/50 border border-amber-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-amber-600 mt-0.5">hourglass_top</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-amber-800 block">2 Campaigns Ending Soon</span>
-                    <p className="text-[9px] text-amber-600 font-medium mt-0.5">MBA Lookalike & Q3 outreach. Extended budgets recommended.</p>
-                    <button onClick={() => { setActiveTab('CAMPAIGNS'); setFilterStatus('ACTIVE'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Review Timelines</button>
-                  </div>
-                </div>
-
-                <div className="bg-rose-50/50 border border-rose-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-rose-600 mt-0.5">running_with_errors</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-rose-800 block">Campaign Budget 90% Consumed</span>
-                    <p className="text-[9px] text-rose-600 font-medium mt-0.5">Google Ads has spent $14,200 of $15,000 allocation.</p>
-                    <button onClick={() => { setSelectedCampaignId('CMP-001'); setActiveTab('DETAILS'); setDetailsSubTab('SETTINGS'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Add Budget</button>
-                  </div>
-                </div>
-
-                <div className="bg-rose-50/50 border border-rose-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-rose-600 mt-0.5">trending_up</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-rose-800 block">CPL Increased 15%</span>
-                    <p className="text-[9px] text-rose-600 font-medium mt-0.5">Meta Ads CPC surge raised Cost Per Lead to $16.90.</p>
-                    <button onClick={() => { setSelectedCampaignId('CMP-002'); setActiveTab('DETAILS'); setDetailsSubTab('ANALYTICS'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Review CPL Trend</button>
-                  </div>
-                </div>
-
-                <div className="bg-emerald-50/50 border border-emerald-200/70 rounded-lg p-3 flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-[18px] text-emerald-600 mt-0.5">local_fire_department</span>
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-emerald-800 block">Best Performing Campaign</span>
-                    <p className="text-[9px] text-emerald-600 font-medium mt-0.5">Scholarship Admissions Drive achieves 11,600% ROI.</p>
-                    <button onClick={() => { setSelectedCampaignId('CMP-004'); setActiveTab('DETAILS'); }} className="text-[9px] font-bold text-indigo-700 hover:underline mt-1 block">Scale Campaign</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Section 3 & 4 Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 text-left">
 
@@ -681,7 +627,7 @@ export default function Campaigns() {
               <div className="lg:col-span-3 bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs flex flex-col justify-between">
                 <div>
                   <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5 mb-1">
-                    <span className="material-symbols-outlined text-[16px] text-indigo-650">filter_alt</span>
+                    <span className="material-symbols-outlined text-[16px] text-indigo-600">filter_alt</span>
                     Master Marketing Conversion Funnel
                   </h3>
                   <p className="text-[10px] text-slate-400">Total pipeline values showing drop-off and conversion velocities.</p>
@@ -695,7 +641,7 @@ export default function Campaigns() {
                       <span>3,450 Leads (100%)</span>
                     </div>
                     <div className="h-4 bg-slate-100 rounded-md overflow-hidden relative border border-slate-150">
-                      <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-650" style={{ width: '100%' }}></div>
+                      <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600" style={{ width: '100%' }}></div>
                     </div>
                   </div>
 
@@ -706,7 +652,7 @@ export default function Campaigns() {
                       <span>2,450 Qualified ({((2450 / 3450) * 100).toFixed(1)}%)</span>
                     </div>
                     <div className="h-4 bg-slate-100 rounded-md overflow-hidden relative border border-slate-150">
-                      <div className="h-full bg-gradient-to-r from-indigo-650 to-blue-500" style={{ width: `${(2450 / 3450) * 100}%` }}></div>
+                      <div className="h-full bg-gradient-to-r from-indigo-600 to-blue-500" style={{ width: `${(2450 / 3450) * 100}%` }}></div>
                       <span className="absolute right-2 top-0.5 text-[8.5px] font-black text-slate-500">Drop-off: 29.0%</span>
                     </div>
                   </div>
@@ -737,7 +683,7 @@ export default function Campaigns() {
 
                 <div className="border-t border-slate-100 pt-2 flex justify-between text-[9px] text-slate-400 font-medium">
                   <span>Conversion rate calculated automatically from CRM lead states.</span>
-                  <span className="text-indigo-650 font-bold">Standard ROI = (Rev - Cost) / Cost</span>
+                  <span className="text-indigo-600 font-bold">Standard ROI = (Rev - Cost) / Cost</span>
                 </div>
               </div>
 
@@ -745,7 +691,7 @@ export default function Campaigns() {
               <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs flex flex-col justify-between">
                 <div>
                   <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5 mb-1">
-                    <span className="material-symbols-outlined text-[16px] text-indigo-650">stars</span>
+                    <span className="material-symbols-outlined text-[16px] text-indigo-600">stars</span>
                     Top Performing Channels
                   </h3>
                   <p className="text-[10px] text-slate-400">High efficiency engines driving the highest enrollment returns.</p>
@@ -775,7 +721,7 @@ export default function Campaigns() {
                               setPrevTab('DASHBOARD')
                               setActiveTab('DETAILS')
                             }}
-                            className="h-6 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-650 border border-indigo-100 text-[9px] font-bold rounded-[3px] transition-all cursor-pointer"
+                            className="h-6 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100 text-[9px] font-bold rounded-[3px] transition-all"
                           >
                             View Details
                           </button>
@@ -788,7 +734,7 @@ export default function Campaigns() {
                 <div className="border-t border-slate-100 pt-2 text-center">
                   <button
                     onClick={() => setActiveTab('CAMPAIGNS')}
-                    className="text-[9px] font-black text-indigo-650 hover:text-indigo-800 transition-colors flex items-center justify-center gap-0.5 mx-auto"
+                    className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 transition-colors flex items-center justify-center gap-0.5 mx-auto"
                   >
                     View All Active Campaigns
                     <span className="material-symbols-outlined text-[12px] mt-0.5">arrow_forward</span>
@@ -849,7 +795,7 @@ export default function Campaigns() {
             <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs text-left relative">
               <table className="w-full min-w-[1000px] border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[9.5px] font-bold text-slate-455 uppercase tracking-wider select-none text-center">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[9.5px] font-bold text-slate-450 uppercase tracking-wider select-none text-center">
                     <th className="px-4 py-2.5 text-left w-64">Campaign Details</th>
                     <th className="px-4 py-2.5 w-24">Status</th>
                     <th className="px-4 py-2.5 w-24">Budget</th>
@@ -884,7 +830,7 @@ export default function Campaigns() {
                                 setPrevTab('CAMPAIGNS')
                                 setActiveTab('DETAILS')
                               }}
-                              className="font-bold text-slate-800 hover:text-indigo-650 hover:underline cursor-pointer block text-xs"
+                              className="font-bold text-slate-800 hover:text-indigo-600 hover:underline cursor-pointer block text-xs"
                             >
                               {c.name}
                             </span>
@@ -909,7 +855,7 @@ export default function Campaigns() {
                           <td className="px-4 py-3 text-center font-mono font-semibold text-slate-700">
                             +{c.leads.toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-center font-mono font-semibold text-blue-605">
+                          <td className="px-4 py-3 text-center font-mono font-semibold text-blue-600">
                             +{c.qualifiedLeads.toLocaleString()}
                           </td>
                           <td className="px-4 py-3 text-center font-mono font-bold text-emerald-600">
@@ -1010,7 +956,7 @@ export default function Campaigns() {
               <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-2xs">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Total Spend</span>
                 <span className="text-base font-black text-slate-800 block mt-1">${aggregateStats.budget.toLocaleString()}</span>
-                <span className="text-[8.5px] font-bold text-slate-455 block mt-0.5">Budget allocations</span>
+                <span className="text-[8.5px] font-bold text-slate-450 block mt-0.5">Budget allocations</span>
               </div>
               <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-2xs">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Gross Revenue</span>
@@ -1299,7 +1245,7 @@ export default function Campaigns() {
               {/* Step Funnel visualization */}
               <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-2xs text-left">
                 <h3 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[15px] text-indigo-655">stacked_bar_chart</span>
+                  <span className="material-symbols-outlined text-[15px] text-indigo-600">stacked_bar_chart</span>
                   Campaign Conversion Pipeline
                 </h3>
                 <div className="flex flex-col md:flex-row items-stretch gap-2.5">
@@ -1388,7 +1334,7 @@ export default function Campaigns() {
                           .filter(l => l.campaignId === activeCampaign.id || activeCampaign.id === 'CMP-001')
                           .map((lead, idx) => (
                             <tr key={idx} className="hover:bg-slate-50/30">
-                              <td className="px-4 py-2 font-bold text-slate-705">{lead.name}</td>
+                              <td className="px-4 py-2 font-bold text-slate-700">{lead.name}</td>
                               <td className="px-4 py-2 text-center text-slate-550 font-mono">
                                 {isMasked ? maskEmail(lead.email) : lead.email}
                               </td>
@@ -1403,7 +1349,7 @@ export default function Campaigns() {
                               <td className="px-4 py-2 text-center">
                                 <span className={`inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold ${lead.status === 'Converted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                                   lead.status === 'Qualified' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
-                                    'bg-slate-100 text-slate-650 border border-slate-200'
+                                    'bg-slate-100 text-slate-600 border border-slate-200'
                                   }`}>{lead.status}</span>
                               </td>
                               <td className="px-4 py-2 text-center text-slate-550">{lead.assignedTo}</td>
@@ -1453,7 +1399,7 @@ export default function Campaigns() {
                                 <strong className="text-slate-600 font-black uppercase tracking-wider">{act.type} • Logged by {act.user}</strong>
                                 <span className="text-slate-400 font-mono">{act.date} {act.time}</span>
                               </div>
-                              <p className="text-[11px] text-slate-650 mt-0.5 leading-relaxed">{act.text}</p>
+                              <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{act.text}</p>
                             </div>
                           </div>
                         ))}
@@ -1722,7 +1668,7 @@ export default function Campaigns() {
                 <button
                   type="button"
                   onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                  className="w-full flex items-center justify-between py-2 border-t border-b border-slate-100 text-[11px] font-black text-slate-700 hover:text-indigo-650 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between py-2 border-t border-b border-slate-100 text-[11px] font-black text-slate-700 hover:text-indigo-600 transition-colors cursor-pointer"
                 >
                   <span>Advanced Settings</span>
                   <span className="material-symbols-outlined text-[16px]">
@@ -1774,7 +1720,7 @@ export default function Campaigns() {
                           type="date"
                           value={newCampaign.startDate}
                           onChange={(e) => setNewCampaign({ ...newCampaign, startDate: e.target.value })}
-                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-850"
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
                         />
                       </div>
                       <div>
@@ -1783,43 +1729,41 @@ export default function Campaigns() {
                           type="date"
                           value={newCampaign.endDate}
                           onChange={(e) => setNewCampaign({ ...newCampaign, endDate: e.target.value })}
-                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-850"
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
                         />
                       </div>
-                    </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-1">Description / Target Goal</label>
+                        <textarea
+                          value={newCampaign.description}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
+                          rows={2}
+                          placeholder="Target goals, ad groups or campaign brief..."
+                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-1">Description / Target Goal</label>
-                      <textarea
-                        value={newCampaign.description}
-                        onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
-                        rows={2}
-                        placeholder="Target goals, ad groups or campaign brief..."
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
-                      />
-                    </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-1">Notes</label>
+                        <textarea
+                          value={newCampaign.notes || ''}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, notes: e.target.value })}
+                          rows={2}
+                          placeholder="Internal comments, team notes..."
+                          className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-1">Notes</label>
-                      <textarea
-                        value={newCampaign.notes || ''}
-                        onChange={(e) => setNewCampaign({ ...newCampaign, notes: e.target.value })}
-                        rows={2}
-                        placeholder="Internal comments, team notes..."
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-1">Custom Tracking Parameters</label>
-                      <input
-                        type="text"
-                        value={newCampaign.customParams || ''}
-                        onChange={(e) => setNewCampaign({ ...newCampaign, customParams: e.target.value })}
-                        placeholder="e.g. utm_content=banner_v1&utm_term=engineering"
-                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
-                      />
-                    </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-1">Custom Tracking Parameters</label>
+                        <input
+                          type="text"
+                          value={newCampaign.customParams || ''}
+                          onChange={(e) => setNewCampaign({ ...newCampaign, customParams: e.target.value })}
+                          placeholder="e.g. utm_content=banner_v1&utm_term=engineering"
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-[11px] font-medium outline-none focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
+                        />
+                      </div>          </div>
                   </div>
                 )}
               </div>
