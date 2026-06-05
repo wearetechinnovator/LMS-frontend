@@ -1,7 +1,5 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import '../assets/dashboard/dashboardstatscard.css'
-
 export default function TeamStatsCard({ label, value, change, idx }) {
     const isPositive = change && change.includes('+')
 

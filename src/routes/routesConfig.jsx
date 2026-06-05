@@ -3,36 +3,36 @@ import { Route, Navigate } from 'react-router-dom'
 import { ProtectRoute } from '../components/ProtectRoute'
 import RoleDashboardLayout from '../layouts/RoleDashboardLayout'
 
-import AdminDashboard from '../pages/Admin/Dashboard'
-import CounselorDashboard from '../pages/Counselor/Dashboard'
-import VendorDashboard from '../pages/Vendor/Dashboard'
-import AdminRoleUserManagement from '../pages/Admin/RoleUserManagement'
+import AdminDashboard from '../pages/Admin/dashboard/Dashboard'
+import CounselorDashboard from '../pages/Counselor/dashboard/Dashboard'
+import VendorDashboard from '../pages/Vendor/dashboard/Dashboard'
+import AdminRoleUserManagement from '../pages/Admin/RoleManage/RoleUserManagement'
 
-const AdminAllLeadsPage = React.lazy(() => import('../pages/Admin/AllLeadsPage'))
-const CounselorAllLeadsPage = React.lazy(() => import('../pages/Counselor/AllLeadsPage'))
-const VendorAllLeadsPage = React.lazy(() => import('../pages/Vendor/AllLeadsPage'))
-const AdminLeadDetailsPage = React.lazy(() => import('../pages/Admin/LeadDetailsPage'))
+const AdminAllLeadsPage = React.lazy(() => import('../pages/Admin/Leads/AllLeadsPage'))
+const CounselorAllLeadsPage = React.lazy(() => import('../pages/Counselor/Leads/AllLeadsPage'))
+const VendorAllLeadsPage = React.lazy(() => import('../pages/Vendor/Leads/AllLeadsPage'))
+const AdminLeadDetailsPage = React.lazy(() => import('../pages/Admin/Leads/LeadDetailsPage'))
 
-const AdminFormBuilderPage = React.lazy(() => import('../pages/Admin/FormBuilderPage'))
-const TeamsPage = React.lazy(() => import('../pages/Team/TeamsPage'))
-const ViewTeamPage = React.lazy(() => import('../pages/Team/ViewTeamPage'))
-const ManageTeamPage = React.lazy(() => import('../pages/Team/ManageTeamPage'))
+const AdminFormBuilderPage = React.lazy(() => import('../pages/Admin/form/FormBuilderPage'))
+const TeamsPage = React.lazy(() => import('../pages/Admin/teams/Teams'))
+const ViewTeamPage = React.lazy(() => import('../pages/Admin/teams/ViewTeam'))
+const ManageTeamPage = React.lazy(() => import('../pages/Admin/teams/ManageTeam'))
 
-const AdminCampaignsPage = React.lazy(() => import('../pages/Admin/CampaignsPage'))
-const VendorCampaignsPage = React.lazy(() => import('../pages/Vendor/CampaignsPage'))
+const AdminCampaignsPage = React.lazy(() => import('../pages/Admin/campaign/CampaignsPage'))
+const VendorCampaignsPage = React.lazy(() => import('../pages/Vendor/campaign/CampaignsPage'))
 
-const AdminAuditLogsPage = React.lazy(() => import('../pages/Admin/AuditLogs'))
+const AdminAuditLogsPage = React.lazy(() => import('../pages/Admin/audit/AuditLogs'))
 
-const AdminLmsSettingsPage = React.lazy(() => import('../pages/Admin/LmsSettings'))
-const CounselorLmsSettingsPage = React.lazy(() => import('../pages/Counselor/LmsSettings'))
-const VendorLmsSettingsPage = React.lazy(() => import('../pages/Vendor/LmsSettings'))
+const AdminLmsSettingsPage = React.lazy(() => import('../pages/Admin/settings/LmsSettings'))
+const CounselorLmsSettingsPage = React.lazy(() => import('../pages/Counselor/settings/LmsSettings'))
+const VendorLmsSettingsPage = React.lazy(() => import('../pages/Vendor/settings/LmsSettings'))
 
-const AdminFormEmbed = React.lazy(() => import('../pages/Admin/FormEmbed'))
+const AdminFormEmbed = React.lazy(() => import('../pages/Admin/form/FormEmbed'))
 
-const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/Analytics'))
-const CounselorAnalyticsPage = React.lazy(() => import('../pages/Counselor/Analytics'))
+const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/analytics/Analytics'))
+const CounselorAnalyticsPage = React.lazy(() => import('../pages/Counselor/analytics/Analytics'))
 
-export const adminNavItems = [
+const adminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/admin/dashboard' },
   { id: 'form-builder', label: 'Form Builder', icon: 'build', path: '/admin/form-builder' },
   { id: 'leads', label: 'All Leads', icon: 'people', path: '/admin/leads' },
@@ -44,7 +44,7 @@ export const adminNavItems = [
   { id: 'form-embed', label: 'Form Embed', icon: 'integration_instructions', path: '/admin/form-embed' },
 ]
 
-export const counselorNavItems = [
+const counselorNavItems = [
   { id: 'overview', label: 'Overview', icon: 'dashboard', path: '/counselor/overview' },
   { id: 'leads', label: 'All Leads', icon: 'people', path: '/counselor/leads' },
   { id: 'analytics', label: 'Analytics', icon: 'analytics', path: '/counselor/analytics' },
@@ -52,7 +52,7 @@ export const counselorNavItems = [
 
 ]
 
-export const vendorNavItems = [
+const vendorNavItems = [
   { id: 'Dashboard', label: 'Dashboard', icon: 'dashboard', path: '/vendor/dashboard' },
   { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/vendor/campaigns' },
   { id: 'leads', label: 'All Leads', icon: 'people', path: '/vendor/leads' },

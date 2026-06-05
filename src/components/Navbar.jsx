@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-export default function Navbar() {
+export default function Navbar({ username, onLogout, roleName = 'Admin Account' }) {
   const location = useLocation()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showFormsDropdown, setShowFormsDropdown] = useState(false)
@@ -33,37 +33,47 @@ export default function Navbar() {
   // Page titles map
   const pageTitles = {
     '/dashboard': 'Dashboard',
+    '/overview': 'Overview',
     '/leads': 'All Leads',
     '/departments': 'Campaigns',
+    '/campaigns': 'Campaigns',
     '/teams': 'Teams',
-    '/form-builder': 'Form Builder'
+    '/form-builder': 'Form Builder',
+    '/form-embed': 'Form Embed',
+    '/roles': 'Role Management',
+    '/audit-logs': 'Audit Logs',
+    '/settings': 'Settings',
+    '/analytics': 'Analytics'
   }
 
   const getPageTitle = () => {
-    for (const [path, title] of Object.entries(pageTitles)) {
-      if (location.pathname.startsWith(path)) {
+    // Strip layout prefix /admin, /counselor, /vendor
+    const path = location.pathname.replace(/^\/(admin|counselor|vendor)/, '')
+    for (const [key, title] of Object.entries(pageTitles)) {
+      if (path === key || path.startsWith(key + '/')) {
         return title
       }
     }
     return 'Dashboard'
   }
 
-  const username = localStorage.getItem('username') || 'ADMIN'
+  const activeUsername = username || localStorage.getItem('username') || 'ADMIN'
+  const roleText = (roleName || 'Admin').split(' ')[0].toUpperCase()
 
   return (
     <motion.nav
-      className="bg-surface border-b border-outline-variant px-8 flex items-center justify-between h-11 sticky top-0 z-30"
+      className="layout-navbar"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
       {/* Left Section - Title / Dropdown */}
-      <div className="relative">
-        {location.pathname.startsWith('/leads') ? (
-          <div className="flex items-center gap-1">
+      <div className="navbar-left">
+        {location.pathname.includes('/leads') ? (
+          <div className="relative flex items-center gap-1">
             <button
               onClick={() => setShowFormsDropdown(!showFormsDropdown)}
-              className="flex items-center gap-1.5 text-[16px] font-bold text-[#1f2937] hover:opacity-85 transition-opacity bg-transparent border-none p-0 cursor-pointer select-none"
+              className="flex items-center gap-1.5 text-[15px] font-bold text-[#0b1c30] hover:opacity-85 transition-opacity bg-transparent border-none p-0 cursor-pointer select-none"
             >
               <span>
                 {activeFormName === 'ALL'
@@ -78,7 +88,7 @@ export default function Navbar() {
             {showFormsDropdown && (
               <>
                 {/* Backdrop overlay to close */}
-                <div className="fixed inset-0 z-40" onClick={() => setShowFormsDropdown(false)} />
+                <div className="fixed inset-0 z-45" onClick={() => setShowFormsDropdown(false)} />
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -107,52 +117,55 @@ export default function Navbar() {
             )}
           </div>
         ) : (
-          <h2 className="text-headline-md font-headline-md text-on-background whitespace-nowrap">
+          <h2 className="navbar-title">
             {getPageTitle()}
           </h2>
         )}
       </div>
 
       {/* Right Section - Actions & User Menu */}
-      <div className="flex items-center gap-2">
+      <div className="navbar-right">
         {/* Notifications Icon */}
-        <div className="relative">
+        <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-full hover:bg-surface-container transition-colors"
+            className="navbar-btn"
           >
             <span
-              className="material-symbols-outlined text-on-surface text-[24px]"
+              className="material-symbols-outlined icon"
               aria-hidden="true"
             >
               notifications
             </span>
             {/* Notification Dot */}
-            <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+            <span className="navbar-badge"></span>
           </button>
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <motion.div
-              className="absolute right-0 mt-2 w-80 bg-surface border border-outline-variant rounded-lg shadow-lg p-4 z-50"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <div className="text-body-md font-body-md text-on-surface mb-3">Notifications</div>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                <div className="p-2 bg-surface-container-lowest rounded text-body-sm text-on-surface-variant">
-                  No new notifications
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+              <motion.div
+                className="navbar-dropdown"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <div className="dropdown-title">Notifications</div>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="dropdown-empty">
+                    No new notifications
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </div>
 
         {/* Help Icon */}
-        <button className="p-2 rounded-full hover:bg-surface-container transition-colors">
+        <button className="navbar-btn">
           <span
-            className="material-symbols-outlined text-on-surface text-[24px]"
+            className="material-symbols-outlined icon"
             aria-hidden="true"
           >
             help
@@ -160,17 +173,17 @@ export default function Navbar() {
         </button>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-outline-variant"></div>
+        <div className="navbar-divider"></div>
 
         {/* User Profile */}
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <span className="text-body-md font-body-md text-on-surface text-[12px] uppercase tracking-wide">
-              {username}
+        <div className="navbar-user">
+          <div className="user-info">
+            <span className="user-role">
+              {roleText}
             </span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-[14px] font-bold cursor-pointer hover:opacity-80 transition-opacity">
-            {username.charAt(0).toUpperCase()}
+          <div className="user-avatar">
+            {activeUsername.charAt(0).toUpperCase()}
           </div>
         </div>
       </div>

@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import '../../assets/dashboard/deepdiveanalytics.css'
-
 export default function DeepDiveAnalytics({ triggerToast = () => {} }) {
   const [activeCategory, setActiveCategory] = useState('counselor') // 'counselor' | 'daily' | 'channel'
   const [viewType, setViewType] = useState('graph') // 'graph' | 'report'

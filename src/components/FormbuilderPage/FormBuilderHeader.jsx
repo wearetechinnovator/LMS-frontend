@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import '../../assets/formbuilderpage/formbuilderpageheader.css'
 import ExportButton from '../ExportButton'
 import Toast from '../Toast'
 

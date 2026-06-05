@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import '../../assets/dashboard/dashboardgraphcards.css'
-
 export default function DashboardGraphCard({ sources = [] }) {
   const [activeTab, setActiveTab] = useState('volume')
   const [hoveredIndex, setHoveredIndex] = useState(null)
@@ -134,7 +132,7 @@ export default function DashboardGraphCard({ sources = [] }) {
           </div>
         </div>
 
-        <div className="volume-chart mt-4" style={{ height: '180px', alignItems: 'center' }}>
+        <div className="volume-chart mt-4" style={{ height: '220px', alignItems: 'center' }}>
           {chartStyle === 'pie' ? (
             <div className="flex w-full h-full items-center justify-between gap-6 px-4">
               {/* Left Donut SVG */}
@@ -220,144 +218,166 @@ export default function DashboardGraphCard({ sources = [] }) {
               </div>
             </div>
           ) : chartStyle === 'line' ? (
-            <div className="relative h-[180px] w-full pt-4">
-              <svg className="w-full h-[140px] overflow-visible" viewBox="0 0 500 140" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25"/>
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.25"/>
-                    <stop offset="100%" stopColor="#10b981" stopOpacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25"/>
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
+            <div className="chart-scroll-container">
+              <div className="chart-scroll-inner relative h-[180px] pt-4">
+                <svg className="w-full h-[140px] overflow-visible" viewBox="0 0 500 140" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25"/>
+                      <stop offset="100%" stopColor="#2563eb" stopOpacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.25"/>
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25"/>
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
 
-                {/* Draw Filled Area Path under the line */}
-                <motion.path
-                  d={`M 0 140 ${activeTabObj.data.map((item, idx) => `L ${(idx / 9) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')} L 500 140 Z`}
-                  fill={activeTab === 'volume' ? 'url(#blueGradient)' : activeTab === 'conversion' ? 'url(#greenGradient)' : 'url(#amberGradient)'}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4 }}
-                />
+                  {/* Draw Filled Area Path under the line */}
+                  <motion.path
+                    d={`M 0 140 ${activeTabObj.data.map((item, idx) => `L ${(idx / 9) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')} L 500 140 Z`}
+                    fill={activeTab === 'volume' ? 'url(#blueGradient)' : activeTab === 'conversion' ? 'url(#greenGradient)' : 'url(#amberGradient)'}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4 }}
+                  />
 
-                {/* Draw Curved Spline / Line path */}
-                <motion.path
-                  d={activeTabObj.data.map((item, idx) => `${idx === 0 ? 'M' : 'L'} ${(idx / 9) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')}
-                  fill="none"
-                  stroke={themeColor}
-                  strokeWidth="3"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.7, ease: 'easeInOut' }}
-                />
+                  {/* Draw Curved Spline / Line path */}
+                  <motion.path
+                    d={activeTabObj.data.map((item, idx) => `${idx === 0 ? 'M' : 'L'} ${(idx / 9) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')}
+                    fill="none"
+                    stroke={themeColor}
+                    strokeWidth="3"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.7, ease: 'easeInOut' }}
+                  />
 
-                {/* Coordinate Markers */}
-                {activeTabObj.data.map((item, idx) => {
-                  const x = (idx / 9) * 500
-                  const y = 130 - (item.value / maxVal) * 105
-                  return (
-                    <circle
-                      key={idx}
-                      cx={x}
-                      cy={y}
-                      r={hoveredIndex === idx ? 6 : 4}
-                      fill={themeColor}
-                      stroke="#ffffff"
-                      strokeWidth="2.5"
-                      className="cursor-pointer transition-all duration-150"
-                      style={{ filter: 'drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.15))' }}
-                      onMouseEnter={() => setHoveredIndex(idx)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                    />
-                  )
-                })}
-              </svg>
+                  {/* Coordinate Markers */}
+                  {activeTabObj.data.map((item, idx) => {
+                    const x = (idx / 9) * 500
+                    const y = 130 - (item.value / maxVal) * 105
+                    return (
+                      <circle
+                        key={idx}
+                        cx={x}
+                        cy={y}
+                        r={hoveredIndex === idx ? 6 : 4}
+                        fill={themeColor}
+                        stroke="#ffffff"
+                        strokeWidth="2.5"
+                        className="cursor-pointer transition-all duration-150"
+                        style={{ filter: 'drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.15))' }}
+                        onMouseEnter={() => setHoveredIndex(idx)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                      />
+                    )
+                  })}
+                </svg>
 
-              {/* HTML Floating Tooltips Overlay (positioned relative to container) */}
-              <div className="absolute inset-0 pointer-events-none">
-                {activeTabObj.data.map((item, idx) => {
-                  const leftPercent = (idx / 9) * 100
-                  const y = 130 - (item.value / maxVal) * 105
-                  const topPercent = (y / 180) * 100 // Map coordinates relative to parent container height
-                  return (
-                    <React.Fragment key={idx}>
-                      {hoveredIndex === idx && (
-                        <div 
-                          className="chart-tooltip pointer-events-auto"
+                {/* HTML Floating Tooltips Overlay (positioned relative to container) */}
+                <div className="chart-tooltip-overlay">
+                  {activeTabObj.data.map((item, idx) => {
+                    const leftPercent = (idx / 9) * 100
+                    const y = 130 - (item.value / maxVal) * 105
+                    const topPercent = (y / 180) * 100 // Map coordinates relative to parent container height
+                    return (
+                      <React.Fragment key={idx}>
+                        {hoveredIndex === idx && (
+                          <div 
+                            className="chart-tooltip pointer-events-auto"
+                            style={{
+                              left: `${leftPercent}%`,
+                              top: 'auto',
+                              bottom: `calc(${100 - topPercent}% + 8px)`,
+                              transform: 'translateX(-50%)'
+                            }}
+                          >
+                            <span className="tooltip-value">{item.value}{activeTabObj.unit}</span>
+                            <span className="tooltip-label">{item.label}</span>
+                          </div>
+                        )}
+                        {/* Always visible coordinate value label */}
+                        <span 
+                          className="chart-coordinate-value"
                           style={{
                             left: `${leftPercent}%`,
                             top: 'auto',
-                            bottom: `calc(${100 - topPercent}% + 8px)`,
+                            bottom: `calc(${100 - topPercent}% + 6px)`,
                             transform: 'translateX(-50%)'
                           }}
                         >
-                          <span className="tooltip-value">{item.value}{activeTabObj.unit}</span>
-                          <span className="tooltip-label">{item.label}</span>
-                        </div>
-                      )}
-                      {/* Floating bottom label */}
-                      <span 
-                        className="absolute text-slate-400 font-semibold select-none text-[8px]"
-                        style={{
-                          left: `${leftPercent}%`,
-                          bottom: '-12px',
-                          transform: 'translateX(-50%)'
-                        }}
-                      >
-                        {item.label.split(' ')[1]}
-                      </span>
-                    </React.Fragment>
-                  )
-                })}
+                          {item.value}{activeTabObj.unit}
+                        </span>
+                        {/* Floating bottom label */}
+                        <span 
+                          className="absolute text-slate-400 font-semibold select-none text-[8px]"
+                          style={{
+                            left: `${leftPercent}%`,
+                            bottom: '-12px',
+                            transform: 'translateX(-50%)'
+                          }}
+                        >
+                          {item.label.split(' ')[1]}
+                        </span>
+                      </React.Fragment>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           ) : (
             /* Bar Chart Layout */
-            activeTabObj.data.map((item, idx) => {
-              const percentage = (item.value / maxVal) * 85 // Scale to max 85% to leave room for tooltips
-              return (
-                <div
-                  key={idx}
-                  className="bar-wrapper"
-                  onMouseEnter={() => setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                  {hoveredIndex === idx && (
-                    <div className="chart-tooltip">
-                      <span className="tooltip-value">{item.value}{activeTabObj.unit}</span>
-                      <span className="tooltip-label">{item.label}</span>
+            <div className="chart-scroll-container">
+              <div className="chart-scroll-inner bar-chart-inner h-full">
+                {activeTabObj.data.map((item, idx) => {
+                  const percentage = (item.value / maxVal) * 85 // Scale to max 85% to leave room for tooltips
+                  return (
+                    <div
+                      key={idx}
+                      className="bar-wrapper"
+                      onMouseEnter={() => setHoveredIndex(idx)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                    >
+                      {hoveredIndex === idx && (
+                        <div className="chart-tooltip">
+                          <span className="tooltip-value">{item.value}{activeTabObj.unit}</span>
+                          <span className="tooltip-label">{item.label}</span>
+                        </div>
+                      )}
+                      {/* Always visible bar value label */}
+                      <span className="bar-value-label">
+                        {item.value}{activeTabObj.unit}
+                      </span>
+                      <motion.div
+                        className="bar"
+                        style={{
+                          opacity: hoveredIndex !== null && hoveredIndex !== idx ? 0.4 : 1,
+                          background: activeTab === 'volume' 
+                            ? 'linear-gradient(180deg, var(--color-primary, #3b82f6) 0%, rgba(59, 130, 246, 0.15) 100%)' 
+                            : activeTab === 'conversion' 
+                            ? 'linear-gradient(180deg, #10b981 0%, rgba(16, 185, 129, 0.15) 100%)' 
+                            : 'linear-gradient(180deg, #f59e0b 0%, rgba(245, 158, 11, 0.15) 100%)',
+                          borderColor: activeTab === 'volume' ? '#3b82f6' : activeTab === 'conversion' ? '#10b981' : '#f59e0b'
+                        }}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${percentage}%` }}
+                        transition={{ type: 'spring', stiffness: 90, damping: 14, delay: idx * 0.03 }}
+                      />
+                      <span 
+                        className="text-slate-400 font-semibold select-none mt-2 text-center truncate"
+                        style={{ fontSize: '8px', width: '100%', letterSpacing: '-0.02em' }}
+                      >
+                        {item.label.split(' ')[1]}
+                      </span>
                     </div>
-                  )}
-                  <motion.div
-                    className="bar"
-                    style={{
-                      opacity: hoveredIndex !== null && hoveredIndex !== idx ? 0.4 : 1,
-                      background: activeTab === 'volume' 
-                        ? 'linear-gradient(180deg, var(--color-primary, #3b82f6) 0%, rgba(59, 130, 246, 0.15) 100%)' 
-                        : activeTab === 'conversion' 
-                        ? 'linear-gradient(180deg, #10b981 0%, rgba(16, 185, 129, 0.15) 100%)' 
-                        : 'linear-gradient(180deg, #f59e0b 0%, rgba(245, 158, 11, 0.15) 100%)',
-                      borderColor: activeTab === 'volume' ? '#3b82f6' : activeTab === 'conversion' ? '#10b981' : '#f59e0b'
-                    }}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${percentage}%` }}
-                    transition={{ type: 'spring', stiffness: 90, damping: 14, delay: idx * 0.03 }}
-                  />
-                  <span 
-                    className="text-slate-400 font-semibold select-none mt-2 text-center truncate"
-                    style={{ fontSize: '8px', width: '100%', letterSpacing: '-0.02em' }}
-                  >
-                    {item.label.split(' ')[1]}
-                  </span>
-                </div>
-              )
-            })
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>

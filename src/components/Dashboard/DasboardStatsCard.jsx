@@ -1,7 +1,5 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import '../../assets/dashboard/dashboardstatscard.css'
-
 export default function DasboardStatsCard({ label, value, change, trend = 'positive', idx }) {
     const isPositive = trend === 'positive'
     const isNegative = trend === 'negative'

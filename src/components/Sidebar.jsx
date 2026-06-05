@@ -1,8 +1,6 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import '../assets/custom.css'
-
 export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogout, navigationItems = [], roleName = 'Admin Account' }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -83,7 +81,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
               <span className="material-symbols-outlined icon">
-                {sidebarCollapsed ? 'right_panel_close' : 'right_panel_open'}
+                {sidebarCollapsed ? 'last_page' : 'first_page'}
               </span>
             </button>
           </div>
@@ -110,21 +108,38 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
           ))}
         </nav>
 
-        {!sidebarCollapsed && (
-          <div className="sidebar-footer">
-            <button
-              onClick={() => navigate(getSettingsPath())}
-              className={`footer-btn ${location.pathname === getSettingsPath() ? 'active' : ''}`}
-            >
-              <span className="material-symbols-outlined icon">settings</span>
-              <span>Settings</span>
-            </button>
-            <button onClick={onLogout} className="footer-btn">
-              <span className="material-symbols-outlined icon">logout</span>
-              <span>Logout</span>
-            </button>
-          </div>
-        )}
+        <div className="sidebar-footer">
+          <button
+            onClick={() => navigate(getSettingsPath())}
+            className={`footer-btn ${location.pathname === getSettingsPath() ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
+            onMouseEnter={(e) => {
+              if (sidebarCollapsed) {
+                const rect = e.currentTarget.getBoundingClientRect()
+                setTooltipTop(rect.top + rect.height / 2)
+                setHoveredItem('Settings')
+              }
+            }}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
+            <span className="material-symbols-outlined icon">settings</span>
+            {!sidebarCollapsed && <span>Settings</span>}
+          </button>
+          <button
+            onClick={onLogout}
+            className={`footer-btn ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
+            onMouseEnter={(e) => {
+              if (sidebarCollapsed) {
+                const rect = e.currentTarget.getBoundingClientRect()
+                setTooltipTop(rect.top + rect.height / 2)
+                setHoveredItem('Logout')
+              }
+            }}
+            onMouseLeave={() => setHoveredItem(null)}
+          >
+            <span className="material-symbols-outlined icon">logout</span>
+            {!sidebarCollapsed && <span>Logout</span>}
+          </button>
+        </div>
 
         {!sidebarCollapsed && (
           <div

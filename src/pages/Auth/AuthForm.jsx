@@ -1,8 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import '../../assets/custom.css'
-
 const inputV = {
   hidden: { y: 10, opacity: 0 },
   visible: (i) => ({ y: 0, opacity: 1, transition: { delay: i * 0.05 } })
