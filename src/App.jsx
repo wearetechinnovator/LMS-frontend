@@ -5,6 +5,7 @@ import OnboardingPage from './pages/Admin/Company/OnboardingPage'
 import { UnProtectRoute } from './components/ProtectRoute'
 import { RoleRoutes } from './routes/routesConfig'
 import Unauthorized from './pages/Unauthorized'
+import UserProvider from './contextApi.jsx'
 
 const LoadingSpinner = () => (
   <div className="grid place-items-center w-full min-h-screen bg-background">
@@ -64,40 +65,42 @@ function App() {
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            !isAuthenticated ? (
-              <UnProtectRoute login={true}>
-                <AuthPage onAuthSuccess={handleAuthSuccess} />
-              </UnProtectRoute>
-            ) : onboardingComplete ? (
-              <Navigate to={getRedirectPath()} replace />
-            ) : (
-              <OnboardingPage username={username} onLogout={handleLogout} onComplete={handleOnboardingComplete} />
-            )
-          }
-        />
+    <UserProvider>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              !isAuthenticated ? (
+                <UnProtectRoute login={true}>
+                  <AuthPage onAuthSuccess={handleAuthSuccess} />
+                </UnProtectRoute>
+              ) : onboardingComplete ? (
+                <Navigate to={getRedirectPath()} replace />
+              ) : (
+                <OnboardingPage username={username} onLogout={handleLogout} onComplete={handleOnboardingComplete} />
+              )
+            }
+          />
 
-        <Route
-          path="/onboarding"
-          element={
-            isAuthenticated && !onboardingComplete ? (
-              <OnboardingPage username={username} onLogout={handleLogout} onComplete={handleOnboardingComplete} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
+          <Route
+            path="/onboarding"
+            element={
+              isAuthenticated && !onboardingComplete ? (
+                <OnboardingPage username={username} onLogout={handleLogout} onComplete={handleOnboardingComplete} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
-        {RoleRoutes({ username, handleLogout })}
+          {RoleRoutes({ username, handleLogout })}
 
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </UserProvider>
   )
 }
 

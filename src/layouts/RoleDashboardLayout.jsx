@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar'
 export default function RoleDashboardLayout({ username, onLogout, navigationItems, roleName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   return (
-    <div className="layout-container">
+    <div className="bg-background h-screen flex overflow-hidden">
       <Sidebar
         sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}

@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import React, { use, useContext, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { UserContext } from '../contextApi.jsx'
+import { useEffect } from 'react'
+import getUser from '../api/getUser.js'
 
 export default function Navbar({ username, onLogout, roleName = 'Admin Account' }) {
+
+  const name = useContext(UserContext);
+
   const location = useLocation()
+
   const [showNotifications, setShowNotifications] = useState(false)
   const [showFormsDropdown, setShowFormsDropdown] = useState(false)
   const [formsList, setFormsList] = useState([
@@ -179,7 +186,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
         <div className="navbar-user">
           <div className="user-info">
             <span className="user-role">
-              {roleText}
+              {name}
             </span>
           </div>
           <div className="user-avatar">

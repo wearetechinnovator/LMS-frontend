@@ -1,7 +1,13 @@
-import React from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import React, { use } from 'react'
+import { useNavigate, useLocation, data } from 'react-router-dom'
 import { motion } from 'framer-motion'
-export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogout, navigationItems = [], roleName = 'Admin Account' }) {
+import { UserContext } from '../contextApi.jsx'
+import { useContext } from 'react'
+
+
+export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogout, navigationItems = [], roleName = 'Admin Account', userName }) {
+  const name = useContext(UserContext);
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -31,6 +37,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
       }
     }
   }, [isResizing])
+
 
   React.useEffect(() => {
     if (isResizing) {
@@ -71,8 +78,8 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
           <div className={`header-content ${sidebarCollapsed ? 'header-content-collapsed' : 'header-content-expanded'}`}>
             {!sidebarCollapsed && (
               <div className="logo-info">
-                <h1>TIS INDIA</h1>
-                <p>{roleName}</p>
+                <span className='text-xs'>{name}</span>
+                <span className='text-xs font-bold'>{roleName}</span>
               </div>
             )}
             <button
