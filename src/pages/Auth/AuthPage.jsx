@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import AuthForm from './AuthForm'
 import LoginSVG from './LoginSVG'
 import RegisterSVG from './RegisterSVG'
+import './auth.css'
 export default function AuthPage({ onAuthSuccess }) {
   const [mounted, setMounted] = useState(false)
   const [isLogin, setIsLogin] = useState(true)

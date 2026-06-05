@@ -33,7 +33,7 @@ export const UnProtectRoute = ({ children, login }) => {
       return <Navigate to="/counselor/overview" replace />
     }
     if (role === 'vendor') {
-      return <Navigate to="/vendor/portal" replace />
+      return <Navigate to="/vendor/dashboard" replace />
     }
     return <Navigate to="/dashboard" replace />
   }

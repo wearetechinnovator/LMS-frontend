@@ -30,7 +30,7 @@
 
 /* Sidebar Header */
 .sidebar-header {
-  height: 52px;
+  height: 44px;
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -109,13 +109,16 @@
 .sidebar-nav::-webkit-scrollbar {
   width: 5px;
 }
+
 .sidebar-nav::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .sidebar-nav::-webkit-scrollbar-thumb {
   background: #eff4ff;
   border-radius: 3px;
 }
+
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
   background: #dae2fd;
 }
@@ -381,4 +384,3 @@
   text-align: center;
   border: 1px dashed #dae2fd;
 }
-

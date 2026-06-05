@@ -58,7 +58,7 @@ function App() {
       return '/counselor/overview'
     }
     if (role === 'vendor') {
-      return '/vendor/portal'
+      return '/vendor/dashboard'
     }
     return '/dashboard'
   }

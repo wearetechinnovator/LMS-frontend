@@ -54,7 +54,7 @@ export default function AuthForm({
       } else if (selectedRole === 'counselor') {
         navigate('/counselor/overview')
       } else if (selectedRole === 'vendor') {
-        navigate('/vendor/portal')
+        navigate('/vendor/dashboard')
       }
     }, 1500)
   }

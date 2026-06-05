@@ -507,7 +507,7 @@
 /* Quick Info section in embed panel */
 .form-embed-quick-info {
   display: grid;
-  grid-template-cols: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 }

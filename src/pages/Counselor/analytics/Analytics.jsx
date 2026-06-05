@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import './analytics.css'
+
 export default function Analytics() {
   // Global View Type: 'graph' | 'report'
   const [globalView, setGlobalView] = useState('graph')
@@ -216,14 +218,14 @@ export default function Analytics() {
             onClick={() => setGlobalView('graph')}
             className={`toggle-view-btn ${globalView === 'graph' ? 'active' : ''}`}
           >
-            <span className="material-symbols-outlined text-[13px]">insights</span>
+            <span className="material-symbols-outlined">insights</span>
             Visual Graphs
           </button>
           <button
             onClick={() => setGlobalView('report')}
             className={`toggle-view-btn ${globalView === 'report' ? 'active' : ''}`}
           >
-            <span className="material-symbols-outlined text-[13px]">table_chart</span>
+            <span className="material-symbols-outlined">table_chart</span>
             Tabular Reports
           </button>
         </div>
@@ -243,7 +245,7 @@ export default function Analytics() {
 
           {globalView === 'graph' ? (
             /* Lead Stage Graph View */
-            <div className="chart-wrapper px-4">
+            <div className="chart-wrapper stage-chart">
               {stageData.map((item, idx) => {
                 const heightPercent = maxStageCount > 0 ? (item.count / maxStageCount) * 80 + 10 : 10
                 const isHovered = hoveredIndex === idx && hoveredSection === 'stage'
@@ -251,12 +253,12 @@ export default function Analytics() {
                 return (
                   <div
                     key={item.stage}
-                    className="flex-1 flex flex-col items-center justify-end h-full relative group cursor-pointer"
+                    className="stage-bar-container"
                     onMouseEnter={(e) => {
                       setHoveredIndex(idx)
                       setHoveredSection('stage')
                       const rect = e.currentTarget.getBoundingClientRect()
-                      const parentRect = e.currentTarget.parentNode.getBoundingClientRect()
+                      const parentRect = e.currentTarget.closest('.chart-wrapper').getBoundingClientRect()
                       setHoveredPos({
                         x: rect.left - parentRect.left + rect.width / 2,
                         y: rect.top - parentRect.top - 10
@@ -267,19 +269,19 @@ export default function Analytics() {
                       setHoveredSection(null)
                     }}
                   >
+                    {/* Count on top of the bar */}
+                    <span className="stage-bar-value">{item.count}</span>
                     {/* Vertical Bar */}
                     <motion.div
-                      className="w-10 rounded-t-lg shadow-sm transition-all duration-200"
+                      className={`stage-bar ${item.class}`}
                       style={{
-                        background: `linear-gradient(180deg, ${item.color} 0%, ${item.color}33 100%)`,
-                        borderTop: `2px solid ${item.color}`,
                         opacity: hoveredSection === 'stage' && hoveredIndex !== idx ? 0.4 : 1
                       }}
                       initial={{ height: 0 }}
                       animate={{ height: `${heightPercent}%` }}
                       transition={{ type: 'spring', stiffness: 90, damping: 14, delay: idx * 0.05 }}
                     />
-                    <span className="text-[9px] font-bold text-slate-500 mt-2">{item.stage}</span>
+                    <span className="stage-bar-label">{item.stage}</span>
                   </div>
                 )
               })}
@@ -288,7 +290,7 @@ export default function Analytics() {
               <AnimatePresence>
                 {hoveredSection === 'stage' && hoveredIndex !== null && (
                   <motion.div
-                    className="absolute chart-tooltip-box z-50"
+                    className="chart-tooltip-box"
                     style={{ left: hoveredPos.x, top: hoveredPos.y, transform: 'translate(-50%, -100%)' }}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -329,7 +331,7 @@ export default function Analytics() {
                     stageData.map(s => [s.stage, s.count, s.percentage])
                   )}
                 >
-                  <span className="material-symbols-outlined text-[13px]">download</span>
+                  <span className="material-symbols-outlined">download</span>
                   Export
                 </button>
               </div>
@@ -349,8 +351,8 @@ export default function Analytics() {
                         <td>
                           <span className={`status-badge ${row.class}`}>{row.stage}</span>
                         </td>
-                        <td className="font-mono font-bold">{row.count}</td>
-                        <td className="font-mono font-semibold text-slate-500">{row.percentage}%</td>
+                        <td className="col-mono col-primary">{row.count}</td>
+                        <td className="col-mono col-muted">{row.percentage}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -386,8 +388,8 @@ export default function Analytics() {
 
           {globalView === 'graph' ? (
             /* Intake Graph View (Custom SVG Line Chart) */
-            <div className="chart-wrapper px-4">
-              <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+            <div className="chart-wrapper intake-chart">
+              <svg className="intake-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="intakeAreaGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
@@ -429,30 +431,39 @@ export default function Analytics() {
 
                       {/* Interactive Nodes */}
                       {points.map((p, idx) => (
-                        <circle
-                          key={idx}
-                          cx={p.x}
-                          cy={p.y}
-                          r="5"
-                          fill="#ffffff"
-                          stroke="#8b5cf6"
-                          strokeWidth="2"
-                          className="cursor-pointer hover:r-7 transition-all"
-                          onMouseEnter={(e) => {
-                            setHoveredIndex(idx)
-                            setHoveredSection('intake')
-                            const rect = e.target.getBoundingClientRect()
-                            const parentRect = e.target.parentNode.parentNode.getBoundingClientRect()
-                            setHoveredPos({
-                              x: rect.left - parentRect.left + rect.width / 2,
-                              y: rect.top - parentRect.top - 8
-                            })
-                          }}
-                          onMouseLeave={() => {
-                            setHoveredIndex(null)
-                            setHoveredSection(null)
-                          }}
-                        />
+                        <g key={idx}>
+                          <circle
+                            cx={p.x}
+                            cy={p.y}
+                            r="5"
+                            fill="#ffffff"
+                            stroke="#8b5cf6"
+                            strokeWidth="2"
+                            className="intake-node"
+                            onMouseEnter={(e) => {
+                              setHoveredIndex(idx)
+                              setHoveredSection('intake')
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const parentRect = e.currentTarget.closest('.chart-wrapper').getBoundingClientRect()
+                              setHoveredPos({
+                                x: rect.left - parentRect.left + rect.width / 2,
+                                y: rect.top - parentRect.top - 8
+                              })
+                            }}
+                            onMouseLeave={() => {
+                              setHoveredIndex(null)
+                              setHoveredSection(null)
+                            }}
+                          />
+                          <text
+                            x={p.x}
+                            y={p.y - 10}
+                            textAnchor="middle"
+                            className="intake-node-value"
+                          >
+                            {activeIntakeData[idx].count}
+                          </text>
+                        </g>
                       ))}
                     </>
                   )
@@ -460,9 +471,9 @@ export default function Analytics() {
               </svg>
 
               {/* Labels below SVG */}
-              <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4">
+              <div className="intake-labels-container">
                 {activeIntakeData.map((item, idx) => (
-                  <span key={idx} className="text-[8.5px] font-bold text-slate-500">{item.label}</span>
+                  <span key={idx} className="intake-label">{item.label}</span>
                 ))}
               </div>
 
@@ -470,7 +481,7 @@ export default function Analytics() {
               <AnimatePresence>
                 {hoveredSection === 'intake' && hoveredIndex !== null && (
                   <motion.div
-                    className="absolute chart-tooltip-box z-50"
+                    className="chart-tooltip-box"
                     style={{ left: hoveredPos.x, top: hoveredPos.y, transform: 'translate(-50%, -100%)' }}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -511,7 +522,7 @@ export default function Analytics() {
                     activeIntakeData.map(i => [i.label, i.count, i.conversion])
                   )}
                 >
-                  <span className="material-symbols-outlined text-[13px]">download</span>
+                  <span className="material-symbols-outlined">download</span>
                   Export
                 </button>
               </div>
@@ -528,9 +539,9 @@ export default function Analytics() {
                   <tbody>
                     {filteredIntakeReport.map((row, idx) => (
                       <tr key={idx}>
-                        <td className="font-bold text-slate-800">{row.label}</td>
-                        <td className="font-mono">{row.count} leads</td>
-                        <td className="font-mono font-semibold text-emerald-600">{row.conversion}%</td>
+                        <td className="col-primary">{row.label}</td>
+                        <td className="col-mono">{row.count} leads</td>
+                        <td className="col-mono col-success">{row.conversion}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -572,8 +583,8 @@ export default function Analytics() {
 
           {globalView === 'graph' ? (
             /* Demographics Graph View (Donut/Pie Chart) */
-            <div className="chart-wrapper px-4 flex justify-center items-center h-[240px]">
-              <svg className="w-48 h-48" viewBox="0 0 100 100">
+            <div className="chart-wrapper demographics-chart">
+              <svg className="demographics-svg" viewBox="0 0 100 100">
                 {(() => {
                   const total = activeDemographicData.reduce((acc, d) => acc + d.count, 0)
                   let startAngle = 0
@@ -606,8 +617,8 @@ export default function Analytics() {
                         onMouseEnter={(e) => {
                           setHoveredIndex(idx)
                           setHoveredSection('demographics')
-                          const rect = e.target.getBoundingClientRect()
-                          const parentRect = e.target.parentNode.parentNode.getBoundingClientRect()
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          const parentRect = e.currentTarget.closest('.chart-wrapper').getBoundingClientRect()
                           setHoveredPos({
                             x: rect.left - parentRect.left + rect.width / 2,
                             y: rect.top - parentRect.top - 10
@@ -626,24 +637,28 @@ export default function Analytics() {
               </svg>
 
               {/* Floating Legend */}
-              <div className="flex flex-col gap-1.5 ml-4 text-left justify-center select-none">
-                {activeDemographicData.map((item, idx) => {
-                  const colors = ['#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#6366f1']
-                  return (
-                    <div key={idx} className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
-                      <span className="text-[10px] font-bold text-slate-600 truncate max-w-[90px]">{item.region}</span>
-                      <span className="text-[10px] font-semibold font-mono text-slate-400">({item.count})</span>
-                    </div>
-                  )
-                })}
+              <div className="demographics-legend">
+                {(() => {
+                  const total = activeDemographicData.reduce((acc, d) => acc + d.count, 0)
+                  return activeDemographicData.map((item, idx) => {
+                    const colors = ['#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#6366f1']
+                    const percent = total > 0 ? ((item.count / total) * 100).toFixed(1) : 0
+                    return (
+                      <div key={idx} className="demographics-legend-item">
+                        <div className="legend-dot" style={{ backgroundColor: colors[idx % colors.length] }} />
+                        <span className="legend-name">{item.region}</span>
+                        <span className="legend-count">({item.count} | {percent}%)</span>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
 
               {/* Tooltip Overlay */}
               <AnimatePresence>
                 {hoveredSection === 'demographics' && hoveredIndex !== null && (
                   <motion.div
-                    className="absolute chart-tooltip-box z-50"
+                    className="chart-tooltip-box"
                     style={{ left: hoveredPos.x, top: hoveredPos.y, transform: 'translate(-50%, -100%)' }}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -684,7 +699,7 @@ export default function Analytics() {
                     activeDemographicData.map(d => [d.region, d.count, d.conversion])
                   )}
                 >
-                  <span className="material-symbols-outlined text-[13px]">download</span>
+                  <span className="material-symbols-outlined">download</span>
                   Export
                 </button>
               </div>
@@ -701,9 +716,9 @@ export default function Analytics() {
                   <tbody>
                     {filteredDemoReport.map((row, idx) => (
                       <tr key={idx}>
-                        <td className="font-bold text-slate-800">{row.region}</td>
-                        <td className="font-mono">{row.count} leads</td>
-                        <td className="font-mono font-semibold text-emerald-600">{row.conversion}%</td>
+                        <td className="col-primary">{row.region}</td>
+                        <td className="col-mono">{row.count} leads</td>
+                        <td className="col-mono col-success">{row.conversion}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -724,18 +739,18 @@ export default function Analytics() {
 
           {globalView === 'graph' ? (
             /* Source Graph View (Horizontal Bar Chart) */
-            <div className="chart-wrapper flex flex-col gap-3 justify-center pt-2">
+            <div className="chart-wrapper source-chart">
               {sourceData.map((item, idx) => {
                 const widthPercent = maxSourceCount > 0 ? (item.count / maxSourceCount) * 75 + 10 : 10
                 return (
                   <div
                     key={item.source}
-                    className="w-full flex items-center relative group cursor-pointer"
+                    className="source-row-item"
                     onMouseEnter={(e) => {
                       setHoveredIndex(idx)
                       setHoveredSection('source')
                       const rect = e.currentTarget.getBoundingClientRect()
-                      const parentRect = e.currentTarget.parentNode.parentNode.getBoundingClientRect()
+                      const parentRect = e.currentTarget.closest('.chart-wrapper').getBoundingClientRect()
                       setHoveredPos({
                         x: rect.left - parentRect.left + (rect.width * widthPercent) / 100 + 40,
                         y: rect.top - parentRect.top + rect.height / 2
@@ -747,27 +762,26 @@ export default function Analytics() {
                     }}
                   >
                     {/* Label */}
-                    <span className="w-24 text-[9px] font-bold text-slate-600 truncate text-left pr-2 select-none">
+                    <span className="source-row-label">
                       {item.source}
                     </span>
 
                     {/* Horizontal Bar */}
-                    <div className="flex-1 bg-slate-50 h-5 rounded-md overflow-hidden relative border border-slate-100">
+                    <div className="source-row-track">
                       <motion.div
-                        className="h-full rounded-r-md"
+                        className="source-row-bar"
                         style={{
-                          background: 'linear-gradient(90deg, #10b981 0%, #10b98188 100%)',
                           opacity: hoveredSection === 'source' && hoveredIndex !== idx ? 0.45 : 1
                         }}
                         initial={{ width: 0 }}
                         animate={{ width: `${widthPercent}%` }}
                         transition={{ type: 'spring', stiffness: 95, damping: 15, delay: idx * 0.04 }}
                       />
-                      {/* Inside bar statistics */}
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-800">
-                        {item.count} leads
-                      </span>
                     </div>
+
+                    <span className="source-row-value">
+                      {item.count} leads ({item.conversion}%)
+                    </span>
                   </div>
                 )
               })}
@@ -776,7 +790,7 @@ export default function Analytics() {
               <AnimatePresence>
                 {hoveredSection === 'source' && hoveredIndex !== null && (
                   <motion.div
-                    className="absolute chart-tooltip-box z-50"
+                    className="chart-tooltip-box"
                     style={{ left: hoveredPos.x, top: hoveredPos.y, transform: 'translate(10px, -50%)' }}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -821,7 +835,7 @@ export default function Analytics() {
                     sourceData.map(s => [s.source, s.count, s.conversion, s.avgScore])
                   )}
                 >
-                  <span className="material-symbols-outlined text-[13px]">download</span>
+                  <span className="material-symbols-outlined">download</span>
                   Export
                 </button>
               </div>
@@ -839,10 +853,10 @@ export default function Analytics() {
                   <tbody>
                     {filteredSourceReport.map((row, idx) => (
                       <tr key={idx}>
-                        <td className="font-bold text-slate-800">{row.source}</td>
-                        <td className="font-mono">{row.count}</td>
-                        <td className="font-mono font-semibold text-emerald-600">{row.conversion}%</td>
-                        <td className="font-mono text-slate-500 font-semibold">{row.avgScore} pts</td>
+                        <td className="col-primary">{row.source}</td>
+                        <td className="col-mono">{row.count}</td>
+                        <td className="col-mono col-success">{row.conversion}%</td>
+                        <td className="col-mono col-muted">{row.avgScore} pts</td>
                       </tr>
                     ))}
                   </tbody>

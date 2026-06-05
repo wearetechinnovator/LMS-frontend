@@ -1442,26 +1442,27 @@ export default function AllLeadsPage() {
   }
 
   return (
-    <div className="leads-page-scope leads-wrapper">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-6 left-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-xl border border-slate-800 flex items-center gap-2 text-xs font-bold font-sans"
-          >
-            <span className="material-symbols-outlined text-[16px] text-green-400">check_circle</span>
-            {toastMsg}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="p-4">
+      <div className="leads-page-scope leads-wrapper">
+        {/* Toast Notification */}
+        <AnimatePresence>
+          {toastMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: -20, x: '-50%' }}
+              className="fixed top-6 left-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-xl border border-slate-800 flex items-center gap-2 text-xs font-bold font-sans"
+            >
+              <span className="material-symbols-outlined text-[16px] text-green-400">check_circle</span>
+              {toastMsg}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {!(activeLeadDetails && role === 'admin') && (
-        <div className="w-full">
-        {/* Saved Views Quick Tabs */}
-        {/* <div className="flex border-b border-outline-variant gap-4 mb-5 select-none text-left">
+        {!(activeLeadDetails && role === 'admin') && (
+          <div className="w-full">
+            {/* Saved Views Quick Tabs */}
+            {/* <div className="flex border-b border-outline-variant gap-4 mb-5 select-none text-left">
               <button
                 onClick={() => setActiveSavedTab('all')}
                 className={`pb-2.5 font-bold text-[12px] border-b-2 transition-all flex items-center gap-1 cursor-pointer ${activeSavedTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1496,1576 +1497,1576 @@ export default function AllLeadsPage() {
               </button>
             </div> */}
 
-        {/* 6-Card Sparkline KPI Grid */}
-        <div className="leads-kpi-grid">
-          {[
-            {
-              label: 'Total Leads',
-              value: formFilteredLeads.length,
-              trend: '+12% vs last month',
-              trendUp: true,
-              color: 'indigo',
-              sparkline: (
-                <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M0 25 Q15 15, 30 20 T60 10 T90 5 T100 2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ),
-              icon: 'groups'
-            },
-            {
-              label: 'New Leads',
-              value: formFilteredLeads.filter(l => l.status === 'NEW').length,
-              trend: '+8% vs last week',
-              trendUp: true,
-              color: 'blue',
-              sparkline: (
-                <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M0 20 L20 18 L40 25 L60 15 L80 8 L100 4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ),
-              icon: 'fiber_new'
-            },
-            {
-              label: 'Follow-Ups Today',
-              value: formFilteredLeads.filter(l => l.followUpToday).length,
-              trend: '-5% vs yesterday',
-              trendUp: false,
-              color: 'orange',
-              sparkline: (
-                <svg className="w-full h-8 text-rose-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M0 5 L20 12 L40 8 L60 18 L80 22 L100 25" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ),
-              icon: 'calendar_today'
-            },
-            {
-              label: 'Qualified Leads',
-              value: formFilteredLeads.filter(l => l.status === 'QUALIFIED').length,
-              trend: '+15% vs last week',
-              trendUp: true,
-              color: 'green',
-              sparkline: (
-                <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M0 28 L20 25 L40 18 L60 14 L80 8 L100 2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ),
-              icon: 'verified'
-            },
-            {
-              label: 'Pending Leads',
-              value: formFilteredLeads.filter(l => ['NEW', 'CONTACTED'].includes(l.status)).length,
-              trend: '-2% vs yesterday',
-              trendUp: false,
-              color: 'amber',
-              sparkline: (
-                <svg className="w-full h-8 text-rose-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M0 8 L20 12 L40 10 L60 15 L80 14 L100 18" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ),
-              icon: 'pending'
-            },
-            {
-              label: 'Conversion Rate',
-              value: `${formFilteredLeads.length > 0 ? Math.round((formFilteredLeads.filter(l => l.status === 'QUALIFIED').length / formFilteredLeads.length) * 100) : 0}%`,
-              trend: '+3% vs last month',
-              trendUp: true,
-              color: 'teal',
-              sparkline: (
-                <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M0 24 L20 20 L40 22 L60 12 L80 8 L100 5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ),
-              icon: 'leaderboard'
-            }
-          ].map((card, idx) => (
-            <div key={idx} className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200 select-none text-left relative overflow-hidden group">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 group-hover:text-slate-650 transition-colors">
-                  {card.label}
-                </span>
-                <span className="material-symbols-outlined text-[18px] text-slate-450 select-none">
-                  {card.icon}
-                </span>
-              </div>
-
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-2xl font-extrabold text-slate-800 tracking-tight">
-                  {card.value}
-                </span>
-                <span className={`text-[10px] font-bold flex items-center gap-0.5 ${card.trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {card.trendUp ? '↑' : '↓'} {card.trend}
-                </span>
-              </div>
-
-              <div className="w-full mt-2 pt-2 border-t border-slate-100 flex items-end">
-                <div className="w-2/3 h-8 flex items-end">
-                  {card.sparkline}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Lead Segment Filter Chips */}
-        <div className="flex flex-wrap items-center gap-2 mb-6 select-none text-left">
-          {[
-            { key: 'all', label: 'All Leads', color: 'indigo', icon: 'groups' },
-            { key: 'primary', label: 'Primary Leads', color: 'amber', icon: 'star' },
-            { key: 'secondary', label: 'Secondary Leads', color: 'sky', icon: 'star_half' },
-            { key: 'tertiary', label: 'Tertiary Leads', color: 'purple', icon: 'star_outline' },
-            { key: 'verified', label: 'Verified Leads', color: 'emerald', icon: 'verified' },
-            { key: 'unverified', label: 'Unverified Leads', color: 'rose', icon: 'cancel' },
-            { key: 'online', label: 'Online Leads', color: 'teal', icon: 'language' },
-            { key: 'offline', label: 'Offline Leads', color: 'pink', icon: 'store' },
-            { key: 'not_assigned', label: 'Not Assigned', color: 'orange', icon: 'person_off' }
-          ].map(segment => {
-            const isActive = activeBlockFilter === segment.key;
-            const stats = segmentStats[segment.key] || { count: 0, pct: 0 };
-
-            // Tailored colors for the active state
-            const activeColorClasses = {
-              indigo: 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20',
-              amber: 'border-amber-600 bg-amber-50/70 text-amber-900 ring-2 ring-amber-500/20',
-              sky: 'border-sky-600 bg-sky-50/70 text-sky-900 ring-2 ring-sky-500/20',
-              purple: 'border-purple-600 bg-purple-50/70 text-purple-900 ring-2 ring-purple-500/20',
-              emerald: 'border-emerald-600 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500/20',
-              rose: 'border-rose-600 bg-rose-50/70 text-rose-900 ring-2 ring-rose-500/20',
-              orange: 'border-orange-600 bg-orange-50/70 text-orange-900 ring-2 ring-orange-500/20',
-              teal: 'border-teal-600 bg-teal-50/70 text-teal-900 ring-2 ring-teal-500/20',
-              pink: 'border-pink-600 bg-pink-50/70 text-pink-900 ring-2 ring-pink-500/20'
-            }[segment.color];
-
-            return (
-              <button
-                key={segment.key}
-                onClick={() => setActiveBlockFilter(segment.key)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11.5px] font-bold transition-all shadow-xs cursor-pointer ${isActive
-                  ? activeColorClasses
-                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900'
-                  }`}
-              >
-                <span className={`material-symbols-outlined text-[15px] ${isActive ? 'text-current' : 'text-slate-400'}`}>
-                  {segment.icon}
-                </span>
-                <span>{segment.label}</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-current/10 font-extrabold' : 'bg-slate-100 text-slate-500'}`}>
-                  {stats.count} ({stats.pct}%)
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Consolidated Filters Toolbar */}
-        <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
-          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
-            {/* Search Bar */}
-            <div className="relative w-full sm:w-64">
-              <span className="material-symbols-outlined text-[15px] text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 select-none">
-                search
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, email, owner..."
-                className="w-full h-8 pl-8 pr-2.5 border border-slate-250 bg-white rounded-lg text-[11px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
-              />
-            </div>
-
-            {/* Date Range Selector */}
-            <div className="relative">
-              <select
-                value={dateRangeFilter}
-                onChange={(e) => setDateRangeFilter(e.target.value)}
-                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <option value="all">Date Range: All Time</option>
-                <option value="today">Created: Today</option>
-                <option value="7days">Created: Last 7 Days</option>
-                <option value="30days">Created: Last 30 Days</option>
-              </select>
-            </div>
-
-            {/* Lead Owner Selector */}
-            <div className="relative">
-              <select
-                value={leadOwnerFilter}
-                onChange={(e) => setLeadOwnerFilter(e.target.value)}
-                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <option value="all">Owner: All</option>
-                <option value="Sarah Jenkins">Sarah Jenkins</option>
-                <option value="Marcus Chan">Marcus Chan</option>
-                <option value="Unassigned">Unassigned</option>
-              </select>
-            </div>
-
-            {/* Source Selector */}
-            <div className="relative">
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-755 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <option value="all">Source: All</option>
-                <option value="Website Organic">Website Organic</option>
-                <option value="Paid Search">Paid Search</option>
-                <option value="Referral">Referral</option>
-                <option value="Direct Mail">Direct Mail</option>
-                <option value="Webinar">Webinar</option>
-                <option value="Cold Outreach">Cold Outreach</option>
-                <option value="Quick Add Form">Quick Add Form</option>
-                <option value="Bulk Offline CSV">Bulk Offline CSV</option>
-              </select>
-            </div>
-
-            {/* Status Selector */}
-            <div className="relative">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <option value="all">Status: All Active</option>
-                <option value="NEW">NEW</option>
-                <option value="CONTACTED">CONTACTED</option>
-                <option value="QUALIFIED">QUALIFIED</option>
-                <option value="LOST">LOST</option>
-              </select>
-            </div>
-
-            {/* Verification Selector */}
-            <div className="relative">
-              <select
-                value={verificationFilter}
-                onChange={(e) => setVerificationFilter(e.target.value)}
-                className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <option value="all">Verification: All</option>
-                <option value="verified">Verified Only</option>
-                <option value="unverified">Unverified Only</option>
-              </select>
-            </div>
-
-            {/* Column Customizer Button */}
-            <div className="relative">
-              <button
-                onClick={() => setShowColumnDropdown(!showColumnDropdown)}
-                className="flex items-center gap-1 px-2 h-8 border border-slate-250 bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-705 rounded-lg cursor-pointer select-none transition-colors"
-              >
-                <span className="material-symbols-outlined text-[15px] text-slate-400">table_chart</span>
-                Columns
-              </button>
-              <AnimatePresence>
-                {showColumnDropdown && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowColumnDropdown(false)} />
-                    <motion.div
-                      className="absolute left-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-20 text-left font-sans animate-fade-in"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 select-none">Toggle Columns</div>
-                      <div className="space-y-1.5 text-[11.5px] font-semibold text-slate-700">
-                        {Object.keys(visibleColumns).map((col) => (
-                          <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer capitalize">
-                            <input
-                              type="checkbox"
-                              checked={visibleColumns[col]}
-                              onChange={() => setVisibleColumns({
-                                ...visibleColumns,
-                                [col]: !visibleColumns[col]
-                              })}
-                              className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350 text-primary"
-                            />
-                            {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
-                          </label>
-                        ))}
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Clear All Option */}
-            {(searchQuery !== '' || filterStatus !== 'all' || dateRangeFilter !== 'all' || leadOwnerFilter !== 'all' || sourceFilter !== 'all' || verificationFilter !== 'all' || activeSavedTab !== 'all' || activeBlockFilter !== 'all') && (
-              <button
-                onClick={() => {
-                  setSearchQuery('')
-                  setFilterStatus('all')
-                  setDateRangeFilter('all')
-                  setLeadOwnerFilter('all')
-                  setSourceFilter('all')
-                  setVerificationFilter('all')
-                  setActiveSavedTab('all')
-                  setActiveBlockFilter('all')
-                  setSortConfig({ key: 'name', direction: 'asc' })
-                }}
-                className="text-primary hover:text-primary-dark transition-colors text-[11.5px] font-bold cursor-pointer underline underline-offset-2 decoration-dotted ml-2"
-              >
-                Clear All
-              </button>
-            )}
-          </div>
-
-          {/* Actions Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowGlobalActionsDropdown(!showGlobalActionsDropdown)}
-              className="flex items-center gap-1 px-2.5 h-8 bg-primary hover:bg-primary/95 text-[11px] font-bold text-white rounded-lg shadow-sm cursor-pointer select-none transition-all duration-150"
-            >
-              Actions
-              <span className="material-symbols-outlined text-[15px] text-white leading-none">expand_more</span>
-            </button>
-
-            <AnimatePresence>
-              {showGlobalActionsDropdown && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setShowGlobalActionsDropdown(false)} />
-                  <motion.div
-                    className="absolute right-0 mt-1.5 w-52 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans"
-                    initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    {/* Group 1: Lead Ingestions */}
-                    <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Ingestions</div>
-                    <button
-                      onClick={() => {
-                        setShowBulkUploadModal(true);
-                        setShowGlobalActionsDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
-                      Bulk Offline Upload
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowQuickLeadModal(true);
-                        setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic' });
-                        setShowGlobalActionsDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
-                      Add Quick Lead
-                    </button>
-
-                    <hr className="border-slate-100 my-1" />
-
-                    {/* Group 2: Data Operations */}
-                    <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Data Operations</div>
-                    {/* Download Leads with Format Submenu on Hover */}
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setShowDownloadFormats(true)}
-                      onMouseLeave={() => setShowDownloadFormats(false)}
-                    >
-                      <button
-                        className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
-                          Download Leads
-                        </div>
-                        <span className="material-symbols-outlined text-[14px] text-slate-400">chevron_left</span>
-                      </button>
-
-                      <AnimatePresence>
-                        {showDownloadFormats && (
-                          <motion.div
-                            className="absolute right-full top-0 w-36 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-50 text-left font-sans"
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 10 }}
-                            transition={{ duration: 0.15 }}
-                          >
-                            <button
-                              onClick={() => {
-                                handleDownloadLeads('CSV');
-                                setShowGlobalActionsDropdown(false);
-                              }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                            >
-                              <span className="material-symbols-outlined text-[14px] text-green-600">table_view</span>
-                              CSV Format
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDownloadLeads('Excel (XLSX)');
-                                setShowGlobalActionsDropdown(false);
-                              }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                            >
-                              <span className="material-symbols-outlined text-[14px] text-emerald-600">grid_on</span>
-                              Excel (XLSX)
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDownloadLeads('PDF');
-                                setShowGlobalActionsDropdown(false);
-                              }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                            >
-                              <span className="material-symbols-outlined text-[14px] text-red-600">picture_as_pdf</span>
-                              PDF Document
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDownloadLeads('JSON');
-                                setShowGlobalActionsDropdown(false);
-                              }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                            >
-                              <span className="material-symbols-outlined text-[14px] text-amber-600">code</span>
-                              JSON Data
-                            </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleChangeLeadStageGlobal();
-                        setShowGlobalActionsDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">swap_horiz</span>
-                      Change Lead Stage
-                    </button>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Desktop Table View */}
-        <div className="hidden md:block">
-          {tableScrollWidth > (tableContainerRef.current?.clientWidth || 0) && (
-            <div
-              ref={topScrollbarRef}
-              onScroll={handleTopScroll}
-              className="w-full overflow-x-auto overflow-y-hidden h-2 mb-1.5 top-scrollbar"
-              style={{ scrollbarWidth: 'thin' }}
-            >
-              <div style={{ width: `${tableScrollWidth}px`, height: '1px' }} />
-            </div>
-          )}
-
-          <motion.div
-            ref={tableContainerRef}
-            onScroll={handleTableScroll}
-            className="w-full max-h-[600px] overflow-y-auto overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm relative z-0"
-          >
-            <table className="w-full relative border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 select-none sticky top-0 z-10">
-                  <th className="px-3 py-3 text-left w-10 bg-slate-50">
-                    <input
-                      type="checkbox"
-                      checked={selectedLeads.length === filteredAndSortedLeads.length && filteredAndSortedLeads.length > 0}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350"
-                    />
-                  </th>
-                  <th className="px-3 py-3 text-center text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50">Action</th>
-                  {visibleColumns.name && (
-                    <th
-                      onClick={() => requestSort('name')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Name & Email
-                        {renderSortIndicator('name')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.phone && (
-                    <th
-                      onClick={() => requestSort('phone')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Phone
-                        {renderSortIndicator('phone')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.score && (
-                    <th
-                      onClick={() => requestSort('score')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Lead Score
-                        {renderSortIndicator('score')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.status && (
-                    <th
-                      onClick={() => requestSort('status')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Status
-                        {renderSortIndicator('status')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.assignedTo && (
-                    <th
-                      onClick={() => requestSort('assignedTo')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Assigned To
-                        {renderSortIndicator('assignedTo')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.source && (
-                    <th
-                      onClick={() => requestSort('source')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Source
-                        {renderSortIndicator('source')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.verified && (
-                    <th
-                      onClick={() => requestSort('verified')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Verification
-                        {renderSortIndicator('verified')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.lastContacted && (
-                    <th
-                      onClick={() => requestSort('lastContacted')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Last Contacted
-                        {renderSortIndicator('lastContacted')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.nextFollowUp && (
-                    <th
-                      onClick={() => requestSort('nextFollowUp')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Next Follow-Up
-                        {renderSortIndicator('nextFollowUp')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.age && (
-                    <th
-                      onClick={() => requestSort('age')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Age
-                        {renderSortIndicator('age')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.priority && (
-                    <th
-                      onClick={() => requestSort('priority')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Priority
-                        {renderSortIndicator('priority')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.tags && (
-                    <th
-                      onClick={() => requestSort('tags')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Tags
-                        {renderSortIndicator('tags')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.activityCount && (
-                    <th
-                      onClick={() => requestSort('activityCount')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Act. Count
-                        {renderSortIndicator('activityCount')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.conversionProb && (
-                    <th
-                      onClick={() => requestSort('conversionProb')}
-                      className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Conv. %
-                        {renderSortIndicator('conversionProb')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.location && (
-                    <th
-                      onClick={() => requestSort('location')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11.5px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Location
-                        {renderSortIndicator('location')}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.campaign && (
-                    <th
-                      onClick={() => requestSort('campaign')}
-                      className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11.5px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
-                    >
-                      <div className="flex items-center">
-                        Campaign
-                        {renderSortIndicator('campaign')}
-                      </div>
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAndSortedLeads.map((lead, index) => (
-                  <motion.tr
-                    key={lead.id}
-                    className={`border-b border-slate-200 hover:bg-slate-50/70 transition-colors ${role === 'admin' ? 'cursor-pointer' : ''}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.04 }}
-                    onClick={() => {
-                      if (role === 'admin') {
-                        setActiveLeadDetails(lead)
-                        setHoveredLeadId(null)
-                      }
-                    }}
-                    onMouseEnter={() => setHoveredLeadId(lead.id)}
-                    onMouseLeave={() => setHoveredLeadId(null)}
-                    onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
-                  >
-                    <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.includes(lead.id)}
-                        onChange={() => toggleSelectLead(lead.id)}
-                        className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-300"
-                      />
-                    </td>
-                    <td className="px-3 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center min-h-[28px]">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (activeDropdownLeadId === lead.id) {
-                              setActiveDropdownLeadId(null);
-                            } else {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const spaceBelow = window.innerHeight - rect.bottom;
-                              const flipUp = spaceBelow < 280;
-                              setDropdownFlipUp(flipUp);
-                              setDropdownPos({
-                                x: rect.left,
-                                y: flipUp ? rect.top : rect.bottom
-                              });
-                              setActiveDropdownLeadId(lead.id);
-                            }
-                            setShowReassignSubId(null);
-                          }}
-                          className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 text-slate-500'
-                            }`}
-                        >
-                          <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
-                        </button>
-                      </div>
-
-                      <AnimatePresence>
-                        {activeDropdownLeadId === lead.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-30 cursor-default"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveDropdownLeadId(null);
-                                setShowReassignSubId(null);
-                              }}
-                            />
-
-                            {(() => {
-                              const showUpwards = dropdownFlipUp;
-                              return (
-                                <motion.div
-                                  style={{
-                                    position: 'fixed',
-                                    left: `${dropdownPos.x}px`,
-                                    ...(showUpwards
-                                      ? { bottom: `${window.innerHeight - dropdownPos.y}px`, top: 'auto' }
-                                      : { top: `${dropdownPos.y + 4}px`, bottom: 'auto' }
-                                    )
-                                  }}
-                                  className="w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-[9999] text-left font-sans"
-                                  initial={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
-                                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
-                                  transition={{ duration: 0.15 }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {role === 'admin' && (
-                                    <button
-                                      onClick={() => {
-                                        navigate(`/admin/leads/${lead.id}`);
-                                        setActiveDropdownLeadId(null);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                    >
-                                      <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
-                                      View/Edit Details
-                                    </button>
-                                  )}
-
-                                  <button
-                                    onClick={() => {
-                                      handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                                      triggerToast('Voice call simulator initialized!');
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">call</span>
-                                    Call Lead
-                                  </button>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setShowEmailModal(true);
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
-                                    Send Email
-                                  </button>
-
-                                  <div className="h-px bg-slate-100 my-1" />
-
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => {
-                                        setShowReassignSubId(showReassignSubId === lead.id ? null : lead.id);
-                                      }}
-                                      className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
-                                    >
-                                      <div className="flex items-center gap-2.5">
-                                        <span className="material-symbols-outlined text-[16px] text-indigo-500 font-medium">supervisor_account</span>
-                                        Re-assign Lead
-                                      </div>
-                                      <span className="material-symbols-outlined text-[14px]">
-                                        {showReassignSubId === lead.id ? 'expand_less' : 'chevron_right'}
-                                      </span>
-                                    </button>
-
-                                    <AnimatePresence>
-                                      {showReassignSubId === lead.id && (
-                                        <motion.div
-                                          className="mt-1 mb-1 mx-1.5 p-1 bg-slate-50 border border-slate-100 rounded-lg space-y-0.5"
-                                          initial={{ opacity: 0, height: 0 }}
-                                          animate={{ opacity: 1, height: 'auto' }}
-                                          exit={{ opacity: 0, height: 0 }}
-                                          transition={{ duration: 0.15 }}
-                                        >
-                                          {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => {
-                                            const counselorLeads = leads.filter(l => l.assignedTo === counselor);
-                                            const count = counselorLeads.length;
-                                            const isCurrentlyAssigned = lead.assignedTo === counselor;
-
-                                            return (
-                                              <div key={counselor} className="relative group">
-                                                <button
-                                                  onClick={() => {
-                                                    handleLeadCounselorChangeDirect(lead.id, counselor);
-                                                    setActiveDropdownLeadId(null);
-                                                    setShowReassignSubId(null);
-                                                  }}
-                                                  className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-left ${isCurrentlyAssigned
-                                                    ? 'bg-blue-50 text-blue-700'
-                                                    : 'text-slate-650 hover:bg-white hover:text-blue-600'
-                                                    }`}
-                                                >
-                                                  <div className="flex items-center gap-1.5">
-                                                    <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-bold text-slate-600 shrink-0">
-                                                      {counselor === 'Unassigned' ? '—' : counselor.split(' ').map(p => p[0]).join('')}
-                                                    </div>
-                                                    <span className='text-[12px]'>{counselor}</span>
-                                                  </div>
-                                                  <div className="flex items-center gap-1.5">
-                                                    {counselor !== 'Unassigned' && (
-                                                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isCurrentlyAssigned ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
-                                                        }`}>
-                                                        {count}
-                                                      </span>
-                                                    )}
-                                                    {isCurrentlyAssigned && (
-                                                      <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
-                                                    )}
-                                                  </div>
-                                                </button>
-
-                                                {counselor !== 'Unassigned' && (
-                                                  <div className="absolute right-full top-0 mr-2 z-[9999] hidden group-hover:block pointer-events-none">
-                                                    <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-left font-sans">
-                                                      <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-slate-100">
-                                                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700 shrink-0">
-                                                          {counselor.split(' ').map(p => p[0]).join('')}
-                                                        </div>
-                                                        <div>
-                                                          <p className="text-[11px] font-bold text-slate-800 leading-tight">{counselor}</p>
-                                                          <p className="text-[9px] text-slate-400 font-medium">{count} active lead{count !== 1 ? 's' : ''}</p>
-                                                        </div>
-                                                      </div>
-
-                                                      {counselorLeads.length > 0 ? (
-                                                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                                                          {counselorLeads.map(l => {
-                                                            const statusColors = {
-                                                              NEW: 'bg-blue-50 text-blue-700',
-                                                              CONTACTED: 'bg-orange-50 text-orange-700',
-                                                              QUALIFIED: 'bg-green-50 text-green-700',
-                                                              LOST: 'bg-red-50 text-red-705'
-                                                            };
-                                                            return (
-                                                              <div key={l.id} className="flex items-center justify-between gap-2">
-                                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                                  <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
-                                                                    {l.name.split(' ').map(p => p[0]).join('').slice(0, 2)}
-                                                                  </div>
-                                                                  <span className="text-[10.5px] text-slate-700 font-medium truncate">{l.name}</span>
-                                                                </div>
-                                                                <span className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusColors[l.status] || 'bg-slate-50 text-slate-600'}`}>
-                                                                  {l.status}
-                                                                </span>
-                                                              </div>
-                                                            );
-                                                          })}
-                                                        </div>
-                                                      ) : (
-                                                        <p className="text-[10px] text-slate-400 italic text-center py-1">No leads assigned</p>
-                                                      )}
-
-                                                      {counselorLeads.length > 0 && (
-                                                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-                                                          <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Avg. Score</span>
-                                                          <span className="text-[10px] font-bold text-slate-700 font-mono">
-                                                            {Math.round(counselorLeads.reduce((s, l) => s + l.score, 0) / counselorLeads.length)}
-                                                          </span>
-                                                        </div>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          })}
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                  </div>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setDetailsActiveTab('timeline');
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">history</span>
-                                    View Activity
-                                  </button>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setDetailsActiveTab('overview');
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-teal-500 font-medium">assignment</span>
-                                    View Application
-                                  </button>
-                                </motion.div>
-                              );
-                            })()}
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </td>
-                    {visibleColumns.name && (
-                      <td className="px-3 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-extrabold shrink-0 select-none">
-                            {getInitials(lead.name)}
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-[12px] font-extrabold text-slate-800 hover:underline truncate">
-                              {lead.name}
-                            </span>
-                            <span className="text-[10px] text-slate-450 truncate">
-                              {isMasked ? maskEmail(lead.email) : lead.email}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.phone && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
-                    )}
-                    {visibleColumns.score && (
-                      <td className="px-3 py-4">
-                        <div className="flex items-center gap-2 w-28">
-                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className={`h-1.5 rounded-full ${lead.score >= 76 ? 'bg-emerald-500' : lead.score >= 41 ? 'bg-amber-500' : 'bg-rose-500'
-                                }`}
-                              style={{ width: `${lead.score}%` }}
-                            />
-                          </div>
-                          <span className="text-[11px] font-extrabold text-slate-700 font-mono">
-                            {lead.score}
-                          </span>
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.status && (
-                      <td className="px-3 py-4">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
-                          {lead.status}
-                        </span>
-                      </td>
-                    )}
-                    {visibleColumns.assignedTo && (
-                      <td className="px-3 py-4 text-slate-700 text-[12px] font-semibold">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] text-primary font-bold">
-                            {lead.assignedTo === 'Unassigned' ? '—' : lead.assignedTo.charAt(0)}
-                          </div>
-                          <span>{lead.assignedTo}</span>
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.source && (
-                      <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.source}</td>
-                    )}
-                    {visibleColumns.verified && (
-                      <td className="px-3 py-4">
-                        {lead.verified ? (
-                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold bg-green-50 text-green-700 border border-green-200/50 select-none">
-                            <span className="material-symbols-outlined text-[10px] font-bold text-green-600">check_circle</span>
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200/50 select-none">
-                            <span className="material-symbols-outlined text-[10px] font-bold text-rose-600">cancel</span>
-                            Unverified
-                          </span>
-                        )}
-                      </td>
-                    )}
-                    {visibleColumns.lastContacted && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.lastContacted}</td>
-                    )}
-                    {visibleColumns.nextFollowUp && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.nextFollowUp}</td>
-                    )}
-                    {visibleColumns.age && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-mono">{lead.age}</td>
-                    )}
-                    {visibleColumns.priority && (
-                      <td className="px-3 py-4">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-extrabold border ${lead.priority === 'High' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                          lead.priority === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                            'bg-slate-50 text-slate-600 border-slate-200'
-                          }`}>
-                          {lead.priority}
-                        </span>
-                      </td>
-                    )}
-                    {visibleColumns.tags && (
-                      <td className="px-3 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          {lead.tags && lead.tags.map((tag, i) => (
-                            <span key={i} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold border border-slate-200">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.activityCount && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-mono text-center font-bold">
-                        {lead.activityCount || lead.timeline?.length || 0}
-                      </td>
-                    )}
-                    {visibleColumns.conversionProb && (
-                      <td className="px-3 py-4 text-[12px] text-slate-600 font-mono text-center font-bold">
-                        {lead.conversionProb}%
-                      </td>
-                    )}
-                    {visibleColumns.location && (
-                      <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.location || '--'}</td>
-                    )}
-                    {visibleColumns.campaign && (
-                      <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.campaign || '--'}</td>
-                    )}
-                    <td className="px-3 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center min-h-[28px]">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (activeDropdownLeadId === lead.id) {
-                              setActiveDropdownLeadId(null);
-                            } else {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const spaceBelow = window.innerHeight - rect.bottom;
-                              const flipUp = spaceBelow < 280;
-                              setDropdownFlipUp(flipUp);
-                              setDropdownPos({
-                                x: rect.right,
-                                y: flipUp ? rect.top : rect.bottom
-                              });
-                              setActiveDropdownLeadId(lead.id);
-                            }
-                            setShowReassignSubId(null);
-                          }}
-                          className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 text-slate-500'
-                            }`}
-                        >
-                          <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
-                        </button>
-                      </div>
-
-                      <AnimatePresence>
-                        {activeDropdownLeadId === lead.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-30 cursor-default"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveDropdownLeadId(null);
-                                setShowReassignSubId(null);
-                              }}
-                            />
-
-                            {(() => {
-                              const showUpwards = dropdownFlipUp;
-                              return (
-                                <motion.div
-                                  style={{
-                                    position: 'fixed',
-                                    right: `${window.innerWidth - dropdownPos.x}px`,
-                                    ...(showUpwards
-                                      ? { bottom: `${window.innerHeight - dropdownPos.y}px`, top: 'auto' }
-                                      : { top: `${dropdownPos.y + 4}px`, bottom: 'auto' }
-                                    )
-                                  }}
-                                  className="w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-[9999] text-left font-sans"
-                                  initial={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
-                                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
-                                  transition={{ duration: 0.15 }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {role === 'admin' && (
-                                     <button
-                                       onClick={() => {
-                                         setActiveLeadDetails(lead);
-                                         setActiveDropdownLeadId(null);
-                                       }}
-                                       className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                     >
-                                       <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
-                                       View/Edit Details
-                                     </button>
-                                   )}
-
-                                  <button
-                                    onClick={() => {
-                                      handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                                      triggerToast('Voice call simulator initialized!');
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">call</span>
-                                    Call Lead
-                                  </button>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setShowEmailModal(true);
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
-                                    Send Email
-                                  </button>
-
-                                  <div className="h-px bg-slate-100 my-1" />
-
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => {
-                                        setShowReassignSubId(showReassignSubId === lead.id ? null : lead.id);
-                                      }}
-                                      className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
-                                    >
-                                      <div className="flex items-center gap-2.5">
-                                        <span className="material-symbols-outlined text-[16px] text-indigo-500 font-medium">supervisor_account</span>
-                                        Re-assign Lead
-                                      </div>
-                                      <span className="material-symbols-outlined text-[14px]">
-                                        {showReassignSubId === lead.id ? 'expand_less' : 'chevron_right'}
-                                      </span>
-                                    </button>
-
-                                    <AnimatePresence>
-                                      {showReassignSubId === lead.id && (
-                                        <motion.div
-                                          className="mt-1 mb-1 mx-1.5 p-1 bg-slate-50 border border-slate-100 rounded-lg space-y-0.5"
-                                          initial={{ opacity: 0, height: 0 }}
-                                          animate={{ opacity: 1, height: 'auto' }}
-                                          exit={{ opacity: 0, height: 0 }}
-                                          transition={{ duration: 0.15 }}
-                                        >
-                                          {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => {
-                                            const counselorLeads = leads.filter(l => l.assignedTo === counselor);
-                                            const count = counselorLeads.length;
-                                            const isCurrentlyAssigned = lead.assignedTo === counselor;
-
-                                            return (
-                                              <div key={counselor} className="relative group">
-                                                <button
-                                                  onClick={() => {
-                                                    handleLeadCounselorChangeDirect(lead.id, counselor);
-                                                    setActiveDropdownLeadId(null);
-                                                    setShowReassignSubId(null);
-                                                  }}
-                                                  className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-left ${isCurrentlyAssigned
-                                                    ? 'bg-blue-50 text-blue-700'
-                                                    : 'text-slate-650 hover:bg-white hover:text-blue-600'
-                                                    }`}
-                                                >
-                                                  <div className="flex items-center gap-1.5">
-                                                    <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-bold text-slate-600 shrink-0">
-                                                      {counselor === 'Unassigned' ? '—' : counselor.split(' ').map(p => p[0]).join('')}
-                                                    </div>
-                                                    <span className='text-[12px]'>{counselor}</span>
-                                                  </div>
-                                                  <div className="flex items-center gap-1.5">
-                                                    {counselor !== 'Unassigned' && (
-                                                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isCurrentlyAssigned ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
-                                                        }`}>
-                                                        {count}
-                                                      </span>
-                                                    )}
-                                                    {isCurrentlyAssigned && (
-                                                      <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
-                                                    )}
-                                                  </div>
-                                                </button>
-
-                                                {counselor !== 'Unassigned' && (
-                                                  <div className="absolute right-full top-0 mr-2 z-[9999] hidden group-hover:block pointer-events-none">
-                                                    <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-left font-sans">
-                                                      <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-slate-100">
-                                                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700 shrink-0">
-                                                          {counselor.split(' ').map(p => p[0]).join('')}
-                                                        </div>
-                                                        <div>
-                                                          <p className="text-[11px] font-bold text-slate-800 leading-tight">{counselor}</p>
-                                                          <p className="text-[9px] text-slate-400 font-medium">{count} active lead{count !== 1 ? 's' : ''}</p>
-                                                        </div>
-                                                      </div>
-
-                                                      {counselorLeads.length > 0 ? (
-                                                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                                                          {counselorLeads.map(l => {
-                                                            const statusColors = {
-                                                              NEW: 'bg-blue-50 text-blue-700',
-                                                              CONTACTED: 'bg-orange-50 text-orange-700',
-                                                              QUALIFIED: 'bg-green-50 text-green-700',
-                                                              LOST: 'bg-red-50 text-red-700'
-                                                            };
-                                                            return (
-                                                              <div key={l.id} className="flex items-center justify-between gap-2">
-                                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                                  <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
-                                                                    {l.name.split(' ').map(p => p[0]).join('').slice(0, 2)}
-                                                                  </div>
-                                                                  <span className="text-[10.5px] text-slate-700 font-medium truncate">{l.name}</span>
-                                                                </div>
-                                                                <span className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusColors[l.status] || 'bg-slate-50 text-slate-600'}`}>
-                                                                  {l.status}
-                                                                </span>
-                                                              </div>
-                                                            );
-                                                          })}
-                                                        </div>
-                                                      ) : (
-                                                        <p className="text-[10px] text-slate-400 italic text-center py-1">No leads assigned</p>
-                                                      )}
-
-                                                      {counselorLeads.length > 0 && (
-                                                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-                                                          <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Avg. Score</span>
-                                                          <span className="text-[10px] font-bold text-slate-700 font-mono">
-                                                            {Math.round(counselorLeads.reduce((s, l) => s + l.score, 0) / counselorLeads.length)}
-                                                          </span>
-                                                        </div>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          })}
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                  </div>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setDetailsActiveTab('timeline');
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">history</span>
-                                    View Activity
-                                  </button>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveLeadDetails(lead);
-                                      setDetailsActiveTab('overview');
-                                      setActiveDropdownLeadId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
-                                  >
-                                    <span className="material-symbols-outlined text-[16px] text-teal-500 font-medium">assignment</span>
-                                    View Application
-                                  </button>
-                                </motion.div>
-                              );
-                            })()}
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </td>
-                  </motion.tr>
-                ))}
-                {filteredAndSortedLeads.length === 0 && (
-                  <tr>
-                    <td colSpan={Object.values(visibleColumns).filter(Boolean).length + 2} className="py-16 text-center">
-                      <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shadow-inner">
-                          <span className="material-symbols-outlined text-[32px]">folder_off</span>
-                        </div>
-                        <div>
-                          <h3 className="text-[14px] font-bold text-slate-800">No Leads Found</h3>
-                          <p className="text-[11px] text-slate-500 mt-1 max-w-xs leading-normal">
-                            We couldn't find any lead matching your search query or active filter settings in this workspace.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSearchQuery('')
-                            setFilterStatus('all')
-                            setActiveSavedTab('all')
-                            setActiveBlockFilter('all')
-                            setSortConfig({ key: 'name', direction: 'asc' })
-                          }}
-                          className="h-8 px-4 bg-primary hover:bg-primary/95 text-white font-bold text-[11.5px] rounded-lg shadow-sm cursor-pointer select-none"
-                        >
-                          Reset Search Filters
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
-
-        {/* Mobile Card Stack View */}
-        <div className="block md:hidden space-y-4">
-          {filteredAndSortedLeads.map((lead) => (
-            <div
-              key={lead.id}
-              onClick={() => {
-                if (role === 'admin') {
-                  setActiveLeadDetails(lead)
+            {/* 6-Card Sparkline KPI Grid */}
+            <div className="leads-kpi-grid mb-4">
+              {[
+                {
+                  label: 'Total Leads',
+                  value: formFilteredLeads.length,
+                  trend: '+12% vs last month',
+                  trendUp: true,
+                  color: 'indigo',
+                  sparkline: (
+                    <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M0 25 Q15 15, 30 20 T60 10 T90 5 T100 2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  icon: 'groups'
+                },
+                {
+                  label: 'New Leads',
+                  value: formFilteredLeads.filter(l => l.status === 'NEW').length,
+                  trend: '+8% vs last week',
+                  trendUp: true,
+                  color: 'blue',
+                  sparkline: (
+                    <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M0 20 L20 18 L40 25 L60 15 L80 8 L100 4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  icon: 'fiber_new'
+                },
+                {
+                  label: 'Follow-Ups Today',
+                  value: formFilteredLeads.filter(l => l.followUpToday).length,
+                  trend: '-5% vs yesterday',
+                  trendUp: false,
+                  color: 'orange',
+                  sparkline: (
+                    <svg className="w-full h-8 text-rose-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M0 5 L20 12 L40 8 L60 18 L80 22 L100 25" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  icon: 'calendar_today'
+                },
+                {
+                  label: 'Qualified Leads',
+                  value: formFilteredLeads.filter(l => l.status === 'QUALIFIED').length,
+                  trend: '+15% vs last week',
+                  trendUp: true,
+                  color: 'green',
+                  sparkline: (
+                    <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M0 28 L20 25 L40 18 L60 14 L80 8 L100 2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  icon: 'verified'
+                },
+                {
+                  label: 'Pending Leads',
+                  value: formFilteredLeads.filter(l => ['NEW', 'CONTACTED'].includes(l.status)).length,
+                  trend: '-2% vs yesterday',
+                  trendUp: false,
+                  color: 'amber',
+                  sparkline: (
+                    <svg className="w-full h-8 text-rose-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M0 8 L20 12 L40 10 L60 15 L80 14 L100 18" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  icon: 'pending'
+                },
+                {
+                  label: 'Conversion Rate',
+                  value: `${formFilteredLeads.length > 0 ? Math.round((formFilteredLeads.filter(l => l.status === 'QUALIFIED').length / formFilteredLeads.length) * 100) : 0}%`,
+                  trend: '+3% vs last month',
+                  trendUp: true,
+                  color: 'teal',
+                  sparkline: (
+                    <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M0 24 L20 20 L40 22 L60 12 L80 8 L100 5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  icon: 'leaderboard'
                 }
-              }}
-              className={`bg-white border border-slate-200 rounded-xl p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${role === 'admin' ? 'cursor-pointer' : ''}`}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-extrabold shrink-0">
-                    {getInitials(lead.name)}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[12.5px] font-extrabold text-slate-800 truncate">
-                      {lead.name}
+              ].map((card, idx) => (
+                <div key={idx} className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200 select-none text-left relative overflow-hidden group">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 group-hover:text-slate-650 transition-colors">
+                      {card.label}
                     </span>
-                    <span className="text-[10px] text-slate-450 truncate">
-                      {isMasked ? maskEmail(lead.email) : lead.email}
+                    <span className="material-symbols-outlined text-[18px] text-slate-450 select-none">
+                      {card.icon}
                     </span>
                   </div>
-                </div>
-                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
-                  {lead.status}
-                </span>
-              </div>
 
-              <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-[11px] border-t border-slate-100 pt-3 text-slate-600 font-medium">
-                <div>
-                  <span className="text-slate-400 block text-[9.5px]">Phone</span>
-                  <span className="font-semibold text-slate-700">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[9.5px]">Score</span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <div className="w-12 bg-slate-100 rounded-full h-1 overflow-hidden">
-                      <div
-                        className={`h-1 rounded-full ${lead.score >= 76 ? 'bg-emerald-500' : lead.score >= 41 ? 'bg-amber-500' : 'bg-rose-500'
-                          }`}
-                        style={{ width: `${lead.score}%` }}
-                      />
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-2xl font-extrabold text-slate-800 tracking-tight">
+                      {card.value}
+                    </span>
+                    <span className={`text-[10px] font-bold flex items-center gap-0.5 ${card.trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {card.trendUp ? '↑' : '↓'} {card.trend}
+                    </span>
+                  </div>
+
+                  <div className="w-full mt-2 pt-2 border-t border-slate-100 flex items-end">
+                    <div className="w-2/3 h-8 flex items-end">
+                      {card.sparkline}
                     </div>
-                    <span className="font-bold text-slate-700 font-mono">{lead.score}</span>
                   </div>
                 </div>
-                <div>
-                  <span className="text-slate-400 block text-[9.5px]">Assigned Counselor</span>
-                  <span className="font-semibold text-slate-700">{lead.assignedTo}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[9.5px]">Lead Source</span>
-                  <span className="font-semibold text-slate-700">{lead.source}</span>
-                </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Mobile Row Hover Actions equivalent */}
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-2.5" onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => {
-                    handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                    triggerToast('Voice call simulator initialized!');
-                  }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-150 text-[10px] font-bold transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[12px]">call</span>
-                  Call
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveLeadDetails(lead);
-                    setShowEmailModal(true);
-                  }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-150 text-[10px] font-bold transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[12px]">mail</span>
-                  Email
-                </button>
-                {role === 'admin' && (
+            {/* Lead Segment Filter Chips */}
+            <div className="flex flex-wrap items-center gap-2 mb-6 select-none text-left">
+              {[
+                { key: 'all', label: 'All Leads', color: 'indigo', icon: 'groups' },
+                { key: 'primary', label: 'Primary Leads', color: 'amber', icon: 'star' },
+                { key: 'secondary', label: 'Secondary Leads', color: 'sky', icon: 'star_half' },
+                { key: 'tertiary', label: 'Tertiary Leads', color: 'purple', icon: 'star_outline' },
+                { key: 'verified', label: 'Verified Leads', color: 'emerald', icon: 'verified' },
+                { key: 'unverified', label: 'Unverified Leads', color: 'rose', icon: 'cancel' },
+                { key: 'online', label: 'Online Leads', color: 'teal', icon: 'language' },
+                { key: 'offline', label: 'Offline Leads', color: 'pink', icon: 'store' },
+                { key: 'not_assigned', label: 'Not Assigned', color: 'orange', icon: 'person_off' }
+              ].map(segment => {
+                const isActive = activeBlockFilter === segment.key;
+                const stats = segmentStats[segment.key] || { count: 0, pct: 0 };
+
+                // Tailored colors for the active state
+                const activeColorClasses = {
+                  indigo: 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20',
+                  amber: 'border-amber-600 bg-amber-50/70 text-amber-900 ring-2 ring-amber-500/20',
+                  sky: 'border-sky-600 bg-sky-50/70 text-sky-900 ring-2 ring-sky-500/20',
+                  purple: 'border-purple-600 bg-purple-50/70 text-purple-900 ring-2 ring-purple-500/20',
+                  emerald: 'border-emerald-600 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500/20',
+                  rose: 'border-rose-600 bg-rose-50/70 text-rose-900 ring-2 ring-rose-500/20',
+                  orange: 'border-orange-600 bg-orange-50/70 text-orange-900 ring-2 ring-orange-500/20',
+                  teal: 'border-teal-600 bg-teal-50/70 text-teal-900 ring-2 ring-teal-500/20',
+                  pink: 'border-pink-600 bg-pink-50/70 text-pink-900 ring-2 ring-pink-500/20'
+                }[segment.color];
+
+                return (
+                  <button
+                    key={segment.key}
+                    onClick={() => setActiveBlockFilter(segment.key)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11.5px] font-bold transition-all shadow-xs cursor-pointer ${isActive
+                      ? activeColorClasses
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900'
+                      }`}
+                  >
+                    <span className={`material-symbols-outlined text-[15px] ${isActive ? 'text-current' : 'text-slate-400'}`}>
+                      {segment.icon}
+                    </span>
+                    <span>{segment.label}</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-current/10 font-extrabold' : 'bg-slate-100 text-slate-500'}`}>
+                      {stats.count} ({stats.pct}%)
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Consolidated Filters Toolbar */}
+            <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
+                {/* Search Bar */}
+                <div className="relative w-full sm:w-64">
+                  <span className="material-symbols-outlined text-[15px] text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 select-none">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name, email, owner..."
+                    className="w-full h-8 pl-8 pr-2.5 border border-slate-250 bg-white rounded-lg text-[11px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
+                  />
+                </div>
+
+                {/* Date Range Selector */}
+                <div className="relative">
+                  <select
+                    value={dateRangeFilter}
+                    onChange={(e) => setDateRangeFilter(e.target.value)}
+                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <option value="all">Date Range: All Time</option>
+                    <option value="today">Created: Today</option>
+                    <option value="7days">Created: Last 7 Days</option>
+                    <option value="30days">Created: Last 30 Days</option>
+                  </select>
+                </div>
+
+                {/* Lead Owner Selector */}
+                <div className="relative">
+                  <select
+                    value={leadOwnerFilter}
+                    onChange={(e) => setLeadOwnerFilter(e.target.value)}
+                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <option value="all">Owner: All</option>
+                    <option value="Sarah Jenkins">Sarah Jenkins</option>
+                    <option value="Marcus Chan">Marcus Chan</option>
+                    <option value="Unassigned">Unassigned</option>
+                  </select>
+                </div>
+
+                {/* Source Selector */}
+                <div className="relative">
+                  <select
+                    value={sourceFilter}
+                    onChange={(e) => setSourceFilter(e.target.value)}
+                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-755 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <option value="all">Source: All</option>
+                    <option value="Website Organic">Website Organic</option>
+                    <option value="Paid Search">Paid Search</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Direct Mail">Direct Mail</option>
+                    <option value="Webinar">Webinar</option>
+                    <option value="Cold Outreach">Cold Outreach</option>
+                    <option value="Quick Add Form">Quick Add Form</option>
+                    <option value="Bulk Offline CSV">Bulk Offline CSV</option>
+                  </select>
+                </div>
+
+                {/* Status Selector */}
+                <div className="relative">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <option value="all">Status: All Active</option>
+                    <option value="NEW">NEW</option>
+                    <option value="CONTACTED">CONTACTED</option>
+                    <option value="QUALIFIED">QUALIFIED</option>
+                    <option value="LOST">LOST</option>
+                  </select>
+                </div>
+
+                {/* Verification Selector */}
+                <div className="relative">
+                  <select
+                    value={verificationFilter}
+                    onChange={(e) => setVerificationFilter(e.target.value)}
+                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <option value="all">Verification: All</option>
+                    <option value="verified">Verified Only</option>
+                    <option value="unverified">Unverified Only</option>
+                  </select>
+                </div>
+
+                {/* Column Customizer Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowColumnDropdown(!showColumnDropdown)}
+                    className="flex items-center gap-1 px-2 h-8 border border-slate-250 bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-705 rounded-lg cursor-pointer select-none transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-slate-400">table_chart</span>
+                    Columns
+                  </button>
+                  <AnimatePresence>
+                    {showColumnDropdown && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setShowColumnDropdown(false)} />
+                        <motion.div
+                          className="absolute left-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-20 text-left font-sans animate-fade-in"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 select-none">Toggle Columns</div>
+                          <div className="space-y-1.5 text-[11.5px] font-semibold text-slate-700">
+                            {Object.keys(visibleColumns).map((col) => (
+                              <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer capitalize">
+                                <input
+                                  type="checkbox"
+                                  checked={visibleColumns[col]}
+                                  onChange={() => setVisibleColumns({
+                                    ...visibleColumns,
+                                    [col]: !visibleColumns[col]
+                                  })}
+                                  className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350 text-primary"
+                                />
+                                {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
+                              </label>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Clear All Option */}
+                {(searchQuery !== '' || filterStatus !== 'all' || dateRangeFilter !== 'all' || leadOwnerFilter !== 'all' || sourceFilter !== 'all' || verificationFilter !== 'all' || activeSavedTab !== 'all' || activeBlockFilter !== 'all') && (
                   <button
                     onClick={() => {
-                      setActiveLeadDetails(lead);
+                      setSearchQuery('')
+                      setFilterStatus('all')
+                      setDateRangeFilter('all')
+                      setLeadOwnerFilter('all')
+                      setSourceFilter('all')
+                      setVerificationFilter('all')
+                      setActiveSavedTab('all')
+                      setActiveBlockFilter('all')
+                      setSortConfig({ key: 'name', direction: 'asc' })
                     }}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-650 border border-amber-150 text-[10px] font-bold transition-all cursor-pointer"
+                    className="text-primary hover:text-primary-dark transition-colors text-[11.5px] font-bold cursor-pointer underline underline-offset-2 decoration-dotted ml-2"
                   >
-                    <span className="material-symbols-outlined text-[12px]">edit</span>
-                    View Details
+                    Clear All
                   </button>
                 )}
               </div>
-            </div>
-          ))}
 
-          {filteredAndSortedLeads.length === 0 && (
-            <div className="py-12 text-center bg-white border border-slate-200 rounded-xl">
-              <span className="material-symbols-outlined text-[32px] text-slate-450 block mb-2">folder_off</span>
-              <p className="text-[12px] font-bold text-slate-800">No Leads Found</p>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination Controls */}
-        <div className="mt-6 flex items-center justify-between text-body-md font-body-md text-on-surface-variant text-[12px] select-none">
-          <span>Showing 1-{filteredAndSortedLeads.length} of {leads.length} leads</span>
-          <div className="flex items-center gap-2">
-            <span>Rows per page</span>
-            <select className="px-2 h-6 border border-outline-variant rounded bg-surface text-[11px] cursor-pointer">
-              <option>50</option>
-              <option>100</option>
-              <option>250</option>
-            </select>
-            <div className="flex items-center gap-1 ml-4">
-              <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-              </button>
-              <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ANIMATED BULK ACTIONS PANEL */}
-        <AnimatePresence>
-          {selectedLeads.length > 0 && (
-            <motion.div
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-5 border border-slate-800 font-sans"
-              initial={{ opacity: 0, y: 80, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 260 }}
-            >
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-white shadow-xs">
-                  {selectedLeads.length}
-                </span>
-                <span className="text-[11.5px] font-semibold text-slate-300">selected</span>
-              </div>
-
-              <div className="h-4 w-px bg-slate-800" />
-
-              {/* Mass Status Option */}
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status:</span>
-                <select
-                  onChange={(e) => handleBulkStatusUpdate(e.target.value)}
-                  defaultValue=""
-                  className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
-                  style={{ color: 'white' }}
+              {/* Actions Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowGlobalActionsDropdown(!showGlobalActionsDropdown)}
+                  className="flex items-center gap-1 px-2.5 h-8 bg-primary hover:bg-primary/95 text-[11px] font-bold text-white rounded-lg shadow-sm cursor-pointer select-none transition-all duration-150"
                 >
-                  <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
-                  <option value="NEW" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>NEW</option>
-                  <option value="CONTACTED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>CONTACTED</option>
-                  <option value="QUALIFIED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>QUALIFIED</option>
-                  <option value="LOST" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>LOST</option>
-                </select>
-              </div>
+                  Actions
+                  <span className="material-symbols-outlined text-[15px] text-white leading-none">expand_more</span>
+                </button>
 
-              {/* Mass Reassign Option */}
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Assign:</span>
-                <select
-                  onChange={(e) => handleBulkAssignUpdate(e.target.value)}
-                  defaultValue=""
-                  className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
-                  style={{ color: 'white' }}
+                <AnimatePresence>
+                  {showGlobalActionsDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setShowGlobalActionsDropdown(false)} />
+                      <motion.div
+                        className="absolute right-0 mt-1.5 w-52 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans"
+                        initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        {/* Group 1: Lead Ingestions */}
+                        <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Ingestions</div>
+                        <button
+                          onClick={() => {
+                            setShowBulkUploadModal(true);
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
+                          Bulk Offline Upload
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowQuickLeadModal(true);
+                            setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic' });
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
+                          Add Quick Lead
+                        </button>
+
+                        <hr className="border-slate-100 my-1" />
+
+                        {/* Group 2: Data Operations */}
+                        <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Data Operations</div>
+                        {/* Download Leads with Format Submenu on Hover */}
+                        <div
+                          className="relative"
+                          onMouseEnter={() => setShowDownloadFormats(true)}
+                          onMouseLeave={() => setShowDownloadFormats(false)}
+                        >
+                          <button
+                            className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
+                              Download Leads
+                            </div>
+                            <span className="material-symbols-outlined text-[14px] text-slate-400">chevron_left</span>
+                          </button>
+
+                          <AnimatePresence>
+                            {showDownloadFormats && (
+                              <motion.div
+                                className="absolute right-full top-0 w-36 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-50 text-left font-sans"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.15 }}
+                              >
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('CSV');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-green-600">table_view</span>
+                                  CSV Format
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('Excel (XLSX)');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-emerald-600">grid_on</span>
+                                  Excel (XLSX)
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('PDF');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-red-600">picture_as_pdf</span>
+                                  PDF Document
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadLeads('JSON');
+                                    setShowGlobalActionsDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-amber-600">code</span>
+                                  JSON Data
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        <button
+                          onClick={() => {
+                            handleChangeLeadStageGlobal();
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">swap_horiz</span>
+                          Change Lead Stage
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              {tableScrollWidth > (tableContainerRef.current?.clientWidth || 0) && (
+                <div
+                  ref={topScrollbarRef}
+                  onScroll={handleTopScroll}
+                  className="w-full overflow-x-auto overflow-y-hidden h-2 mb-1.5 top-scrollbar"
+                  style={{ scrollbarWidth: 'thin' }}
                 >
-                  <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Assign to...</option>
-                  <option value="Sarah Jenkins" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Sarah Jenkins</option>
-                  <option value="Marcus Chan" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Marcus Chan</option>
-                  <option value="Unassigned" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Unassigned</option>
-                </select>
-              </div>
+                  <div style={{ width: `${tableScrollWidth}px`, height: '1px' }} />
+                </div>
+              )}
 
-              <div className="h-4 w-px bg-slate-800" />
-
-              {/* Delete Option */}
-              <button
-                onClick={handleBulkDelete}
-                className="text-[11px] text-red-400 hover:text-red-300 hover:underline font-bold cursor-pointer transition-colors flex items-center gap-0.5"
+              <motion.div
+                ref={tableContainerRef}
+                onScroll={handleTableScroll}
+                className="w-full max-h-[600px] overflow-y-auto overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm relative z-0"
               >
-                <span className="material-symbols-outlined text-[15px]">delete</span>
-                Delete
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      )}
+                <table className="w-full relative border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 select-none sticky top-0 z-10">
+                      <th className="px-3 py-3 text-left w-10 bg-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.length === filteredAndSortedLeads.length && filteredAndSortedLeads.length > 0}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350"
+                        />
+                      </th>
+                      <th className="px-3 py-3 text-center text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50">Action</th>
+                      {visibleColumns.name && (
+                        <th
+                          onClick={() => requestSort('name')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Name & Email
+                            {renderSortIndicator('name')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.phone && (
+                        <th
+                          onClick={() => requestSort('phone')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Phone
+                            {renderSortIndicator('phone')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.score && (
+                        <th
+                          onClick={() => requestSort('score')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Lead Score
+                            {renderSortIndicator('score')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.status && (
+                        <th
+                          onClick={() => requestSort('status')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Status
+                            {renderSortIndicator('status')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.assignedTo && (
+                        <th
+                          onClick={() => requestSort('assignedTo')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Assigned To
+                            {renderSortIndicator('assignedTo')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.source && (
+                        <th
+                          onClick={() => requestSort('source')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Source
+                            {renderSortIndicator('source')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.verified && (
+                        <th
+                          onClick={() => requestSort('verified')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Verification
+                            {renderSortIndicator('verified')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.lastContacted && (
+                        <th
+                          onClick={() => requestSort('lastContacted')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Last Contacted
+                            {renderSortIndicator('lastContacted')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.nextFollowUp && (
+                        <th
+                          onClick={() => requestSort('nextFollowUp')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Next Follow-Up
+                            {renderSortIndicator('nextFollowUp')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.age && (
+                        <th
+                          onClick={() => requestSort('age')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Age
+                            {renderSortIndicator('age')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.priority && (
+                        <th
+                          onClick={() => requestSort('priority')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Priority
+                            {renderSortIndicator('priority')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.tags && (
+                        <th
+                          onClick={() => requestSort('tags')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Tags
+                            {renderSortIndicator('tags')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.activityCount && (
+                        <th
+                          onClick={() => requestSort('activityCount')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Act. Count
+                            {renderSortIndicator('activityCount')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.conversionProb && (
+                        <th
+                          onClick={() => requestSort('conversionProb')}
+                          className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Conv. %
+                            {renderSortIndicator('conversionProb')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.location && (
+                        <th
+                          onClick={() => requestSort('location')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11.5px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Location
+                            {renderSortIndicator('location')}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.campaign && (
+                        <th
+                          onClick={() => requestSort('campaign')}
+                          className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11.5px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                        >
+                          <div className="flex items-center">
+                            Campaign
+                            {renderSortIndicator('campaign')}
+                          </div>
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAndSortedLeads.map((lead, index) => (
+                      <motion.tr
+                        key={lead.id}
+                        className={`border-b border-slate-200 hover:bg-slate-50/70 transition-colors ${role === 'admin' ? 'cursor-pointer' : ''}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.04 }}
+                        onClick={() => {
+                          if (role === 'admin') {
+                            setActiveLeadDetails(lead)
+                            setHoveredLeadId(null)
+                          }
+                        }}
+                        onMouseEnter={() => setHoveredLeadId(lead.id)}
+                        onMouseLeave={() => setHoveredLeadId(null)}
+                        onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
+                      >
+                        <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedLeads.includes(lead.id)}
+                            onChange={() => toggleSelectLead(lead.id)}
+                            className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-300"
+                          />
+                        </td>
+                        <td className="px-3 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center min-h-[28px]">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (activeDropdownLeadId === lead.id) {
+                                  setActiveDropdownLeadId(null);
+                                } else {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const spaceBelow = window.innerHeight - rect.bottom;
+                                  const flipUp = spaceBelow < 280;
+                                  setDropdownFlipUp(flipUp);
+                                  setDropdownPos({
+                                    x: rect.left,
+                                    y: flipUp ? rect.top : rect.bottom
+                                  });
+                                  setActiveDropdownLeadId(lead.id);
+                                }
+                                setShowReassignSubId(null);
+                              }}
+                              className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 text-slate-500'
+                                }`}
+                            >
+                              <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
+                            </button>
+                          </div>
 
-      {activeLeadDetails && role === 'admin' && (
-        <LeadDetailsDrawer
-          activeLeadDetails={activeLeadDetails}
-          setActiveLeadDetails={setActiveLeadDetails}
-          triggerToast={triggerToast}
-          playingRecording={playingRecording}
-          setPlayingRecording={setPlayingRecording}
-          audioPlaying={audioPlaying}
-          setAudioPlaying={setAudioPlaying}
-          playbackSpeed={playbackSpeed}
-          setPlaybackSpeed={setPlaybackSpeed}
-          playbackProgress={playbackProgress}
-          setPlaybackProgress={setPlaybackProgress}
-          mergeSelectedProps={mergeSelectedProps}
-          handlePropSelection={handlePropSelection}
-          handleMergeProfiles={handleMergeProfiles}
-          handleLeadStatusChange={handleLeadStatusChange}
-          handleLeadCounselorChange={handleLeadCounselorChange}
-          handleLeadScoreChange={handleLeadScoreChange}
-          editingScore={editingScore}
-          setEditingScore={setEditingScore}
-          newComment={newComment}
-          setNewComment={setNewComment}
-          interactionType={interactionType}
-          setInteractionType={setInteractionType}
-          handleLogInteraction={handleLogInteraction}
-          handleTogglePinEvent={handleTogglePinEvent}
-          handleSendQueryResponse={handleSendQueryResponse}
-          timelineFilter={timelineFilter}
-          setTimelineFilter={setTimelineFilter}
-          timelineSearchQuery={timelineSearchQuery}
-          setTimelineSearchQuery={setTimelineSearchQuery}
-          filteredTimeline={filteredTimeline}
-          detailsActiveTab={detailsActiveTab}
-          setDetailsActiveTab={setDetailsActiveTab}
-          getInitials={getInitials}
-          getStatusColor={getStatusColor}
-          getDuplicateRecord={getDuplicateRecord}
-          setShowEmailModal={setShowEmailModal}
-        />
-      )}
+                          <AnimatePresence>
+                            {activeDropdownLeadId === lead.id && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-30 cursor-default"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDropdownLeadId(null);
+                                    setShowReassignSubId(null);
+                                  }}
+                                />
+
+                                {(() => {
+                                  const showUpwards = dropdownFlipUp;
+                                  return (
+                                    <motion.div
+                                      style={{
+                                        position: 'fixed',
+                                        left: `${dropdownPos.x}px`,
+                                        ...(showUpwards
+                                          ? { bottom: `${window.innerHeight - dropdownPos.y}px`, top: 'auto' }
+                                          : { top: `${dropdownPos.y + 4}px`, bottom: 'auto' }
+                                        )
+                                      }}
+                                      className="w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-[9999] text-left font-sans"
+                                      initial={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
+                                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
+                                      transition={{ duration: 0.15 }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {role === 'admin' && (
+                                        <button
+                                          onClick={() => {
+                                            navigate(`/admin/leads/${lead.id}`);
+                                            setActiveDropdownLeadId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                        >
+                                          <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
+                                          View/Edit Details
+                                        </button>
+                                      )}
+
+                                      <button
+                                        onClick={() => {
+                                          handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
+                                          triggerToast('Voice call simulator initialized!');
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">call</span>
+                                        Call Lead
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveLeadDetails(lead);
+                                          setShowEmailModal(true);
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
+                                        Send Email
+                                      </button>
+
+                                      <div className="h-px bg-slate-100 my-1" />
+
+                                      <div className="relative">
+                                        <button
+                                          onClick={() => {
+                                            setShowReassignSubId(showReassignSubId === lead.id ? null : lead.id);
+                                          }}
+                                          className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                          <div className="flex items-center gap-2.5">
+                                            <span className="material-symbols-outlined text-[16px] text-indigo-500 font-medium">supervisor_account</span>
+                                            Re-assign Lead
+                                          </div>
+                                          <span className="material-symbols-outlined text-[14px]">
+                                            {showReassignSubId === lead.id ? 'expand_less' : 'chevron_right'}
+                                          </span>
+                                        </button>
+
+                                        <AnimatePresence>
+                                          {showReassignSubId === lead.id && (
+                                            <motion.div
+                                              className="mt-1 mb-1 mx-1.5 p-1 bg-slate-50 border border-slate-100 rounded-lg space-y-0.5"
+                                              initial={{ opacity: 0, height: 0 }}
+                                              animate={{ opacity: 1, height: 'auto' }}
+                                              exit={{ opacity: 0, height: 0 }}
+                                              transition={{ duration: 0.15 }}
+                                            >
+                                              {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => {
+                                                const counselorLeads = leads.filter(l => l.assignedTo === counselor);
+                                                const count = counselorLeads.length;
+                                                const isCurrentlyAssigned = lead.assignedTo === counselor;
+
+                                                return (
+                                                  <div key={counselor} className="relative group">
+                                                    <button
+                                                      onClick={() => {
+                                                        handleLeadCounselorChangeDirect(lead.id, counselor);
+                                                        setActiveDropdownLeadId(null);
+                                                        setShowReassignSubId(null);
+                                                      }}
+                                                      className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-left ${isCurrentlyAssigned
+                                                        ? 'bg-blue-50 text-blue-700'
+                                                        : 'text-slate-650 hover:bg-white hover:text-blue-600'
+                                                        }`}
+                                                    >
+                                                      <div className="flex items-center gap-1.5">
+                                                        <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-bold text-slate-600 shrink-0">
+                                                          {counselor === 'Unassigned' ? '—' : counselor.split(' ').map(p => p[0]).join('')}
+                                                        </div>
+                                                        <span className='text-[12px]'>{counselor}</span>
+                                                      </div>
+                                                      <div className="flex items-center gap-1.5">
+                                                        {counselor !== 'Unassigned' && (
+                                                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isCurrentlyAssigned ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                                            }`}>
+                                                            {count}
+                                                          </span>
+                                                        )}
+                                                        {isCurrentlyAssigned && (
+                                                          <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
+                                                        )}
+                                                      </div>
+                                                    </button>
+
+                                                    {counselor !== 'Unassigned' && (
+                                                      <div className="absolute right-full top-0 mr-2 z-[9999] hidden group-hover:block pointer-events-none">
+                                                        <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-left font-sans">
+                                                          <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-slate-100">
+                                                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700 shrink-0">
+                                                              {counselor.split(' ').map(p => p[0]).join('')}
+                                                            </div>
+                                                            <div>
+                                                              <p className="text-[11px] font-bold text-slate-800 leading-tight">{counselor}</p>
+                                                              <p className="text-[9px] text-slate-400 font-medium">{count} active lead{count !== 1 ? 's' : ''}</p>
+                                                            </div>
+                                                          </div>
+
+                                                          {counselorLeads.length > 0 ? (
+                                                            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                                              {counselorLeads.map(l => {
+                                                                const statusColors = {
+                                                                  NEW: 'bg-blue-50 text-blue-700',
+                                                                  CONTACTED: 'bg-orange-50 text-orange-700',
+                                                                  QUALIFIED: 'bg-green-50 text-green-700',
+                                                                  LOST: 'bg-red-50 text-red-705'
+                                                                };
+                                                                return (
+                                                                  <div key={l.id} className="flex items-center justify-between gap-2">
+                                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                                      <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
+                                                                        {l.name.split(' ').map(p => p[0]).join('').slice(0, 2)}
+                                                                      </div>
+                                                                      <span className="text-[10.5px] text-slate-700 font-medium truncate">{l.name}</span>
+                                                                    </div>
+                                                                    <span className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusColors[l.status] || 'bg-slate-50 text-slate-600'}`}>
+                                                                      {l.status}
+                                                                    </span>
+                                                                  </div>
+                                                                );
+                                                              })}
+                                                            </div>
+                                                          ) : (
+                                                            <p className="text-[10px] text-slate-400 italic text-center py-1">No leads assigned</p>
+                                                          )}
+
+                                                          {counselorLeads.length > 0 && (
+                                                            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                                                              <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Avg. Score</span>
+                                                              <span className="text-[10px] font-bold text-slate-700 font-mono">
+                                                                {Math.round(counselorLeads.reduce((s, l) => s + l.score, 0) / counselorLeads.length)}
+                                                              </span>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })}
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveLeadDetails(lead);
+                                          setDetailsActiveTab('timeline');
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">history</span>
+                                        View Activity
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveLeadDetails(lead);
+                                          setDetailsActiveTab('overview');
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-teal-500 font-medium">assignment</span>
+                                        View Application
+                                      </button>
+                                    </motion.div>
+                                  );
+                                })()}
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </td>
+                        {visibleColumns.name && (
+                          <td className="px-3 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-extrabold shrink-0 select-none">
+                                {getInitials(lead.name)}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[12px] font-extrabold text-slate-800 hover:underline truncate">
+                                  {lead.name}
+                                </span>
+                                <span className="text-[10px] text-slate-450 truncate">
+                                  {isMasked ? maskEmail(lead.email) : lead.email}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.phone && (
+                          <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
+                        )}
+                        {visibleColumns.score && (
+                          <td className="px-3 py-4">
+                            <div className="flex items-center gap-2 w-28">
+                              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className={`h-1.5 rounded-full ${lead.score >= 76 ? 'bg-emerald-500' : lead.score >= 41 ? 'bg-amber-500' : 'bg-rose-500'
+                                    }`}
+                                  style={{ width: `${lead.score}%` }}
+                                />
+                              </div>
+                              <span className="text-[11px] font-extrabold text-slate-700 font-mono">
+                                {lead.score}
+                              </span>
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.status && (
+                          <td className="px-3 py-4">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
+                              {lead.status}
+                            </span>
+                          </td>
+                        )}
+                        {visibleColumns.assignedTo && (
+                          <td className="px-3 py-4 text-slate-700 text-[12px] font-semibold">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] text-primary font-bold">
+                                {lead.assignedTo === 'Unassigned' ? '—' : lead.assignedTo.charAt(0)}
+                              </div>
+                              <span>{lead.assignedTo}</span>
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.source && (
+                          <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.source}</td>
+                        )}
+                        {visibleColumns.verified && (
+                          <td className="px-3 py-4">
+                            {lead.verified ? (
+                              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold bg-green-50 text-green-700 border border-green-200/50 select-none">
+                                <span className="material-symbols-outlined text-[10px] font-bold text-green-600">check_circle</span>
+                                Verified
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200/50 select-none">
+                                <span className="material-symbols-outlined text-[10px] font-bold text-rose-600">cancel</span>
+                                Unverified
+                              </span>
+                            )}
+                          </td>
+                        )}
+                        {visibleColumns.lastContacted && (
+                          <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.lastContacted}</td>
+                        )}
+                        {visibleColumns.nextFollowUp && (
+                          <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.nextFollowUp}</td>
+                        )}
+                        {visibleColumns.age && (
+                          <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-mono">{lead.age}</td>
+                        )}
+                        {visibleColumns.priority && (
+                          <td className="px-3 py-4">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-extrabold border ${lead.priority === 'High' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                              lead.priority === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                'bg-slate-50 text-slate-600 border-slate-200'
+                              }`}>
+                              {lead.priority}
+                            </span>
+                          </td>
+                        )}
+                        {visibleColumns.tags && (
+                          <td className="px-3 py-4">
+                            <div className="flex flex-wrap gap-1">
+                              {lead.tags && lead.tags.map((tag, i) => (
+                                <span key={i} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold border border-slate-200">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.activityCount && (
+                          <td className="px-3 py-4 text-[12px] text-slate-600 font-mono text-center font-bold">
+                            {lead.activityCount || lead.timeline?.length || 0}
+                          </td>
+                        )}
+                        {visibleColumns.conversionProb && (
+                          <td className="px-3 py-4 text-[12px] text-slate-600 font-mono text-center font-bold">
+                            {lead.conversionProb}%
+                          </td>
+                        )}
+                        {visibleColumns.location && (
+                          <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.location || '--'}</td>
+                        )}
+                        {visibleColumns.campaign && (
+                          <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.campaign || '--'}</td>
+                        )}
+                        <td className="px-3 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center min-h-[28px]">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (activeDropdownLeadId === lead.id) {
+                                  setActiveDropdownLeadId(null);
+                                } else {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const spaceBelow = window.innerHeight - rect.bottom;
+                                  const flipUp = spaceBelow < 280;
+                                  setDropdownFlipUp(flipUp);
+                                  setDropdownPos({
+                                    x: rect.right,
+                                    y: flipUp ? rect.top : rect.bottom
+                                  });
+                                  setActiveDropdownLeadId(lead.id);
+                                }
+                                setShowReassignSubId(null);
+                              }}
+                              className={`p-1 rounded transition-all cursor-pointer ${activeDropdownLeadId === lead.id ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 text-slate-500'
+                                }`}
+                            >
+                              <span className="material-symbols-outlined text-[18px] font-semibold leading-none align-middle">more_vert</span>
+                            </button>
+                          </div>
+
+                          <AnimatePresence>
+                            {activeDropdownLeadId === lead.id && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-30 cursor-default"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDropdownLeadId(null);
+                                    setShowReassignSubId(null);
+                                  }}
+                                />
+
+                                {(() => {
+                                  const showUpwards = dropdownFlipUp;
+                                  return (
+                                    <motion.div
+                                      style={{
+                                        position: 'fixed',
+                                        right: `${window.innerWidth - dropdownPos.x}px`,
+                                        ...(showUpwards
+                                          ? { bottom: `${window.innerHeight - dropdownPos.y}px`, top: 'auto' }
+                                          : { top: `${dropdownPos.y + 4}px`, bottom: 'auto' }
+                                        )
+                                      }}
+                                      className="w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-[9999] text-left font-sans"
+                                      initial={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
+                                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.95, y: showUpwards ? 5 : -5 }}
+                                      transition={{ duration: 0.15 }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {role === 'admin' && (
+                                        <button
+                                          onClick={() => {
+                                            setActiveLeadDetails(lead);
+                                            setActiveDropdownLeadId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                        >
+                                          <span className="material-symbols-outlined text-[16px] text-amber-500 font-medium">edit</span>
+                                          View/Edit Details
+                                        </button>
+                                      )}
+
+                                      <button
+                                        onClick={() => {
+                                          handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
+                                          triggerToast('Voice call simulator initialized!');
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">call</span>
+                                        Call Lead
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveLeadDetails(lead);
+                                          setShowEmailModal(true);
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
+                                        Send Email
+                                      </button>
+
+                                      <div className="h-px bg-slate-100 my-1" />
+
+                                      <div className="relative">
+                                        <button
+                                          onClick={() => {
+                                            setShowReassignSubId(showReassignSubId === lead.id ? null : lead.id);
+                                          }}
+                                          className={`w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors cursor-pointer text-left ${showReassignSubId === lead.id ? 'bg-blue-50/80 text-blue-700' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                          <div className="flex items-center gap-2.5">
+                                            <span className="material-symbols-outlined text-[16px] text-indigo-500 font-medium">supervisor_account</span>
+                                            Re-assign Lead
+                                          </div>
+                                          <span className="material-symbols-outlined text-[14px]">
+                                            {showReassignSubId === lead.id ? 'expand_less' : 'chevron_right'}
+                                          </span>
+                                        </button>
+
+                                        <AnimatePresence>
+                                          {showReassignSubId === lead.id && (
+                                            <motion.div
+                                              className="mt-1 mb-1 mx-1.5 p-1 bg-slate-50 border border-slate-100 rounded-lg space-y-0.5"
+                                              initial={{ opacity: 0, height: 0 }}
+                                              animate={{ opacity: 1, height: 'auto' }}
+                                              exit={{ opacity: 0, height: 0 }}
+                                              transition={{ duration: 0.15 }}
+                                            >
+                                              {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => {
+                                                const counselorLeads = leads.filter(l => l.assignedTo === counselor);
+                                                const count = counselorLeads.length;
+                                                const isCurrentlyAssigned = lead.assignedTo === counselor;
+
+                                                return (
+                                                  <div key={counselor} className="relative group">
+                                                    <button
+                                                      onClick={() => {
+                                                        handleLeadCounselorChangeDirect(lead.id, counselor);
+                                                        setActiveDropdownLeadId(null);
+                                                        setShowReassignSubId(null);
+                                                      }}
+                                                      className={`w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer text-left ${isCurrentlyAssigned
+                                                        ? 'bg-blue-50 text-blue-700'
+                                                        : 'text-slate-650 hover:bg-white hover:text-blue-600'
+                                                        }`}
+                                                    >
+                                                      <div className="flex items-center gap-1.5">
+                                                        <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-bold text-slate-600 shrink-0">
+                                                          {counselor === 'Unassigned' ? '—' : counselor.split(' ').map(p => p[0]).join('')}
+                                                        </div>
+                                                        <span className='text-[12px]'>{counselor}</span>
+                                                      </div>
+                                                      <div className="flex items-center gap-1.5">
+                                                        {counselor !== 'Unassigned' && (
+                                                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isCurrentlyAssigned ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                                            }`}>
+                                                            {count}
+                                                          </span>
+                                                        )}
+                                                        {isCurrentlyAssigned && (
+                                                          <span className="material-symbols-outlined text-[12px] text-blue-600 font-bold">check</span>
+                                                        )}
+                                                      </div>
+                                                    </button>
+
+                                                    {counselor !== 'Unassigned' && (
+                                                      <div className="absolute right-full top-0 mr-2 z-[9999] hidden group-hover:block pointer-events-none">
+                                                        <div className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 text-left font-sans">
+                                                          <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-slate-100">
+                                                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700 shrink-0">
+                                                              {counselor.split(' ').map(p => p[0]).join('')}
+                                                            </div>
+                                                            <div>
+                                                              <p className="text-[11px] font-bold text-slate-800 leading-tight">{counselor}</p>
+                                                              <p className="text-[9px] text-slate-400 font-medium">{count} active lead{count !== 1 ? 's' : ''}</p>
+                                                            </div>
+                                                          </div>
+
+                                                          {counselorLeads.length > 0 ? (
+                                                            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                                              {counselorLeads.map(l => {
+                                                                const statusColors = {
+                                                                  NEW: 'bg-blue-50 text-blue-700',
+                                                                  CONTACTED: 'bg-orange-50 text-orange-700',
+                                                                  QUALIFIED: 'bg-green-50 text-green-700',
+                                                                  LOST: 'bg-red-50 text-red-700'
+                                                                };
+                                                                return (
+                                                                  <div key={l.id} className="flex items-center justify-between gap-2">
+                                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                                      <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
+                                                                        {l.name.split(' ').map(p => p[0]).join('').slice(0, 2)}
+                                                                      </div>
+                                                                      <span className="text-[10.5px] text-slate-700 font-medium truncate">{l.name}</span>
+                                                                    </div>
+                                                                    <span className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusColors[l.status] || 'bg-slate-50 text-slate-600'}`}>
+                                                                      {l.status}
+                                                                    </span>
+                                                                  </div>
+                                                                );
+                                                              })}
+                                                            </div>
+                                                          ) : (
+                                                            <p className="text-[10px] text-slate-400 italic text-center py-1">No leads assigned</p>
+                                                          )}
+
+                                                          {counselorLeads.length > 0 && (
+                                                            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                                                              <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Avg. Score</span>
+                                                              <span className="text-[10px] font-bold text-slate-700 font-mono">
+                                                                {Math.round(counselorLeads.reduce((s, l) => s + l.score, 0) / counselorLeads.length)}
+                                                              </span>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })}
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveLeadDetails(lead);
+                                          setDetailsActiveTab('timeline');
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">history</span>
+                                        View Activity
+                                      </button>
+
+                                      <button
+                                        onClick={() => {
+                                          setActiveLeadDetails(lead);
+                                          setDetailsActiveTab('overview');
+                                          setActiveDropdownLeadId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
+                                      >
+                                        <span className="material-symbols-outlined text-[16px] text-teal-500 font-medium">assignment</span>
+                                        View Application
+                                      </button>
+                                    </motion.div>
+                                  );
+                                })()}
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </td>
+                      </motion.tr>
+                    ))}
+                    {filteredAndSortedLeads.length === 0 && (
+                      <tr>
+                        <td colSpan={Object.values(visibleColumns).filter(Boolean).length + 2} className="py-16 text-center">
+                          <div className="max-w-md mx-auto flex flex-col items-center justify-center space-y-4">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shadow-inner">
+                              <span className="material-symbols-outlined text-[32px]">folder_off</span>
+                            </div>
+                            <div>
+                              <h3 className="text-[14px] font-bold text-slate-800">No Leads Found</h3>
+                              <p className="text-[11px] text-slate-500 mt-1 max-w-xs leading-normal">
+                                We couldn't find any lead matching your search query or active filter settings in this workspace.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSearchQuery('')
+                                setFilterStatus('all')
+                                setActiveSavedTab('all')
+                                setActiveBlockFilter('all')
+                                setSortConfig({ key: 'name', direction: 'asc' })
+                              }}
+                              className="h-8 px-4 bg-primary hover:bg-primary/95 text-white font-bold text-[11.5px] rounded-lg shadow-sm cursor-pointer select-none"
+                            >
+                              Reset Search Filters
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </motion.div>
+            </div>
+
+            {/* Mobile Card Stack View */}
+            <div className="block md:hidden space-y-4">
+              {filteredAndSortedLeads.map((lead) => (
+                <div
+                  key={lead.id}
+                  onClick={() => {
+                    if (role === 'admin') {
+                      setActiveLeadDetails(lead)
+                    }
+                  }}
+                  className={`bg-white border border-slate-200 rounded-xl p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${role === 'admin' ? 'cursor-pointer' : ''}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-extrabold shrink-0">
+                        {getInitials(lead.name)}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[12.5px] font-extrabold text-slate-800 truncate">
+                          {lead.name}
+                        </span>
+                        <span className="text-[10px] text-slate-450 truncate">
+                          {isMasked ? maskEmail(lead.email) : lead.email}
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
+                      {lead.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-[11px] border-t border-slate-100 pt-3 text-slate-600 font-medium">
+                    <div>
+                      <span className="text-slate-400 block text-[9.5px]">Phone</span>
+                      <span className="font-semibold text-slate-700">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9.5px]">Score</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="w-12 bg-slate-100 rounded-full h-1 overflow-hidden">
+                          <div
+                            className={`h-1 rounded-full ${lead.score >= 76 ? 'bg-emerald-500' : lead.score >= 41 ? 'bg-amber-500' : 'bg-rose-500'
+                              }`}
+                            style={{ width: `${lead.score}%` }}
+                          />
+                        </div>
+                        <span className="font-bold text-slate-700 font-mono">{lead.score}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9.5px]">Assigned Counselor</span>
+                      <span className="font-semibold text-slate-700">{lead.assignedTo}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9.5px]">Lead Source</span>
+                      <span className="font-semibold text-slate-700">{lead.source}</span>
+                    </div>
+                  </div>
+
+                  {/* Mobile Row Hover Actions equivalent */}
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-2.5" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => {
+                        handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
+                        triggerToast('Voice call simulator initialized!');
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-150 text-[10px] font-bold transition-all cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">call</span>
+                      Call
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveLeadDetails(lead);
+                        setShowEmailModal(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-150 text-[10px] font-bold transition-all cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">mail</span>
+                      Email
+                    </button>
+                    {role === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setActiveLeadDetails(lead);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-650 border border-amber-150 text-[10px] font-bold transition-all cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">edit</span>
+                        View Details
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {filteredAndSortedLeads.length === 0 && (
+                <div className="py-12 text-center bg-white border border-slate-200 rounded-xl">
+                  <span className="material-symbols-outlined text-[32px] text-slate-450 block mb-2">folder_off</span>
+                  <p className="text-[12px] font-bold text-slate-800">No Leads Found</p>
+                </div>
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="mt-6 flex items-center justify-between text-body-md font-body-md text-on-surface-variant text-[12px] select-none">
+              <span>Showing 1-{filteredAndSortedLeads.length} of {leads.length} leads</span>
+              <div className="flex items-center gap-2">
+                <span>Rows per page</span>
+                <select className="px-2 h-6 border border-outline-variant rounded bg-surface text-[11px] cursor-pointer">
+                  <option>50</option>
+                  <option>100</option>
+                  <option>250</option>
+                </select>
+                <div className="flex items-center gap-1 ml-4">
+                  <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
+                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                  </button>
+                  <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
+                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ANIMATED BULK ACTIONS PANEL */}
+            <AnimatePresence>
+              {selectedLeads.length > 0 && (
+                <motion.div
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-5 border border-slate-800 font-sans"
+                  initial={{ opacity: 0, y: 80, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 40, scale: 0.95 }}
+                  transition={{ type: 'spring', damping: 22, stiffness: 260 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-white shadow-xs">
+                      {selectedLeads.length}
+                    </span>
+                    <span className="text-[11.5px] font-semibold text-slate-300">selected</span>
+                  </div>
+
+                  <div className="h-4 w-px bg-slate-800" />
+
+                  {/* Mass Status Option */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status:</span>
+                    <select
+                      onChange={(e) => handleBulkStatusUpdate(e.target.value)}
+                      defaultValue=""
+                      className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                      style={{ color: 'white' }}
+                    >
+                      <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
+                      <option value="NEW" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>NEW</option>
+                      <option value="CONTACTED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>CONTACTED</option>
+                      <option value="QUALIFIED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>QUALIFIED</option>
+                      <option value="LOST" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>LOST</option>
+                    </select>
+                  </div>
+
+                  {/* Mass Reassign Option */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Assign:</span>
+                    <select
+                      onChange={(e) => handleBulkAssignUpdate(e.target.value)}
+                      defaultValue=""
+                      className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                      style={{ color: 'white' }}
+                    >
+                      <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Assign to...</option>
+                      <option value="Sarah Jenkins" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Sarah Jenkins</option>
+                      <option value="Marcus Chan" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Marcus Chan</option>
+                      <option value="Unassigned" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Unassigned</option>
+                    </select>
+                  </div>
+
+                  <div className="h-4 w-px bg-slate-800" />
+
+                  {/* Delete Option */}
+                  <button
+                    onClick={handleBulkDelete}
+                    className="text-[11px] text-red-400 hover:text-red-300 hover:underline font-bold cursor-pointer transition-colors flex items-center gap-0.5"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">delete</span>
+                    Delete
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {activeLeadDetails && role === 'admin' && (
+          <LeadDetailsDrawer
+            activeLeadDetails={activeLeadDetails}
+            setActiveLeadDetails={setActiveLeadDetails}
+            triggerToast={triggerToast}
+            playingRecording={playingRecording}
+            setPlayingRecording={setPlayingRecording}
+            audioPlaying={audioPlaying}
+            setAudioPlaying={setAudioPlaying}
+            playbackSpeed={playbackSpeed}
+            setPlaybackSpeed={setPlaybackSpeed}
+            playbackProgress={playbackProgress}
+            setPlaybackProgress={setPlaybackProgress}
+            mergeSelectedProps={mergeSelectedProps}
+            handlePropSelection={handlePropSelection}
+            handleMergeProfiles={handleMergeProfiles}
+            handleLeadStatusChange={handleLeadStatusChange}
+            handleLeadCounselorChange={handleLeadCounselorChange}
+            handleLeadScoreChange={handleLeadScoreChange}
+            editingScore={editingScore}
+            setEditingScore={setEditingScore}
+            newComment={newComment}
+            setNewComment={setNewComment}
+            interactionType={interactionType}
+            setInteractionType={setInteractionType}
+            handleLogInteraction={handleLogInteraction}
+            handleTogglePinEvent={handleTogglePinEvent}
+            handleSendQueryResponse={handleSendQueryResponse}
+            timelineFilter={timelineFilter}
+            setTimelineFilter={setTimelineFilter}
+            timelineSearchQuery={timelineSearchQuery}
+            setTimelineSearchQuery={setTimelineSearchQuery}
+            filteredTimeline={filteredTimeline}
+            detailsActiveTab={detailsActiveTab}
+            setDetailsActiveTab={setDetailsActiveTab}
+            getInitials={getInitials}
+            getStatusColor={getStatusColor}
+            getDuplicateRecord={getDuplicateRecord}
+            setShowEmailModal={setShowEmailModal}
+          />
+        )}
 
         {/* VIEW APPLICATION MODAL */}
         <AnimatePresence>
@@ -3689,6 +3690,7 @@ export default function AllLeadsPage() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
     </div>
   )
 }

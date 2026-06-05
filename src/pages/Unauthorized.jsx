@@ -11,7 +11,7 @@ export default function Unauthorized() {
     } else if (role === 'counselor') {
       navigate('/counselor/overview')
     } else if (role === 'vendor') {
-      navigate('/vendor/portal')
+      navigate('/vendor/dashboard')
     } else {
       navigate('/')
     }
