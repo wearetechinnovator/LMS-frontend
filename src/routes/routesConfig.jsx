@@ -40,7 +40,7 @@ const adminNavItems = [
   { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/admin/departments' },
   { id: 'teams', label: 'Teams', icon: 'group', path: '/admin/teams' },
   { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/admin/audit-logs' },
-  { id: 'roles', label: 'Role Management', icon: 'perm_identity', path: '/admin/roles' },
+  { id: 'roles', label: 'Roles', icon: 'perm_identity', path: '/admin/roles' },
   { id: 'form-embed', label: 'Form Embed', icon: 'integration_instructions', path: '/admin/form-embed' },
 ]
 
