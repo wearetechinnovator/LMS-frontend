@@ -29,8 +29,8 @@ const VendorLmsSettingsPage = React.lazy(() => import('../pages/Vendor/settings/
 
 const AdminFormEmbed = React.lazy(() => import('../pages/Admin/form/FormEmbed'))
 
-const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/analytics/Analytics'))
-const CounselorAnalyticsPage = React.lazy(() => import('../pages/Counselor/analytics/Analytics'))
+const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/analysis/Analysis'))
+const CounselorAnalyticsPage = React.lazy(() => import('../pages/Counselor/analysis/Analysis'))
 
 const adminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/admin/dashboard' },

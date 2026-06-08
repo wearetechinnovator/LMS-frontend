@@ -343,6 +343,10 @@ export default function LeadDetailsDrawer({
                       <span className="text-slate-400 font-medium block text-[9px] uppercase tracking-wider">Next Follow-Up</span>
                       <span className="text-slate-800 font-bold">{activeLeadDetails.nextFollowUp}</span>
                     </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block text-[9px] uppercase tracking-wider">Lead Query</span>
+                      <span className="text-slate-800 font-bold truncate block" title={activeLeadDetails.query || '--'}>{activeLeadDetails.query || '--'}</span>
+                    </div>
                     <div className="col-span-2">
                       <span className="text-slate-400 font-medium block text-[9px] uppercase tracking-wider mb-1">Tags</span>
                       <div className="flex flex-wrap gap-1.5">
@@ -710,7 +714,8 @@ export default function LeadDetailsDrawer({
                             { key: 'assignedTo', label: 'Counselor', icon: 'person_add' },
                             { key: 'source', label: 'Source', icon: 'source' },
                             { key: 'location', label: 'Location', icon: 'location_on' },
-                            { key: 'campaign', label: 'Campaign', icon: 'sell' }
+                            { key: 'campaign', label: 'Campaign', icon: 'sell' },
+                            { key: 'query', label: 'Query', icon: 'question_mark' }
                           ].map(({ key, label, icon }) => {
                             const valPrimary = activeLeadDetails[key]
                             const valDuplicate = dupe[key]

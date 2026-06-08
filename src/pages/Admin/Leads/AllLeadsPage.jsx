@@ -64,6 +64,7 @@ export default function AllLeadsPage() {
   const [leadOwnerFilter, setLeadOwnerFilter] = useState('all')
   const [sourceFilter, setSourceFilter] = useState('all')
   const [verificationFilter, setVerificationFilter] = useState('all')
+  const [queryFilter, setQueryFilter] = useState('all')
   const [detailsActiveTab, setDetailsActiveTab] = useState('overview')
 
   // Live sidebar interaction states
@@ -86,6 +87,7 @@ export default function AllLeadsPage() {
     status: true,
     assignedTo: true,
     source: true,
+    query: true,
     verified: true,
     lastContacted: true,
     nextFollowUp: true,
@@ -163,7 +165,7 @@ export default function AllLeadsPage() {
   const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
-  const [quickLeadForm, setQuickLeadForm] = useState({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic' })
+  const [quickLeadForm, setQuickLeadForm] = useState({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' })
   const [uploadingBulk, setUploadingBulk] = useState(false)
   const [downloadingLeadsState, setDownloadingLeadsState] = useState(false)
   const [timelineFilter, setTimelineFilter] = useState('ALL')
@@ -184,7 +186,8 @@ export default function AllLeadsPage() {
     source: 'Referral',
     score: 95,
     location: 'London, UK',
-    campaign: 'Referral_Promo'
+    campaign: 'Referral_Promo',
+    query: 'BCA'
   })
 
   const handlePropSelection = (field, value) => {
@@ -206,7 +209,8 @@ export default function AllLeadsPage() {
         source: activeLeadDetails.source || '',
         score: activeLeadDetails.score || 50,
         location: activeLeadDetails.location || '',
-        campaign: activeLeadDetails.campaign || ''
+        campaign: activeLeadDetails.campaign || '',
+        query: activeLeadDetails.query || ''
       })
     }
   }, [activeLeadDetails])
@@ -454,13 +458,13 @@ export default function AllLeadsPage() {
       }
     }
     const initial = [
-      { id: 'LS-1021', name: 'Eleanor Penthilgon', email: 'eleanor.p@enterprise.com', phone: '+1 (555) 617-2834', status: 'NEW', assignedTo: 'Sarah Jenkins', source: 'Website Organic', score: 92, location: 'Austin, TX', campaign: 'Q3_Tech_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true },
-      { id: 'LS-1020', name: 'Jackson Reed', email: 'j.reed88@gmail.com', phone: '+1 (555) 837-1126', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Paid Search', score: 74, location: 'Houston, TX', campaign: 'Q3_Tech_Promo', tier: 'Secondary', verified: true, formName: 'MBA Scholarship Form', createdToday: false, followUpToday: true },
-      { id: 'LS-1019', name: 'Amina Patel', email: 'apatel.design@studio.co', phone: '+44 7890 90877', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins', source: 'Referral', score: 95, location: 'London, UK', campaign: 'Referral_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true },
-      { id: 'LS-1018', name: "Liam O'Connor", email: 'liam.o@solarix.ie', phone: '+353 1 234 5678', status: 'NEW', assignedTo: 'Unassigned', source: 'Direct Mail', score: 40, location: 'Dublin, IE', campaign: 'Q1_Direct_Mail', tier: 'Tertiary', verified: false, formName: 'General Inquiry Form', createdToday: false },
-      { id: 'LS-1017', name: 'Sophia Wong', email: 's.wong@fintech.com', phone: '+852 9123 4567', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Webinar', score: 81, location: 'Hong Kong, HK', campaign: 'Q3_Fintech_Webinar', tier: 'Primary', verified: false, formName: 'MBA Scholarship Form', createdToday: true, followUpToday: true },
-      { id: 'LS-1016', name: 'David Miller', email: 'dmiller@realtech.io', phone: '+1 (555) 908-1212', status: 'LOST', assignedTo: 'Sarah Jenkins', source: 'Cold Outreach', score: 15, location: 'Boston, MA', campaign: 'Cold_Outreach_Q2', tier: 'Tertiary', verified: true, formName: 'General Inquiry Form', createdToday: false },
-      { id: 'LS-1015', name: 'Amina Patel (Duplicate)', email: 'apatel.design@studio.co', phone: '+44 7890 99999', status: 'NEW', assignedTo: 'Marcus Chan', source: 'Cold Outreach', score: 62, location: 'Manchester, UK', campaign: 'Cold_Outreach_Q2', tier: 'Secondary', verified: false, formName: 'B.Tech Admissions Form', createdToday: true }
+      { id: 'LS-1021', name: 'Eleanor Penthilgon', email: 'eleanor.p@enterprise.com', phone: '+1 (555) 617-2834', status: 'NEW', assignedTo: 'Sarah Jenkins', source: 'Website Organic', score: 92, location: 'Austin, TX', campaign: 'Q3_Tech_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true, query: 'B.Tech' },
+      { id: 'LS-1020', name: 'Jackson Reed', email: 'j.reed88@gmail.com', phone: '+1 (555) 837-1126', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Paid Search', score: 74, location: 'Houston, TX', campaign: 'Q3_Tech_Promo', tier: 'Secondary', verified: true, formName: 'MBA Scholarship Form', createdToday: false, followUpToday: true, query: 'MBA' },
+      { id: 'LS-1019', name: 'Amina Patel', email: 'apatel.design@studio.co', phone: '+44 7890 90877', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins', source: 'Referral', score: 95, location: 'London, UK', campaign: 'Referral_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true, query: 'BCA' },
+      { id: 'LS-1018', name: "Liam O'Connor", email: 'liam.o@solarix.ie', phone: '+353 1 234 5678', status: 'NEW', assignedTo: 'Unassigned', source: 'Direct Mail', score: 40, location: 'Dublin, IE', campaign: 'Q1_Direct_Mail', tier: 'Tertiary', verified: false, formName: 'General Inquiry Form', createdToday: false, query: 'Cardiology' },
+      { id: 'LS-1017', name: 'Sophia Wong', email: 's.wong@fintech.com', phone: '+852 9123 4567', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Webinar', score: 81, location: 'Hong Kong, HK', campaign: 'Q3_Fintech_Webinar', tier: 'Primary', verified: false, formName: 'MBA Scholarship Form', createdToday: true, followUpToday: true, query: 'MCA' },
+      { id: 'LS-1016', name: 'David Miller', email: 'dmiller@realtech.io', phone: '+1 (555) 908-1212', status: 'LOST', assignedTo: 'Sarah Jenkins', source: 'Cold Outreach', score: 15, location: 'Boston, MA', campaign: 'Cold_Outreach_Q2', tier: 'Tertiary', verified: true, formName: 'General Inquiry Form', createdToday: false, query: 'Heart' },
+      { id: 'LS-1015', name: 'Amina Patel (Duplicate)', email: 'apatel.design@studio.co', phone: '+44 7890 99999', status: 'NEW', assignedTo: 'Marcus Chan', source: 'Cold Outreach', score: 62, location: 'Manchester, UK', campaign: 'Cold_Outreach_Q2', tier: 'Secondary', verified: false, formName: 'B.Tech Admissions Form', createdToday: true, query: 'BCA' }
     ].map(lead => {
       // Define realistic default CRM fields
       const defaultCRMFields = {
@@ -535,6 +539,16 @@ export default function AllLeadsPage() {
         count: counts[name]
       }))
     ]
+  }, [leads])
+
+  const uniqueQueries = useMemo(() => {
+    const queries = new Set()
+    leads.forEach(lead => {
+      if (lead.query) {
+        queries.add(lead.query)
+      }
+    })
+    return Array.from(queries)
   }, [leads])
 
   const formFilteredLeads = useMemo(() => {
@@ -689,7 +703,8 @@ export default function AllLeadsPage() {
     return sortedLeads.filter(lead => {
       const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.assignedTo.toLowerCase().includes(searchQuery.toLowerCase())
+        lead.assignedTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.query && lead.query.toLowerCase().includes(searchQuery.toLowerCase()))
 
       const matchesStatus = filterStatus === 'all' || lead.status === filterStatus
 
@@ -714,6 +729,9 @@ export default function AllLeadsPage() {
       // Verification Filter
       const matchesVerification = verificationFilter === 'all' ||
         (verificationFilter === 'verified' ? lead.verified === true : lead.verified === false)
+
+      // Query Filter
+      const matchesQuery = queryFilter === 'all' || lead.query === queryFilter
 
       // Saved View tabs filtering
       let matchesSavedTab = true
@@ -745,9 +763,9 @@ export default function AllLeadsPage() {
         matchesBlock = lead.assignedTo === 'Unassigned'
       }
 
-      return matchesSearch && matchesStatus && matchesDateRange && matchesOwner && matchesSource && matchesVerification && matchesSavedTab && matchesBlock
+      return matchesSearch && matchesStatus && matchesDateRange && matchesOwner && matchesSource && matchesVerification && matchesQuery && matchesSavedTab && matchesBlock
     })
-  }, [sortedLeads, searchQuery, filterStatus, dateRangeFilter, leadOwnerFilter, sourceFilter, verificationFilter, activeSavedTab, activeBlockFilter])
+  }, [sortedLeads, searchQuery, filterStatus, dateRangeFilter, leadOwnerFilter, sourceFilter, verificationFilter, queryFilter, activeSavedTab, activeBlockFilter])
 
   // Counts for Today and Total Leads stats display
   const todayLeadsCount = useMemo(() => {
@@ -1151,6 +1169,7 @@ export default function AllLeadsPage() {
       activityCount: 1,
       conversionProb: 50,
       leadType: formData.leadType || 'Online',
+      query: formData.query || 'BCA',
       timeline: [
         {
           id: Date.now(),
@@ -1207,6 +1226,7 @@ export default function AllLeadsPage() {
           activityCount: 1,
           conversionProb: 85,
           leadType: 'Offline',
+          query: 'Cardiology',
           timeline: [
             {
               id: Date.now(),
@@ -1253,6 +1273,7 @@ export default function AllLeadsPage() {
           activityCount: 1,
           conversionProb: 65,
           leadType: 'Offline',
+          query: 'MCA',
           timeline: [
             {
               id: Date.now() + 1,
@@ -1378,7 +1399,8 @@ export default function AllLeadsPage() {
       source: activeLeadDetails.source,
       score: activeLeadDetails.score,
       location: activeLeadDetails.location,
-      campaign: activeLeadDetails.campaign
+      campaign: activeLeadDetails.campaign,
+      query: activeLeadDetails.query
     })
     setShowMergeModal(true)
   }
@@ -1731,6 +1753,20 @@ export default function AllLeadsPage() {
                     </select>
                   </div>
 
+                  {/* Query Selector */}
+                  <div className="relative">
+                    <select
+                      value={queryFilter}
+                      onChange={(e) => setQueryFilter(e.target.value)}
+                      className="leads-filter-select"
+                    >
+                      <option value="all">Query: All</option>
+                      {uniqueQueries.map(q => (
+                        <option key={q} value={q}>{q}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Column Customizer Button */}
                   <div className="relative">
                     <button
@@ -1775,7 +1811,7 @@ export default function AllLeadsPage() {
                   </div>
 
                   {/* Clear All Option */}
-                  {(searchQuery !== '' || filterStatus !== 'all' || dateRangeFilter !== 'all' || leadOwnerFilter !== 'all' || sourceFilter !== 'all' || verificationFilter !== 'all' || activeSavedTab !== 'all' || activeBlockFilter !== 'all') && (
+                  {(searchQuery !== '' || filterStatus !== 'all' || dateRangeFilter !== 'all' || leadOwnerFilter !== 'all' || sourceFilter !== 'all' || verificationFilter !== 'all' || queryFilter !== 'all' || activeSavedTab !== 'all' || activeBlockFilter !== 'all') && (
                     <button
                       onClick={() => {
                         setSearchQuery('')
@@ -1784,6 +1820,7 @@ export default function AllLeadsPage() {
                         setLeadOwnerFilter('all')
                         setSourceFilter('all')
                         setVerificationFilter('all')
+                        setQueryFilter('all')
                         setActiveSavedTab('all')
                         setActiveBlockFilter('all')
                         setSortConfig({ key: 'name', direction: 'asc' })
@@ -1831,7 +1868,7 @@ export default function AllLeadsPage() {
                           <button
                             onClick={() => {
                               setShowQuickLeadModal(true);
-                              setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic' });
+                              setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' });
                               setShowGlobalActionsDropdown(false);
                             }}
                             className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
@@ -2022,6 +2059,17 @@ export default function AllLeadsPage() {
                             <div className="flex items-center">
                               Source
                               {renderSortIndicator('source')}
+                            </div>
+                          </th>
+                        )}
+                        {visibleColumns.query && (
+                          <th
+                            onClick={() => requestSort('query')}
+                            className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                          >
+                            <div className="flex items-center">
+                              Query
+                              {renderSortIndicator('query')}
                             </div>
                           </th>
                         )}
@@ -2468,6 +2516,9 @@ export default function AllLeadsPage() {
                           {visibleColumns.source && (
                             <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.source}</td>
                           )}
+                          {visibleColumns.query && (
+                            <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.query || '--'}</td>
+                          )}
                           {visibleColumns.verified && (
                             <td className="px-3 py-4">
                               {lead.verified ? (
@@ -2621,6 +2672,10 @@ export default function AllLeadsPage() {
                       <div>
                         <span className="text-slate-400 block text-[9.5px]">Lead Source</span>
                         <span className="font-semibold text-slate-700">{lead.source}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9.5px]">Query</span>
+                        <span className="font-semibold text-slate-700">{lead.query || '--'}</span>
                       </div>
                     </div>
 
@@ -3195,6 +3250,17 @@ export default function AllLeadsPage() {
                           )}
                         </select>
                       </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Lead Query (e.g. BCA, MCA, Cardiology)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. BCA"
+                        value={quickLeadForm.query}
+                        onChange={(e) => setQuickLeadForm({ ...quickLeadForm, query: e.target.value })}
+                        className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
                     </div>
                   </div>
 

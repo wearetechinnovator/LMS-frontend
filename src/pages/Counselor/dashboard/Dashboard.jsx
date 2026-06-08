@@ -59,23 +59,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-wrapper dashboard-page-scope">
-      {/* Export Toast Notification */}
-      <AnimatePresence>
-        {toastMsg && (
-          <motion.div
-            className="export-toast-container"
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: 'spring', duration: 0.4 }}
-          >
-            <div className="export-toast-content">
-              <span className="material-symbols-outlined export-toast-icon">check_circle</span>
-              <span className="export-toast-text">{toastMsg}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       <div className="dashboard-header">
         <div className="date-filter-wrapper">
@@ -122,7 +106,6 @@ export default function Dashboard() {
           </AnimatePresence>
         </div>
 
-        <ExportButton triggerToast={triggerToast} />
 
       </div>
 

@@ -48,7 +48,8 @@ export default function LeadDetails() {
     source: '',
     score: 50,
     location: '',
-    campaign: ''
+    campaign: '',
+    query: ''
   })
 
   useEffect(() => {
@@ -86,7 +87,8 @@ export default function LeadDetails() {
         source: activeLeadDetails.source || '',
         score: activeLeadDetails.score || 50,
         location: activeLeadDetails.location || '',
-        campaign: activeLeadDetails.campaign || ''
+        campaign: activeLeadDetails.campaign || '',
+        query: activeLeadDetails.query || ''
       })
     }
   }, [activeLeadDetails])
@@ -553,7 +555,11 @@ export default function LeadDetails() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 font-medium">UTM Medium</span>
-                  <span className="text-slate-800 font-bold">cpc</span>
+                  <span className="text-slate-850 font-bold font-sans">cpc</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-medium font-sans">Query</span>
+                  <span className="text-slate-800 font-bold font-sans">{activeLeadDetails.query || '--'}</span>
                 </div>
               </div>
             </div>
@@ -1246,7 +1252,8 @@ export default function LeadDetails() {
                     { key: 'assignedTo', label: 'Counselor', icon: 'person_add' },
                     { key: 'source', label: 'Source', icon: 'source' },
                     { key: 'location', label: 'Location', icon: 'location_on' },
-                    { key: 'campaign', label: 'Campaign', icon: 'sell' }
+                    { key: 'campaign', label: 'Campaign', icon: 'sell' },
+                    { key: 'query', label: 'Query', icon: 'question_mark' }
                   ].map(({ key, label, icon }) => {
                     const valPrimary = activeLeadDetails[key]
                     const valDuplicate = dupe[key]
