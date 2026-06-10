@@ -240,6 +240,7 @@ export default function RoleUserManagement() {
                 ...u,
                 name: formData.name,
                 email: formData.email,
+                phoneNumber: formData.phoneNumber,
                 role: formData.role,
                 department: formData.department,
                 status: formData.status,
@@ -964,6 +965,18 @@ export default function RoleUserManagement() {
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                             placeholder="e.g. john.m@company.com"
+                                            className="w-full h-8 px-2.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                            required
+                                        />
+                                    </div>
+                                    {/* Input Phone number */}
+                                    <div className="space-y-1">
+                                        <label className="block text-[8px] font-bold text-on-surface-variant uppercase tracking-wider">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phoneNumber}
+                                            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                            placeholder="e.g. 9876543210"
                                             className="w-full h-8 px-2.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
                                             required
                                         />
