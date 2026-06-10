@@ -36,7 +36,19 @@ const adminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/admin/dashboard' },
   { id: 'form-builder', label: 'Form Builder', icon: 'build', path: '/admin/form-builder' },
   { id: 'leads', label: 'All Leads', icon: 'people', path: '/admin/leads' },
-  { id: 'analytics', label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: 'analytics',
+    path: '/admin/analytics',
+    subItems: [
+      { id: 'stage', label: 'Lead Stage wise', path: '/admin/analytics/stage' },
+      { id: 'registration', label: 'Lead Registration wise', path: '/admin/analytics/registration' },
+      { id: 'demographics', label: 'Demographics wise', path: '/admin/analytics/demographics' },
+      { id: 'source', label: 'Source Channel Report', path: '/admin/analytics/source' },
+      { id: 'vendor_counselor', label: 'Vendors & Counselors', path: '/admin/analytics/vendor-counselor' }
+    ]
+  },
   { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/admin/departments' },
   { id: 'teams', label: 'Teams', icon: 'group', path: '/admin/teams' },
   { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/admin/audit-logs' },
@@ -47,9 +59,19 @@ const adminNavItems = [
 const counselorNavItems = [
   { id: 'overview', label: 'Overview', icon: 'dashboard', path: '/counselor/overview' },
   { id: 'leads', label: 'All Leads', icon: 'people', path: '/counselor/leads' },
-  { id: 'analytics', label: 'Analytics', icon: 'analytics', path: '/counselor/analytics' },
-  // { id: 'roles', label: 'Role Management', icon: 'perm_identity', path: '/counselor/roles' },
-
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: 'analytics',
+    path: '/counselor/analytics',
+    subItems: [
+      { id: 'stage', label: 'Lead Stage wise', path: '/counselor/analytics/stage' },
+      { id: 'registration', label: 'Lead Registration wise', path: '/counselor/analytics/registration' },
+      { id: 'demographics', label: 'Demographics wise', path: '/counselor/analytics/demographics' },
+      { id: 'source', label: 'Source Channel Report', path: '/counselor/analytics/source' },
+      { id: 'vendor_counselor', label: 'Vendors & Counselors', path: '/counselor/analytics/vendor-counselor' }
+    ]
+  },
 ]
 
 const vendorNavItems = [
@@ -88,7 +110,14 @@ export const RoleRoutes = ({ username, handleLogout }) => {
         <Route path="departments/:id/manage" element={<ManageTeamPage />} />
         <Route path="audit-logs" element={<AdminAuditLogsPage />} />
         <Route path="settings" element={<AdminLmsSettingsPage />} />
-        <Route path="analytics" element={<AdminAnalyticsPage />} />
+        <Route path="analytics">
+          <Route index element={<Navigate to="stage" replace />} />
+          <Route path="stage" element={<AdminAnalyticsPage activeTabProp="stage" />} />
+          <Route path="registration" element={<AdminAnalyticsPage activeTabProp="registration" />} />
+          <Route path="demographics" element={<AdminAnalyticsPage activeTabProp="demographics" />} />
+          <Route path="source" element={<AdminAnalyticsPage activeTabProp="source" />} />
+          <Route path="vendor-counselor" element={<AdminAnalyticsPage activeTabProp="vendor_counselor" />} />
+        </Route>
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
 
@@ -107,7 +136,14 @@ export const RoleRoutes = ({ username, handleLogout }) => {
       >
         <Route path="overview" element={<CounselorDashboard />} />
         <Route path="leads" element={<CounselorAllLeadsPage />} />
-        <Route path="analytics" element={<CounselorAnalyticsPage />} />
+        <Route path="analytics">
+          <Route index element={<Navigate to="stage" replace />} />
+          <Route path="stage" element={<CounselorAnalyticsPage activeTabProp="stage" />} />
+          <Route path="registration" element={<CounselorAnalyticsPage activeTabProp="registration" />} />
+          <Route path="demographics" element={<CounselorAnalyticsPage activeTabProp="demographics" />} />
+          <Route path="source" element={<CounselorAnalyticsPage activeTabProp="source" />} />
+          <Route path="vendor-counselor" element={<CounselorAnalyticsPage activeTabProp="vendor_counselor" />} />
+        </Route>
         <Route path="settings" element={<CounselorLmsSettingsPage />} />
         {/* <Route path="roles" element={<AdminRoleUserManagement />} /> */}
 

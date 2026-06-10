@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getStatusStyle, getCustomStatuses, getCustomJourneys } from '../helpers/statusHelper'
 
 export default function LeadDetailsDrawer({
   activeLeadDetails,
@@ -100,7 +101,10 @@ export default function LeadDetailsDrawer({
             ) : (
               <span className="bg-slate-50 border border-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full select-none">Cold</span>
             )}
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border select-none ${getStatusColor(activeLeadDetails.status)}`}>
+            <span 
+              className="px-2 py-0.5 rounded-full text-[10px] font-bold border select-none"
+              style={getStatusStyle(activeLeadDetails.status, getCustomStatuses())}
+            >
               {activeLeadDetails.status}
             </span>
           </div>
@@ -110,45 +114,107 @@ export default function LeadDetailsDrawer({
         <div className="px-4 py-3 border-b border-slate-150 bg-white space-y-3 select-none">
           {/* Journey tracker */}
           {(() => {
-            const JOURNEY_STAGES = [
-              { key: 'NEW', label: 'New' },
-              { key: 'ASSIGNED', label: 'Assigned' },
-              { key: 'CONTACTED', label: 'Contacted' },
-              { key: 'QUALIFIED', label: 'Qualified' },
-              { key: 'WON', label: 'Won' }
-            ]
+            const journeys = getCustomJourneys()
+            const leadJourney = journeys.find(j => j.id === (activeLeadDetails.journeyId || 'default')) || journeys.find(j => j.isDefault) || journeys[0]
+            const steps = leadJourney ? leadJourney.steps : []
+            const customStatuses = getCustomStatuses()
+            const JOURNEY_STAGES = steps.map(stepVal => {
+              const found = customStatuses.find(s => s.value === stepVal)
+              return {
+                key: stepVal,
+                label: found ? found.label : stepVal
+              }
+            })
+
             const currentStatus = activeLeadDetails.status || 'NEW'
             let currentIdx = JOURNEY_STAGES.findIndex(s => s.key === currentStatus)
-            if (currentIdx === -1) {
-              if (currentStatus === 'DRAFT' || currentStatus === 'NEW') currentIdx = 0
-              else currentIdx = 3
+
+            const handleLeadJourneyChangeLocal = (newJourneyId) => {
+              const local = localStorage.getItem('lms_leads_database')
+              if (local) {
+                try {
+                  const dbLeads = JSON.parse(local)
+                  const updated = dbLeads.map(l => {
+                    if (l.id === activeLeadDetails.id) {
+                      const prevJourney = journeys.find(j => j.id === (activeLeadDetails.journeyId || 'default'))?.name || 'Standard CRM Pipeline'
+                      const nextJourney = journeys.find(j => j.id === newJourneyId)?.name || newJourneyId
+                      const updatedTimeline = [
+                        {
+                          id: Date.now(),
+                          type: 'SYSTEM',
+                          title: 'Pipeline Shifted',
+                          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+                          body: `Shifted lead pipeline from '${prevJourney}' to '${nextJourney}'`,
+                          user: role === 'admin' ? 'Admin' : role === 'counselor' ? 'Sarah Jenkins' : 'Vendor',
+                          ip: '192.168.1.105',
+                          icon: 'route',
+                          color: 'indigo-600'
+                        },
+                        ...(l.timeline || [])
+                      ]
+                      const updatedLead = { ...l, journeyId: newJourneyId, timeline: updatedTimeline }
+                      setActiveLeadDetails(updatedLead)
+                      return updatedLead
+                    }
+                    return l
+                  })
+                  localStorage.setItem('lms_leads_database', JSON.stringify(updated))
+                  window.dispatchEvent(new CustomEvent('lms-leads-updated'))
+                  triggerToast("Lead pipeline shifted successfully!")
+                } catch (err) {
+                  console.error(err)
+                }
+              }
             }
 
             return (
-              <div className="flex flex-col gap-1 text-left">
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Lead Journey</div>
+              <div className="flex flex-col gap-2 text-left">
+                <div className="flex justify-between items-center select-none">
+                  <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Lead Journey</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9.5px] text-slate-400 font-bold uppercase">Pipeline:</span>
+                    <select
+                      value={activeLeadDetails.journeyId || 'default'}
+                      onChange={(e) => handleLeadJourneyChangeLocal(e.target.value)}
+                      className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] outline-none text-slate-700 cursor-pointer font-bold shadow-2xs focus:border-sky-500"
+                    >
+                      {journeys.map(j => (
+                        <option key={j.id} value={j.id}>{j.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between w-full gap-1 pt-1 overflow-x-auto">
                   {JOURNEY_STAGES.map((stage, idx) => {
                     const isCompleted = idx < currentIdx
                     const isActive = idx === currentIdx
+                    const activeStyle = getStatusStyle(stage.key, customStatuses)
                     return (
                       <React.Fragment key={stage.key}>
                         {idx > 0 && (
-                          <div className={`h-[2px] flex-grow min-w-[5px] transition-colors duration-200 ${isCompleted ? 'bg-green-500' : isActive ? 'bg-primary' : 'bg-slate-200'}`} />
+                          <div 
+                            className="h-[2px] flex-grow min-w-[5px] transition-colors duration-200" 
+                            style={{
+                              backgroundColor: isCompleted ? '#22c55e' : isActive ? activeStyle.color : '#e2e8f0'
+                            }}
+                          />
                         )}
                         <button
                           onClick={() => handleLeadStatusChange(activeLeadDetails.id, stage.key)}
-                          className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full border text-[9px] font-bold transition-all whitespace-nowrap cursor-pointer ${isCompleted
-                            ? 'bg-green-50 border-green-200 text-green-700'
-                            : isActive
-                              ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20'
-                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-350 hover:bg-slate-100'
-                            }`}
+                          className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full border text-[9px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                            isCompleted
+                              ? 'bg-green-50 border-green-200 text-green-700'
+                              : isActive
+                                ? ''
+                                : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-350 hover:bg-slate-100'
+                          }`}
+                          style={isActive ? activeStyle : {}}
                         >
                           {isCompleted ? (
                             <span className="material-symbols-outlined text-[11px] text-green-600 font-bold">check</span>
                           ) : isActive ? (
-                            <span className="material-symbols-outlined text-[11px] text-primary animate-pulse">arrow_forward</span>
+                            <span className="material-symbols-outlined text-[11px] animate-pulse" style={{ color: activeStyle.color }}>arrow_forward</span>
                           ) : null}
                           {stage.label}
                         </button>

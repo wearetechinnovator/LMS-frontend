@@ -3,11 +3,25 @@ import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import LeadDetailsDrawer from '../../../components/LeadDetailsDrawer'
 import './leads.css'
+import LeadsKpiCard from '../../../components/LeadsKpiCard'
+import LeadsFilterChip from '../../../components/LeadsFilterChip'
+import LeadsToolbar from '../../../components/LeadsToolbar'
+import { getCustomStatuses, getStatusStyle } from '../../../helpers/statusHelper'
 
 export default function AllLeadsPage() {
   const location = useLocation()
   const [selectedLeads, setSelectedLeads] = useState([])
   const [activeLeadDetails, setActiveLeadDetails] = useState(null)
+
+  const [statusesList, setStatusesList] = useState(() => getCustomStatuses())
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setStatusesList(getCustomStatuses())
+    }
+    window.addEventListener('lms-statuses-updated', handleUpdate)
+    return () => window.removeEventListener('lms-statuses-updated', handleUpdate)
+  }, [])
   const [hoveredLeadId, setHoveredLeadId] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [showTooltip, setShowTooltip] = useState(false)
@@ -99,7 +113,6 @@ export default function AllLeadsPage() {
     location: false,
     campaign: false
   })
-  const [showColumnDropdown, setShowColumnDropdown] = useState(false)
 
   // Double horizontal scrollbar state & refs
   const tableContainerRef = React.useRef(null)
@@ -160,8 +173,6 @@ export default function AllLeadsPage() {
   const [showReassignSubId, setShowReassignSubId] = useState(null)
 
   // -- NEW STATE HOOKS FOR GLOBAL ACTIONS DROPDOWN & MODALS --
-  const [showGlobalActionsDropdown, setShowGlobalActionsDropdown] = useState(false)
-  const [showDownloadFormats, setShowDownloadFormats] = useState(false)
   const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
@@ -584,29 +595,10 @@ export default function AllLeadsPage() {
     }
   }, [location.state, leads])
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'NEW':
-        return 'bg-blue-50/80 text-blue-700 border-blue-200/50'
-      case 'CONTACTED':
-        return 'bg-orange-50/80 text-orange-700 border-orange-200/50'
-      case 'QUALIFIED':
-        return 'bg-emerald-50/80 text-emerald-700 border-emerald-200/50'
-      case 'LOST':
-        return 'bg-rose-50/80 text-rose-700 border-rose-200/50'
-      default:
-        return 'bg-amber-50/80 text-amber-700 border-amber-200/50'
-    }
-  }
-
-  const getStatusBadgeStyles = (status) => {
-    switch (status) {
-      case 'NEW': return 'bg-blue-600 text-white border-blue-700'
-      case 'CONTACTED': return 'bg-[#c2410c] text-white border-orange-700'
-      case 'QUALIFIED': return 'bg-green-600 text-white border-green-700'
-      case 'LOST': return 'bg-red-600 text-white border-red-700'
-      default: return 'bg-slate-600 text-white border-slate-700'
-    }
+  const getStatusColor = () => ''
+  
+  const getStatusStyleLocal = (status) => {
+    return getStatusStyle(status, statusesList)
   }
 
   const toggleSelectAll = () => {
@@ -1600,36 +1592,20 @@ export default function AllLeadsPage() {
                   icon: 'leaderboard'
                 }
               ].map((card, idx) => (
-                <div key={idx} className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200 select-none text-left relative overflow-hidden group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 group-hover:text-slate-650 transition-colors">
-                      {card.label}
-                    </span>
-                    <span className="material-symbols-outlined text-[18px] text-slate-450 select-none">
-                      {card.icon}
-                    </span>
-                  </div>
-
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-2xl font-extrabold text-slate-800 tracking-tight">
-                      {card.value}
-                    </span>
-                    <span className={`text-[10px] font-bold flex items-center gap-0.5 ${card.trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {card.trendUp ? '↑' : '↓'} {card.trend}
-                    </span>
-                  </div>
-
-                  <div className="w-full mt-2 pt-2 border-t border-slate-100 flex items-end">
-                    <div className="w-2/3 h-8 flex items-end">
-                      {card.sparkline}
-                    </div>
-                  </div>
-                </div>
+                <LeadsKpiCard
+                  key={idx}
+                  label={card.label}
+                  value={card.value}
+                  icon={card.icon}
+                  trend={card.trend}
+                  trendUp={card.trendUp}
+                  sparkline={card.sparkline}
+                />
               ))}
             </div>
 
             {/* Lead Segment Filter Chips */}
-            <div className="flex flex-wrap items-center gap-2 mb-6 select-none text-left">
+            <div className="leads-chips-container">
               {[
                 { key: 'all', label: 'All Leads', color: 'indigo', icon: 'groups' },
                 { key: 'primary', label: 'Primary Leads', color: 'amber', icon: 'star' },
@@ -1644,213 +1620,46 @@ export default function AllLeadsPage() {
                 const isActive = activeBlockFilter === segment.key;
                 const stats = segmentStats[segment.key] || { count: 0, pct: 0 };
 
-                // Tailored colors for the active state
-                const activeColorClasses = {
-                  indigo: 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20',
-                  amber: 'border-amber-600 bg-amber-50/70 text-amber-900 ring-2 ring-amber-500/20',
-                  sky: 'border-sky-600 bg-sky-50/70 text-sky-900 ring-2 ring-sky-500/20',
-                  purple: 'border-purple-600 bg-purple-50/70 text-purple-900 ring-2 ring-purple-500/20',
-                  emerald: 'border-emerald-600 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500/20',
-                  rose: 'border-rose-600 bg-rose-50/70 text-rose-900 ring-2 ring-rose-500/20',
-                  orange: 'border-orange-600 bg-orange-50/70 text-orange-900 ring-2 ring-orange-500/20',
-                  teal: 'border-teal-600 bg-teal-50/70 text-teal-900 ring-2 ring-teal-500/20',
-                  pink: 'border-pink-600 bg-pink-50/70 text-pink-900 ring-2 ring-pink-500/20'
-                }[segment.color];
-
                 return (
-                  <button
+                  <LeadsFilterChip
                     key={segment.key}
+                    label={segment.label}
+                    icon={segment.icon}
+                    count={stats.count}
+                    pct={stats.pct}
+                    color={segment.color}
+                    isActive={isActive}
                     onClick={() => setActiveBlockFilter(segment.key)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11.5px] font-bold transition-all shadow-xs cursor-pointer ${isActive
-                      ? activeColorClasses
-                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900'
-                      }`}
-                  >
-                    <span className={`material-symbols-outlined text-[15px] ${isActive ? 'text-current' : 'text-slate-400'}`}>
-                      {segment.icon}
-                    </span>
-                    <span>{segment.label}</span>
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-current/10 font-extrabold' : 'bg-slate-100 text-slate-500'}`}>
-                      {stats.count} ({stats.pct}%)
-                    </span>
-                  </button>
+                  />
                 );
               })}
             </div>
 
             {/* Consolidated Filters Toolbar */}
-            <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
-              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
-                {/* Search Bar */}
-                <div className="relative w-full sm:w-64">
-                  <span className="material-symbols-outlined text-[15px] text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 select-none">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, email, owner..."
-                    className="w-full h-8 pl-8 pr-2.5 border border-slate-250 bg-white rounded-lg text-[11px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
-                  />
-                </div>
-
-                {/* Date Range Selector */}
-                <div className="relative">
-                  <select
-                    value={dateRangeFilter}
-                    onChange={(e) => setDateRangeFilter(e.target.value)}
-                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <option value="all">Date Range: All Time</option>
-                    <option value="today">Created: Today</option>
-                    <option value="7days">Created: Last 7 Days</option>
-                    <option value="30days">Created: Last 30 Days</option>
-                  </select>
-                </div>
-
-                {/* Lead Owner Selector */}
-                <div className="relative">
-                  <select
-                    value={leadOwnerFilter}
-                    onChange={(e) => setLeadOwnerFilter(e.target.value)}
-                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <option value="all">Owner: All</option>
-                    <option value="Sarah Jenkins">Sarah Jenkins</option>
-                    <option value="Marcus Chan">Marcus Chan</option>
-                    <option value="Unassigned">Unassigned</option>
-                  </select>
-                </div>
-
-                {/* Source Selector */}
-                <div className="relative">
-                  <select
-                    value={sourceFilter}
-                    onChange={(e) => setSourceFilter(e.target.value)}
-                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-755 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <option value="all">Source: All</option>
-                    <option value="Website Organic">Website Organic</option>
-                    <option value="Paid Search">Paid Search</option>
-                    <option value="Referral">Referral</option>
-                    <option value="Direct Mail">Direct Mail</option>
-                    <option value="Webinar">Webinar</option>
-                    <option value="Cold Outreach">Cold Outreach</option>
-                    <option value="Quick Add Form">Quick Add Form</option>
-                    <option value="Bulk Offline CSV">Bulk Offline CSV</option>
-                  </select>
-                </div>
-
-                {/* Status Selector */}
-                <div className="relative">
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <option value="all">Status: All Active</option>
-                    <option value="NEW">NEW</option>
-                    <option value="CONTACTED">CONTACTED</option>
-                    <option value="QUALIFIED">QUALIFIED</option>
-                    <option value="LOST">LOST</option>
-                  </select>
-                </div>
-
-                {/* Verification Selector */}
-                <div className="relative">
-                  <select
-                    value={verificationFilter}
-                    onChange={(e) => setVerificationFilter(e.target.value)}
-                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <option value="all">Verification: All</option>
-                    <option value="verified">Verified Only</option>
-                    <option value="unverified">Unverified Only</option>
-                  </select>
-                </div>
-
-                {/* Query Selector */}
-                <div className="relative">
-                  <select
-                    value={queryFilter}
-                    onChange={(e) => setQueryFilter(e.target.value)}
-                    className="h-8 px-2 border border-slate-250 bg-white rounded-lg text-[11px] font-bold text-slate-750 outline-none cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <option value="all">Query: All</option>
-                    {uniqueQueries.map(q => (
-                      <option key={q} value={q}>{q}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Column Customizer Button */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowColumnDropdown(!showColumnDropdown)}
-                    className="flex items-center gap-1 px-2 h-8 border border-slate-250 bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-705 rounded-lg cursor-pointer select-none transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[15px] text-slate-400">table_chart</span>
-                    Columns
-                  </button>
-                  <AnimatePresence>
-                    {showColumnDropdown && (
-                      <>
-                        <div className="fixed inset-0 z-10" onClick={() => setShowColumnDropdown(false)} />
-                        <motion.div
-                          className="absolute left-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-20 text-left font-sans animate-fade-in"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 select-none">Toggle Columns</div>
-                          <div className="space-y-1.5 text-[11.5px] font-semibold text-slate-700">
-                            {Object.keys(visibleColumns).map((col) => (
-                              <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer capitalize">
-                                <input
-                                  type="checkbox"
-                                  checked={visibleColumns[col]}
-                                  onChange={() => setVisibleColumns({
-                                    ...visibleColumns,
-                                    [col]: !visibleColumns[col]
-                                  })}
-                                  className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350 text-primary"
-                                />
-                                {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
-                              </label>
-                            ))}
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Clear All Option */}
-                {(searchQuery !== '' || filterStatus !== 'all' || dateRangeFilter !== 'all' || leadOwnerFilter !== 'all' || sourceFilter !== 'all' || verificationFilter !== 'all' || queryFilter !== 'all' || activeSavedTab !== 'all' || activeBlockFilter !== 'all') && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery('')
-                      setFilterStatus('all')
-                      setDateRangeFilter('all')
-                      setLeadOwnerFilter('all')
-                      setSourceFilter('all')
-                      setVerificationFilter('all')
-                      setQueryFilter('all')
-                      setActiveSavedTab('all')
-                      setActiveBlockFilter('all')
-                      setSortConfig({ key: 'name', direction: 'asc' })
-                    }}
-                    className="text-primary hover:text-primary-dark transition-colors text-[11.5px] font-bold cursor-pointer underline underline-offset-2 decoration-dotted ml-2"
-                  >
-                    Clear All
-                  </button>
-                )}
-              </div>
-
-
-            </div>
+            <LeadsToolbar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              dateRangeFilter={dateRangeFilter}
+              setDateRangeFilter={setDateRangeFilter}
+              leadOwnerFilter={leadOwnerFilter}
+              setLeadOwnerFilter={setLeadOwnerFilter}
+              sourceFilter={sourceFilter}
+              setSourceFilter={setSourceFilter}
+              filterStatus={filterStatus}
+              setFilterStatus={setFilterStatus}
+              verificationFilter={verificationFilter}
+              setVerificationFilter={setVerificationFilter}
+              queryFilter={queryFilter}
+              setQueryFilter={setQueryFilter}
+              uniqueQueries={uniqueQueries}
+              visibleColumns={visibleColumns}
+              setVisibleColumns={setVisibleColumns}
+              activeSavedTab={activeSavedTab}
+              setActiveSavedTab={setActiveSavedTab}
+              activeBlockFilter={activeBlockFilter}
+              setActiveBlockFilter={setActiveBlockFilter}
+              setSortConfig={setSortConfig}
+            />
 
             {/* Desktop Table View */}
             <div className="hidden md:block">
@@ -2384,7 +2193,10 @@ export default function AllLeadsPage() {
                         )}
                         {visibleColumns.status && (
                           <td className="px-3 py-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
+                            <span 
+                              className="inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border"
+                              style={getStatusStyleLocal(lead.status)}
+                            >
                               {lead.status}
                             </span>
                           </td>
@@ -2777,7 +2589,10 @@ export default function AllLeadsPage() {
                         </span>
                       </div>
                     </div>
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
+                    <span 
+                      className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border"
+                      style={getStatusStyleLocal(lead.status)}
+                    >
                       {lead.status}
                     </span>
                   </div>

@@ -2,12 +2,26 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import './leads.css'
+import LeadsKpiCard from '../../../components/LeadsKpiCard'
+import LeadsFilterChip from '../../../components/LeadsFilterChip'
+import LeadsToolbar from '../../../components/LeadsToolbar'
+import { getCustomStatuses, getStatusStyle } from '../../../helpers/statusHelper'
 
 export default function AllLeadsPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const [selectedLeads, setSelectedLeads] = useState([])
   const [activeLeadDetails, setActiveLeadDetails] = useState(null)
+
+  const [statusesList, setStatusesList] = useState(() => getCustomStatuses())
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setStatusesList(getCustomStatuses())
+    }
+    window.addEventListener('lms-statuses-updated', handleUpdate)
+    return () => window.removeEventListener('lms-statuses-updated', handleUpdate)
+  }, [])
   const [hoveredLeadId, setHoveredLeadId] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [showTooltip, setShowTooltip] = useState(false)
@@ -99,7 +113,6 @@ export default function AllLeadsPage() {
     location: false,
     campaign: false
   })
-  const [showColumnDropdown, setShowColumnDropdown] = useState(false)
 
   // Double horizontal scrollbar state & refs
   const tableContainerRef = React.useRef(null)
@@ -160,8 +173,6 @@ export default function AllLeadsPage() {
   const [showReassignSubId, setShowReassignSubId] = useState(null)
 
   // -- NEW STATE HOOKS FOR GLOBAL ACTIONS DROPDOWN & MODALS --
-  const [showGlobalActionsDropdown, setShowGlobalActionsDropdown] = useState(false)
-  const [showDownloadFormats, setShowDownloadFormats] = useState(false)
   const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
@@ -581,29 +592,8 @@ export default function AllLeadsPage() {
     }
   }, [location.state])
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'NEW':
-        return 'bg-blue-50/80 text-blue-700 border-blue-200/50'
-      case 'CONTACTED':
-        return 'bg-orange-50/80 text-orange-700 border-orange-200/50'
-      case 'QUALIFIED':
-        return 'bg-emerald-50/80 text-emerald-700 border-emerald-200/50'
-      case 'LOST':
-        return 'bg-rose-50/80 text-rose-700 border-rose-200/50'
-      default:
-        return 'bg-amber-50/80 text-amber-700 border-amber-200/50'
-    }
-  }
-
-  const getStatusBadgeStyles = (status) => {
-    switch (status) {
-      case 'NEW': return 'bg-blue-600 text-white border-blue-700'
-      case 'CONTACTED': return 'bg-[#c2410c] text-white border-orange-700'
-      case 'QUALIFIED': return 'bg-green-600 text-white border-green-700'
-      case 'LOST': return 'bg-red-600 text-white border-red-700'
-      default: return 'bg-slate-600 text-white border-slate-700'
-    }
+  const getStatusStyleLocal = (status) => {
+    return getStatusStyle(status, statusesList)
   }
 
   const toggleSelectAll = () => {
@@ -1481,41 +1471,7 @@ export default function AllLeadsPage() {
 
           {!(activeLeadDetails && role === 'admin') && (
             <div className="w-full">
-              {/* Saved Views Quick Tabs */}
-              {/* <div className="flex border-b border-outline-variant gap-4 mb-5 select-none text-left">
-              <button
-                onClick={() => setActiveSavedTab('all')}
-                className={`pb-2.5 font-bold text-[12px] border-b-2 transition-all flex items-center gap-1 cursor-pointer ${activeSavedTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-              >
-                <span className="material-symbols-outlined text-[16px]">list</span>
-                All Leads
-              </button>
-              <button
-                onClick={() => setActiveSavedTab('hot')}
-                className={`pb-2.5 font-bold text-[12px] border-b-2 transition-all flex items-center gap-1 cursor-pointer ${activeSavedTab === 'hot' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-              >
-                <span className="material-symbols-outlined text-[16px] text-green-500">local_fire_department</span>
-                Hot Leads (Score &ge; 76)
-              </button>
-              <button
-                onClick={() => setActiveSavedTab('unassigned')}
-                className={`pb-2.5 font-bold text-[12px] border-b-2 transition-all flex items-center gap-1 cursor-pointer ${activeSavedTab === 'unassigned' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-              >
-                <span className="material-symbols-outlined text-[16px] text-red-400">person_off</span>
-                Unassigned Leads
-              </button>
-              <button
-                onClick={() => setActiveSavedTab('qualified')}
-                className={`pb-2.5 font-bold text-[12px] border-b-2 transition-all flex items-center gap-1 cursor-pointer ${activeSavedTab === 'qualified' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-              >
-                <span className="material-symbols-outlined text-[16px] text-blue-500">verified</span>
-                Qualified Pipeline
-              </button>
-            </div> */}
+
 
               {/* 6-Card Sparkline KPI Grid */}
               <div className="leads-kpi-grid mb-4">
@@ -1526,11 +1482,6 @@ export default function AllLeadsPage() {
                     trend: '+12% vs last month',
                     trendUp: true,
                     color: 'indigo',
-                    sparkline: (
-                      <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M0 25 Q15 15, 30 20 T60 10 T90 5 T100 2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ),
                     icon: 'groups'
                   },
                   {
@@ -1539,11 +1490,6 @@ export default function AllLeadsPage() {
                     trend: '+8% vs last week',
                     trendUp: true,
                     color: 'blue',
-                    sparkline: (
-                      <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M0 20 L20 18 L40 25 L60 15 L80 8 L100 4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ),
                     icon: 'fiber_new'
                   },
                   {
@@ -1552,11 +1498,6 @@ export default function AllLeadsPage() {
                     trend: '-5% vs yesterday',
                     trendUp: false,
                     color: 'orange',
-                    sparkline: (
-                      <svg className="w-full h-8 text-rose-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M0 5 L20 12 L40 8 L60 18 L80 22 L100 25" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ),
                     icon: 'calendar_today'
                   },
                   {
@@ -1565,11 +1506,6 @@ export default function AllLeadsPage() {
                     trend: '+15% vs last week',
                     trendUp: true,
                     color: 'green',
-                    sparkline: (
-                      <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M0 28 L20 25 L40 18 L60 14 L80 8 L100 2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ),
                     icon: 'verified'
                   },
                   {
@@ -1578,11 +1514,6 @@ export default function AllLeadsPage() {
                     trend: '-2% vs yesterday',
                     trendUp: false,
                     color: 'amber',
-                    sparkline: (
-                      <svg className="w-full h-8 text-rose-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M0 8 L20 12 L40 10 L60 15 L80 14 L100 18" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ),
                     icon: 'pending'
                   },
                   {
@@ -1591,39 +1522,17 @@ export default function AllLeadsPage() {
                     trend: '+3% vs last month',
                     trendUp: true,
                     color: 'teal',
-                    sparkline: (
-                      <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M0 24 L20 20 L40 22 L60 12 L80 8 L100 5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ),
                     icon: 'leaderboard'
                   }
                 ].map((card, idx) => (
-                  <div key={idx} className="leads-kpi-card">
-                    <div className="leads-kpi-header">
-                      <span className="leads-kpi-label">
-                        {card.label}
-                      </span>
-                      <span className="material-symbols-outlined leads-kpi-icon select-none">
-                        {card.icon}
-                      </span>
-                    </div>
-
-                    <div className="leads-kpi-body">
-                      <span className="leads-kpi-value">
-                        {card.value}
-                      </span>
-                      <span className={`leads-kpi-trend ${card.trendUp ? 'trend-up' : 'trend-down'}`}>
-                        {card.trendUp ? '↑' : '↓'} {card.trend}
-                      </span>
-                    </div>
-
-                    <div className="leads-kpi-footer">
-                      <div className="leads-kpi-chart">
-                        {card.sparkline}
-                      </div>
-                    </div>
-                  </div>
+                  <LeadsKpiCard
+                    key={idx}
+                    label={card.label}
+                    value={card.value}
+                    icon={card.icon}
+                    trend={card.trend}
+                    trendUp={card.trendUp}
+                  />
                 ))}
               </div>
 
@@ -1644,328 +1553,50 @@ export default function AllLeadsPage() {
                   const stats = segmentStats[segment.key] || { count: 0, pct: 0 };
 
                   return (
-                    <button
+                    <LeadsFilterChip
                       key={segment.key}
+                      label={segment.label}
+                      icon={segment.icon}
+                      count={stats.count}
+                      pct={stats.pct}
+                      color={segment.color}
+                      isActive={isActive}
                       onClick={() => setActiveBlockFilter(segment.key)}
-                      className={`leads-chip ${isActive ? `active color-${segment.color}` : ''}`}
-                    >
-                      <span className="material-symbols-outlined leads-chip-icon">
-                        {segment.icon}
-                      </span>
-                      <span>{segment.label}</span>
-                      <span className="leads-chip-count">
-                        {stats.count} ({stats.pct}%)
-                      </span>
-                    </button>
+                    />
                   );
                 })}
               </div>
 
               {/* Consolidated Filters Toolbar */}
-              <div className="leads-toolbar">
-                <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
-                  {/* Search Bar */}
-                  <div className="leads-search-wrapper">
-                    <span className="material-symbols-outlined leads-search-icon select-none">
-                      search
-                    </span>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search by name, email, owner..."
-                      className="leads-search-input"
-                    />
-                  </div>
-
-                  {/* Date Range Selector */}
-                  <div className="relative">
-                    <select
-                      value={dateRangeFilter}
-                      onChange={(e) => setDateRangeFilter(e.target.value)}
-                      className="leads-filter-select"
-                    >
-                      <option value="all">Date Range: All Time</option>
-                      <option value="today">Created: Today</option>
-                      <option value="7days">Created: Last 7 Days</option>
-                      <option value="30days">Created: Last 30 Days</option>
-                    </select>
-                  </div>
-
-                  {/* Lead Owner Selector */}
-                  <div className="relative">
-                    <select
-                      value={leadOwnerFilter}
-                      onChange={(e) => setLeadOwnerFilter(e.target.value)}
-                      className="leads-filter-select"
-                    >
-                      <option value="all">Owner: All</option>
-                      <option value="Sarah Jenkins">Sarah Jenkins</option>
-                      <option value="Marcus Chan">Marcus Chan</option>
-                      <option value="Unassigned">Unassigned</option>
-                    </select>
-                  </div>
-
-                  {/* Source Selector */}
-                  <div className="relative">
-                    <select
-                      value={sourceFilter}
-                      onChange={(e) => setSourceFilter(e.target.value)}
-                      className="leads-filter-select"
-                    >
-                      <option value="all">Source: All</option>
-                      <option value="Website Organic">Website Organic</option>
-                      <option value="Paid Search">Paid Search</option>
-                      <option value="Referral">Referral</option>
-                      <option value="Direct Mail">Direct Mail</option>
-                      <option value="Webinar">Webinar</option>
-                      <option value="Cold Outreach">Cold Outreach</option>
-                      <option value="Quick Add Form">Quick Add Form</option>
-                      <option value="Bulk Offline CSV">Bulk Offline CSV</option>
-                    </select>
-                  </div>
-
-                  {/* Status Selector */}
-                  <div className="relative">
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="leads-filter-select"
-                    >
-                      <option value="all">Status: All Active</option>
-                      <option value="NEW">NEW</option>
-                      <option value="CONTACTED">CONTACTED</option>
-                      <option value="QUALIFIED">QUALIFIED</option>
-                      <option value="LOST">LOST</option>
-                    </select>
-                  </div>
-
-                  {/* Verification Selector */}
-                  <div className="relative">
-                    <select
-                      value={verificationFilter}
-                      onChange={(e) => setVerificationFilter(e.target.value)}
-                      className="leads-filter-select"
-                    >
-                      <option value="all">Verification: All</option>
-                      <option value="verified">Verified Only</option>
-                      <option value="unverified">Unverified Only</option>
-                    </select>
-                  </div>
-
-                  {/* Query Selector */}
-                  <div className="relative">
-                    <select
-                      value={queryFilter}
-                      onChange={(e) => setQueryFilter(e.target.value)}
-                      className="leads-filter-select"
-                    >
-                      <option value="all">Query: All</option>
-                      {uniqueQueries.map(q => (
-                        <option key={q} value={q}>{q}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Column Customizer Button */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowColumnDropdown(!showColumnDropdown)}
-                      className="leads-action-btn"
-                    >
-                      <span className="material-symbols-outlined text-[15px] text-slate-400">table_chart</span>
-                      Columns
-                    </button>
-                    <AnimatePresence>
-                      {showColumnDropdown && (
-                        <>
-                          <div className="fixed inset-0 z-10" onClick={() => setShowColumnDropdown(false)} />
-                          <motion.div
-                            className="absolute left-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-20 text-left font-sans animate-fade-in"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.15 }}
-                          >
-                            <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 select-none">Toggle Columns</div>
-                            <div className="space-y-1.5 text-[11.5px] font-semibold text-slate-700">
-                              {Object.keys(visibleColumns).map((col) => (
-                                <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer capitalize">
-                                  <input
-                                    type="checkbox"
-                                    checked={visibleColumns[col]}
-                                    onChange={() => setVisibleColumns({
-                                      ...visibleColumns,
-                                      [col]: !visibleColumns[col]
-                                    })}
-                                    className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350 text-primary"
-                                  />
-                                  {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
-                                </label>
-                              ))}
-                            </div>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Clear All Option */}
-                  {(searchQuery !== '' || filterStatus !== 'all' || dateRangeFilter !== 'all' || leadOwnerFilter !== 'all' || sourceFilter !== 'all' || verificationFilter !== 'all' || queryFilter !== 'all' || activeSavedTab !== 'all' || activeBlockFilter !== 'all') && (
-                    <button
-                      onClick={() => {
-                        setSearchQuery('')
-                        setFilterStatus('all')
-                        setDateRangeFilter('all')
-                        setLeadOwnerFilter('all')
-                        setSourceFilter('all')
-                        setVerificationFilter('all')
-                        setQueryFilter('all')
-                        setActiveSavedTab('all')
-                        setActiveBlockFilter('all')
-                        setSortConfig({ key: 'name', direction: 'asc' })
-                      }}
-                      className="text-primary hover:text-primary-dark transition-colors text-[11.5px] font-bold cursor-pointer underline underline-offset-2 decoration-dotted ml-2"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-
-                {/* Actions Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowGlobalActionsDropdown(!showGlobalActionsDropdown)}
-                    className="leads-action-btn primary"
-                  >
-                    Actions
-                    <span className="material-symbols-outlined text-[15px] text-white leading-none">expand_more</span>
-                  </button>
-
-                  <AnimatePresence>
-                    {showGlobalActionsDropdown && (
-                      <>
-                        <div className="fixed inset-0 z-30" onClick={() => setShowGlobalActionsDropdown(false)} />
-                        <motion.div
-                          className="absolute right-0 mt-1.5 w-52 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans"
-                          initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          {/* Group 1: Lead Ingestions */}
-                          <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Ingestions</div>
-                          <button
-                            onClick={() => {
-                              setShowBulkUploadModal(true);
-                              setShowGlobalActionsDropdown(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                          >
-                            <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
-                            Bulk Offline Upload
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowQuickLeadModal(true);
-                              setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' });
-                              setShowGlobalActionsDropdown(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                          >
-                            <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
-                            Add Quick Lead
-                          </button>
-
-                          <hr className="border-slate-100 my-1" />
-
-                          {/* Group 2: Data Operations */}
-                          <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Data Operations</div>
-                          {/* Download Leads with Format Submenu on Hover */}
-                          <div
-                            className="relative"
-                            onMouseEnter={() => setShowDownloadFormats(true)}
-                            onMouseLeave={() => setShowDownloadFormats(false)}
-                          >
-                            <button
-                              className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
-                                Download Leads
-                              </div>
-                              <span className="material-symbols-outlined text-[14px] text-slate-400">chevron_left</span>
-                            </button>
-
-                            <AnimatePresence>
-                              {showDownloadFormats && (
-                                <motion.div
-                                  className="absolute right-full top-0 w-36 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-50 text-left font-sans"
-                                  initial={{ opacity: 0, x: 10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: 10 }}
-                                  transition={{ duration: 0.15 }}
-                                >
-                                  <button
-                                    onClick={() => {
-                                      handleDownloadLeads('CSV');
-                                      setShowGlobalActionsDropdown(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[14px] text-green-600">table_view</span>
-                                    CSV Format
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleDownloadLeads('Excel (XLSX)');
-                                      setShowGlobalActionsDropdown(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[14px] text-emerald-600">grid_on</span>
-                                    Excel (XLSX)
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleDownloadLeads('PDF');
-                                      setShowGlobalActionsDropdown(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[14px] text-red-600">picture_as_pdf</span>
-                                    PDF Document
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleDownloadLeads('JSON');
-                                      setShowGlobalActionsDropdown(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="material-symbols-outlined text-[14px] text-amber-600">code</span>
-                                    JSON Data
-                                  </button>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                          <button
-                            onClick={() => {
-                              handleChangeLeadStageGlobal();
-                              setShowGlobalActionsDropdown(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
-                          >
-                            <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">swap_horiz</span>
-                            Change Lead Stage
-                          </button>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
+              <LeadsToolbar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                dateRangeFilter={dateRangeFilter}
+                setDateRangeFilter={setDateRangeFilter}
+                leadOwnerFilter={leadOwnerFilter}
+                setLeadOwnerFilter={setLeadOwnerFilter}
+                sourceFilter={sourceFilter}
+                setSourceFilter={setSourceFilter}
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
+                verificationFilter={verificationFilter}
+                setVerificationFilter={setVerificationFilter}
+                queryFilter={queryFilter}
+                setQueryFilter={setQueryFilter}
+                uniqueQueries={uniqueQueries}
+                visibleColumns={visibleColumns}
+                setVisibleColumns={setVisibleColumns}
+                activeSavedTab={activeSavedTab}
+                setActiveSavedTab={setActiveSavedTab}
+                activeBlockFilter={activeBlockFilter}
+                setActiveBlockFilter={setActiveBlockFilter}
+                setSortConfig={setSortConfig}
+                setShowBulkUploadModal={setShowBulkUploadModal}
+                setShowQuickLeadModal={setShowQuickLeadModal}
+                setQuickLeadForm={setQuickLeadForm}
+                handleDownloadLeads={handleDownloadLeads}
+                handleChangeLeadStageGlobal={handleChangeLeadStageGlobal}
+              />
 
               {/* Desktop Table View */}
               <div className="leads-table-scroll-container">
@@ -2498,7 +2129,10 @@ export default function AllLeadsPage() {
                           )}
                           {visibleColumns.status && (
                             <td className="px-3 py-4">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
+                              <span 
+                                className="inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border"
+                                style={getStatusStyleLocal(lead.status)}
+                              >
                                 {lead.status}
                               </span>
                             </td>
@@ -2642,7 +2276,10 @@ export default function AllLeadsPage() {
                           </span>
                         </div>
                       </div>
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border ${getStatusColor(lead.status)}`}>
+                      <span 
+                        className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border"
+                        style={getStatusStyleLocal(lead.status)}
+                      >
                         {lead.status}
                       </span>
                     </div>
@@ -2774,10 +2411,9 @@ export default function AllLeadsPage() {
                         style={{ color: 'white' }}
                       >
                         <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
-                        <option value="NEW" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>NEW</option>
-                        <option value="CONTACTED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>CONTACTED</option>
-                        <option value="QUALIFIED" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>QUALIFIED</option>
-                        <option value="LOST" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>LOST</option>
+                        {statusesList.map(status => (
+                          <option key={status.value} value={status.value} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{status.label}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -3321,10 +2957,9 @@ export default function AllLeadsPage() {
                         id="globalStageSelectInput"
                         className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                       >
-                        <option value="NEW">NEW</option>
-                        <option value="CONTACTED">CONTACTED</option>
-                        <option value="QUALIFIED">QUALIFIED</option>
-                        <option value="LOST">LOST</option>
+                        {statusesList.map(status => (
+                          <option key={status.value} value={status.value}>{status.label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>

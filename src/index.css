@@ -181,14 +181,7 @@ h4,
 }
 
 /* Body Text / Form Labels */
-.body-text,
-label {
-  font-size: 13px;
-  /* 0.8125rem */
-  font-weight: 400;
-  line-height: 1.5;
-  color: #1e293b;
-}
+
 
 /* Strong Body Text */
 .body-text-strong {
@@ -303,14 +296,17 @@ pre {
 .top-scrollbar::-webkit-scrollbar {
   height: 8px;
 }
+
 .top-scrollbar::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 4px;
 }
+
 .top-scrollbar::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
+
 .top-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -318,14 +314,17 @@ pre {
 .table-scroll-container::-webkit-scrollbar {
   height: 8px;
 }
+
 .table-scroll-container::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 4px;
 }
+
 .table-scroll-container::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
+
 .table-scroll-container::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }

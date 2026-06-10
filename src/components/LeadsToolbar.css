@@ -1,0 +1,180 @@
+/* ==========================================
+   Leads Page Toolbar Stylesheet
+   ========================================== */
+
+.leads-toolbar {
+  background-color: var(--color-surface-container-low, #eff4ff);
+  border: 1px solid var(--color-outline-variant, #c3c6d7);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.leads-toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.leads-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.leads-search-wrapper {
+  position: relative;
+  min-width: 160px;
+  flex-grow: 1;
+  max-width: 260px;
+}
+
+.leads-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px !important;
+  color: var(--color-outline, #737686);
+}
+
+.leads-search-input {
+  width: 100%;
+  height: 30px;
+  padding: 0 12px 0 32px;
+  border: 1px solid var(--color-outline-variant, #c3c6d7);
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  color: var(--color-on-background, #0b1c30);
+  border-radius: 8px;
+  font-size: 11px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.leads-search-input:focus {
+  border-color: var(--color-primary, #004ac6);
+  box-shadow: 0 0 0 2px rgba(0, 74, 198, 0.1);
+}
+
+.leads-filter-select {
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--color-outline-variant, #c3c6d7);
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  color: var(--color-on-background, #0b1c30);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.leads-filter-select:hover {
+  background-color: var(--color-surface-container-low, #eff4ff);
+}
+
+.leads-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  border: 1px solid var(--color-outline-variant, #c3c6d7);
+  color: var(--color-on-background, #0b1c30);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.leads-action-btn:hover {
+  background-color: var(--color-surface-container-low, #eff4ff);
+  border-color: var(--color-outline, #737686);
+}
+
+.leads-action-btn.primary {
+  background-color: var(--color-primary, #004ac6);
+  color: #ffffff;
+  border: none;
+}
+
+.leads-action-btn.primary:hover {
+  background-color: #003ea8;
+}
+
+.leads-action-btn .btn-icon {
+  font-size: 16px !important;
+}
+
+/* Fix relative container style */
+.relative {
+  position: relative;
+}
+
+/* Toggle Columns label styling */
+.space-y-1\.5 label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.space-y-1\.5 label:hover {
+  background-color: #f8fafc;
+}
+
+/* Responsive adjustments for toolbar */
+@media (max-width: 768px) {
+  .leads-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+  .leads-toolbar-left {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 100%;
+    width: 100%;
+    gap: 8px;
+  }
+  .leads-search-wrapper {
+    max-width: 100%;
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .leads-filter-select {
+    flex-grow: 1;
+    height: 34px;
+    font-size: 12px;
+  }
+  .leads-toolbar-right {
+    justify-content: flex-end;
+    margin-top: 4px;
+    width: 100%;
+    gap: 10px;
+  }
+  .leads-toolbar-right .leads-action-btn {
+    flex-grow: 1;
+    height: 34px;
+    font-size: 12px;
+  }
+}

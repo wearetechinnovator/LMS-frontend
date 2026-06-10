@@ -1,5 +1,5 @@
-import React, { use } from 'react'
-import { useNavigate, useLocation, data } from 'react-router-dom'
+import React from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { UserContext } from '../contextApi.jsx'
 import { useContext } from 'react'
@@ -18,6 +18,18 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
   const [isResizing, setIsResizing] = React.useState(false)
   const [hoveredItem, setHoveredItem] = React.useState(null)
   const [tooltipTop, setTooltipTop] = React.useState(0)
+  const [expandedItems, setExpandedItems] = React.useState({
+    analytics: location.pathname.includes('/analytics')
+  })
+
+  // Automatically expand sub-menus if active path is a sub-route
+  React.useEffect(() => {
+    navigationItems.forEach(item => {
+      if (item.subItems && item.subItems.some(sub => location.pathname === sub.path)) {
+        setExpandedItems(prev => ({ ...prev, [item.id]: true }))
+      }
+    })
+  }, [location.pathname, navigationItems])
 
   const startResizing = React.useCallback((e) => {
     e.preventDefault()
@@ -51,7 +63,12 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
   }, [isResizing, resize, stopResizing])
 
   const getActiveItem = () => {
-    return navigationItems.find(item => item.path === location.pathname)?.id || ''
+    const matched = navigationItems.find(item => {
+      if (item.path === location.pathname) return true
+      if (item.subItems && item.subItems.some(sub => sub.path === location.pathname)) return true
+      return false
+    })
+    return matched ? matched.id : ''
   }
 
   const getSettingsPath = () => {
@@ -95,24 +112,65 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
         </div>
 
         <nav className="sidebar-nav">
-          {navigationItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => navigate(item.path)}
-              onMouseEnter={(e) => {
-                if (sidebarCollapsed) {
-                  const rect = e.currentTarget.getBoundingClientRect()
-                  setTooltipTop(rect.top + rect.height / 2)
-                  setHoveredItem(item.label)
-                }
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`nav-item ${getActiveItem() === item.id ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
-            >
-              <span className="material-symbols-outlined icon">{item.icon}</span>
-              {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
-            </button>
-          ))}
+          {navigationItems.map(item => {
+            const hasSubItems = item.subItems && item.subItems.length > 0
+            const isExpanded = !!expandedItems[item.id]
+            const isActive = getActiveItem() === item.id
+
+            return (
+              <div key={item.id} className="nav-group" style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                <button
+                  onClick={() => {
+                    if (hasSubItems) {
+                      setExpandedItems(prev => ({ ...prev, [item.id]: !prev[item.id] }))
+                      // If expanding and not already inside a sub-route, navigate to first sub-item
+                      if (!location.pathname.includes(item.path)) {
+                        navigate(item.subItems[0].path)
+                      }
+                    } else {
+                      navigate(item.path)
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    if (sidebarCollapsed) {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      setTooltipTop(rect.top + rect.height / 2)
+                      setHoveredItem(item.label)
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  className={`nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
+                >
+                  <span className="material-symbols-outlined icon">{item.icon}</span>
+                  {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                  {!sidebarCollapsed && hasSubItems && (
+                    <span className="material-symbols-outlined sub-menu-arrow">
+                      {isExpanded ? 'expand_less' : 'expand_more'}
+                    </span>
+                  )}
+                </button>
+
+                {/* Sub Menu Items */}
+                {!sidebarCollapsed && hasSubItems && isExpanded && (
+                  <div className="sub-menu-list">
+                    {item.subItems.map(subItem => {
+                      const isSubActive = location.pathname === subItem.path
+                      return (
+                        <button
+                          key={subItem.id}
+                          onClick={() => navigate(subItem.path)}
+                          className={`sub-nav-item ${isSubActive ? 'active' : ''}`}
+                        >
+                          <span className="sub-nav-dot" />
+                          <span className="truncate">{subItem.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </nav>
 
         <div className="sidebar-footer">
