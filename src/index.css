@@ -251,14 +251,7 @@ td,
 }
 
 /* Button Text */
-button,
-.button {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  /* 0.875rem */
-  font-weight: 500;
-  line-height: 1.4;
-}
+
 
 /* Input & Textarea */
 input,

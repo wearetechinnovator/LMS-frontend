@@ -1,11 +1,11 @@
 /* ==========================================================================
-   TIS Platform Auth Page Stylesheet
+    Auth Page Stylesheet
    ========================================================================== */
 
 .auth-page-scope {
     background-color: #0b1f65;
     background-image: radial-gradient(circle at 10% 20%, rgba(19, 57, 188, 0.2) 0%, transparent 40%),
-                      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -36,7 +36,7 @@
     width: 50%;
     background: linear-gradient(135deg, #183fb5 0%, #0a1b65 100%);
     background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-                      linear-gradient(135deg, #183fb5 0%, #0a1b65 100%);
+        linear-gradient(135deg, #183fb5 0%, #0a1b65 100%);
     background-size: 20px 20px, 100% 100%;
     padding: 28px;
     display: flex;
@@ -61,11 +61,13 @@
         flex-direction: column;
         min-height: auto;
     }
+
     .auth-sidebar {
         width: 100%;
         padding: 32px 24px;
         min-height: 320px;
     }
+
     .auth-form-scope {
         width: 100%;
     }
@@ -105,8 +107,18 @@
 }
 
 @keyframes badgePulse {
-    0%, 100% { opacity: 0.6; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 12px #10b981; }
+
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+        box-shadow: 0 0 12px #10b981;
+    }
 }
 
 .auth-sidebar-title {

@@ -24,7 +24,7 @@ export default function Dashboard() {
     { label: 'Last 7 Days', value: 'Last 7 Days' },
     { label: 'Last 30 Days', value: 'Last 30 Days' },
     { label: 'Last 90 Days', value: 'Last 90 Days' },
-    { label: 'This Year', value: 'This Year' }
+    { label: 'This Session', value: 'This Session' }
   ]
 
   const stats = [

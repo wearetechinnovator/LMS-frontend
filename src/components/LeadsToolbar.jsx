@@ -3,6 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getCustomStatuses } from '../helpers/statusHelper';
 import './LeadsToolbar.css';
 
+import excelIcon from '../assets/excel.png';
+import pdfIcon from '../assets/pdf.png';
+import jsonIcon from '../assets/json.png';
+import csvIcon from '../assets/csv.png';
+
+
 export default function LeadsToolbar({
   searchQuery,
   setSearchQuery,
@@ -315,7 +321,7 @@ export default function LeadsToolbar({
                               }}
                               className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
                             >
-                              <span className="material-symbols-outlined text-[14px] text-green-600">table_view</span>
+                              <img src={csvIcon} alt="csv" className="w-4 h-4" />
                               CSV Format
                             </button>
                             <button
@@ -325,7 +331,7 @@ export default function LeadsToolbar({
                               }}
                               className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
                             >
-                              <span className="material-symbols-outlined text-[14px] text-emerald-600">grid_on</span>
+                              <img src={excelIcon} alt="csv" className="w-4 h-4" />
                               Excel (XLSX)
                             </button>
                             <button
@@ -335,7 +341,7 @@ export default function LeadsToolbar({
                               }}
                               className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
                             >
-                              <span className="material-symbols-outlined text-[14px] text-red-600">picture_as_pdf</span>
+                              <img src={pdfIcon} alt="csv" className="w-4 h-4" />
                               PDF Document
                             </button>
                             <button
@@ -345,7 +351,7 @@ export default function LeadsToolbar({
                               }}
                               className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
                             >
-                              <span className="material-symbols-outlined text-[14px] text-amber-600">code</span>
+                              <img src={jsonIcon} alt="csv" className="w-4 h-4" />
                               JSON Data
                             </button>
                           </motion.div>

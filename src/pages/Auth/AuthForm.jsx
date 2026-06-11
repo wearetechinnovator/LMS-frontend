@@ -89,48 +89,37 @@ export default function AuthForm({
 
         <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
-            <motion.div className="auth-form-grid" custom={0} variants={inputV} initial="hidden" animate="visible">
+            <motion.div className="auth-form-group" custom={0} variants={inputV} initial="hidden" animate="visible">
               <div className="auth-form-group">
-                <label className="auth-label">First name</label>
+                <label className="auth-label">Username</label>
                 <input
                   type="text"
-                  name="firstName"
-                  value={formData.firstName}
+                  name="username"
+                  value={formData.username}
                   onChange={onFormChange}
-                  className={`auth-input ${errors.firstName ? 'error' : ''}`}
-                  placeholder="John"
+                  className={`auth-input ${errors.username ? 'error' : ''}`}
+                  placeholder="Username"
                 />
-                {errors.firstName && <p className="auth-error-text">{errors.firstName}</p>}
+                {errors.username && <p className="auth-error-text">{errors.username}</p>}
               </div>
-              <div className="auth-form-group">
-                <label className="auth-label">Last name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={onFormChange}
-                  className={`auth-input ${errors.lastName ? 'error' : ''}`}
-                  placeholder="Doe"
-                />
-                {errors.lastName && <p className="auth-error-text">{errors.lastName}</p>}
-              </div>
+
             </motion.div>
           )}
 
           <motion.div className="auth-form-group" custom={isLogin ? 0 : 1} variants={inputV} initial="hidden" animate="visible">
-            <label className="auth-label">{isLogin ? 'EMAIL ADDRESS' : 'NUMBER'}</label>
+            <label className="auth-label">MOBILE NUMBER</label>
             <input
-              type={isLogin ? 'email' : 'tel'}
+              type="tel"
               name="number"
               value={formData.number || ''}
               onChange={onFormChange}
               className={`auth-input ${errors.number ? 'error' : ''}`}
-              placeholder={isLogin ? 'Email Address' : '9xxxxxxxx'}
+              placeholder='Number'
             />
             {errors.number && <p className="auth-error-text">{errors.number}</p>}
           </motion.div>
 
-          {!isLogin && (
+          {/* {!isLogin && (
             <motion.div className="auth-form-group" custom={2} variants={inputV} initial="hidden" animate="visible">
               <label className="auth-label">ROLE</label>
               <select
@@ -144,7 +133,7 @@ export default function AuthForm({
                 <option value="vendor">Vendor</option>
               </select>
             </motion.div>
-          )}
+          )} */}
 
           <motion.div className="auth-form-group" custom={isLogin ? 1 : 3} variants={inputV} initial="hidden" animate="visible">
             <label className="auth-label">PASSWORD</label>
