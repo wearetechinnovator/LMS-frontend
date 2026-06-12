@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormBuilder from './FormBuilder'
 import FormBuilderHeader from '../../../components/FormbuilderPage/FormBuilderHeader'
@@ -36,67 +36,37 @@ export default function FormBuilderPage() {
     setToastMessage(msg)
   }
 
-  // Detailed mock forms data structures matching the uploaded screenshot
-  const [formsList, setFormsList] = useState([
-    {
-      id: 'TMP-0001-C',
-      name: 'General Contact Inquiry',
-      status: 'TEMPLATE',
-      responses: null,
-      conversionRate: null,
-      createdBy: 'System Architect',
-      createdDate: '1 week ago',
-      description: 'A standard contact inquiry form to capture visitors\' basic contact information and their specific queries or interests.',
-      fields: [
-        { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe', helperText: '', options: [] },
-        { id: 2, type: 'email', label: 'Email Address', required: true, placeholder: 'john@example.com', helperText: '', options: [] },
-        { id: 3, type: 'text', label: 'Inquiry Subject', required: true, placeholder: 'How can we help you?', helperText: '', options: [] },
-        { id: 4, type: 'text', label: 'Detailed Message', required: true, placeholder: 'Type your message details here...', helperText: '', options: [] }
-      ]
-    },
+  // Detailed mock forms data structures matching the uploaded screenshot as fallback
+  const [formsList, setFormsList] = useState([])
 
-
-    {
-      id: 'FRM-3320-B',
-      name: 'SaaS Demo Request - Main Landing',
-      status: 'PUBLISHED',
-      responses: 8982,
-      conversionRate: '12.1%',
-      createdBy: 'System Admin',
-      createdDate: '1 month ago',
-      description: 'Request a personalized product demo of our LMS and CRM platform. Our solution architects will build a sandbox tailormade for your workflow.',
-      fields: [
-        { id: 1, type: 'text', label: 'First Name', required: true, placeholder: 'Sarah', helperText: '', options: [] },
-        { id: 2, type: 'text', label: 'Last Name', required: true, placeholder: 'Miller', helperText: '', options: [] },
-        { id: 3, type: 'email', label: 'Corporate Email', required: true, placeholder: 'sarah.miller@example.com', helperText: '', options: [] },
-        { id: 4, type: 'phone', label: 'Phone Number', required: true, placeholder: '+1 (555) 019-2834', helperText: "We'll call you at this number to schedule your demo.", options: [] },
-        { id: 5, type: 'radio', label: 'Primary Goal', required: true, placeholder: 'Select...', helperText: '', options: ['Improve Conversion Rate', 'Automate Lead Routing', 'Audit Logging & Compliance', 'Other'] }
-      ]
-    },
-    {
-      id: 'FRM-1102-C',
-      name: 'Partner Program Application 2024',
-      status: 'DRAFT',
-      responses: null,
-      conversionRate: null,
-      createdBy: 'Marcus Chen',
-      createdDate: '5 hours ago',
-      description: 'Apply to become an official integration partner. Gain exclusive access to beta features, partner commission models, and mutual co-marketing campaigns.',
-      fields: [
-        { id: 1, type: 'text', label: 'Contact Name', required: true, placeholder: 'Alex Chen', helperText: '', options: [] },
-        { id: 2, type: 'email', label: 'Email Address', required: true, placeholder: 'partnerships@alliance.net', helperText: '', options: [] },
-        { id: 3, type: 'text', label: 'Website URL', required: true, placeholder: 'https://alliance.net', helperText: '', options: [] },
-        { id: 4, type: 'select', label: 'Partner Type', required: true, placeholder: 'Select type...', helperText: '', options: ['System Integrator', 'Technology Partner', 'Affiliate / Agency', 'Strategic Advisor'] },
-        { id: 5, type: 'text', label: 'Comments / Notes', required: false, placeholder: 'Describe your integration goals...', helperText: '', options: [] }
-      ]
-    },
-
-  ])
+  // Fetch forms from database on mount
+  useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || token === 'mock-jwt-token') return;
+        const response = await fetch('http://localhost:5001/api/v1/form/get-form', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFormsList(data);
+        }
+      } catch (err) {
+        console.error("Failed to load forms from backend:", err);
+      }
+    };
+    fetchForms();
+  }, []);
 
   // Filter forms based on search query and status option selection
   const filteredForms = formsList.filter(form => {
-    const matchesSearch = form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      form.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
+    const nameStr = form.name || '';
+    const creatorStr = form.createdBy || '';
+    const matchesSearch = nameStr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      creatorStr.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = filterStatus === 'all' || form.status === filterStatus
     return matchesSearch && matchesStatus
   })
@@ -131,76 +101,191 @@ export default function FormBuilderPage() {
   }
 
   // Duplicate form
-  const handleDuplicateForm = (form) => {
-    const duplicated = {
-      ...form,
-      id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-D`,
-      name: `${form.name} (Copy)`,
-      status: 'DRAFT',
-      responses: 0,
-      conversionRate: '0%',
-      createdBy: 'System Admin',
-      createdDate: 'Just now'
-    }
-    setFormsList([duplicated, ...formsList])
-    triggerToast(`Form "${form.name}" duplicated successfully!`)
-  }
-
-  // Save edited or created form
-  const handleSaveForm = (updatedData) => {
-    let savedForm = null
-    const isExisting = activeFormSchema.id && formsList.some(form => form.id === activeFormSchema.id)
-    if (isExisting) {
-      setFormsList(prev => prev.map(form => {
-        if (form.id === activeFormSchema.id) {
-          const updated = {
-            ...form,
-            name: updatedData.title,
-            description: updatedData.description,
-            fields: updatedData.fields,
-            status: updatedData.status
-          }
-          savedForm = updated
-          return updated
+  const handleDuplicateForm = async (form) => {
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/form/create-form', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            title: `${form.name} (Copy)`,
+            description: form.description,
+            fields: form.fields,
+            status: 'DRAFT'
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to duplicate form');
         }
-        return form
-      }))
-      triggerToast(`Form "${updatedData.title}" saved successfully!`)
+        const saved = await response.json();
+        setFormsList(prev => [saved, ...prev]);
+        triggerToast(`Form "${form.name}" duplicated successfully!`);
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+      }
     } else {
-      const newForm = {
-        id: activeFormSchema.id || `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
-        name: updatedData.title,
-        description: updatedData.description,
-        fields: updatedData.fields,
-        status: updatedData.status,
+      const duplicated = {
+        ...form,
+        id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-D`,
+        name: `${form.name} (Copy)`,
+        status: 'DRAFT',
         responses: 0,
         conversionRate: '0%',
         createdBy: 'System Admin',
         createdDate: 'Just now'
       }
-      savedForm = newForm
-      setFormsList([newForm, ...formsList])
-      triggerToast(`New form "${updatedData.title}" created successfully!`)
+      setFormsList([duplicated, ...formsList])
+      triggerToast(`Form "${form.name}" duplicated successfully!`)
+    }
+  }
+
+  // Save edited or created form
+  const handleSaveForm = async (updatedData) => {
+    const token = localStorage.getItem('authToken');
+    const isExisting = activeFormSchema.id && formsList.some(form => form.id === activeFormSchema.id);
+    const hasNetworkToken = token && token !== 'mock-jwt-token';
+    const isRealDatabaseId = isExisting && !String(activeFormSchema.id).startsWith('FRM-') && !String(activeFormSchema.id).startsWith('TMP-');
+
+    if (hasNetworkToken) {
+      if (isRealDatabaseId) {
+        // Edit existing form
+        try {
+          const response = await fetch(`http://localhost:5001/api/v1/form/edit-form/${activeFormSchema.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              title: updatedData.title,
+              description: updatedData.description,
+              fields: updatedData.fields,
+              status: updatedData.status
+            })
+          });
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Failed to save form');
+          }
+          const saved = await response.json();
+          setFormsList(prev => prev.map(form => form.id === activeFormSchema.id ? saved : form));
+          triggerToast(`Form "${updatedData.title}" saved successfully!`);
+        } catch (err) {
+          triggerToast(`Error: ${err.message}`);
+          return;
+        }
+      } else {
+        // Create new form
+        try {
+          const response = await fetch('http://localhost:5001/api/v1/form/create-form', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              title: updatedData.title,
+              description: updatedData.description,
+              fields: updatedData.fields,
+              status: updatedData.status
+            })
+          });
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Failed to create form');
+          }
+          const saved = await response.json();
+          setFormsList(prev => [saved, ...prev]);
+          triggerToast(`New form "${updatedData.title}" created successfully!`);
+        } catch (err) {
+          triggerToast(`Error: ${err.message}`);
+          return;
+        }
+      }
+    } else {
+      // Local mock fallback
+      if (isExisting) {
+        setFormsList(prev => prev.map(form => {
+          if (form.id === activeFormSchema.id) {
+            return {
+              ...form,
+              name: updatedData.title,
+              description: updatedData.description,
+              fields: updatedData.fields,
+              status: updatedData.status
+            }
+          }
+          return form
+        }))
+        triggerToast(`Form "${updatedData.title}" saved successfully!`)
+      } else {
+        const newForm = {
+          id: activeFormSchema.id || `FRM-${Math.floor(1000 + Math.random() * 9000)}-N`,
+          name: updatedData.title,
+          description: updatedData.description,
+          fields: updatedData.fields,
+          status: updatedData.status,
+          responses: 0,
+          conversionRate: '0%',
+          createdBy: 'System Admin',
+          createdDate: 'Just now'
+        }
+        setFormsList([newForm, ...formsList])
+        triggerToast(`New form "${updatedData.title}" created successfully!`)
+      }
     }
 
     setActiveFormSchema(null)
   }
 
   // Save form as template
-  const handleSaveAsTemplate = (updatedData) => {
-    const templateForm = {
-      id: `TMP-${Math.floor(1000 + Math.random() * 9000)}-T`,
-      name: `${updatedData.title} (Template)`,
-      description: updatedData.description,
-      fields: updatedData.fields,
-      status: 'TEMPLATE',
-      responses: null,
-      conversionRate: null,
-      createdBy: 'System Admin',
-      createdDate: 'Just now'
+  const handleSaveAsTemplate = async (updatedData) => {
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/form/create-form', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            title: updatedData.title,
+            description: updatedData.description,
+            fields: updatedData.fields,
+            status: 'TEMPLATE'
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to save template');
+        }
+        const saved = await response.json();
+        setFormsList(prev => [saved, ...prev]);
+        triggerToast(`Form saved as template successfully!`);
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+      }
+    } else {
+      const templateForm = {
+        id: `TMP-${Math.floor(1000 + Math.random() * 9000)}-T`,
+        name: `${updatedData.title} (Template)`,
+        description: updatedData.description,
+        fields: updatedData.fields,
+        status: 'TEMPLATE',
+        responses: null,
+        conversionRate: null,
+        createdBy: 'System Admin',
+        createdDate: 'Just now'
+      }
+      setFormsList([templateForm, ...formsList])
+      triggerToast(`Form saved as template successfully!`)
     }
-    setFormsList([templateForm, ...formsList])
-    triggerToast(`Form saved as template successfully!`)
     setActiveFormSchema(null)
   }
 

@@ -512,6 +512,30 @@ export default function AllLeadsPage() {
     localStorage.setItem('lms_leads_database', JSON.stringify(leads))
   }, [leads])
 
+  // Sync leads from database on mount
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || token === 'mock-jwt-token') return;
+        const response = await fetch('http://localhost:5001/api/v1/lead/get-lead', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setLeads(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch leads from database:", err);
+      }
+    };
+    fetchLeads();
+  }, []);
+
   // Listen for storage or custom update events to synchronize lead changes instantly
   useEffect(() => {
     const handleLeadsUpdated = () => {
@@ -838,62 +862,184 @@ export default function AllLeadsPage() {
   }, [activeLeadDetails, timelineFilter, timelineSearchQuery])
 
   // BULK ACTIONS HANDLERS
-  const handleBulkStatusUpdate = (newStatus) => {
-    if (!newStatus) return
-    setLeads(leads.map(lead => {
-      if (selectedLeads.includes(lead.id)) {
-        const updatedTimeline = [
-          {
-            id: Date.now() + Math.random(),
-            type: 'STATUS_CHANGE',
-            title: `Bulk Status updated to ${newStatus}`,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-            user: 'Admin',
-            ip: '192.168.1.105',
-            icon: 'swap_horiz',
-            color: newStatus === 'QUALIFIED' ? 'green-600' : newStatus === 'LOST' ? 'red-600' : 'orange-600'
+  const handleBulkStatusUpdate = async (newStatus) => {
+    if (!newStatus || selectedLeads.length === 0) return;
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/lead/bulk-status', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          ...lead.timeline
-        ]
-        return { ...lead, status: newStatus, timeline: updatedTimeline }
+          body: JSON.stringify({ ids: selectedLeads, status: newStatus })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update bulk status');
+        }
+        const updatedLeads = leads.map(lead => {
+          if (selectedLeads.includes(lead.id)) {
+            const updatedTimeline = [
+              {
+                id: Date.now() + Math.random(),
+                type: 'STATUS_CHANGE',
+                title: `Bulk Status updated to ${newStatus}`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+                user: 'Admin',
+                ip: '192.168.1.105',
+                icon: 'swap_horiz',
+                color: newStatus === 'QUALIFIED' ? 'green-600' : newStatus === 'LOST' ? 'red-600' : 'orange-600'
+              },
+              ...lead.timeline
+            ];
+            return { ...lead, status: newStatus, timeline: updatedTimeline };
+          }
+          return lead;
+        });
+        setLeads(updatedLeads);
+        localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+        window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+        triggerToast(`Bulk status updated to ${newStatus} for ${selectedLeads.length} leads`);
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
       }
-      return lead
-    }))
-    setSelectedLeads([])
-    triggerToast(`Bulk status updated to ${newStatus} for ${selectedLeads.length} leads`)
-  }
+    } else {
+      const updatedLeads = leads.map(lead => {
+        if (selectedLeads.includes(lead.id)) {
+          const updatedTimeline = [
+            {
+              id: Date.now() + Math.random(),
+              type: 'STATUS_CHANGE',
+              title: `Bulk Status updated to ${newStatus}`,
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+              user: 'Admin',
+              ip: '192.168.1.105',
+              icon: 'swap_horiz',
+              color: newStatus === 'QUALIFIED' ? 'green-600' : newStatus === 'LOST' ? 'red-600' : 'orange-600'
+            },
+            ...lead.timeline
+          ];
+          return { ...lead, status: newStatus, timeline: updatedTimeline };
+        }
+        return lead;
+      });
+      setLeads(updatedLeads);
+      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+      window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+      triggerToast(`Bulk status updated to ${newStatus} for ${selectedLeads.length} leads`);
+    }
+    setSelectedLeads([]);
+  };
 
-  const handleBulkAssignUpdate = (newCounselor) => {
-    if (!newCounselor) return
-    setLeads(leads.map(lead => {
-      if (selectedLeads.includes(lead.id)) {
-        const updatedTimeline = [
-          {
-            id: Date.now() + Math.random(),
-            type: 'ASSIGNMENT',
-            title: `Bulk Counselor Reassigned`,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-            body: `Assigned to: ${newCounselor}`,
-            user: 'Admin',
-            ip: '192.168.1.105',
-            icon: 'person_add',
-            color: 'blue-600'
+  const handleBulkAssignUpdate = async (newCounselor) => {
+    if (!newCounselor || selectedLeads.length === 0) return;
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/lead/bulk-assign', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          ...lead.timeline
-        ]
-        return { ...lead, assignedTo: newCounselor, timeline: updatedTimeline }
+          body: JSON.stringify({ ids: selectedLeads, assignedTo: newCounselor })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update bulk assignment');
+        }
+        const updatedLeads = leads.map(lead => {
+          if (selectedLeads.includes(lead.id)) {
+            const updatedTimeline = [
+              {
+                id: Date.now() + Math.random(),
+                type: 'ASSIGNMENT',
+                title: `Bulk Counselor Reassigned`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+                body: `Assigned to: ${newCounselor}`,
+                user: 'Admin',
+                ip: '192.168.1.105',
+                icon: 'person_add',
+                color: 'blue-600'
+              },
+              ...lead.timeline
+            ];
+            return { ...lead, assignedTo: newCounselor, timeline: updatedTimeline };
+          }
+          return lead;
+        });
+        setLeads(updatedLeads);
+        localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+        window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+        triggerToast(`Bulk reassigned ${selectedLeads.length} leads to ${newCounselor}`);
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
       }
-      return lead
-    }))
-    setSelectedLeads([])
-    triggerToast(`Bulk reassigned ${selectedLeads.length} leads to ${newCounselor}`)
-  }
+    } else {
+      const updatedLeads = leads.map(lead => {
+        if (selectedLeads.includes(lead.id)) {
+          const updatedTimeline = [
+            {
+              id: Date.now() + Math.random(),
+              type: 'ASSIGNMENT',
+              title: `Bulk Counselor Reassigned`,
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+              body: `Assigned to: ${newCounselor}`,
+              user: 'Admin',
+              ip: '192.168.1.105',
+              icon: 'person_add',
+              color: 'blue-600'
+            },
+            ...lead.timeline
+          ];
+          return { ...lead, assignedTo: newCounselor, timeline: updatedTimeline };
+        }
+        return lead;
+      });
+      setLeads(updatedLeads);
+      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+      window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+      triggerToast(`Bulk reassigned ${selectedLeads.length} leads to ${newCounselor}`);
+    }
+    setSelectedLeads([]);
+  };
 
-  const handleBulkDelete = () => {
-    setLeads(leads.filter(lead => !selectedLeads.includes(lead.id)))
-    setSelectedLeads([])
-    triggerToast(`Deleted ${selectedLeads.length} leads successfully`)
-  }
+  const handleBulkDelete = async () => {
+    if (selectedLeads.length === 0) return;
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/lead/bulk-delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ ids: selectedLeads })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to bulk delete leads');
+        }
+        const updatedLeads = leads.filter(lead => !selectedLeads.includes(lead.id));
+        setLeads(updatedLeads);
+        localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+        window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+        triggerToast(`Deleted ${selectedLeads.length} leads successfully`);
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+      }
+    } else {
+      const updatedLeads = leads.filter(lead => !selectedLeads.includes(lead.id));
+      setLeads(updatedLeads);
+      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+      window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+      triggerToast(`Deleted ${selectedLeads.length} leads successfully`);
+    }
+    setSelectedLeads([]);
+  };
 
   // SINGLE LEAD PROPERTY EDITORS
   const handleLeadStatusChange = (leadId, newStatus) => {
@@ -1135,10 +1281,9 @@ export default function AllLeadsPage() {
     triggerToast('Inquiry response sent and ticket resolved!');
   }
 
-  const handleAddQuickLead = (formData) => {
+  const handleAddQuickLead = async (formData) => {
     if (!formData.name.trim() || !formData.email.trim()) return;
     const newLead = {
-      id: `LS-${1022 + leads.length}`,
       name: formData.name,
       email: formData.email,
       phone: formData.phone || '--',
@@ -1151,43 +1296,70 @@ export default function AllLeadsPage() {
       tier: 'Secondary',
       verified: false,
       createdToday: true,
-      lastContacted: 'None',
-      nextFollowUp: 'Jun 10, 2026',
-      age: '1 day',
-      priority: 'Medium',
-      tags: ['Quick Add'],
-      activityCount: 1,
-      conversionProb: 50,
-      leadType: formData.leadType || 'Online',
       query: formData.query || 'BCA',
-      timeline: [
-        {
-          id: Date.now(),
-          type: 'CREATION',
-          title: `Lead Created (${formData.leadType || 'Online'} Add)`,
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-          body: `Added manually by counselor as ${formData.leadType || 'Online'} lead with source ${formData.source || 'Quick Add Form'}. Initialized with Starter Score 50.`,
-          user: 'Admin',
-          ip: '192.168.1.105',
-          icon: 'add_circle',
-          color: 'blue-600'
-        }
-      ],
-      application: {
-        appliedProgram: 'Standard Professional Tier',
-        submissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        companyName: 'N/A',
-        companySize: 'N/A',
-        annualRevenue: 'N/A',
-        useCase: `Manually added via Quick Add console as ${formData.leadType || 'Online'} lead.`,
-        notes: 'Vetting pending.'
-      },
-      queries: []
+      leadType: formData.leadType || 'Online'
     };
 
-    setLeads([newLead, ...leads]);
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/lead/create-lead', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newLead)
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to create lead');
+        }
+        const saved = await response.json();
+        const updatedLeads = [saved, ...leads];
+        setLeads(updatedLeads);
+        localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+        window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+        triggerToast(`Lead '${saved.name}' created successfully!`);
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+      }
+    } else {
+      // Mock fallback
+      const mockLead = {
+        ...newLead,
+        id: `LS-${1022 + leads.length}`,
+        timeline: [
+          {
+            id: Date.now(),
+            type: 'CREATION',
+            title: `Lead Created (${formData.leadType || 'Online'} Add)`,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+            body: `Added manually by counselor as ${formData.leadType || 'Online'} lead with source ${formData.source || 'Quick Add Form'}. Initialized with Starter Score 50.`,
+            user: 'Admin',
+            ip: '192.168.1.105',
+            icon: 'add_circle',
+            color: 'blue-600'
+          }
+        ],
+        application: {
+          appliedProgram: 'Standard Professional Tier',
+          submissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          companyName: 'N/A',
+          companySize: 'N/A',
+          annualRevenue: 'N/A',
+          useCase: `Manually added via Quick Add console as ${formData.leadType || 'Online'} lead.`,
+          notes: 'Vetting pending.'
+        },
+        queries: []
+      };
+      const updatedLeads = [mockLead, ...leads];
+      setLeads(updatedLeads);
+      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+      window.dispatchEvent(new CustomEvent('lms-leads-updated'));
+      triggerToast(`Lead '${mockLead.name}' created successfully!`);
+    }
     setShowQuickLeadModal(false);
-    triggerToast(`Quick lead "${formData.name}" added successfully!`);
   };
 
   const handleBulkUploadCSV = () => {

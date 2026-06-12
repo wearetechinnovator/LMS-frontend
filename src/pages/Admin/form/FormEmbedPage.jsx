@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './form.css'
 
@@ -269,14 +269,41 @@ function EmbedOptions({ form, copiedKey, onCopy }) {
 
 // ---------- Main Page ----------
 export default function FormEmbedPage() {
-    const [selectedForm, setSelectedForm] = useState(MOCK_FORMS[0])
+    const [formsList, setFormsList] = useState([])
+    const [selectedForm, setSelectedForm] = useState(null)
     const [activeTab, setActiveTab] = useState('embed') // 'embed' | 'preview'
     const [copiedKey, setCopiedKey] = useState(null)
     const [search, setSearch] = useState('')
 
-    const filtered = MOCK_FORMS.filter(f =>
-        f.name.toLowerCase().includes(search.toLowerCase())
-    )
+    // Fetch forms from database on mount
+    useEffect(() => {
+        const fetchForms = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token || token === 'mock-jwt-token') return;
+                const response = await fetch('http://localhost:5001/api/v1/form/get-form', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setFormsList(data);
+                    if (data.length > 0) {
+                        setSelectedForm(data[0]);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load forms from backend:", err);
+            }
+        };
+        fetchForms();
+    }, []);
+
+    const filtered = formsList.filter(f => {
+        const nameStr = f.name || '';
+        return nameStr.toLowerCase().includes(search.toLowerCase());
+    })
 
     const handleCopy = (key, text) => {
         navigator.clipboard.writeText(text).catch(() => { })

@@ -84,6 +84,30 @@ export default function LeadDetailsPage() {
     window.dispatchEvent(new CustomEvent('lms-leads-updated'))
   }, [leads])
 
+  // Sync leads from database on mount
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || token === 'mock-jwt-token') return;
+        const response = await fetch('http://localhost:5001/api/v1/lead/get-lead', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setLeads(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch leads in details page:", err);
+      }
+    };
+    fetchLeads();
+  }, []);
+
   useEffect(() => {
     const handleLeadsUpdated = () => {
       const localData = localStorage.getItem('lms_leads_database')
@@ -205,7 +229,7 @@ export default function LeadDetailsPage() {
     }, 3000)
   }
 
-  const handleLeadStatusChange = (leadId, newStatus) => {
+  const handleLeadStatusChange = async (leadId, newStatus) => {
     const prevStatus = activeLeadDetails.status
     const updatedTimeline = [
       {
@@ -220,6 +244,31 @@ export default function LeadDetailsPage() {
       },
       ...activeLeadDetails.timeline
     ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            status: newStatus,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update lead status');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === leadId) {
         return { ...lead, status: newStatus, timeline: updatedTimeline }
@@ -229,7 +278,7 @@ export default function LeadDetailsPage() {
     triggerToast(`Lead status updated to ${newStatus}`)
   }
 
-  const handleLeadJourneyChange = (leadId, newJourneyId) => {
+  const handleLeadJourneyChange = async (leadId, newJourneyId) => {
     const prevJourney = journeysList.find(j => j.id === (activeLeadDetails.journeyId || 'default'))?.name || 'Standard CRM Pipeline'
     const nextJourney = journeysList.find(j => j.id === newJourneyId)?.name || newJourneyId
     const updatedTimeline = [
@@ -246,6 +295,31 @@ export default function LeadDetailsPage() {
       },
       ...activeLeadDetails.timeline
     ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            journeyId: newJourneyId,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to shift pipeline');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === leadId) {
         return { ...lead, journeyId: newJourneyId, timeline: updatedTimeline }
@@ -255,7 +329,7 @@ export default function LeadDetailsPage() {
     triggerToast("Lead pipeline shifted successfully!")
   }
 
-  const handleLeadCounselorChange = (leadId, newCounselor) => {
+  const handleLeadCounselorChange = async (leadId, newCounselor) => {
     const prevCounselor = activeLeadDetails.assignedTo
     const updatedTimeline = [
       {
@@ -271,6 +345,31 @@ export default function LeadDetailsPage() {
       },
       ...activeLeadDetails.timeline
     ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            assignedTo: newCounselor,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update counselor assignment');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === leadId) {
         return { ...lead, assignedTo: newCounselor, timeline: updatedTimeline }
@@ -280,7 +379,7 @@ export default function LeadDetailsPage() {
     triggerToast(`Assigned counselor changed to ${newCounselor}`)
   }
 
-  const handleLeadScoreChange = (leadId, newScore) => {
+  const handleLeadScoreChange = async (leadId, newScore) => {
     const prevScore = activeLeadDetails.score
     const updatedTimeline = [
       {
@@ -296,6 +395,31 @@ export default function LeadDetailsPage() {
       },
       ...activeLeadDetails.timeline
     ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            score: newScore,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update lead score');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === leadId) {
         return { ...lead, score: newScore, timeline: updatedTimeline }
@@ -304,30 +428,55 @@ export default function LeadDetailsPage() {
     }))
   }
 
-  const handleSendQueryResponse = (leadId, queryId, responseText) => {
+  const handleSendQueryResponse = async (leadId, queryId, responseText) => {
     if (!responseText.trim()) return
+    const updatedQueries = activeLeadDetails.queries.map(q => {
+      if (q.id === queryId) {
+        return { ...q, status: 'RESOLVED', response: responseText }
+      }
+      return q
+    })
+    const updatedTimeline = [
+      {
+        id: Date.now(),
+        type: 'COMMENT',
+        title: `Support query resolved`,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+        body: `Replied to query "${activeLeadDetails.queries.find(x => x.id === queryId).question}": "${responseText}"`,
+        user: 'Admin',
+        ip: '192.168.1.105',
+        icon: 'check_circle',
+        color: 'green-600'
+      },
+      ...activeLeadDetails.timeline
+    ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            queries: updatedQueries,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to resolve query');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === leadId) {
-        const updatedQueries = lead.queries.map(q => {
-          if (q.id === queryId) {
-            return { ...q, status: 'RESOLVED', response: responseText }
-          }
-          return q
-        })
-        const updatedTimeline = [
-          {
-            id: Date.now(),
-            type: 'COMMENT',
-            title: `Support query resolved`,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-            body: `Replied to query "${lead.queries.find(x => x.id === queryId).question}": "${responseText}"`,
-            user: 'Admin',
-            ip: '192.168.1.105',
-            icon: 'check_circle',
-            color: 'green-600'
-          },
-          ...lead.timeline
-        ]
         return { ...lead, queries: updatedQueries, timeline: updatedTimeline }
       }
       return lead
@@ -335,7 +484,7 @@ export default function LeadDetailsPage() {
     triggerToast('Inquiry response sent and ticket resolved!')
   }
 
-  const handleMergeProfiles = () => {
+  const handleMergeProfiles = async () => {
     if (!dupe) return
     const consolidatedTimeline = [
       {
@@ -352,6 +501,36 @@ export default function LeadDetailsPage() {
       ...activeLeadDetails.timeline,
       ...dupe.timeline
     ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const delResponse = await fetch(`http://localhost:5001/api/v1/lead/delete-lead/${dupe.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!delResponse.ok) throw new Error('Failed to delete duplicate profile');
+
+        const updateResponse = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${activeLeadDetails.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            ...mergeSelectedProps,
+            timeline: consolidatedTimeline
+          })
+        });
+        if (!updateResponse.ok) throw new Error('Failed to save consolidated profile');
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     const consolidatedLead = {
       ...activeLeadDetails,
       ...mergeSelectedProps,
@@ -365,7 +544,7 @@ export default function LeadDetailsPage() {
     triggerToast(`Profiles successfully merged! Consolidated ${consolidatedTimeline.length} activities.`)
   }
 
-  const handleLogInteraction = () => {
+  const handleLogInteraction = async () => {
     if (!newComment.trim()) return
     let title = 'Interaction Logged'
     let icon = 'chat'
@@ -401,6 +580,30 @@ export default function LeadDetailsPage() {
       color: color
     }
     const updatedTimeline = [newEvent, ...activeLeadDetails.timeline]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${activeLeadDetails.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to log interaction');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === activeLeadDetails.id) {
         return { ...lead, timeline: updatedTimeline }
@@ -411,7 +614,7 @@ export default function LeadDetailsPage() {
     triggerToast('New interaction added to activity trail!')
   }
 
-  const handleTogglePinEvent = (eventId) => {
+  const handleTogglePinEvent = async (eventId) => {
     const updatedTimeline = activeLeadDetails.timeline.map(event => {
       if (event.id === eventId) {
         return { ...event, pinned: !event.pinned }
@@ -422,6 +625,30 @@ export default function LeadDetailsPage() {
       ...updatedTimeline.filter(e => e.pinned),
       ...updatedTimeline.filter(e => !e.pinned)
     ]
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${activeLeadDetails.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            timeline: sortedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to toggle event pin');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
     setLeads(leads.map(lead => {
       if (lead.id === activeLeadDetails.id) {
         return { ...lead, timeline: sortedTimeline }

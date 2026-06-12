@@ -13,50 +13,14 @@ export default function AuthForm({
   successMessage,
   onFormChange,
   onSubmit,
-  onToggleMode
+  onToggleMode,
+  isLoading
 }) {
-  const navigate = useNavigate()
-
   const handleSubmit = (e) => {
     e.preventDefault()
-
-    let selectedRole = 'admin'
-    if (isLogin) {
-      const email = (formData.number || '').trim().toLowerCase()
-      const password = formData.password
-      if (email === 'admin@gmail.com' && password === '1234') {
-        selectedRole = 'admin'
-      } else if (email === 'counselor@gmail.com' && password === '1234') {
-        selectedRole = 'counselor'
-      } else if (email === 'vendor@gmail.com' && password === '1234') {
-        selectedRole = 'vendor'
-      } else {
-        if (onSubmit) {
-          onSubmit(e)
-        }
-        return
-      }
-    } else {
-      selectedRole = formData.role || 'admin'
-    }
-
     if (onSubmit) {
-      const isValid = onSubmit(e)
-      if (!isValid) return
+      onSubmit(e)
     }
-
-    localStorage.setItem('authToken', 'mock-jwt-token')
-    localStorage.setItem('userRole', selectedRole)
-
-    setTimeout(() => {
-      if (selectedRole === 'admin') {
-        navigate('/admin/dashboard')
-      } else if (selectedRole === 'counselor') {
-        navigate('/counselor/overview')
-      } else if (selectedRole === 'vendor') {
-        navigate('/vendor/dashboard')
-      }
-    }, 1500)
   }
 
   return (
@@ -185,9 +149,19 @@ export default function AuthForm({
             animate="visible"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            className="auth-submit-btn"
+            className="auth-submit-btn flex items-center justify-center gap-2"
+            disabled={isLoading}
           >
-            {isLogin ? 'Log In' : 'Create my account'}
+            {isLoading ? (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : isLogin ? (
+              'Log In'
+            ) : (
+              'Create my account'
+            )}
           </motion.button>
 
           <motion.div custom={isLogin ? 4 : 6} variants={inputV} initial="hidden" animate="visible" className="auth-divider-container">

@@ -76,6 +76,11 @@ export default function LmsSettings() {
   const [colorRgba, setColorRgba] = useState('rgba(59, 130, 246, 1)')
   const [newStatusDesc, setNewStatusDesc] = useState('')
   const [editingStatusValue, setEditingStatusValue] = useState(null)
+  
+  // Warning modals states for custom statuses
+  const [showStatusEditWarning, setShowStatusEditWarning] = useState(false)
+  const [showStatusDeleteWarning, setShowStatusDeleteWarning] = useState(false)
+  const [statusToDelete, setStatusToDelete] = useState(null)
 
   // -- TAB 6: Lead Journey States --
   const [journeysList, setJourneysList] = useState(() => getCustomJourneys())
@@ -122,6 +127,40 @@ export default function LmsSettings() {
       window.removeEventListener('lms-leads-updated', handleLeadsUpdate)
     }
   }, [])
+
+  // Sync statuses from database when mounted
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || token === 'mock-jwt-token') return;
+
+        const response = await fetch('http://localhost:5001/api/v1/lead-status/get-lead-status', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map(item => ({
+              id: item.lead_status_id,
+              value: item.lead_status_name,
+              label: item.lead_status_name,
+              color: item.color || '#3b82f6',
+              description: item.description || 'Custom lead status',
+              isSystem: ['NEW', 'ASSIGNED', 'CONTACTED', 'QUALIFIED', 'DEMO', 'PROPOSAL', 'NEGOTIATION', 'WON', 'LOST'].includes(item.lead_status_name)
+            }));
+            setStatusesList(mapped);
+            saveCustomStatuses(mapped);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching lead statuses from database:", err);
+      }
+    };
+    fetchStatuses();
+  }, []);
 
   // Memoize filtered leads for the Export tab preview
   const filteredLeads = useMemo(() => {
@@ -342,7 +381,7 @@ export default function LmsSettings() {
     }
   };
 
-  const handleAddStatus = (e) => {
+  const handleAddStatus = async (e) => {
     e.preventDefault()
     const rawVal = newStatusValue.trim().toUpperCase()
     if (!rawVal) {
@@ -370,6 +409,35 @@ export default function LmsSettings() {
       description: newStatusDesc.trim() || 'Custom lead status'
     }
 
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch('http://localhost:5001/api/v1/lead-status/create-lead-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            status_name: newStatus.value,
+            color: newStatus.color,
+            description: newStatus.description
+          })
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create status in database');
+        }
+        const savedStatus = await response.json();
+        newStatus.id = savedStatus.lead_status_id;
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    } else {
+      newStatus.id = `mock-${Date.now()}`;
+    }
+
     const updated = [...statusesList, newStatus]
     setStatusesList(updated)
     saveCustomStatuses(updated)
@@ -385,21 +453,47 @@ export default function LmsSettings() {
     setNewStatusDesc('')
   }
 
-  const handleDeleteStatus = (statusValue) => {
-    const target = statusesList.find(s => s.value === statusValue)
+  const handleStartDeleteStatus = (statusValue) => {
+    setStatusToDelete(statusValue)
+    setShowStatusDeleteWarning(true)
+  }
+
+  const handleConfirmDeleteStatus = async () => {
+    const target = statusesList.find(s => s.value === statusToDelete)
     if (!target) return
 
-    const updated = statusesList.filter(s => s.value !== statusValue)
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token' && target.id && !String(target.id).startsWith('mock')) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead-status/delete-lead-status/${target.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to delete status from database');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
+    const updated = statusesList.filter(s => s.value !== statusToDelete)
     setStatusesList(updated)
     saveCustomStatuses(updated)
 
     const updatedJourneysList = journeysList.map(j => ({
       ...j,
-      steps: j.steps.filter(s => s !== statusValue)
+      steps: j.steps.filter(s => s !== statusToDelete)
     }))
     setJourneysList(updatedJourneysList)
     saveCustomJourneys(updatedJourneysList)
 
+    setShowStatusDeleteWarning(false)
+    setStatusToDelete(null)
     triggerToast(`Status '${target.label}' deleted.`)
   }
 
@@ -422,11 +516,42 @@ export default function LmsSettings() {
     setNewStatusDesc('')
   }
 
-  const handleUpdateStatus = (e) => {
-    e.preventDefault()
+  const handleShowEditWarning = (e) => {
+    if (e) e.preventDefault();
     if (!newStatusLabel.trim()) {
-      triggerToast("Error: Display Label is required.")
-      return
+      triggerToast("Error: Display Label is required.");
+      return;
+    }
+    setShowStatusEditWarning(true);
+  }
+
+  const handleUpdateStatus = async () => {
+    const target = statusesList.find(s => s.value === editingStatusValue);
+    if (!target) return;
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token' && target.id && !String(target.id).startsWith('mock')) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/v1/lead-status/edit-lead-status/${target.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            status_name: target.value,
+            color: newStatusColor,
+            description: newStatusDesc.trim() || 'Custom lead status'
+          })
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update status in database');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
     }
 
     const updated = statusesList.map(s => {
@@ -445,6 +570,7 @@ export default function LmsSettings() {
     saveCustomStatuses(updated)
     triggerToast(`Status '${newStatusLabel.trim()}' updated successfully!`)
 
+    setShowStatusEditWarning(false)
     handleCancelEditStatus()
   }
 
@@ -1788,7 +1914,7 @@ export default function LmsSettings() {
             className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 text-left"
           >
             {/* Left Column: Form to create / edit */}
-            <form onSubmit={editingStatusValue ? handleUpdateStatus : handleAddStatus} className="lg:col-span-4 bg-white border border-[#c3c6d7] rounded-xl p-5 shadow-2xs space-y-4">
+            <form onSubmit={editingStatusValue ? handleShowEditWarning : handleAddStatus} className="lg:col-span-4 bg-white border border-[#c3c6d7] rounded-xl p-5 shadow-2xs space-y-4">
               <div className="border-b border-[#c3c6d7] pb-2.5">
                 <h3 className="text-sm font-bold text-slate-800">
                   {editingStatusValue ? `Edit Status` : 'Create Status'}
@@ -1953,7 +2079,7 @@ export default function LmsSettings() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteStatus(status.value)}
+                                  onClick={() => handleStartDeleteStatus(status.value)}
                                   className="w-6 h-6 rounded-full hover:bg-rose-50 text-slate-450 hover:text-red-500 flex items-center justify-center border-none bg-transparent cursor-pointer transition-colors"
                                   title="Delete status"
                                 >
@@ -2187,6 +2313,126 @@ export default function LmsSettings() {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Status Warning Modal Overlay */}
+      <AnimatePresence>
+        {showStatusEditWarning && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowStatusEditWarning(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden relative z-10 flex flex-col text-left font-sans"
+            >
+              <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white">
+                <div>
+                  <h3 className="text-[13px] font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-amber-500 text-[18px]">warning</span>
+                    Update CRM Status
+                  </h3>
+                  <p className="text-[9.5px] text-slate-500 mt-0.5">Warning: Status modification affects pipeline analytics.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowStatusEditWarning(false)}
+                  className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-[11px] text-slate-655 leading-relaxed">
+                  Are you sure you want to update the status <span className="font-bold text-slate-800">"{editingStatusValue}"</span>? 
+                  Renaming badges or updating color mappings may impact active leads and steps mapped to sales journeys.
+                </p>
+                <div className="border-t border-slate-100 pt-3.5 flex justify-end gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowStatusEditWarning(false)}
+                    className="px-4 py-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-600 text-[11px] font-bold transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUpdateStatus}
+                    className="px-4 py-1.5 bg-[#2f7d9e] hover:bg-[#206587] text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer border-0"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Status Warning Modal Overlay */}
+      <AnimatePresence>
+        {showStatusDeleteWarning && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowStatusDeleteWarning(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden relative z-10 flex flex-col text-left font-sans"
+            >
+              <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-red-50 to-white">
+                <div>
+                  <h3 className="text-[13px] font-bold text-red-700 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-red-650 text-[18px]">gpp_maybe</span>
+                    Delete CRM Status
+                  </h3>
+                  <p className="text-[9.5px] text-red-500 mt-0.5">Warning: Deletion is permanent and destructive.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowStatusDeleteWarning(false)}
+                  className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-[11px] text-slate-655 leading-relaxed">
+                  Are you sure you want to permanently delete the status <span className="font-bold text-slate-800">"{statusToDelete}"</span>? 
+                  This will remove the stage from all pipeline journeys, and leads currently on this stage will be unmapped.
+                </p>
+                <div className="border-t border-slate-100 pt-3.5 flex justify-end gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowStatusDeleteWarning(false)}
+                    className="px-4 py-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-600 text-[11px] font-bold transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDeleteStatus}
+                    className="px-4 py-1.5 bg-red-650 hover:bg-red-700 text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer border-0"
+                  >
+                    Yes, Delete Status
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -13,6 +13,7 @@ export default function RoleDashboardLayout({ username, onLogout, navigationItem
         onLogout={onLogout}
         navigationItems={navigationItems}
         roleName={roleName}
+        username={username}
       />
       <div className="layout-main">
         <Navbar username={username} onLogout={onLogout} roleName={roleName} />

@@ -18,9 +18,15 @@ const LoadingSpinner = () => (
 )
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [onboardingComplete, setOnboardingComplete] = useState(false)
-  const [username, setUsername] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('authToken')
+  })
+  const [onboardingComplete, setOnboardingComplete] = useState(() => {
+    return localStorage.getItem('onboardingComplete') === 'true' || localStorage.getItem('userRole') === 'admin'
+  })
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('username') || ''
+  })
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -36,10 +42,18 @@ function App() {
   const handleAuthSuccess = (user) => {
     setUsername(user.username)
     setIsAuthenticated(true)
+    localStorage.setItem('username', user.username)
+    
+    const role = localStorage.getItem('userRole') || user.role
+    if (role === 'admin') {
+      setOnboardingComplete(true)
+      localStorage.setItem('onboardingComplete', 'true')
+    }
   }
 
   const handleOnboardingComplete = () => {
     setOnboardingComplete(true)
+    localStorage.setItem('onboardingComplete', 'true')
   }
 
   const handleLogout = () => {
@@ -48,6 +62,8 @@ function App() {
     setUsername('')
     localStorage.removeItem('authToken')
     localStorage.removeItem('userRole')
+    localStorage.removeItem('onboardingComplete')
+    localStorage.removeItem('username')
   }
 
   const getRedirectPath = () => {

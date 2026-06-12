@@ -184,9 +184,12 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
 
         {/* User Profile */}
         <div className="navbar-user">
-          <div className="user-info">
-            <span className="user-role">
-              {name}
+          <div className="user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '8px' }}>
+            <span className="user-name" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0b1c30', lineHeight: '1.2' }}>
+              {activeUsername}
+            </span>
+            <span className="user-role" style={{ fontSize: '10px', fontWeight: '600', color: '#64748b', lineHeight: '1.2', marginTop: '2px' }}>
+              {roleName || 'Admin Account'}
             </span>
           </div>
           <div className="user-avatar">

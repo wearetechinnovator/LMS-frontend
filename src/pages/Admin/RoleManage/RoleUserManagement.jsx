@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import TeamStatsCard from '../../../components/TeamStateCard'
 import Toast from '../../../components/Toast'
@@ -9,6 +9,7 @@ const initialUsers = [
         id: 'USR-001',
         name: 'Sarah Jenkins',
         email: 'sarah.j@techinnovator.com',
+        phoneNumber: '9876543210',
         role: 'Campaign Manager',
         department: 'Marketing',
         lastActive: 'Just now',
@@ -20,6 +21,7 @@ const initialUsers = [
         id: 'USR-002',
         name: 'David K.',
         email: 'david.k@techinnovator.com',
+        phoneNumber: '9876543211',
         role: 'System Admin',
         department: 'IT & Operations',
         lastActive: '10 mins ago',
@@ -31,6 +33,7 @@ const initialUsers = [
         id: 'USR-003',
         name: 'Michael Chang',
         email: 'm.chang@techinnovator.com',
+        phoneNumber: '9876543212',
         role: 'Admissions Counselor',
         department: 'Admissions',
         lastActive: '2 hours ago',
@@ -42,6 +45,7 @@ const initialUsers = [
         id: 'USR-004',
         name: 'Emily Watson',
         email: 'emily.w@techinnovator.com',
+        phoneNumber: '9876543213',
         role: 'Sales Executive',
         department: 'Sales',
         lastActive: 'Yesterday',
@@ -53,6 +57,7 @@ const initialUsers = [
         id: 'USR-005',
         name: 'Robert Stark',
         email: 'robert.s@techinnovator.com',
+        phoneNumber: '9876543214',
         role: 'Auditor',
         department: 'Compliance',
         lastActive: '3 days ago',
@@ -64,6 +69,57 @@ const initialUsers = [
 
 // Granular permissions template scoped for each Role type
 const initialRolePermissions = {
+    'Admin': {
+        dashboard: true,
+        leads_view: true,
+        leads_edit: true,
+        leads_delete: true,
+        leads_assign: true,
+        forms_view: true,
+        forms_create: true,
+        forms_edit: true,
+        forms_delete: true,
+        campaigns_view: true,
+        campaigns_create: true,
+        campaigns_edit: true,
+        campaigns_delete: true,
+        auditLogs: true,
+        settings: true
+    },
+    'Counselor': {
+        dashboard: true,
+        leads_view: true,
+        leads_edit: true,
+        leads_delete: false,
+        leads_assign: false,
+        forms_view: true,
+        forms_create: false,
+        forms_edit: false,
+        forms_delete: false,
+        campaigns_view: true,
+        campaigns_create: false,
+        campaigns_edit: false,
+        campaigns_delete: false,
+        auditLogs: false,
+        settings: false
+    },
+    'Vendor': {
+        dashboard: true,
+        leads_view: true,
+        leads_edit: true,
+        leads_delete: false,
+        leads_assign: true,
+        forms_view: true,
+        forms_create: true,
+        forms_edit: true,
+        forms_delete: false,
+        campaigns_view: true,
+        campaigns_create: true,
+        campaigns_edit: true,
+        campaigns_delete: true,
+        auditLogs: false,
+        settings: false
+    },
     'System Admin': {
         dashboard: true,
         leads_view: true,
@@ -155,12 +211,53 @@ export default function RoleUserManagement() {
     const [activeTab, setActiveTab] = useState('users') // 'users' or 'roles'
     const [users, setUsers] = useState(initialUsers)
     const [rolePermissions, setRolePermissions] = useState(initialRolePermissions)
-    const [customRoles, setCustomRoles] = useState(['System Admin', 'Campaign Manager', 'Admissions Counselor', 'Sales Executive', 'Auditor'])
+    const [customRoles, setCustomRoles] = useState([
+        { role_id: 'mock-1', role_name: 'System Admin' },
+        { role_id: 'mock-2', role_name: 'Campaign Manager' },
+        { role_id: 'mock-3', role_name: 'Admissions Counselor' },
+        { role_id: 'mock-4', role_name: 'Sales Executive' },
+        { role_id: 'mock-5', role_name: 'Auditor' }
+    ])
     const [showCreateRoleModal, setShowCreateRoleModal] = useState(false)
     const [newRoleName, setNewRoleName] = useState('')
+    
+    // Edit & Delete role states
+    const [showEditRoleModal, setShowEditRoleModal] = useState(false)
+    const [showDeleteRoleModal, setShowDeleteRoleModal] = useState(false)
+    const [roleToEdit, setRoleToEdit] = useState('')
+    const [newEditedRoleName, setNewEditedRoleName] = useState('')
+    const [roleToDelete, setRoleToDelete] = useState('')
 
     // Sidebar selected role in Permissions tab
     const [selectedRole, setSelectedRole] = useState('Campaign Manager')
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token || token === 'mock-jwt-token') return;
+                
+                const response = await fetch('http://localhost:5001/api/v1/role/get-role', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        setCustomRoles(data);
+                        const names = data.map(item => item.role_name);
+                        if (names.length > 0 && !names.includes(selectedRole)) {
+                            setSelectedRole(names[0]);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching roles from database:", err);
+            }
+        };
+        fetchRoles();
+    }, [selectedRole]);
 
     // Filter and search states
     const [searchTerm, setSearchTerm] = useState('')
@@ -175,6 +272,7 @@ export default function RoleUserManagement() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phoneNumber: '',
         role: 'Admissions Counselor',
         department: 'Admissions',
         status: 'Active'
@@ -201,6 +299,7 @@ export default function RoleUserManagement() {
         setFormData({
             name: '',
             email: '',
+            phoneNumber: '',
             role: 'Admissions Counselor',
             department: 'Admissions',
             status: 'Active'
@@ -213,6 +312,7 @@ export default function RoleUserManagement() {
         setFormData({
             name: user.name,
             email: user.email,
+            phoneNumber: user.phoneNumber || '',
             role: user.role,
             department: user.department,
             status: user.status
@@ -255,6 +355,7 @@ export default function RoleUserManagement() {
                 id: newId,
                 name: formData.name,
                 email: formData.email,
+                phoneNumber: formData.phoneNumber,
                 role: formData.role,
                 department: formData.department,
                 lastActive: 'Invited just now',
@@ -283,13 +384,32 @@ export default function RoleUserManagement() {
     }
 
     const handleTogglePermission = (role, key) => {
-        setRolePermissions(prev => ({
-            ...prev,
-            [role]: {
-                ...prev[role],
-                [key]: !prev[role][key]
-            }
-        }))
+        setRolePermissions(prev => {
+            const rolePerms = prev[role] || {
+                dashboard: false,
+                leads_view: false,
+                leads_edit: false,
+                leads_delete: false,
+                leads_assign: false,
+                forms_view: false,
+                forms_create: false,
+                forms_edit: false,
+                forms_delete: false,
+                campaigns_view: false,
+                campaigns_create: false,
+                campaigns_edit: false,
+                campaigns_delete: false,
+                auditLogs: false,
+                settings: false
+            };
+            return {
+                ...prev,
+                [role]: {
+                    ...rolePerms,
+                    [key]: !rolePerms[key]
+                }
+            };
+        });
     }
 
     const handleSavePermissions = () => {
@@ -360,7 +480,7 @@ export default function RoleUserManagement() {
         setShowCreateRoleModal(true)
     }
 
-    const handleConfirmCreateRole = (e) => {
+    const handleConfirmCreateRole = async (e) => {
         if (e) e.preventDefault()
         if (!newRoleName.trim()) {
             triggerToast('Error: Role name cannot be empty!')
@@ -368,12 +488,36 @@ export default function RoleUserManagement() {
         }
 
         const formattedRole = newRoleName.trim()
-        if (customRoles.includes(formattedRole)) {
+        if (rolesList.includes(formattedRole)) {
             triggerToast(`Error: Role "${formattedRole}" already exists!`)
             return
         }
 
-        setCustomRoles(prev => [...prev, formattedRole])
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token') {
+            try {
+                const response = await fetch('http://localhost:5001/api/v1/role/create-role', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ role_name: formattedRole })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to create role in database');
+                }
+                const newRole = await response.json();
+                setCustomRoles(prev => [...prev, newRole])
+            } catch (err) {
+                triggerToast(`Error: ${err.message}`);
+                return;
+            }
+        } else {
+            setCustomRoles(prev => [...prev, { role_id: `mock-${Date.now()}`, role_name: formattedRole }])
+        }
+
         setRolePermissions(prev => ({
             ...prev,
             [formattedRole]: {
@@ -400,7 +544,109 @@ export default function RoleUserManagement() {
         triggerToast(`Custom role "${formattedRole}" created successfully!`)
     }
 
-    const rolesList = customRoles
+    const handleEditRole = (roleName) => {
+        setRoleToEdit(roleName);
+        setNewEditedRoleName(roleName);
+        setShowEditRoleModal(true);
+    }
+
+    const handleConfirmEditRole = async (e) => {
+        if (e) e.preventDefault();
+        if (!newEditedRoleName.trim()) {
+            triggerToast('Error: Role name cannot be empty!');
+            return;
+        }
+
+        const formattedRole = newEditedRoleName.trim();
+        if (formattedRole.toLowerCase() !== roleToEdit.toLowerCase() && rolesList.map(r => r.toLowerCase()).includes(formattedRole.toLowerCase())) {
+            triggerToast(`Error: Role "${formattedRole}" already exists!`);
+            return;
+        }
+
+        const roleObj = customRoles.find(r => r.role_name === roleToEdit);
+        if (!roleObj) return;
+
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token' && !String(roleObj.role_id).startsWith('mock')) {
+            try {
+                const response = await fetch(`http://localhost:5001/api/v1/role/edit-role/${roleObj.role_id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ role_name: formattedRole })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to update role in database');
+                }
+            } catch (err) {
+                triggerToast(`Error: ${err.message}`);
+                return;
+            }
+        }
+
+        setCustomRoles(prev => prev.map(r => r.role_name === roleToEdit ? { ...r, role_name: formattedRole } : r));
+        setUsers(prev => prev.map(u => u.role === roleToEdit ? { ...u, role: formattedRole } : u));
+        if (selectedRole === roleToEdit) {
+            setSelectedRole(formattedRole);
+        }
+        setRolePermissions(prev => {
+            const updated = { ...prev };
+            if (updated[roleToEdit]) {
+                updated[formattedRole] = updated[roleToEdit];
+                delete updated[roleToEdit];
+            }
+            return updated;
+        });
+
+        setShowEditRoleModal(false);
+        triggerToast(`Role updated successfully to "${formattedRole}"!`);
+    }
+
+    const handleDeleteRoleClick = (roleName) => {
+        setRoleToDelete(roleName);
+        setShowDeleteRoleModal(true);
+    }
+
+    const handleConfirmDeleteRole = async () => {
+        const roleObj = customRoles.find(r => r.role_name === roleToDelete);
+        if (!roleObj) return;
+
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token' && !String(roleObj.role_id).startsWith('mock')) {
+            try {
+                const response = await fetch(`http://localhost:5001/api/v1/role/delete-role/${roleObj.role_id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to delete role from database');
+                }
+            } catch (err) {
+                triggerToast(`Error: ${err.message}`);
+                return;
+            }
+        }
+
+        setCustomRoles(prev => prev.filter(r => r.role_name !== roleToDelete));
+        const remainingRoles = customRoles.filter(r => r.role_name !== roleToDelete);
+        const fallbackRole = remainingRoles.length > 0 ? remainingRoles[0].role_name : 'Admissions Counselor';
+        setUsers(prev => prev.map(u => u.role === roleToDelete ? { ...u, role: fallbackRole } : u));
+        
+        if (selectedRole === roleToDelete && remainingRoles.length > 0) {
+            setSelectedRole(remainingRoles[0].role_name);
+        }
+
+        setShowDeleteRoleModal(false);
+        triggerToast(`Role "${roleToDelete}" deleted successfully.`);
+    }
+
+    const rolesList = customRoles.map(r => r.role_name)
     const statusTypes = ['Active', 'Suspended', 'Invited']
 
     return (
@@ -657,17 +903,43 @@ export default function RoleUserManagement() {
                         </div>
                         <div className="flex-1 p-1.5 space-y-0.5 overflow-y-auto">
                             {rolesList.map((role) => (
-                                <button
+                                <div
                                     key={role}
                                     onClick={() => setSelectedRole(role)}
-                                    className={`w-full text-left px-3 py-2 rounded text-[11px] font-bold transition-all flex items-center justify-between ${selectedRole === role
+                                    className={`group w-full flex items-center justify-between px-3 py-1.5 rounded text-[11px] font-bold transition-all cursor-pointer ${selectedRole === role
                                         ? 'bg-primary/10 text-primary shadow-xs border-l-4 border-primary pl-2'
                                         : 'text-on-surface hover:bg-surface-container hover:text-on-background'
                                         }`}
                                 >
-                                    <span>{role}</span>
-                                    <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                                </button>
+                                    <span className="truncate pr-1">{role}</span>
+                                    
+                                    {/* Action Buttons (visible on hover) */}
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditRole(role);
+                                            }}
+                                            className="p-0.5 hover:bg-slate-200/80 rounded text-slate-500 hover:text-primary transition-colors flex items-center justify-center border-none bg-transparent cursor-pointer"
+                                            title="Rename Role"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px] font-semibold">edit</span>
+                                        </button>
+                                        
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteRoleClick(role);
+                                            }}
+                                            className="p-0.5 hover:bg-rose-100 rounded text-slate-500 hover:text-rose-600 transition-colors flex items-center justify-center border-none bg-transparent cursor-pointer"
+                                            title="Delete Role"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px] font-semibold">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -1126,6 +1398,147 @@ export default function RoleUserManagement() {
                                     </button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Edit Custom Role Modal Overlay */}
+            <AnimatePresence>
+                {showEditRoleModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        {/* Backdrop overlay */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowEditRoleModal(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+                        />
+
+                        {/* Modal Card */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden relative z-10 flex flex-col"
+                        >
+                            {/* Header */}
+                            <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white">
+                                <div>
+                                    <h3 className="text-[13px] font-bold text-slate-800 flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-amber-500 text-[18px]">warning</span>
+                                        Rename Role Profile
+                                    </h3>
+                                    <p className="text-[9.5px] text-slate-500 mt-0.5">Warning: Renaming may affect matching permissions.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditRoleModal(false)}
+                                    className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+
+                            {/* Form Body */}
+                            <form onSubmit={handleConfirmEditRole} className="p-5 space-y-4">
+                                <div className="space-y-1">
+                                    <label className="block text-[8px] font-bold text-slate-500 uppercase tracking-wider">New Role Title</label>
+                                    <input
+                                        type="text"
+                                        value={newEditedRoleName}
+                                        onChange={(e) => setNewEditedRoleName(e.target.value)}
+                                        className="w-full h-8 px-2.5 border border-slate-200 rounded text-slate-800 bg-white placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+
+                                {/* Form Actions */}
+                                <div className="border-t border-slate-100 pt-3.5 flex justify-end gap-2 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditRoleModal(false)}
+                                        className="px-4.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-600 text-[11px] font-bold transition-all cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Custom Role Modal Overlay */}
+            <AnimatePresence>
+                {showDeleteRoleModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        {/* Backdrop overlay */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowDeleteRoleModal(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+                        />
+
+                        {/* Modal Card */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden relative z-10 flex flex-col"
+                        >
+                            {/* Header */}
+                            <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-red-50 to-white">
+                                <div>
+                                    <h3 className="text-[13px] font-bold text-red-700 flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-red-600 text-[18px]">gpp_maybe</span>
+                                        Delete Role Profile
+                                    </h3>
+                                    <p className="text-[9.5px] text-red-500 mt-0.5">Warning: Deletion is destructive and permanent.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteRoleModal(false)}
+                                    className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-5 space-y-4">
+                                <p className="text-[11px] text-slate-600 leading-relaxed">
+                                    Are you sure you want to permanently delete the role <span className="font-bold text-slate-800">"{roleToDelete}"</span>? This will clear all permission configurations from the database.
+                                </p>
+
+                                {/* Actions */}
+                                <div className="border-t border-slate-100 pt-3.5 flex justify-end gap-2 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteRoleModal(false)}
+                                        className="px-4.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-600 text-[11px] font-bold transition-all cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleConfirmDeleteRole}
+                                        className="px-4.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer"
+                                    >
+                                        Yes, Delete Role
+                                    </button>
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
                 )}
