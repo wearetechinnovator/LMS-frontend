@@ -87,7 +87,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
                   ? `All Leads - (${formsList.find(f => f.name === 'ALL')?.count || 0})`
                   : `${activeFormName} - (${formsList.find(f => f.name === activeFormName)?.count || 0})`}
               </span>
-              <span className="material-symbols-outlined text-[20px] text-slate-500 transition-transform duration-200" style={{ transform: showFormsDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+              <span className="material-symbols-outlined text-headline-lg text-slate-500 transition-transform duration-200" style={{ transform: showFormsDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                 keyboard_arrow_down
               </span>
             </button>
@@ -113,7 +113,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
                         }`}
                     >
                       <span>{form.displayName === 'ALL' ? 'All Leads' : form.displayName}</span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeFormName === form.name ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                      <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded-full ${activeFormName === form.name ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
                         }`}>
                         {form.count}
                       </span>
