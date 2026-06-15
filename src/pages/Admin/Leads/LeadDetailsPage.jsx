@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import './leads.css'
 import { getCustomStatuses, getLeadJourney, getStatusStyle, getStatusBadgeStyle, getCustomJourneys } from '../../../helpers/statusHelper'
+import { hasPermission } from '../../../components/ProtectRoute'
 
 export default function LeadDetailsPage() {
   const { id } = useParams()
@@ -20,6 +21,8 @@ export default function LeadDetailsPage() {
     }
     return []
   })
+
+  const [dbUsers, setDbUsers] = useState([])
 
   const activeLeadDetails = useMemo(() => {
     return leads.find(l => l.id === id)
@@ -90,7 +93,7 @@ export default function LeadDetailsPage() {
       try {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
-        const response = await fetch('http://localhost:5001/api/v1/lead/get-lead', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -106,6 +109,30 @@ export default function LeadDetailsPage() {
       }
     };
     fetchLeads();
+  }, []);
+
+  // Sync users from database on mount to map active counselors
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || token === 'mock-jwt-token') return;
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setDbUsers(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch users in details page:", err);
+      }
+    };
+    fetchUsers();
   }, []);
 
   useEffect(() => {
@@ -163,6 +190,23 @@ export default function LeadDetailsPage() {
     return () => clearInterval(interval)
   }, [audioPlaying, playbackSpeed])
 
+  const counselorsList = useMemo(() => {
+    const list = new Set()
+    dbUsers.forEach(u => {
+      if (u.status === 'Active' && u.name) {
+        list.add(u.name)
+      }
+    })
+    leads.forEach(l => {
+      if (l.assignedTo) {
+        list.add(l.assignedTo)
+      }
+    })
+    const defaultCounselors = ['Unassigned']
+    defaultCounselors.forEach(c => list.add(c))
+    return Array.from(list)
+  }, [leads, dbUsers])
+
   const currentStageIndex = useMemo(() => {
     const status = activeLeadDetails?.status
     return journeySteps.indexOf(status)
@@ -184,7 +228,7 @@ export default function LeadDetailsPage() {
 
   const dupe = leads.find(l => l.id !== activeLeadDetails.id && l.email === activeLeadDetails.email)
   const role = localStorage.getItem('userRole')
-  const isMasked = role === 'counselor' || role === 'vendor'
+  const isMasked = role !== 'admin' && role !== 'Admin' && role !== 'System Admin'
 
   const maskEmail = (email) => {
     if (!email) return ''
@@ -230,6 +274,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleLeadStatusChange = async (leadId, newStatus) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     const prevStatus = activeLeadDetails.status
     const updatedTimeline = [
       {
@@ -248,7 +296,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${leadId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -279,6 +327,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleLeadJourneyChange = async (leadId, newJourneyId) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     const prevJourney = journeysList.find(j => j.id === (activeLeadDetails.journeyId || 'default'))?.name || 'Standard CRM Pipeline'
     const nextJourney = journeysList.find(j => j.id === newJourneyId)?.name || newJourneyId
     const updatedTimeline = [
@@ -299,7 +351,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${leadId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -330,6 +382,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleLeadCounselorChange = async (leadId, newCounselor) => {
+    if (!hasPermission('leads_assign')) {
+      triggerToast("Error: You do not have permission to reassign counselors!");
+      return;
+    }
     const prevCounselor = activeLeadDetails.assignedTo
     const updatedTimeline = [
       {
@@ -349,7 +405,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${leadId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -380,6 +436,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleLeadScoreChange = async (leadId, newScore) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     const prevScore = activeLeadDetails.score
     const updatedTimeline = [
       {
@@ -399,7 +459,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${leadId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -429,6 +489,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleSendQueryResponse = async (leadId, queryId, responseText) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     if (!responseText.trim()) return
     const updatedQueries = activeLeadDetails.queries.map(q => {
       if (q.id === queryId) {
@@ -454,7 +518,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${leadId}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${leadId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -485,6 +549,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleMergeProfiles = async () => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     if (!dupe) return
     const consolidatedTimeline = [
       {
@@ -505,7 +573,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const delResponse = await fetch(`http://localhost:5001/api/v1/lead/delete-lead/${dupe.id}`, {
+        const delResponse = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/delete-lead/${dupe.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -513,7 +581,7 @@ export default function LeadDetailsPage() {
         });
         if (!delResponse.ok) throw new Error('Failed to delete duplicate profile');
 
-        const updateResponse = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${activeLeadDetails.id}`, {
+        const updateResponse = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${activeLeadDetails.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -545,6 +613,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleLogInteraction = async () => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     if (!newComment.trim()) return
     let title = 'Interaction Logged'
     let icon = 'chat'
@@ -584,7 +656,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${activeLeadDetails.id}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${activeLeadDetails.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -615,6 +687,10 @@ export default function LeadDetailsPage() {
   }
 
   const handleTogglePinEvent = async (eventId) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
     const updatedTimeline = activeLeadDetails.timeline.map(event => {
       if (event.id === eventId) {
         return { ...event, pinned: !event.pinned }
@@ -629,7 +705,7 @@ export default function LeadDetailsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead/edit-lead/${activeLeadDetails.id}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${activeLeadDetails.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -799,40 +875,42 @@ export default function LeadDetailsPage() {
                 </div>
               </div>
 
-              {/* <div className="space-y-3 pt-4 border-t border-slate-100">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lead Operations</div>
-              <div className="space-y-1.5">
-                <div className="text-[12px] font-bold text-slate-400 uppercase tracking-wider block">Lead Status</div>
-                <select
-                  value={activeLeadDetails.status}
-                  onChange={(e) => handleLeadStatusChange(activeLeadDetails.id, e.target.value)}
-                  className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors"
-                >
-                  <option value="NEW">NEW</option>
-                  <option value="ASSIGNED">ASSIGNED</option>
-                  <option value="CONTACTED">CONTACTED</option>
-                  <option value="QUALIFIED">QUALIFIED</option>
-                  <option value="DEMO">DEMO SCHEDULED</option>
-                  <option value="PROPOSAL">PROPOSAL</option>
-                  <option value="NEGOTIATION">NEGOTIATION</option>
-                  <option value="WON">WON</option>
-                  <option value="LOST">LOST</option>
-                </select>
-              </div>
+              <div className="space-y-3 pt-4 border-t border-slate-100">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lead Operations</div>
+                <div className="space-y-1.5">
+                  <div className="text-[12px] font-bold text-slate-400 uppercase tracking-wider block">Lead Status</div>
+                  <select
+                    value={activeLeadDetails.status}
+                    onChange={(e) => handleLeadStatusChange(activeLeadDetails.id, e.target.value)}
+                    disabled={!hasPermission('leads_edit')}
+                    className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <option value="NEW">NEW</option>
+                    <option value="ASSIGNED">ASSIGNED</option>
+                    <option value="CONTACTED">CONTACTED</option>
+                    <option value="QUALIFIED">QUALIFIED</option>
+                    <option value="DEMO">DEMO SCHEDULED</option>
+                    <option value="PROPOSAL">PROPOSAL</option>
+                    <option value="NEGOTIATION">NEGOTIATION</option>
+                    <option value="WON">WON</option>
+                    <option value="LOST">LOST</option>
+                  </select>
+                </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Counselor</label>
-                <select
-                  value={activeLeadDetails.assignedTo}
-                  onChange={(e) => handleLeadCounselorChange(activeLeadDetails.id, e.target.value)}
-                  className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors"
-                >
-                  <option value="Sarah Jenkins">Sarah Jenkins</option>
-                  <option value="Marcus Chan">Marcus Chan</option>
-                  <option value="Unassigned">Unassigned</option>
-                </select>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Counselor</label>
+                  <select
+                    value={activeLeadDetails.assignedTo || 'Unassigned'}
+                    onChange={(e) => handleLeadCounselorChange(activeLeadDetails.id, e.target.value)}
+                    disabled={!hasPermission('leads_assign')}
+                    className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {counselorsList.map(counselor => (
+                      <option key={counselor} value={counselor}>{counselor}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div> */}
             </div>
           </div>
         </div>

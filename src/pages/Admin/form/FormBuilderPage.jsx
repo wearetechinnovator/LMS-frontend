@@ -45,7 +45,7 @@ export default function FormBuilderPage() {
       try {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
-        const response = await fetch('http://localhost:5001/api/v1/form/get-form', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/get-form`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -105,7 +105,7 @@ export default function FormBuilderPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/form/create-form', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/create-form`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ export default function FormBuilderPage() {
       if (isRealDatabaseId) {
         // Edit existing form
         try {
-          const response = await fetch(`http://localhost:5001/api/v1/form/edit-form/${activeFormSchema.id}`, {
+          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/edit-form/${activeFormSchema.id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ export default function FormBuilderPage() {
       } else {
         // Create new form
         try {
-          const response = await fetch('http://localhost:5001/api/v1/form/create-form', {
+          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/create-form`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export default function FormBuilderPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/form/create-form', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/create-form`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -281,7 +281,7 @@ export default function FormEmbedPage() {
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token || token === 'mock-jwt-token') return;
-                const response = await fetch('http://localhost:5001/api/v1/form/get-form', {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/get-form`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

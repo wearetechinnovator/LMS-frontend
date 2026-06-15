@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-export default function DeepDiveAnalytics({ triggerToast = () => {} }) {
+export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] }) {
   const [activeCategory, setActiveCategory] = useState('counselor') // 'counselor' | 'daily' | 'channel'
   const [viewType, setViewType] = useState('graph') // 'graph' | 'report'
   const [searchQuery, setSearchQuery] = useState('')
@@ -15,34 +15,118 @@ export default function DeepDiveAnalytics({ triggerToast = () => {} }) {
   const [channelMetric, setChannelMetric] = useState('leads') // 'leads' | 'conversion' | 'cpl'
 
   // 1. Counselor Performance Dataset
-  const counselorData = [
-    { name: 'Sarah Jenkins', leads: 94, conversion: 18.5, responseTime: 4.2 },
-    { name: 'Marcus Chan', leads: 78, conversion: 15.2, responseTime: 5.0 },
-    { name: 'Janet Smith', leads: 62, conversion: 12.8, responseTime: 6.1 },
-    { name: 'Michael Moore', leads: 45, conversion: 10.4, responseTime: 7.5 },
-    { name: 'Unassigned', leads: 12, conversion: 0, responseTime: 12.0 }
-  ]
+  const counselorData = useMemo(() => {
+    const groups = {}
+    leads.forEach(l => {
+      const counselor = l.assignedTo || 'Unassigned'
+      if (!groups[counselor]) {
+        groups[counselor] = []
+      }
+      groups[counselor].push(l)
+    })
+
+    const data = Object.keys(groups).map(name => {
+      const counselorLeads = groups[name]
+      const total = counselorLeads.length
+      const won = counselorLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
+      const conversion = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0
+      
+      let responseTimeSum = 0
+      counselorLeads.forEach(l => {
+        responseTimeSum += l.activityCount ? Math.max(1.2, 8.5 - l.activityCount) : 4.5
+      })
+      const responseTime = total > 0 ? parseFloat((responseTimeSum / total).toFixed(1)) : 5.0
+
+      return { name, leads: total, conversion, responseTime }
+    })
+
+    if (data.length === 0) {
+      return [
+        { name: 'Sarah Jenkins', leads: 0, conversion: 0, responseTime: 4.2 },
+        { name: 'Marcus Chan', leads: 0, conversion: 0, responseTime: 5.0 },
+        { name: 'Janet Smith', leads: 0, conversion: 0, responseTime: 6.1 },
+        { name: 'Michael Moore', leads: 0, conversion: 0, responseTime: 7.5 },
+        { name: 'Unassigned', leads: 0, conversion: 0, responseTime: 12.0 }
+      ]
+    }
+
+    return data.sort((a, b) => b.leads - a.leads)
+  }, [leads])
 
   // 2. Daily Lead Intake Dataset
-  const dailyData = [
-    { date: 'May 22', leads: 42, conversion: 35.7, converted: 15 },
-    { date: 'May 23', leads: 58, conversion: 37.9, converted: 22 },
-    { date: 'May 24', leads: 65, conversion: 43.1, converted: 28 },
-    { date: 'May 25', leads: 48, conversion: 37.5, converted: 18 },
-    { date: 'May 26', leads: 55, conversion: 36.4, converted: 20 },
-    { date: 'May 27', leads: 30, conversion: 26.7, converted: 8 },
-    { date: 'May 28', leads: 25, conversion: 20.0, converted: 5 }
-  ]
+  const dailyData = useMemo(() => {
+    const arr = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      arr.push({
+        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        toDateString: d.toDateString()
+      })
+    }
+
+    return arr.map(day => {
+      const dayLeads = leads.filter(l => {
+        const d = l.createdAt ? new Date(l.createdAt) : null
+        return d && d.toDateString() === day.toDateString
+      })
+      const total = dayLeads.length
+      const won = dayLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
+      const conversion = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0
+
+      return {
+        date: day.label,
+        leads: total,
+        converted: won,
+        conversion
+      }
+    })
+  }, [leads])
 
   // 3. Channel/Vendor Wise Dataset
-  const channelData = [
-    { name: 'Google Ads', leads: 120, conversion: 22.0, cpl: 10.0, cost: 1200 },
-    { name: 'Facebook Ads', leads: 95, conversion: 18.0, cpl: 10.0, cost: 950 },
-    { name: 'Referral', leads: 40, conversion: 35.0, cpl: 0, cost: 0 },
-    { name: 'Organic Search', leads: 65, conversion: 25.0, cpl: 2.3, cost: 150 },
-    { name: 'Cold Outreach', leads: 30, conversion: 8.0, cpl: 6.7, cost: 200 },
-    { name: 'Webinar', leads: 50, conversion: 30.0, cpl: 10.0, cost: 500 }
-  ]
+  const channelData = useMemo(() => {
+    const groups = {}
+    leads.forEach(l => {
+      const channel = l.source || 'Other'
+      if (!groups[channel]) {
+        groups[channel] = []
+      }
+      groups[channel].push(l)
+    })
+
+    const cplMap = {
+      'Google Ads': 10.0,
+      'Facebook': 10.0,
+      'Facebook Ads': 10.0,
+      'Organic Search': 2.3,
+      'Website Organic': 2.3,
+      'Referral': 0,
+      'Other': 5.0
+    }
+
+    const data = Object.keys(groups).map(name => {
+      const channelLeads = groups[name]
+      const total = channelLeads.length
+      const won = channelLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
+      const conversion = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0
+      
+      const cpl = cplMap[name] !== undefined ? cplMap[name] : 5.0
+      const cost = parseFloat((cpl * total).toFixed(1))
+
+      return { name, leads: total, conversion, cpl, cost }
+    })
+
+    if (data.length === 0) {
+      return [
+        { name: 'Google Ads', leads: 0, conversion: 0, cpl: 10.0, cost: 0 },
+        { name: 'Facebook Ads', leads: 0, conversion: 0, cpl: 10.0, cost: 0 },
+        { name: 'Referral', leads: 0, conversion: 0, cpl: 0, cost: 0 },
+        { name: 'Organic Search', leads: 0, conversion: 0, cpl: 2.3, cost: 0 }
+      ]
+    }
+
+    return data.sort((a, b) => b.leads - a.leads)
+  }, [leads])
 
   // Helper to handle header clicks for sorting
   const handleSort = (field) => {

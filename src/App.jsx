@@ -67,17 +67,7 @@ function App() {
   }
 
   const getRedirectPath = () => {
-    const role = localStorage.getItem('userRole')
-    if (role === 'admin') {
-      return '/admin/dashboard'
-    }
-    if (role === 'counselor') {
-      return '/counselor/overview'
-    }
-    if (role === 'vendor') {
-      return '/vendor/dashboard'
-    }
-    return '/dashboard'
+    return '/admin/dashboard'
   }
 
   return (

@@ -71,14 +71,15 @@ const originalLogs = [
 ]
 
 export default function AuditLogs() {
-    const [logs, setLogs] = useState(originalLogs)
+    const [logs, setLogs] = useState([])
+    const [loading, setLoading] = useState(true)
     const [selectedActionFilter, setSelectedActionFilter] = useState('All')
     const [selectedDateFilter, setSelectedDateFilter] = useState('Last 7 Days')
     const [searchTerm, setSearchTerm] = useState('')
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1)
-    const entriesPerPage = 5
+    const entriesPerPage = 10
 
     // Export animation/feedback state
     const [isExporting, setIsExporting] = useState(false)
@@ -89,24 +90,146 @@ export default function AuditLogs() {
     }
 
     // Available activity actions for filtering
-    const actionFilters = ['All', 'New User Created', 'Created Lead', 'Lead Assigned', 'System Setting Updated', 'User Logout', 'User Login']
     const dateFilters = ['Last 7 Days', 'Yesterday', 'Last 30 Days', 'Custom Range']
 
+    // Fetch logs from DB
+    React.useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token || token === 'mock-jwt-token') {
+                    setLogs(originalLogs);
+                    setLoading(false);
+                    return;
+                }
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/audit/get-audit-logs`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        setLogs(data.length > 0 ? data : originalLogs);
+                    } else {
+                        setLogs(originalLogs);
+                    }
+                } else {
+                    setLogs(originalLogs);
+                }
+            } catch (err) {
+                console.error("Failed to fetch audit logs:", err);
+                setLogs(originalLogs);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLogs();
+    }, []);
+
+    // Listen for custom updates
+    React.useEffect(() => {
+        const handleLogsUpdated = () => {
+            const token = localStorage.getItem('authToken');
+            if (token && token !== 'mock-jwt-token') {
+                fetch(`${import.meta.env.VITE_BASE_URL}/audit/get-audit-logs`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data) && data.length > 0) {
+                            setLogs(data);
+                        }
+                    })
+                    .catch(err => console.error("Error updates:", err));
+            }
+        };
+        window.addEventListener('lms-leads-updated', handleLogsUpdated);
+        return () => window.removeEventListener('lms-leads-updated', handleLogsUpdated);
+    }, []);
+
+    const actionFilters = React.useMemo(() => {
+        const labels = new Set(['All']);
+        logs.forEach(log => {
+            if (log.action?.label) {
+                labels.add(log.action.label);
+            }
+        });
+        return Array.from(labels);
+    }, [logs]);
+
     // Filtering logic
-    const filteredLogs = logs.filter(log => {
-        const matchAction = selectedActionFilter === 'All' || log.action.label === selectedActionFilter
-        const matchSearch = log.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.targetEntity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.ipAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.details.toLowerCase().includes(searchTerm.toLowerCase())
-        return matchAction && matchSearch
-    })
+    const filteredLogs = React.useMemo(() => {
+        const now = new Date()
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+        return logs.filter(log => {
+            const matchAction = selectedActionFilter === 'All' || log.action.label === selectedActionFilter
+
+            let matchDate = true;
+            if (log.timestamp) {
+                const logDate = new Date(log.timestamp);
+                switch (selectedDateFilter) {
+                    case 'Yesterday': {
+                        const yesterdayStart = new Date(startOfDay);
+                        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+                        matchDate = logDate >= yesterdayStart && logDate < startOfDay;
+                        break;
+                    }
+                    case 'Last 7 Days': {
+                        const sevenDaysAgo = new Date(startOfDay);
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                        matchDate = logDate >= sevenDaysAgo;
+                        break;
+                    }
+                    case 'Last 30 Days': {
+                        const thirtyDaysAgo = new Date(startOfDay);
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                        matchDate = logDate >= thirtyDaysAgo;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+
+            const matchSearch = log.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.targetEntity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.ipAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.details.toLowerCase().includes(searchTerm.toLowerCase())
+
+            return matchAction && matchDate && matchSearch
+        })
+    }, [logs, selectedActionFilter, selectedDateFilter, searchTerm])
 
     // Paginated subset
     const indexOfLastEntry = currentPage * entriesPerPage
     const indexOfFirstEntry = indexOfLastEntry - entriesPerPage
     const currentEntries = filteredLogs.slice(indexOfFirstEntry, indexOfLastEntry)
     const totalPages = Math.ceil(filteredLogs.length / entriesPerPage) || 1
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const start = Math.max(1, currentPage - 1);
+        const end = Math.min(totalPages, currentPage + 1);
+
+        if (start > 1) {
+            pages.push(1);
+            if (start > 2) pages.push('...');
+        }
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+
+        if (end < totalPages) {
+            if (end < totalPages - 1) pages.push('...');
+            pages.push(totalPages);
+        }
+        return pages;
+    };
 
     const handleClearAllFilters = () => {
         setSelectedActionFilter('All')
@@ -115,19 +238,10 @@ export default function AuditLogs() {
         setCurrentPage(1)
     }
 
-    const triggerExport = () => {
-        setIsExporting(true)
-        setToastMessage('')
-        setTimeout(() => {
-            setIsExporting(false)
-            setToastMessage('Audit logs exported to CSV successfully!')
-        }, 1500)
-    }
-
     return (
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative">
 
-            {/* Premium Toast Banner */}
+            {/* Toast Banner */}
             <Toast
                 message={toastMessage}
                 isVisible={!!toastMessage}
@@ -283,7 +397,16 @@ export default function AuditLogs() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant">
-                            {currentEntries.length > 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-8 text-on-surface-variant font-medium">
+                                        <div className="flex flex-col items-center justify-center space-y-2">
+                                            <span className="material-symbols-outlined text-[32px] animate-spin">sync</span>
+                                            <p>Loading audit logs...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : currentEntries.length > 0 ? (
                                 currentEntries.map((log) => (
                                     <tr key={log.id} className="hover:bg-surface-container/30 transition-colors">
 
@@ -308,7 +431,7 @@ export default function AuditLogs() {
                                         {/* Action Badge */}
                                         <td className="px-4 py-3 align-middle">
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border text-[9px] font-semibold bg-blue-50/50 text-blue-700 border-blue-200">
-                                                <span className="material-symbols-outlined text-[13px]">{log.action.icon}</span>
+                                                <span className="material-symbols-outlined text-[13px]!">{log.action.icon || 'info'}</span>
                                                 {log.action.label}
                                             </span>
                                         </td>
@@ -355,7 +478,7 @@ export default function AuditLogs() {
                 {/* Table Pagination Footer */}
                 <div className="px-4 py-2 border-t border-outline-variant flex items-center justify-between bg-surface-container select-none">
                     <p className="text-[9px] text-on-surface-variant font-semibold">
-                        Showing {filteredLogs.length > 0 ? indexOfFirstEntry + 1 : 0} to {Math.min(indexOfLastEntry, filteredLogs.length)} of 12,453 entries
+                        Showing {filteredLogs.length > 0 ? indexOfFirstEntry + 1 : 0} to {Math.min(indexOfLastEntry, filteredLogs.length)} of {filteredLogs.length.toLocaleString()} entries
                     </p>
                     <div className="flex items-center gap-1">
                         <button
@@ -368,32 +491,23 @@ export default function AuditLogs() {
                         </button>
 
                         <div className="flex gap-0.5">
-                            {[1, 2, 3].map(page => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${currentPage === page
-                                        ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
-                                        : 'hover:bg-surface-container-lowest text-on-surface'
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                            {totalPages > 3 && (
-                                <>
-                                    <span className="px-1 text-on-surface-variant self-end text-[10px]">...</span>
+                            {getPageNumbers().map((page, pIdx) => {
+                                if (page === '...') {
+                                    return <span key={`dots-${pIdx}`} className="px-1.5 text-on-surface-variant self-end text-[10px] leading-tight select-none">...</span>;
+                                }
+                                return (
                                     <button
-                                        onClick={() => setCurrentPage(250)}
-                                        className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${currentPage === 250
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${currentPage === page
                                             ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
                                             : 'hover:bg-surface-container-lowest text-on-surface'
                                             }`}
                                     >
-                                        250
+                                        {page}
                                     </button>
-                                </>
-                            )}
+                                );
+                            })}
                         </div>
 
                         <button

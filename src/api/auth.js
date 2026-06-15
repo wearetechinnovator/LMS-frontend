@@ -1,7 +1,5 @@
-const BASE_URL = 'http://localhost:5001/api/v1';
-
 export async function registerUser(user_phone_number) {
-  const response = await fetch(`${BASE_URL}/auth/register`, {
+  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,7 +21,7 @@ export async function verifyOTP({
   user_name,
   user_password,
 }) {
-  const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
+  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/verify-otp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -45,7 +43,7 @@ export async function verifyOTP({
 }
 
 export async function loginUser(user_phone_number, user_password) {
-  const response = await fetch(`${BASE_URL}/auth/login`, {
+  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

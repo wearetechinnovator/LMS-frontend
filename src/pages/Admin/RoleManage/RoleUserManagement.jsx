@@ -232,12 +232,33 @@ export default function RoleUserManagement() {
     const [selectedRole, setSelectedRole] = useState('Campaign Manager')
 
     useEffect(() => {
+        const fetchUsers = async () => {
+            const token = localStorage.getItem('authToken');
+            if (!token || token === 'mock-jwt-token') return;
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUsers(data);
+                }
+            } catch (err) {
+                console.error("Error fetching users from database:", err);
+            }
+        };
+        fetchUsers();
+    }, []);
+
+    useEffect(() => {
         const fetchRoles = async () => {
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token || token === 'mock-jwt-token') return;
                 
-                const response = await fetch('http://localhost:5001/api/v1/role/get-role', {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/get-role`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -246,6 +267,23 @@ export default function RoleUserManagement() {
                     const data = await response.json();
                     if (Array.isArray(data) && data.length > 0) {
                         setCustomRoles(data);
+                        
+                        // Parse role permissions
+                        const permsMap = {};
+                        data.forEach(roleObj => {
+                            let parsedPerms = {};
+                            if (roleObj.role_permissions) {
+                                parsedPerms = typeof roleObj.role_permissions === 'string' 
+                                    ? JSON.parse(roleObj.role_permissions)
+                                    : roleObj.role_permissions;
+                            }
+                            permsMap[roleObj.role_name] = parsedPerms;
+                        });
+                        setRolePermissions(prev => ({
+                            ...prev,
+                            ...permsMap
+                        }));
+
                         const names = data.map(item => item.role_name);
                         if (names.length > 0 && !names.includes(selectedRole)) {
                             setSelectedRole(names[0]);
@@ -275,7 +313,8 @@ export default function RoleUserManagement() {
         phoneNumber: '',
         role: 'Admissions Counselor',
         department: 'Admissions',
-        status: 'Active'
+        status: 'Active',
+        password: ''
     })
 
     // Custom toast notifications
@@ -287,8 +326,8 @@ export default function RoleUserManagement() {
 
     // Filter users logic
     const filteredUsers = users.filter(user => {
-        const matchSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchSearch = (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
         const matchRole = roleFilter === 'All' || user.role === roleFilter
         const matchStatus = statusFilter === 'All' || user.status === statusFilter
         return matchSearch && matchRole && matchStatus
@@ -300,9 +339,10 @@ export default function RoleUserManagement() {
             name: '',
             email: '',
             phoneNumber: '',
-            role: 'Admissions Counselor',
+            role: rolesList[0] || 'Admissions Counselor',
             department: 'Admissions',
-            status: 'Active'
+            status: 'Active',
+            password: ''
         })
         setIsDrawerOpen(true)
     }
@@ -315,71 +355,177 @@ export default function RoleUserManagement() {
             phoneNumber: user.phoneNumber || '',
             role: user.role,
             department: user.department,
-            status: user.status
+            status: user.status,
+            password: ''
         })
         setIsDrawerOpen(true)
     }
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault()
-        if (!formData.name.trim() || !formData.email.trim()) {
-            triggerToast('Error: Name and Email fields are required!')
+        if (!formData.name.trim() || !formData.email.trim() || !formData.phoneNumber.trim()) {
+            triggerToast('Error: Name, Email, and Phone fields are required!')
+            return
+        }
+        if (!editingUser && !formData.password.trim()) {
+            triggerToast('Error: Password is required for new users!')
             return
         }
 
-        // Determine avatar color matching
-        let colorTheme = 'bg-primary/10 text-primary border-primary/20'
-        if (formData.role === 'System Admin') colorTheme = 'bg-red-500/10 text-red-600 border-red-500/20'
-        else if (formData.role === 'Admissions Counselor') colorTheme = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-        else if (formData.role === 'Sales Executive') colorTheme = 'bg-primary/10 text-primary border-primary/20'
-        else if (formData.role === 'Auditor') colorTheme = 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-
-        if (editingUser) {
-            // Edit mode
-            setUsers(prev => prev.map(u => u.id === editingUser.id ? {
-                ...u,
-                name: formData.name,
-                email: formData.email,
-                phoneNumber: formData.phoneNumber,
-                role: formData.role,
-                department: formData.department,
-                status: formData.status,
-                color: colorTheme
-            } : u))
-            triggerToast(`User account "${formData.name}" successfully updated!`)
-        } else {
-            // Create mode
-            const newId = `USR-${Math.floor(100 + Math.random() * 900)}`
-            const initials = formData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-            const newUser = {
-                id: newId,
-                name: formData.name,
-                email: formData.email,
-                phoneNumber: formData.phoneNumber,
-                role: formData.role,
-                department: formData.department,
-                lastActive: 'Invited just now',
-                status: formData.status,
-                avatar: initials || 'US',
-                color: colorTheme
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token') {
+            try {
+                if (editingUser) {
+                    const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/edit-user/${editingUser.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: formData.name,
+                            email: formData.email,
+                            phoneNumber: formData.phoneNumber,
+                            role: formData.role,
+                            department: formData.department,
+                            status: formData.status,
+                            password: formData.password || undefined
+                        })
+                    });
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || 'Failed to edit user');
+                    }
+                    const updatedUser = await response.json();
+                    setUsers(prev => prev.map(u => u.id === editingUser.id ? updatedUser : u));
+                    triggerToast(`User account "${formData.name}" successfully updated!`);
+                } else {
+                    const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/create-user`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: formData.name,
+                            email: formData.email,
+                            phoneNumber: formData.phoneNumber,
+                            role: formData.role,
+                            department: formData.department,
+                            status: formData.status,
+                            password: formData.password
+                        })
+                    });
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || 'Failed to create user');
+                    }
+                    const createdUser = await response.json();
+                    setUsers(prev => [createdUser, ...prev]);
+                    triggerToast(`User "${formData.name}" registered successfully!`);
+                }
+            } catch (err) {
+                triggerToast(`Error: ${err.message}`);
+                return;
             }
-            setUsers(prev => [...prev, newUser])
-            triggerToast(`Invited "${formData.name}" successfully as ${formData.role}!`)
+        } else {
+            // Mock mode fallback
+            let colorTheme = 'bg-primary/10 text-primary border-primary/20'
+            if (formData.role === 'System Admin') colorTheme = 'bg-red-500/10 text-red-600 border-red-500/20'
+            else if (formData.role === 'Admissions Counselor') colorTheme = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+            else if (formData.role === 'Sales Executive') colorTheme = 'bg-primary/10 text-primary border-primary/20'
+            else if (formData.role === 'Auditor') colorTheme = 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+
+            if (editingUser) {
+                setUsers(prev => prev.map(u => u.id === editingUser.id ? {
+                    ...u,
+                    name: formData.name,
+                    email: formData.email,
+                    phoneNumber: formData.phoneNumber,
+                    role: formData.role,
+                    department: formData.department,
+                    status: formData.status,
+                    color: colorTheme
+                } : u))
+                triggerToast(`User account "${formData.name}" successfully updated!`)
+            } else {
+                const newId = `USR-${Math.floor(100 + Math.random() * 900)}`
+                const initials = formData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                const newUser = {
+                    id: newId,
+                    name: formData.name,
+                    email: formData.email,
+                    phoneNumber: formData.phoneNumber,
+                    role: formData.role,
+                    department: formData.department,
+                    lastActive: 'Invited just now',
+                    status: formData.status,
+                    avatar: initials || 'US',
+                    color: colorTheme
+                }
+                setUsers(prev => [...prev, newUser])
+                triggerToast(`Invited "${formData.name}" successfully as ${formData.role}!`)
+            }
         }
 
         setIsDrawerOpen(false)
     }
 
-    const handleToggleStatus = (user) => {
+    const handleToggleStatus = async (user) => {
         const nextStatus = user.status === 'Active' ? 'Suspended' : 'Active'
-        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: nextStatus } : u))
-        triggerToast(`User "${user.name}" status set to ${nextStatus}!`)
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token') {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/edit-user/${user.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        status: nextStatus
+                    })
+                });
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'Failed to update user status');
+                }
+                const updatedUser = await response.json();
+                setUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
+                triggerToast(`User "${user.name}" status set to ${nextStatus}!`);
+            } catch (err) {
+                triggerToast(`Error: ${err.message}`);
+            }
+        } else {
+            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: nextStatus } : u))
+            triggerToast(`User "${user.name}" status set to ${nextStatus}!`)
+        }
     }
 
-    const handleDeleteUser = (userId, userName) => {
+    const handleDeleteUser = async (userId, userName) => {
         if (window.confirm(`Are you sure you want to remove user "${userName}"?`)) {
-            setUsers(prev => prev.filter(u => u.id !== userId))
-            triggerToast(`User "${userName}" successfully deleted.`)
+            const token = localStorage.getItem('authToken');
+            if (token && token !== 'mock-jwt-token') {
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/delete-user/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || 'Failed to delete user');
+                    }
+                    setUsers(prev => prev.filter(u => u.id !== userId));
+                    triggerToast(`User "${userName}" successfully deleted.`);
+                } catch (err) {
+                    triggerToast(`Error: ${err.message}`);
+                }
+            } else {
+                setUsers(prev => prev.filter(u => u.id !== userId))
+                triggerToast(`User "${userName}" successfully deleted.`)
+            }
         }
     }
 
@@ -412,8 +558,46 @@ export default function RoleUserManagement() {
         });
     }
 
-    const handleSavePermissions = () => {
-        triggerToast(`Permissions for role "${selectedRole}" updated successfully!`)
+    const handleSavePermissions = async () => {
+        const roleObj = customRoles.find(r => r.role_name === selectedRole);
+        if (!roleObj) {
+            triggerToast("Error: Role not found!");
+            return;
+        }
+
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token') {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/update-permissions/${roleObj.role_id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        permissions: rolePermissions[selectedRole] || {}
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'Failed to update permissions');
+                }
+
+                // If user is currently logged in with this role, update their cached permissions!
+                const currentUserRole = localStorage.getItem('userRole');
+                if (currentUserRole === selectedRole) {
+                    localStorage.setItem('userPermissions', JSON.stringify(rolePermissions[selectedRole] || {}));
+                    window.dispatchEvent(new Event('storage'));
+                }
+
+                triggerToast(`Permissions for role "${selectedRole}" updated successfully!`);
+            } catch (err) {
+                triggerToast(`Error: ${err.message}`);
+            }
+        } else {
+            triggerToast(`Mock permissions for "${selectedRole}" saved locally!`);
+        }
     }
 
     const handleClearAllPermissions = () => {
@@ -496,7 +680,7 @@ export default function RoleUserManagement() {
         const token = localStorage.getItem('authToken');
         if (token && token !== 'mock-jwt-token') {
             try {
-                const response = await fetch('http://localhost:5001/api/v1/role/create-role', {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/create-role`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -569,7 +753,7 @@ export default function RoleUserManagement() {
         const token = localStorage.getItem('authToken');
         if (token && token !== 'mock-jwt-token' && !String(roleObj.role_id).startsWith('mock')) {
             try {
-                const response = await fetch(`http://localhost:5001/api/v1/role/edit-role/${roleObj.role_id}`, {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/edit-role/${roleObj.role_id}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -617,7 +801,7 @@ export default function RoleUserManagement() {
         const token = localStorage.getItem('authToken');
         if (token && token !== 'mock-jwt-token' && !String(roleObj.role_id).startsWith('mock')) {
             try {
-                const response = await fetch(`http://localhost:5001/api/v1/role/delete-role/${roleObj.role_id}`, {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/delete-role/${roleObj.role_id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1251,6 +1435,21 @@ export default function RoleUserManagement() {
                                             placeholder="e.g. 9876543210"
                                             className="w-full h-8 px-2.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
                                             required
+                                        />
+                                    </div>
+
+                                    {/* Input Password */}
+                                    <div className="space-y-1">
+                                        <label className="block text-[8px] font-bold text-on-surface-variant uppercase tracking-wider">
+                                            {editingUser ? 'Password (leave blank to keep current)' : 'Password'}
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            placeholder="e.g. ••••••••"
+                                            className="w-full h-8 px-2.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                            required={!editingUser}
                                         />
                                     </div>
 

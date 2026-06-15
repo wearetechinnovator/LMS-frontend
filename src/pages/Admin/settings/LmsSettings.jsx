@@ -135,7 +135,7 @@ export default function LmsSettings() {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
 
-        const response = await fetch('http://localhost:5001/api/v1/lead-status/get-lead-status', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead-status/get-lead-status`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -412,7 +412,7 @@ export default function LmsSettings() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/lead-status/create-lead-status', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead-status/create-lead-status`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -465,7 +465,7 @@ export default function LmsSettings() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token' && target.id && !String(target.id).startsWith('mock')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead-status/delete-lead-status/${target.id}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead-status/delete-lead-status/${target.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -532,7 +532,7 @@ export default function LmsSettings() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token' && target.id && !String(target.id).startsWith('mock')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/v1/lead-status/edit-lead-status/${target.id}`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead-status/edit-lead-status/${target.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

@@ -7,6 +7,8 @@ import LeadsFilterChip from '../../../components/LeadsFilterChip'
 import LeadsToolbar from '../../../components/LeadsToolbar'
 import { getCustomStatuses, getStatusStyle } from '../../../helpers/statusHelper'
 
+import { hasPermission } from '../../../components/ProtectRoute'
+
 export default function AllLeadsPage() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -26,7 +28,7 @@ export default function AllLeadsPage() {
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [showTooltip, setShowTooltip] = useState(false)
   const role = localStorage.getItem('userRole')
-  const isMasked = role === 'counselor' || role === 'vendor'
+  const isMasked = role !== 'admin' && role !== 'Admin' && role !== 'System Admin'
   const maskEmail = (email) => {
     if (!email) return ''
     const atIdx = email.indexOf('@')
@@ -102,7 +104,6 @@ export default function AllLeadsPage() {
     assignedTo: true,
     source: true,
     query: true,
-    verified: true,
     lastContacted: true,
     nextFollowUp: true,
     age: true,
@@ -176,7 +177,7 @@ export default function AllLeadsPage() {
   const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
-  const [quickLeadForm, setQuickLeadForm] = useState({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' })
+  const [quickLeadForm, setQuickLeadForm] = useState({ name: '', email: '', phone: '', assignedTo: '', leadType: '', source: '', query: '' })
   const [uploadingBulk, setUploadingBulk] = useState(false)
   const [downloadingLeadsState, setDownloadingLeadsState] = useState(false)
   const [timelineFilter, setTimelineFilter] = useState('ALL')
@@ -189,16 +190,16 @@ export default function AllLeadsPage() {
   const [playbackSpeed, setPlaybackSpeed] = useState('1x')
   const [playbackProgress, setPlaybackProgress] = useState(30)
   const [mergeSelectedProps, setMergeSelectedProps] = useState({
-    name: 'Amina Patel',
-    email: 'apatel.design@studio.co',
-    phone: '+44 7890 90877',
-    status: 'QUALIFIED',
-    assignedTo: 'Sarah Jenkins',
-    source: 'Referral',
-    score: 95,
-    location: 'London, UK',
-    campaign: 'Referral_Promo',
-    query: 'BCA'
+    name: '',
+    email: '',
+    phone: '',
+    status: '',
+    assignedTo: '',
+    source: '',
+    score: 50,
+    location: '',
+    campaign: '',
+    query: ''
   })
 
   const handlePropSelection = (field, value) => {
@@ -227,7 +228,7 @@ export default function AllLeadsPage() {
   }, [activeLeadDetails])
 
   // Active Waveform Playback Simulator
-  React.useEffect(() => {
+  useEffect(() => {
     let interval = null
     if (audioPlaying) {
       const speedFactor = playbackSpeed === '2x' ? 2 : playbackSpeed === '1.5x' ? 1.5 : 1
@@ -252,260 +253,9 @@ export default function AllLeadsPage() {
     return leads.find(l => l.id !== lead.id && l.email === lead.email)
   }
 
-  // Default chronological timelines database template
-  const getInitialTimeline = (lead) => [
-    {
-      id: 1,
-      type: 'STATUS_CHANGE',
-      title: `Status changed to ${lead.status === 'NEW' ? 'Callback Later' : lead.status}`,
-      date: 'Oct 24, 14:32:01',
-      user: 'John Doe',
-      ip: '192.168.1.105',
-      icon: 'update',
-      color: '#c2410c'
-    },
-    {
-      id: 2,
-      type: 'COMMENT',
-      title: 'Comment added',
-      date: 'Oct 24, 14:30:15',
-      body: '"Left a voicemail. Will try again tomorrow morning."',
-      user: 'John Doe',
-      ip: '192.168.1.105',
-      icon: 'chat',
-      color: 'slate-400'
-    },
-    {
-      id: 3,
-      type: 'ASSIGNMENT',
-      title: 'Counselor Assigned',
-      date: 'Oct 24, 09:15:00',
-      body: `Assigned to: ${lead.assignedTo}`,
-      user: 'SYSTEM: Auto-Routing',
-      ip: '10.0.0.42',
-      icon: 'person_add',
-      color: 'blue-600'
-    },
-    {
-      id: 4,
-      type: 'STATUS_CHANGE_FLOW',
-      title: 'Status changed',
-      date: 'Oct 24, 09:14:50',
-      body: { from: 'New', to: 'Assigned' },
-      user: 'Admin',
-      ip: '10.0.0.42',
-      icon: 'swap_horiz',
-      color: 'slate-400'
-    },
-    {
-      id: 5,
-      type: 'CREATION',
-      title: 'Lead Created',
-      date: 'Oct 24, 08:02:11',
-      body: `Via Form Submit: Landing Page`,
-      user: lead.name,
-      ip: '73.282.14.88',
-      icon: 'add_circle',
-      color: 'slate-800'
-    },
-    {
-      id: 6,
-      type: 'EMAIL',
-      title: 'Email Sent',
-      date: 'Oct 24, 07:45:00',
-      body: 'Subject: Introduction to LeadPro CRM',
-      user: 'John Doe',
-      ip: '192.168.1.105',
-      icon: 'mail',
-      color: 'blue-600'
-    },
-    {
-      id: 7,
-      type: 'CALL',
-      title: 'Phone Call',
-      date: 'Oct 23, 16:15:50',
-      body: 'Duration: 04:22',
-      user: 'John Doe',
-      ip: '192.168.1.105',
-      icon: 'call',
-      color: 'slate-400',
-      recording: true
-    },
-    {
-      id: 8,
-      type: 'TAG',
-      title: 'Tag Added',
-      date: 'Oct 23, 15:00:12',
-      body: 'High Value',
-      user: 'Admin',
-      ip: '10.0.0.42',
-      icon: 'sell',
-      color: 'amber-800'
-    },
-    {
-      id: 9,
-      type: 'MEETING',
-      title: 'Meeting Scheduled',
-      date: 'Oct 23, 11:20:00',
-      body: 'Date: Oct 28, 10:00 AM',
-      user: 'John Doe',
-      ip: '192.168.1.105',
-      icon: 'video_call',
-      color: 'slate-400'
-    }
-  ]
-
-  // Default Lead Application Profiles database templates
-  const getInitialApplication = (lead) => {
-    const apps = {
-      'LS-1021': {
-        appliedProgram: 'Enterprise CRM Integration Suite',
-        submissionDate: 'Oct 22, 2026',
-        companyName: 'Penthilgon Enterprises',
-        companySize: '500+ employees',
-        annualRevenue: '$25M - $50M',
-        useCase: 'Consolidating lead routing and phone record logs across 3 regional branches.',
-        notes: 'Requested expedited onboarding schedule due to legacy system contract expiry next month.'
-      },
-      'LS-1020': {
-        appliedProgram: 'Professional Tier (Monthly Plan)',
-        submissionDate: 'Oct 23, 2026',
-        companyName: 'Reed Consulting Group',
-        companySize: '15-49 employees',
-        annualRevenue: '$1.5M - $3M',
-        useCase: 'Outbound sales follow-ups and marketing attribution tracking.',
-        notes: 'Expressed interest in setting up webhooks to feed into Slack channel.'
-      },
-      'LS-1019': {
-        appliedProgram: 'Custom Enterprise Plan',
-        submissionDate: 'Oct 24, 2026',
-        companyName: 'Patel & Partners Design Studio',
-        companySize: '50-100 employees',
-        annualRevenue: '$8M - $12M',
-        useCase: 'Client portal synchronization and advanced analytics dashboard integration.',
-        notes: 'Highly focused on design aesthetics and responsive timeline views.'
-      },
-      'LS-1018': {
-        appliedProgram: 'Starter Solo Plan',
-        submissionDate: 'Oct 24, 2026',
-        companyName: 'Solarix Energy IE',
-        companySize: '2-9 employees',
-        annualRevenue: '$200k - $500k',
-        useCase: 'Tracking solar panel install sales pipelines in Dublin area.',
-        notes: 'Referred by direct mail promo code Q1_Direct_Mail.'
-      },
-      'LS-1017': {
-        appliedProgram: 'Professional CRM Bundle',
-        submissionDate: 'Oct 23, 2026',
-        companyName: 'Fintech HK Partners',
-        companySize: '100-249 employees',
-        annualRevenue: '$15M - $20M',
-        useCase: 'Tracking high-net-worth investor onboarding flows and webinars.',
-        notes: 'Requires dual language support (English/Cantonese) in communication drafts.'
-      },
-      'LS-1016': {
-        appliedProgram: 'Standard Professional Tier',
-        submissionDate: 'Oct 21, 2026',
-        companyName: 'RealTech Solutions LLC',
-        companySize: '10-24 employees',
-        annualRevenue: '$1M - $2M',
-        useCase: 'Replacing current Excel spreadsheet to track property investor contacts.',
-        notes: 'Lost lead - contact requested to be unsubscribed from further cold outreach.'
-      },
-      'LS-1015': {
-        appliedProgram: 'Custom Enterprise Plan',
-        submissionDate: 'Oct 24, 2026',
-        companyName: 'Patel Design Studio UK',
-        companySize: '50-100 employees',
-        annualRevenue: '$8M - $12M',
-        useCase: 'Duplicate profile created via different landing page form.',
-        notes: 'To be merged with LS-1019 primary profile.'
-      }
-    }
-    return apps[lead.id] || {
-      appliedProgram: 'Standard Professional Tier',
-      submissionDate: 'Oct 24, 2026',
-      companyName: lead.name + ' Corp',
-      companySize: '10-49 employees',
-      annualRevenue: '$1M - $3M',
-      useCase: 'Pipeline tracking and customer engagement trail.',
-      notes: 'No additional notes provided.'
-    }
-  }
-
-  // Default support inquiries and customer queries
-  const getInitialQueries = (lead) => {
-    const queries = {
-      'LS-1021': [
-        { id: 1, question: 'Do you offer custom SLA agreements for enterprise packages?', date: 'Oct 23, 2026', status: 'RESOLVED', response: 'Yes, we provide 99.9% uptime custom SLAs for contract values exceeding $10k/yr.' },
-        { id: 2, question: 'Is training included for all team members, or is it an add-on?', date: 'Oct 24, 2026', status: 'PENDING', response: null }
-      ],
-      'LS-1020': [
-        { id: 1, question: 'Can we integrate custom SIP phone numbers with the audio playback recorder?', date: 'Oct 24, 2026', status: 'PENDING', response: null }
-      ],
-      'LS-1019': [
-        { id: 1, question: 'Can we export timelines directly into CSV format for client invoicing?', date: 'Oct 24, 2026', status: 'RESOLVED', response: 'Absolutely. There is an Export button on the top-right of the Timeline panel.' }
-      ],
-      'LS-1018': [
-        { id: 1, question: 'Do you charge a setup fee for importing from Hubspot?', date: 'Oct 24, 2026', status: 'PENDING', response: null }
-      ],
-      'LS-1017': [
-        { id: 1, question: 'How do we request custom campaign tags for lead links?', date: 'Oct 24, 2026', status: 'RESOLVED', response: 'You can define custom parameters directly under the UTM Campaign setting tab.' }
-      ],
-      'LS-1016': [],
-      'LS-1015': []
-    }
-    return queries[lead.id] || []
-  }
-
   // Interactive local leads database array state
-  const [leads, setLeads] = useState(() => {
-    const localData = localStorage.getItem('lms_leads_database')
-    if (localData) {
-      try {
-        return JSON.parse(localData)
-      } catch (e) {
-        console.error("Error parsing leads database from localStorage:", e)
-      }
-    }
-    const initial = [
-      { id: 'LS-1021', name: 'Eleanor Penthilgon', email: 'eleanor.p@enterprise.com', phone: '+1 (555) 617-2834', status: 'NEW', assignedTo: 'Sarah Jenkins', source: 'Website Organic', score: 92, location: 'Austin, TX', campaign: 'Q3_Tech_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true, query: 'B.Tech' },
-      { id: 'LS-1020', name: 'Jackson Reed', email: 'j.reed88@gmail.com', phone: '+1 (555) 837-1126', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Paid Search', score: 74, location: 'Houston, TX', campaign: 'Q3_Tech_Promo', tier: 'Secondary', verified: true, formName: 'MBA Scholarship Form', createdToday: false, followUpToday: true, query: 'MBA' },
-      { id: 'LS-1019', name: 'Amina Patel', email: 'apatel.design@studio.co', phone: '+44 7890 90877', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins', source: 'Referral', score: 95, location: 'London, UK', campaign: 'Referral_Promo', tier: 'Primary', verified: true, formName: 'B.Tech Admissions Form', createdToday: true, query: 'BCA' },
-      { id: 'LS-1018', name: "Liam O'Connor", email: 'liam.o@solarix.ie', phone: '+353 1 234 5678', status: 'NEW', assignedTo: 'Unassigned', source: 'Direct Mail', score: 40, location: 'Dublin, IE', campaign: 'Q1_Direct_Mail', tier: 'Tertiary', verified: false, formName: 'General Inquiry Form', createdToday: false, query: 'Cardiology' },
-      { id: 'LS-1017', name: 'Sophia Wong', email: 's.wong@fintech.com', phone: '+852 9123 4567', status: 'CONTACTED', assignedTo: 'Marcus Chan', source: 'Webinar', score: 81, location: 'Hong Kong, HK', campaign: 'Q3_Fintech_Webinar', tier: 'Primary', verified: false, formName: 'MBA Scholarship Form', createdToday: true, followUpToday: true, query: 'MCA' },
-      { id: 'LS-1016', name: 'David Miller', email: 'dmiller@realtech.io', phone: '+1 (555) 908-1212', status: 'LOST', assignedTo: 'Sarah Jenkins', source: 'Cold Outreach', score: 15, location: 'Boston, MA', campaign: 'Cold_Outreach_Q2', tier: 'Tertiary', verified: true, formName: 'General Inquiry Form', createdToday: false, query: 'Heart' },
-      { id: 'LS-1015', name: 'Amina Patel (Duplicate)', email: 'apatel.design@studio.co', phone: '+44 7890 99999', status: 'NEW', assignedTo: 'Marcus Chan', source: 'Cold Outreach', score: 62, location: 'Manchester, UK', campaign: 'Cold_Outreach_Q2', tier: 'Secondary', verified: false, formName: 'B.Tech Admissions Form', createdToday: true, query: 'BCA' }
-    ].map(lead => {
-      // Define realistic default CRM fields
-      const defaultCRMFields = {
-        lastContacted: lead.status === 'NEW' ? 'None' : (lead.id === 'LS-1020' ? 'May 30, 2026' : (lead.id === 'LS-1019' ? 'May 31, 2026' : 'May 28, 2026')),
-        nextFollowUp: lead.status === 'LOST' ? 'None' : (lead.id === 'LS-1020' ? 'Jun 03, 2026' : (lead.id === 'LS-1017' ? 'Jun 03, 2026' : 'Jun 10, 2026')),
-        age: lead.createdToday ? '1 day' : (lead.id === 'LS-1016' ? '24 days' : '12 days'),
-        priority: lead.score >= 80 ? 'High' : lead.score >= 50 ? 'Medium' : 'Low',
-        tags: lead.tier === 'Primary' ? ['Enterprise', 'Hot'] : (lead.id === 'LS-1015' ? ['Duplicate', 'B.Tech'] : ['Inquiry']),
-        activityCount: lead.id === 'LS-1016' ? 4 : 9,
-        conversionProb: lead.score,
-        leadType: ['Direct Mail', 'Cold Outreach', 'Bulk Offline CSV'].includes(lead.source) ? 'Offline' : 'Online'
-      }
-      // Dynamically inject custom initial timelines into database records
-      return { ...lead, ...defaultCRMFields, timeline: [], application: getInitialApplication(lead), queries: getInitialQueries(lead) }
-    }).map((lead, idx) => {
-      // Explicitly seed initialized logs
-      const seed = [
-        { id: 'LS-1021', name: 'Sarah Miller', status: 'NEW', assignedTo: 'Sarah Jenkins' },
-        { id: 'LS-1020', name: 'Jackson Reed', status: 'CONTACTED', assignedTo: 'Marcus Chan' },
-        { id: 'LS-1019', name: 'Amina Patel', status: 'QUALIFIED', assignedTo: 'Sarah Jenkins' },
-        { id: 'LS-1018', name: "Liam O'Connor", status: 'NEW', assignedTo: 'Unassigned' },
-        { id: 'LS-1017', name: 'Sophia Wong', status: 'CONTACTED', assignedTo: 'Marcus Chan' },
-        { id: 'LS-1016', name: 'David Miller', status: 'LOST', assignedTo: 'Sarah Jenkins' },
-        { id: 'LS-1015', name: 'Amina Patel (Duplicate)', status: 'NEW', assignedTo: 'Marcus Chan' }
-      ][idx]
-      return { ...lead, timeline: getInitialTimeline(seed) }
-    })
-    localStorage.setItem('lms_leads_database', JSON.stringify(initial))
-    return initial
-  })
+  const [leads, setLeads] = useState([])
+  const [dbUsers, setDbUsers] = useState([])
 
   // Synchronize leads array state to localStorage when changes occur
   useEffect(() => {
@@ -518,7 +268,7 @@ export default function AllLeadsPage() {
       try {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
-        const response = await fetch('http://localhost:5001/api/v1/lead/get-lead', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -534,6 +284,30 @@ export default function AllLeadsPage() {
       }
     };
     fetchLeads();
+  }, []);
+
+  // Sync users from database on mount to map active counselors
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || token === 'mock-jwt-token') return;
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setDbUsers(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch users in leads page:", err);
+      }
+    };
+    fetchUsers();
   }, []);
 
   // Listen for storage or custom update events to synchronize lead changes instantly
@@ -576,6 +350,35 @@ export default function AllLeadsPage() {
     ]
   }, [leads])
 
+  const counselorsList = useMemo(() => {
+    const list = new Set()
+    dbUsers.forEach(u => {
+      if (u.status === 'Active' && u.name) {
+        list.add(u.name)
+      }
+    })
+    leads.forEach(l => {
+      if (l.assignedTo) {
+        list.add(l.assignedTo)
+      }
+    })
+    const defaultCounselors = ['Unassigned']
+    defaultCounselors.forEach(c => list.add(c))
+    return Array.from(list)
+  }, [leads, dbUsers])
+
+  const sourcesList = useMemo(() => {
+    const list = new Set()
+    leads.forEach(l => {
+      if (l.source) {
+        list.add(l.source)
+      }
+    })
+    const defaultSources = ['Google Ads', 'Website Organic', 'Referral', 'Offline Event', 'Bulk Offline CSV']
+    defaultSources.forEach(s => list.add(s))
+    return Array.from(list)
+  }, [leads])
+
   const uniqueQueries = useMemo(() => {
     const queries = new Set()
     leads.forEach(lead => {
@@ -591,7 +394,7 @@ export default function AllLeadsPage() {
   }, [leads, selectedFormFilter])
 
   // Sync form list data with Navbar dropdown
-  React.useEffect(() => {
+  useEffect(() => {
     const payload = {
       formsList: formsData,
       activeForm: selectedFormFilter
@@ -646,14 +449,6 @@ export default function AllLeadsPage() {
   }
 
   // Export action handler with loading state
-  const handleExportTimeline = () => {
-    if (exporting) return
-    setExporting(true)
-    setTimeout(() => {
-      setExporting(false)
-      triggerToast('Timeline interactions exported successfully as CSV')
-    }, 1200)
-  }
 
   const triggerToast = (msg) => {
     setToastMsg(msg)
@@ -787,7 +582,7 @@ export default function AllLeadsPage() {
   }, [formFilteredLeads])
 
   const todayFollowUpCount = useMemo(() => {
-    return formFilteredLeads.filter(l => l.followUpToday).length
+    return formFilteredLeads.filter(l => l.status === 'FOLLOW UP' || l.status === 'FOLLOW_UP' || l.followUpToday).length
   }, [formFilteredLeads])
 
   const todayPendingCount = useMemo(() => {
@@ -867,7 +662,7 @@ export default function AllLeadsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/lead/bulk-status', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/bulk-status`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -935,10 +730,14 @@ export default function AllLeadsPage() {
 
   const handleBulkAssignUpdate = async (newCounselor) => {
     if (!newCounselor || selectedLeads.length === 0) return;
+    if (!hasPermission('leads_assign')) {
+      triggerToast("Error: You do not have permission to reassign counselors!");
+      return;
+    }
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/lead/bulk-assign', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/bulk-assign`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -1011,7 +810,7 @@ export default function AllLeadsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/lead/bulk-delete', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/bulk-delete`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1041,102 +840,16 @@ export default function AllLeadsPage() {
     setSelectedLeads([]);
   };
 
-  // SINGLE LEAD PROPERTY EDITORS
-  const handleLeadStatusChange = (leadId, newStatus) => {
-    const prevStatus = activeLeadDetails.status
-    const updatedTimeline = [
-      {
-        id: Date.now(),
-        type: 'STATUS_CHANGE',
-        title: `Status updated`,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-        body: { from: prevStatus, to: newStatus },
-        user: 'Admin',
-        ip: '192.168.1.105',
-        icon: 'swap_horiz',
-        color: 'slate-400'
-      },
-      ...activeLeadDetails.timeline
-    ]
 
-    setLeads(leads.map(lead => {
-      if (lead.id === leadId) {
-        const updated = { ...lead, status: newStatus, timeline: updatedTimeline }
-        setActiveLeadDetails(updated)
-        return updated
-      }
-      return lead
-    }))
-    triggerToast(`Lead status updated to ${newStatus}`)
-  }
 
-  const handleTogglePinEvent = (eventId) => {
-    if (!activeLeadDetails || !activeLeadDetails.timeline) return
-    const updatedTimeline = activeLeadDetails.timeline.map(event => {
-      if (event.id === eventId) {
-        return { ...event, pinned: !event.pinned }
-      }
-      return event
-    })
-    // Sort so pinned are at the top
-    const sortedTimeline = [
-      ...updatedTimeline.filter(e => e.pinned),
-      ...updatedTimeline.filter(e => !e.pinned)
-    ]
-    setLeads(leads.map(lead => {
-      if (lead.id === activeLeadDetails.id) {
-        const updated = { ...lead, timeline: sortedTimeline }
-        setActiveLeadDetails(updated)
-        return updated
-      }
-      return lead
-    }))
-    triggerToast(`Activity pin toggled!`)
-  }
 
-  const handleQuickLog = (actionTitle, actionBody) => {
-    if (!activeLeadDetails) return
-    const newEvent = {
-      id: Date.now(),
-      type: actionTitle.includes('Task') ? 'TASK' : actionTitle.includes('Meeting') ? 'MEETING' : 'COMMENT',
-      title: actionTitle,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-      body: actionBody,
-      user: 'Sarah Jenkins',
-      ip: '192.168.1.105',
-      icon: actionTitle.includes('Call') ? 'call' : actionTitle.includes('Email') ? 'mail' : actionTitle.includes('WhatsApp') ? 'chat' : actionTitle.includes('Meeting') ? 'calendar_today' : 'task_alt',
-      color: 'blue-600'
-    }
-    const updatedTimeline = [newEvent, ...activeLeadDetails.timeline]
-    const sortedTimeline = [
-      ...updatedTimeline.filter(e => e.pinned),
-      ...updatedTimeline.filter(e => !e.pinned)
-    ]
-    setLeads(leads.map(lead => {
-      if (lead.id === activeLeadDetails.id) {
-        const updated = { ...lead, timeline: sortedTimeline }
-        setActiveLeadDetails(updated)
-        return updated
-      }
-      return lead
-    }))
-    triggerToast(`${actionTitle} logged!`)
-  }
+
+
 
   const handleQuickLogDirect = (leadId, actionTitle, actionBody) => {
     const targetLead = leads.find(l => l.id === leadId)
     if (!targetLead) return
-    const newEvent = {
-      id: Date.now(),
-      type: actionTitle.includes('Task') ? 'TASK' : actionTitle.includes('Meeting') ? 'MEETING' : 'COMMENT',
-      title: actionTitle,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-      body: actionBody,
-      user: 'Sarah Jenkins',
-      ip: '192.168.1.105',
-      icon: actionTitle.includes('Call') ? 'call' : actionTitle.includes('Email') ? 'mail' : actionTitle.includes('WhatsApp') ? 'chat' : actionTitle.includes('Meeting') ? 'calendar_today' : 'task_alt',
-      color: 'blue-600'
-    }
+
     const updatedTimeline = [newEvent, ...(targetLead.timeline || [])]
     const sortedTimeline = [
       ...updatedTimeline.filter(e => e.pinned),
@@ -1155,35 +868,20 @@ export default function AllLeadsPage() {
     triggerToast(`${actionTitle} logged!`)
   }
 
-  const handleLeadScoreChange = (leadId, newScore) => {
-    const prevScore = activeLeadDetails.score
-    const updatedTimeline = [
-      {
-        id: Date.now(),
-        type: 'SCORE_CHANGE',
-        title: `Score adjusted`,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-        body: `Adjusted score from ${prevScore} to ${newScore}`,
-        user: 'Admin',
-        ip: '192.168.1.105',
-        icon: 'grade',
-        color: 'blue-600'
-      },
-      ...activeLeadDetails.timeline
-    ]
 
-    setLeads(leads.map(lead => {
-      if (lead.id === leadId) {
-        const updated = { ...lead, score: newScore, timeline: updatedTimeline }
-        setActiveLeadDetails(updated)
-        return updated
-      }
-      return lead
-    }))
-  }
 
-  const handleLeadCounselorChange = (leadId, newCounselor) => {
-    const prevCounselor = activeLeadDetails.assignedTo
+
+
+  const handleLeadCounselorChangeDirect = async (leadId, newCounselor) => {
+    if (!hasPermission('leads_assign')) {
+      triggerToast("Error: You do not have permission to reassign counselors!");
+      return;
+    }
+
+    const leadToUpdate = leads.find(l => l.id === leadId);
+    if (!leadToUpdate) return;
+
+    const prevCounselor = leadToUpdate.assignedTo;
     const updatedTimeline = [
       {
         id: Date.now(),
@@ -1196,38 +894,35 @@ export default function AllLeadsPage() {
         icon: 'person_add',
         color: 'blue-600'
       },
-      ...activeLeadDetails.timeline
-    ]
+      ...leadToUpdate.timeline
+    ];
 
-    setLeads(leads.map(lead => {
-      if (lead.id === leadId) {
-        const updated = { ...lead, assignedTo: newCounselor, timeline: updatedTimeline }
-        setActiveLeadDetails(updated)
-        return updated
-      }
-      return lead
-    }))
-    triggerToast(`Assigned counselor changed to ${newCounselor}`)
-  }
-
-  const handleLeadCounselorChangeDirect = (leadId, newCounselor) => {
-    setLeads(leads.map(lead => {
-      if (lead.id === leadId) {
-        const prevCounselor = lead.assignedTo;
-        const updatedTimeline = [
-          {
-            id: Date.now(),
-            type: 'ASSIGNMENT',
-            title: `Counselor Reassigned`,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-            body: `Assigned counselor changed from ${prevCounselor} to ${newCounselor}`,
-            user: 'Admin',
-            ip: '192.168.1.105',
-            icon: 'person_add',
-            color: 'blue-600'
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${leadId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          ...lead.timeline
-        ];
+          body: JSON.stringify({
+            assignedTo: newCounselor,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update counselor assignment');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
+    setLeads(leads.map(lead => {
+      if (lead.id === leadId) {
         return { ...lead, assignedTo: newCounselor, timeline: updatedTimeline };
       }
       return lead;
@@ -1303,7 +998,7 @@ export default function AllLeadsPage() {
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
       try {
-        const response = await fetch('http://localhost:5001/api/v1/lead/create-lead', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/create-lead`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1365,102 +1060,7 @@ export default function AllLeadsPage() {
   const handleBulkUploadCSV = () => {
     setUploadingBulk(true);
     setTimeout(() => {
-      const mockIngested = [
-        {
-          id: `LS-${1022 + leads.length}`,
-          name: 'Rohan Sharma',
-          email: 'rohan.sharma@techsolutions.in',
-          phone: '+91 98765 43210',
-          status: 'NEW',
-          assignedTo: 'Sarah Jenkins',
-          source: 'Bulk Offline CSV',
-          score: 85,
-          location: 'Mumbai, IN',
-          campaign: 'Offline_CSV_Q2',
-          tier: 'Primary',
-          verified: true,
-          createdToday: true,
-          lastContacted: 'None',
-          nextFollowUp: 'Jun 12, 2026',
-          age: '1 day',
-          priority: 'High',
-          tags: ['CSV Import', 'Primary'],
-          activityCount: 1,
-          conversionProb: 85,
-          leadType: 'Offline',
-          query: 'Cardiology',
-          timeline: [
-            {
-              id: Date.now(),
-              type: 'CREATION',
-              title: 'Lead Ingested (CSV Bulk)',
-              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-              body: 'Uploaded via Bulk Offline CSV Upload portal.',
-              user: 'Admin',
-              ip: '192.168.1.105',
-              icon: 'upload_file',
-              color: 'green-600'
-            }
-          ],
-          application: {
-            appliedProgram: 'Enterprise CRM Suite',
-            submissionDate: 'May 25, 2026',
-            companyName: 'Sharma Tech Solutions',
-            companySize: '250-499 employees',
-            annualRevenue: '$12M - $18M',
-            useCase: 'Ingested via CSV file offline import.',
-            notes: 'High potential priority client.'
-          },
-          queries: []
-        },
-        {
-          id: `LS-${1023 + leads.length}`,
-          name: 'Clara Oswald',
-          email: 'clara.oswald@tardis.co.uk',
-          phone: '+44 20 7946 0958',
-          status: 'NEW',
-          assignedTo: 'Marcus Chan',
-          source: 'Bulk Offline CSV',
-          score: 65,
-          location: 'London, UK',
-          campaign: 'Offline_CSV_Q2',
-          tier: 'Secondary',
-          verified: false,
-          createdToday: true,
-          lastContacted: 'None',
-          nextFollowUp: 'Jun 15, 2026',
-          age: '1 day',
-          priority: 'Low',
-          tags: ['CSV Import', 'Secondary'],
-          activityCount: 1,
-          conversionProb: 65,
-          leadType: 'Offline',
-          query: 'MCA',
-          timeline: [
-            {
-              id: Date.now() + 1,
-              type: 'CREATION',
-              title: 'Lead Ingested (CSV Bulk)',
-              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-              body: 'Uploaded via Bulk Offline CSV Upload portal.',
-              user: 'Admin',
-              ip: '192.168.1.105',
-              icon: 'upload_file',
-              color: 'green-600'
-            }
-          ],
-          application: {
-            appliedProgram: 'Starter Solo Plan',
-            submissionDate: 'May 25, 2026',
-            companyName: 'Oswald Ventures',
-            companySize: '1-9 employees',
-            annualRevenue: '$100k - $250k',
-            useCase: 'Ingested via CSV file offline import.',
-            notes: 'Follow up required to check credentials.'
-          },
-          queries: []
-        }
-      ];
+
 
       setLeads(prev => [...mockIngested, ...prev]);
       setUploadingBulk(false);
@@ -1568,59 +1168,7 @@ export default function AllLeadsPage() {
   }
 
   // INTERACTIVE ACTIVITY LOGGER
-  const handleLogInteraction = () => {
-    if (!newComment.trim()) return
 
-    let title = 'Interaction Logged'
-    let icon = 'chat'
-    let color = 'slate-400'
-    let bodyText = newComment
-
-    if (interactionType === 'COMMENT') {
-      title = 'Comment added'
-      icon = 'chat'
-      color = 'slate-400'
-      bodyText = `"${newComment}"`
-    } else if (interactionType === 'TASK') {
-      title = 'Task assigned'
-      icon = 'assignment'
-      color = 'blue-600'
-    } else if (interactionType === 'CALL') {
-      title = 'Phone Call Summary'
-      icon = 'call'
-      color = 'slate-400'
-    } else if (interactionType === 'MEETING') {
-      title = 'Meeting Scheduled'
-      icon = 'video_call'
-      color = 'slate-400'
-    }
-
-    const newEvent = {
-      id: Date.now(),
-      type: interactionType,
-      title: title,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-      body: bodyText,
-      user: 'Admin',
-      ip: '192.168.1.105',
-      icon: icon,
-      color: color
-    }
-
-    const updatedTimeline = [newEvent, ...activeLeadDetails.timeline]
-
-    setLeads(leads.map(lead => {
-      if (lead.id === activeLeadDetails.id) {
-        const updated = { ...lead, timeline: updatedTimeline }
-        setActiveLeadDetails(updated)
-        return updated
-      }
-      return lead
-    }))
-
-    setNewComment('')
-    triggerToast('New interaction added to activity trail!')
-  }
 
   return (
     <div className="p-4">
@@ -1666,7 +1214,7 @@ export default function AllLeadsPage() {
                   },
                   {
                     label: 'Follow-Ups Today',
-                    value: formFilteredLeads.filter(l => l.followUpToday).length,
+                    value: todayFollowUpCount,
                     trend: '-5% vs yesterday',
                     trendUp: false,
                     color: 'orange',
@@ -1696,6 +1244,7 @@ export default function AllLeadsPage() {
                     color: 'teal',
                     icon: 'leaderboard'
                   }
+
                 ].map((card, idx) => (
                   <LeadsKpiCard
                     key={idx}
@@ -1768,6 +1317,8 @@ export default function AllLeadsPage() {
                 setQuickLeadForm={setQuickLeadForm}
                 handleDownloadLeads={handleDownloadLeads}
                 handleChangeLeadStageGlobal={handleChangeLeadStageGlobal}
+                counselors={counselorsList}
+                sources={sourcesList}
               />
 
               {/* Desktop Table View */}
@@ -1876,17 +1427,7 @@ export default function AllLeadsPage() {
                             </div>
                           </th>
                         )}
-                        {visibleColumns.verified && (
-                          <th
-                            onClick={() => requestSort('verified')}
-                            className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-105 transition-colors select-none bg-slate-50"
-                          >
-                            <div className="flex items-center">
-                              Verification
-                              {renderSortIndicator('verified')}
-                            </div>
-                          </th>
-                        )}
+
                         {visibleColumns.lastContacted && (
                           <th
                             onClick={() => requestSort('lastContacted')}
@@ -2136,7 +1677,7 @@ export default function AllLeadsPage() {
                                                 exit={{ opacity: 0, height: 0 }}
                                                 transition={{ duration: 0.15 }}
                                               >
-                                                {['Sarah Jenkins', 'Marcus Chan', 'Unassigned'].map((counselor) => {
+                                                {counselorsList.map((counselor) => {
                                                   const counselorLeads = leads.filter(l => l.assignedTo === counselor);
                                                   const count = counselorLeads.length;
                                                   const isCurrentlyAssigned = lead.assignedTo === counselor;
@@ -2269,9 +1810,14 @@ export default function AllLeadsPage() {
                                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-extrabold shrink-0 select-none">
                                   {getInitials(lead.name)}
                                 </div>
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-[12px] font-extrabold text-slate-800 hover:underline truncate">
+                                <div className="flex flex-col min-w-0 text-left">
+                                  <span className="text-[12px] font-extrabold text-slate-800 hover:underline truncate flex items-center gap-1.5">
                                     {lead.name}
+                                    {lead.verified ? (
+                                      <span className="material-symbols-outlined text-[12px]! font-bold text-emerald-500 select-none" title="Verified">check_circle</span>
+                                    ) : (
+                                      <span className="material-symbols-outlined text-[12px]! font-bold text-rose-500 select-none" title="Unverified">cancel</span>
+                                    )}
                                   </span>
                                   <span className="text-[10px] text-slate-450 truncate">
                                     {isMasked ? maskEmail(lead.email) : lead.email}
@@ -2301,7 +1847,7 @@ export default function AllLeadsPage() {
                           )}
                           {visibleColumns.status && (
                             <td className="px-3 py-4">
-                              <span 
+                              <span
                                 className="inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold tracking-wide border"
                                 style={getStatusStyleLocal(lead.status)}
                               >
@@ -2324,21 +1870,6 @@ export default function AllLeadsPage() {
                           )}
                           {visibleColumns.query && (
                             <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.query || '--'}</td>
-                          )}
-                          {visibleColumns.verified && (
-                            <td className="px-3 py-4">
-                              {lead.verified ? (
-                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold bg-green-50 text-green-700 border border-green-200/50 select-none">
-                                  <span className="material-symbols-outlined text-[10px] font-bold text-green-600">check_circle</span>
-                                  Verified
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200/50 select-none">
-                                  <span className="material-symbols-outlined text-[10px] font-bold text-rose-600">cancel</span>
-                                  Unverified
-                                </span>
-                              )}
-                            </td>
                           )}
                           {visibleColumns.lastContacted && (
                             <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.lastContacted}</td>
@@ -2448,7 +1979,7 @@ export default function AllLeadsPage() {
                           </span>
                         </div>
                       </div>
-                      <span 
+                      <span
                         className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide border"
                         style={getStatusStyleLocal(lead.status)}
                       >
@@ -2571,50 +2102,61 @@ export default function AllLeadsPage() {
                       <span className="text-[11.5px] font-semibold text-slate-300">selected</span>
                     </div>
 
-                    <div className="h-4 w-px bg-slate-800" />
+                    {hasPermission('leads_edit') && (
+                      <>
+                        <div className="h-4 w-px bg-slate-800" />
+                        {/* Mass Status Option */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status:</span>
+                          <select
+                            onChange={(e) => handleBulkStatusUpdate(e.target.value)}
+                            defaultValue=""
+                            className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                            style={{ color: 'white' }}
+                          >
+                            <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
+                            {statusesList.map(status => (
+                              <option key={status.value} value={status.value} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{status.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
 
-                    {/* Mass Status Option */}
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status:</span>
-                      <select
-                        onChange={(e) => handleBulkStatusUpdate(e.target.value)}
-                        defaultValue=""
-                        className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
-                        style={{ color: 'white' }}
-                      >
-                        <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
-                        {statusesList.map(status => (
-                          <option key={status.value} value={status.value} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{status.label}</option>
-                        ))}
-                      </select>
-                    </div>
+                    {hasPermission('leads_assign') && (
+                      <>
+                        <div className="h-4 w-px bg-slate-800" />
+                        {/* Mass Reassign Option */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Assign:</span>
+                          <select
+                            onChange={(e) => handleBulkAssignUpdate(e.target.value)}
+                            defaultValue=""
+                            className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                            style={{ color: 'white' }}
+                          >
+                            <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Assign to...</option>
+                            {counselorsList.map(c => (
+                              <option key={c} value={c} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
 
-                    {/* Mass Reassign Option */}
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Assign:</span>
-                      <select
-                        onChange={(e) => handleBulkAssignUpdate(e.target.value)}
-                        defaultValue=""
-                        className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
-                        style={{ color: 'white' }}
-                      >
-                        <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Assign to...</option>
-                        <option value="Sarah Jenkins" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Sarah Jenkins</option>
-                        <option value="Marcus Chan" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Marcus Chan</option>
-                        <option value="Unassigned" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Unassigned</option>
-                      </select>
-                    </div>
-
-                    <div className="h-4 w-px bg-slate-800" />
-
-                    {/* Delete Option */}
-                    <button
-                      onClick={handleBulkDelete}
-                      className="text-[11px] text-red-400 hover:text-red-300 hover:underline font-bold cursor-pointer transition-colors flex items-center gap-0.5"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">delete</span>
-                      Delete
-                    </button>
+                    {hasPermission('leads_delete') && (
+                      <>
+                        <div className="h-4 w-px bg-slate-800" />
+                        {/* Delete Option */}
+                        <button
+                          onClick={handleBulkDelete}
+                          className="text-[11px] text-red-400 hover:text-red-300 hover:underline font-bold cursor-pointer transition-colors flex items-center gap-0.5"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">delete</span>
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -3009,9 +2551,10 @@ export default function AllLeadsPage() {
                         onChange={(e) => setQuickLeadForm({ ...quickLeadForm, assignedTo: e.target.value })}
                         className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                       >
-                        <option value="Sarah Jenkins">Sarah Jenkins</option>
-                        <option value="Marcus Chan">Marcus Chan</option>
-                        <option value="Unassigned">Unassigned</option>
+                        <option value="" disabled>Select Counselor</option>
+                        {counselorsList.map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
                       </select>
                     </div>
 

@@ -145,6 +145,7 @@ export default function AuthPage({ onAuthSuccess }) {
         
         localStorage.setItem('authToken', response.token)
         localStorage.setItem('userRole', role)
+        localStorage.setItem('userPermissions', JSON.stringify(response.user.permissions || {}))
         
         setTimeout(() => {
           onAuthSuccess({ username: response.user.name, role, isNewUser: false })
@@ -201,6 +202,7 @@ export default function AuthPage({ onAuthSuccess }) {
 
       localStorage.setItem('authToken', response.token)
       localStorage.setItem('userRole', role)
+      localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
 
       setTimeout(() => {
         onAuthSuccess({ username: (response.user && response.user.name) || formData.username, role, isNewUser: true })

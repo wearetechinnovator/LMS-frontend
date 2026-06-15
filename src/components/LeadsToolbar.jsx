@@ -37,7 +37,9 @@ export default function LeadsToolbar({
   setShowQuickLeadModal,
   setQuickLeadForm,
   handleDownloadLeads,
-  handleChangeLeadStageGlobal
+  handleChangeLeadStageGlobal,
+  counselors = [],
+  sources = []
 }) {
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const [showGlobalActionsDropdown, setShowGlobalActionsDropdown] = useState(false);
@@ -117,10 +119,10 @@ export default function LeadsToolbar({
             onChange={(e) => setLeadOwnerFilter(e.target.value)}
             className="leads-filter-select"
           >
-            <option value="all">Owner: All</option>
-            <option value="Sarah Jenkins">Sarah Jenkins</option>
-            <option value="Marcus Chan">Marcus Chan</option>
-            <option value="Unassigned">Unassigned</option>
+            <option value="all">Counselor: All</option>
+            {counselors.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
         </div>
 
@@ -132,14 +134,9 @@ export default function LeadsToolbar({
             className="leads-filter-select"
           >
             <option value="all">Source: All</option>
-            <option value="Website Organic">Website Organic</option>
-            <option value="Paid Search">Paid Search</option>
-            <option value="Referral">Referral</option>
-            <option value="Direct Mail">Direct Mail</option>
-            <option value="Webinar">Webinar</option>
-            <option value="Cold Outreach">Cold Outreach</option>
-            <option value="Quick Add Form">Quick Add Form</option>
-            <option value="Bulk Offline CSV">Bulk Offline CSV</option>
+            {sources.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
         </div>
 
