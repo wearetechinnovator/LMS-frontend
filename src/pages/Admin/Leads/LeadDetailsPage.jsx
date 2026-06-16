@@ -79,7 +79,9 @@ export default function LeadDetailsPage() {
     score: 50,
     location: '',
     campaign: '',
-    query: ''
+    query: '',
+    ip: '',
+    device: ''
   })
 
   useEffect(() => {
@@ -166,7 +168,9 @@ export default function LeadDetailsPage() {
         score: activeLeadDetails.score || 50,
         location: activeLeadDetails.location || '',
         campaign: activeLeadDetails.campaign || '',
-        query: activeLeadDetails.query || ''
+        query: activeLeadDetails.query || '',
+        ip: activeLeadDetails.ip || '',
+        device: activeLeadDetails.device || ''
       })
     }
   }, [activeLeadDetails])
@@ -872,6 +876,20 @@ export default function LeadDetailsPage() {
                     <span className="text-slate-400 font-medium font-sans">Query</span>
                     <span className="text-slate-800 font-bold font-sans">{activeLeadDetails.query || '--'}</span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">IP Address</span>
+                    <span className="text-slate-800 font-bold">{activeLeadDetails.ip || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Device</span>
+                    <span className="text-slate-800 font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">
+                        {activeLeadDetails.device?.toLowerCase() === 'mobile' ? 'smartphone' : 
+                         activeLeadDetails.device?.toLowerCase() === 'tablet' ? 'tablet_mac' : 'desktop_windows'}
+                      </span>
+                      {activeLeadDetails.device || 'Desktop'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1489,7 +1507,9 @@ export default function LeadDetailsPage() {
                     { key: 'source', label: 'Source', icon: 'source' },
                     { key: 'location', label: 'Location', icon: 'location_on' },
                     { key: 'campaign', label: 'Campaign', icon: 'sell' },
-                    { key: 'query', label: 'Query', icon: 'question_mark' }
+                    { key: 'query', label: 'Query', icon: 'question_mark' },
+                    { key: 'ip', label: 'IP Address', icon: 'settings_ethernet' },
+                    { key: 'device', label: 'Device', icon: 'devices' }
                   ].map(({ key, label, icon }) => {
                     const valPrimary = activeLeadDetails[key]
                     const valDuplicate = dupe[key]

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './analysis.css'
 
@@ -11,93 +11,286 @@ export default function Analytics({ activeTabProp = 'stage' }) {
   const [hoveredSection, setHoveredSection] = useState(null) // 'stage' | 'intake' | 'demographics' | 'source' | 'vendor'
   const [hoveredPos, setHoveredPos] = useState({ x: 0, y: 0 })
 
+  const [leads, setLeads] = useState([])
+  const [dbUsers, setDbUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      const token = localStorage.getItem('authToken')
+      if (!token || token === 'mock-jwt-token') {
+        setLoading(false)
+        return
+      }
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` }
+        const [leadsRes, usersRes] = await Promise.all([
+          fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, { headers }),
+          fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, { headers })
+        ])
+        if (leadsRes.ok) {
+          const leadsData = await leadsRes.json()
+          if (Array.isArray(leadsData)) {
+            setLeads(leadsData)
+          }
+        }
+        if (usersRes.ok) {
+          const usersData = await usersRes.json()
+          if (Array.isArray(usersData)) {
+            setDbUsers(usersData)
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching analytics data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   // ----------------------------------------------------
   // DATASETS DEFINITIONS
   // ----------------------------------------------------
 
   // 1. Lead Stage Dataset
-  const stageData = [
-    { stage: 'NEW', count: 68, percentage: 27.2, color: '#3b82f6', class: 'new' },
-    { stage: 'CONTACTED', count: 98, percentage: 39.2, color: '#f97316', class: 'contacted' },
-    { stage: 'QUALIFIED', count: 59, percentage: 23.6, color: '#10b981', class: 'qualified' },
-    { stage: 'LOST', count: 25, percentage: 10.0, color: '#ef4444', class: 'lost' }
-  ]
+  const stageData = useMemo(() => {
+    const counts = {}
+    leads.forEach(l => {
+      const st = l.status || 'NEW'
+      counts[st] = (counts[st] || 0) + 1
+    })
+    const total = leads.length || 1
+    const statusColors = {
+      NEW: '#3b82f6',
+      ASSIGNED: '#6366f1',
+      CONTACTED: '#f97316',
+      QUALIFIED: '#10b981',
+      DEMO: '#8b5cf6',
+      PROPOSAL: '#06b6d4',
+      NEGOTIATION: '#ec4899',
+      WON: '#10b981',
+      LOST: '#ef4444'
+    }
+    const statusClasses = {
+      NEW: 'new',
+      ASSIGNED: 'new',
+      CONTACTED: 'contacted',
+      QUALIFIED: 'qualified',
+      DEMO: 'qualified',
+      PROPOSAL: 'qualified',
+      NEGOTIATION: 'qualified',
+      WON: 'qualified',
+      LOST: 'lost'
+    }
+    const list = Object.keys(counts).map(status => ({
+      stage: status,
+      count: counts[status],
+      percentage: parseFloat(((counts[status] / total) * 100).toFixed(1)),
+      color: statusColors[status] || '#64748b',
+      class: statusClasses[status] || 'new'
+    }))
+    return list.length > 0 ? list : [
+      { stage: 'NEW', count: 0, percentage: 0, color: '#3b82f6', class: 'new' }
+    ]
+  }, [leads])
 
   // 2. Daily & Yearly Intake Dataset
   const [intakeTimeline, setIntakeTimeline] = useState('daily') // 'daily' | 'yearly'
-  const dailyIntakeData = [
-    { label: 'May 28', count: 24, conversion: 25.0 },
-    { label: 'May 29', count: 32, conversion: 28.1 },
-    { label: 'May 30', count: 41, conversion: 34.1 },
-    { label: 'May 31', count: 38, conversion: 31.5 },
-    { label: 'Jun 01', count: 48, conversion: 40.2 },
-    { label: 'Jun 02', count: 52, conversion: 44.3 },
-    { label: 'Jun 03', count: 45, conversion: 38.9 }
-  ]
-  const yearlyIntakeData = [
-    { label: '2022', count: 450, conversion: 22.4 },
-    { label: '2023', count: 780, conversion: 26.8 },
-    { label: '2024', count: 1120, conversion: 32.1 },
-    { label: '2025', count: 1540, conversion: 37.5 },
-    { label: '2026', count: 1890, conversion: 41.2 }
-  ]
+  const dailyIntakeData = useMemo(() => {
+    const result = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })
+      const dayLeads = leads.filter(l => {
+        if (!l.createdAt) return false
+        const leadDate = new Date(l.createdAt)
+        return leadDate.toDateString() === d.toDateString()
+      })
+      const converted = dayLeads.filter(l => ['QUALIFIED', 'WON', 'DEMO', 'PROPOSAL', 'NEGOTIATION'].includes(l.status)).length
+      const convRate = dayLeads.length > 0 ? parseFloat(((converted / dayLeads.length) * 100).toFixed(1)) : 0
+      result.push({
+        label,
+        count: dayLeads.length,
+        conversion: convRate
+      })
+    }
+    return result
+  }, [leads])
+
+  const yearlyIntakeData = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const result = []
+    for (let i = 4; i >= 0; i--) {
+      const year = String(currentYear - i)
+      const yearLeads = leads.filter(l => {
+        if (!l.createdAt) return false
+        const leadDate = new Date(l.createdAt)
+        return String(leadDate.getFullYear()) === year
+      })
+      const converted = yearLeads.filter(l => ['QUALIFIED', 'WON', 'DEMO', 'PROPOSAL', 'NEGOTIATION'].includes(l.status)).length
+      const convRate = yearLeads.length > 0 ? parseFloat(((converted / yearLeads.length) * 100).toFixed(1)) : 0
+      result.push({
+        label: year,
+        count: yearLeads.length,
+        conversion: convRate
+      })
+    }
+    return result
+  }, [leads])
+
   const activeIntakeData = useMemo(() => {
     return intakeTimeline === 'daily' ? dailyIntakeData : yearlyIntakeData
-  }, [intakeTimeline])
+  }, [intakeTimeline, dailyIntakeData, yearlyIntakeData])
 
   // 3. Demographic Dataset (State, Union, International)
   const [demographicType, setDemographicType] = useState('state') // 'state' | 'union' | 'international'
-  const stateData = [
-    { region: 'California', count: 72, conversion: 38.5 },
-    { region: 'Texas', count: 58, conversion: 32.1 },
-    { region: 'New York', count: 46, conversion: 29.5 },
-    { region: 'Karnataka', count: 39, conversion: 41.0 },
-    { region: 'Maharashtra', count: 35, conversion: 35.8 }
-  ]
-  const unionData = [
-    { region: 'Delhi NCR', count: 62, conversion: 39.2 },
-    { region: 'Chandigarh', count: 18, conversion: 27.5 },
-    { region: 'Puducherry', count: 12, conversion: 22.0 }
-  ]
-  const internationalData = [
-    { region: 'United Kingdom', count: 85, conversion: 42.1 },
-    { region: 'United States', count: 98, conversion: 46.5 },
-    { region: 'Ireland', count: 42, conversion: 33.3 },
-    { region: 'Hong Kong', count: 35, conversion: 38.0 },
-    { region: 'Germany', count: 28, conversion: 28.5 }
-  ]
+  const demographicTypeData = useMemo(() => {
+    const unionList = ['Delhi', 'Delhi NCR', 'Chandigarh', 'Puducherry', 'Daman', 'Diu', 'Lakshadweep', 'Andaman']
+    const internationalList = ['United Kingdom', 'UK', 'United States', 'US', 'USA', 'Germany', 'Ireland', 'Hong Kong', 'Canada', 'London', 'California', 'Texas', 'New York']
+
+    const stateCounts = {}
+    const unionCounts = {}
+    const internationalCounts = {}
+
+    leads.forEach(l => {
+      const loc = l.location || 'Unknown'
+      const isUnion = unionList.some(u => loc.toLowerCase().includes(u.toLowerCase()))
+      const isInt = internationalList.some(i => loc.toLowerCase().includes(i.toLowerCase()))
+
+      if (isInt) {
+        internationalCounts[loc] = (internationalCounts[loc] || 0) + 1
+      } else if (isUnion) {
+        unionCounts[loc] = (unionCounts[loc] || 0) + 1
+      } else {
+        stateCounts[loc] = (stateCounts[loc] || 0) + 1
+      }
+    })
+
+    const mapCounts = (counts) => {
+      return Object.keys(counts).map(region => {
+        const regionLeads = leads.filter(l => l.location === region)
+        const converted = regionLeads.filter(l => ['QUALIFIED', 'WON', 'DEMO', 'PROPOSAL', 'NEGOTIATION'].includes(l.status)).length
+        const convRate = regionLeads.length > 0 ? parseFloat(((converted / regionLeads.length) * 100).toFixed(1)) : 0
+        return {
+          region,
+          count: counts[region],
+          conversion: convRate
+        }
+      })
+    }
+
+    const states = mapCounts(stateCounts)
+    const unions = mapCounts(unionCounts)
+    const ints = mapCounts(internationalCounts)
+
+    return {
+      state: states.length > 0 ? states : [{ region: 'Kolkata', count: 0, conversion: 0 }],
+      union: unions.length > 0 ? unions : [{ region: 'Delhi', count: 0, conversion: 0 }],
+      international: ints.length > 0 ? ints : [{ region: 'International', count: 0, conversion: 0 }]
+    }
+  }, [leads])
+
   const activeDemographicData = useMemo(() => {
-    if (demographicType === 'state') return stateData
-    if (demographicType === 'union') return unionData
-    return internationalData
-  }, [demographicType])
+    return demographicTypeData[demographicType] || []
+  }, [demographicType, demographicTypeData])
 
   // 4. Source Wise Dataset
-  const sourceData = [
-    { source: 'Website Organic', count: 112, conversion: 35.5, avgScore: 82 },
-    { source: 'Paid Search', count: 95, conversion: 28.0, avgScore: 74 },
-    { source: 'Referral', count: 64, conversion: 48.2, avgScore: 89 },
-    { source: 'Webinar', count: 48, conversion: 31.4, avgScore: 68 },
-    { source: 'Cold Outreach', count: 38, conversion: 12.5, avgScore: 42 },
-    { source: 'Direct Mail', count: 22, conversion: 18.0, avgScore: 50 }
-  ]
+  const sourceData = useMemo(() => {
+    const counts = {}
+    leads.forEach(l => {
+      const src = l.source || 'Unknown Source'
+      if (!counts[src]) {
+        counts[src] = { count: 0, totalScore: 0, converted: 0 }
+      }
+      counts[src].count += 1
+      counts[src].totalScore += (l.score ?? 50)
+      if (['QUALIFIED', 'WON', 'DEMO', 'PROPOSAL', 'NEGOTIATION'].includes(l.status)) {
+        counts[src].converted += 1
+      }
+    })
+
+    const list = Object.keys(counts).map(src => ({
+      source: src,
+      count: counts[src].count,
+      conversion: parseFloat(((counts[src].converted / counts[src].count) * 100).toFixed(1)),
+      avgScore: Math.round(counts[src].totalScore / counts[src].count)
+    }))
+
+    return list.length > 0 ? list : [
+      { source: 'Quick Add Form', count: 0, conversion: 0, avgScore: 50 }
+    ]
+  }, [leads])
 
   // 5. Vendor & Counselor Dataset
   const [vendorCounselorMode, setVendorCounselorMode] = useState('vendor') // 'vendor' | 'counselor'
-  const vendorData = [
-    { vendor: 'Tech Solutions Ltd', leads: 240, conversion: 35.8, qualityScore: 8.5 },
-    { vendor: 'EduMedia Group', leads: 180, conversion: 28.3, qualityScore: 7.2 },
-    { vendor: 'Direct Ads Inc', leads: 155, conversion: 22.5, qualityScore: 6.8 },
-    { vendor: 'Global Partners', leads: 95, conversion: 40.0, qualityScore: 9.0 },
-    { vendor: 'Affiliate Network', leads: 75, conversion: 18.0, qualityScore: 5.5 }
-  ]
+  const vendorData = useMemo(() => {
+    const counts = {}
+    leads.forEach(l => {
+      const camp = l.campaign || 'Direct_Ingest'
+      if (!counts[camp]) {
+        counts[camp] = { leads: 0, converted: 0, qualitySum: 0 }
+      }
+      counts[camp].leads += 1
+      counts[camp].qualitySum += (l.score ?? 50)
+      if (['QUALIFIED', 'WON', 'DEMO', 'PROPOSAL', 'NEGOTIATION'].includes(l.status)) {
+        counts[camp].converted += 1
+      }
+    })
 
-  const counselorData = [
-    { counselor: 'Sarah Jenkins', assigned: 120, contacted: 110, converted: 45, conversion: 37.5 },
-    { counselor: 'Michael Chang', assigned: 140, contacted: 125, converted: 42, conversion: 30.0 },
-    { counselor: 'Emily Rodriguez', assigned: 95, contacted: 90, converted: 38, conversion: 40.0 },
-    { counselor: 'David Koomson', assigned: 110, contacted: 95, converted: 33, conversion: 30.0 }
-  ]
+    const list = Object.keys(counts).map(camp => ({
+      vendor: camp,
+      leads: counts[camp].leads,
+      conversion: parseFloat(((counts[camp].converted / counts[camp].leads) * 100).toFixed(1)),
+      qualityScore: parseFloat(((counts[camp].qualitySum / counts[camp].leads) / 10).toFixed(1))
+    }))
+
+    return list.length > 0 ? list : [
+      { vendor: 'Direct_Ingest', leads: 0, conversion: 0, qualityScore: 5.0 }
+    ]
+  }, [leads])
+
+  const counselorData = useMemo(() => {
+    const counts = {}
+    dbUsers.forEach(u => {
+      if (u.name && u.status === 'Active') {
+        counts[u.name] = { assigned: 0, contacted: 0, converted: 0 }
+      }
+    })
+
+    leads.forEach(l => {
+      const counselor = l.assignedTo || 'Unassigned'
+      if (counselor !== 'Unassigned') {
+        if (!counts[counselor]) {
+          counts[counselor] = { assigned: 0, contacted: 0, converted: 0 }
+        }
+        counts[counselor].assigned += 1
+        if (l.status !== 'NEW') {
+          counts[counselor].contacted += 1
+        }
+        if (['QUALIFIED', 'WON', 'DEMO', 'PROPOSAL', 'NEGOTIATION'].includes(l.status)) {
+          counts[counselor].converted += 1
+        }
+      }
+    })
+
+    const list = Object.keys(counts).map(name => {
+      const c = counts[name]
+      return {
+        counselor: name,
+        assigned: c.assigned,
+        contacted: c.contacted,
+        converted: c.converted,
+        conversion: c.assigned > 0 ? parseFloat(((c.converted / c.assigned) * 100).toFixed(1)) : 0
+      }
+    })
+
+    return list.length > 0 ? list : [
+      { counselor: 'No Counselors', assigned: 0, contacted: 0, converted: 0, conversion: 0 }
+    ]
+  }, [leads, dbUsers])
 
   // ----------------------------------------------------
   // REPORT VIEW STATES (SEARCH & SORT)
@@ -257,6 +450,43 @@ export default function Analytics({ activeTabProp = 'stage' }) {
   const maxVendorLeads = Math.max(...vendorData.map(d => d.leads))
   const maxCounselorAssigned = Math.max(...counselorData.map(c => c.assigned))
 
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '400px',
+        width: '100%',
+        backgroundColor: '#f8f9ff',
+        fontFamily: '"Inter", sans-serif',
+        gap: '12px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid rgba(0, 74, 198, 0.15)',
+          borderTopColor: '#004ac6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <p style={{
+          fontSize: '11px',
+          fontWeight: 800,
+          color: '#737686',
+          textTransform: 'uppercase',
+          letterSpacing: '1px'
+        }}>Loading Analytics...</p>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
   return (
     <div className="analytics-container">
       {/* Top Banner and Navigation */}
@@ -271,7 +501,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
 
       {/* Dynamic Tab Contents */}
       <div className="analytics-tab-body">
-        
+
         {/* 1. LEAD STAGE WISE TAB */}
         {activeTab === 'stage' && (
           <div className="tab-content-layout">
@@ -605,7 +835,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
               <div className="card-header-row">
                 <div className="card-title-group">
                   <h2>Demographics Tracking</h2>
-                  <p>Lead distribution mapping across territories and regions</p>
+
                 </div>
 
                 <div className="card-local-toggle">
@@ -615,17 +845,17 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                   >
                     States
                   </button>
-                  <button
+                  {/* <button
                     className={`card-local-toggle-btn ${demographicType === 'union' ? 'active' : ''}`}
                     onClick={() => setDemographicType('union')}
                   >
                     Union
-                  </button>
+                  </button> */}
                   <button
                     className={`card-local-toggle-btn ${demographicType === 'international' ? 'active' : ''}`}
                     onClick={() => setDemographicType('international')}
                   >
-                    Int'l
+                    International
                   </button>
                 </div>
               </div>
@@ -927,8 +1157,8 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                 <div className="card-title-group">
                   <h2>{vendorCounselorMode === 'vendor' ? 'Vendor Performance Analysis' : 'Counselor Assignment Efficiency'}</h2>
                   <p>
-                    {vendorCounselorMode === 'vendor' 
-                      ? 'Lead generation breakdown and relative distribution by external vendor' 
+                    {vendorCounselorMode === 'vendor'
+                      ? 'Lead generation breakdown and relative distribution by external vendor'
                       : 'Lead resolution mapping: Converted vs Assigned leads ratio per counselor'}
                   </p>
                 </div>
@@ -1024,7 +1254,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                     {counselorData.map((item) => {
                       const assignedWidth = maxCounselorAssigned > 0 ? (item.assigned / maxCounselorAssigned) * 100 : 0
                       const convertedWidth = maxCounselorAssigned > 0 ? (item.converted / maxCounselorAssigned) * 100 : 0
-                      
+
                       return (
                         <div key={item.counselor} className="counselor-perf-row">
                           <div className="counselor-name-row">

@@ -7,6 +7,8 @@ import { RoleRoutes } from './routes/routesConfig'
 import Unauthorized from './pages/Unauthorized'
 import UserProvider from './contextApi.jsx'
 
+const PublicEmbedForm = React.lazy(() => import('./pages/PublicEmbedForm'))
+
 const LoadingSpinner = () => (
   <div className="grid place-items-center w-full min-h-screen bg-background">
     <div className="flex flex-row gap-2">
@@ -101,6 +103,8 @@ function App() {
           />
 
           {RoleRoutes({ username, handleLogout })}
+
+          <Route path="/embed/form/:formId" element={<PublicEmbedForm />} />
 
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<Navigate to="/" replace />} />

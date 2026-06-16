@@ -4,71 +4,6 @@ import ExportButton from '../../../components/ExportButton'
 import Toast from '../../../components/Toast'
 
 // Static mockup of original records from the screenshot + a few extra for robust filtering
-const originalLogs = [
-    {
-        id: 1,
-        timestamp: '2023-10-27 15:45:10',
-        user: { name: 'Jane Doe', avatar: 'JD', color: 'bg-blue-500/20 text-blue-600 border-blue-200', isSystemAdmin: false },
-        action: { label: 'New User Created', icon: 'person_add', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-        targetEntity: { name: 'User Management', isLink: false },
-        ipAddress: '192.168.1.105',
-        details: 'Sarah Miller (Role: Admin, Dept: Sales)'
-    },
-    {
-        id: 2,
-        timestamp: '2023-10-27 14:53:01',
-        user: { name: 'Jane Doe', avatar: 'JD', color: 'bg-blue-500/20 text-blue-600 border-blue-200', isSystemAdmin: false },
-        action: { label: 'Created Lead', icon: 'post_add', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-        targetEntity: { name: 'LD-90210 (Acme Corp)', isLink: true },
-        ipAddress: '192.168.1.105',
-        details: 'Source: Web Form, Campaign: Q4_Promo'
-    },
-    {
-        id: 3,
-        timestamp: '2023-10-27 14:32:05',
-        user: { name: 'System', avatar: 'SYS', color: 'bg-outline-variant/20 text-on-surface-variant border-outline-variant', isSystemAdmin: false },
-        action: { label: 'Lead Assigned', icon: 'assignment_ind', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-        targetEntity: { name: 'Sarah Miller', isLink: false },
-        ipAddress: 'Internal',
-        details: 'Auto-routed based on region (North America)'
-    },
-    {
-        id: 4,
-        timestamp: '2023-10-27 13:10:22',
-        user: { name: 'System Admin', avatar: 'SYS', color: 'bg-red-500/20 text-red-600 border-red-200', isSystemAdmin: true },
-        action: { label: 'System Setting Updated', icon: 'settings', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-        targetEntity: { name: 'Lead Scoring Logic', isLink: false },
-        ipAddress: '203.0.113.45',
-        details: 'Threshold changed from 70 to 85'
-    },
-    {
-        id: 5,
-        timestamp: '2023-10-27 12:45:00',
-        user: { name: 'Anna Lee', avatar: 'AL', color: 'bg-orange-500/20 text-orange-600 border-orange-200', isSystemAdmin: false },
-        action: { label: 'User Logout', icon: 'logout', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-        targetEntity: { name: 'System', isLink: false },
-        ipAddress: '192.168.1.105',
-        details: 'Session duration: 4h 22m'
-    },
-    {
-        id: 6,
-        timestamp: '2023-10-26 18:22:15',
-        user: { name: 'Jane Doe', avatar: 'JD', color: 'bg-blue-500/20 text-blue-600 border-blue-200', isSystemAdmin: false },
-        action: { label: 'User Login', icon: 'login', color: 'bg-green-50 text-green-700 border-green-100' },
-        targetEntity: { name: 'System', isLink: false },
-        ipAddress: '192.168.1.105',
-        details: 'Session initialized via browser client'
-    },
-    {
-        id: 7,
-        timestamp: '2023-10-26 11:05:40',
-        user: { name: 'System Admin', avatar: 'SYS', color: 'bg-red-500/20 text-red-600 border-red-200', isSystemAdmin: true },
-        action: { label: 'System Setting Updated', icon: 'settings', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-        targetEntity: { name: 'SMTP Gateway Config', isLink: false },
-        ipAddress: '203.0.113.45',
-        details: 'Changed default sender email account'
-    }
-]
 
 export default function AuditLogs() {
     const [logs, setLogs] = useState([])
@@ -241,7 +176,8 @@ export default function AuditLogs() {
     return (
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative">
 
-            {/* Toast Banner */}
+            {/* 
+            Toast Banner */}
             <Toast
                 message={toastMessage}
                 isVisible={!!toastMessage}
@@ -251,8 +187,8 @@ export default function AuditLogs() {
             {/* Header Block */}
             <div className="flex justify-between items-start border-b border-outline-variant pb-3">
                 <div>
-                    <h1 className="text-headline-lg font-headline-lg text-on-background text-[22px] font-bold">Audit Logs</h1>
-                    <p className="text-body-md text-on-surface-variant text-[11px] mt-0.5">Chronological record of system and user activities.</p>
+                    <h1 className="font-headline-lg text-on-background text-[22px] font-bold">Audit Logs</h1>
+                    <p className="text-on-surface-variant text-[11px] mt-0.5">Chronological record of system and user activities.</p>
                 </div>
 
                 {/* Top Action Bars */}
@@ -297,7 +233,7 @@ export default function AuditLogs() {
             <div className="flex flex-col md:flex-row gap-3 items-center">
                 {/* Search Inputs */}
                 <div className="flex-1 relative w-full">
-                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">search</span>
+                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-headline-md">search</span>
                     <input
                         type="text"
                         placeholder="Search logs by user, entity, IP or change details..."
@@ -306,7 +242,7 @@ export default function AuditLogs() {
                             setSearchTerm(e.target.value)
                             setCurrentPage(1)
                         }}
-                        className="w-full h-8 pl-9 pr-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                        className="w-full h-8 pl-9 pr-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md  text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
                     />
                 </div>
 
@@ -325,7 +261,7 @@ export default function AuditLogs() {
                             <option key={filter} value={filter}>{filter}</option>
                         ))}
                     </select>
-                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[16px]">expand_more</span>
+                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-headline-md">expand_more</span>
                 </div>
             </div>
 
@@ -338,10 +274,10 @@ export default function AuditLogs() {
                     <span>Activity Type: {selectedActionFilter}</span>
                     <button
                         onClick={() => setSelectedActionFilter('All')}
-                        className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-[10px] transition-colors"
+                        className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-label-caps transition-colors"
                         title="Remove Activity Type filter"
                     >
-                        <span className="material-symbols-outlined text-[10px]">close</span>
+                        <span className="material-symbols-outlined text-label-caps">close</span>
                     </button>
                 </div>
 
@@ -351,10 +287,10 @@ export default function AuditLogs() {
                         <span>Range: {selectedDateFilter}</span>
                         <button
                             onClick={() => setSelectedDateFilter('Last 7 Days')}
-                            className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-[10px] transition-colors"
+                            className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-label-capstransition-colors"
                             title="Reset date range"
                         >
-                            <span className="material-symbols-outlined text-[10px]">close</span>
+                            <span className="material-symbols-outlined text-label-caps">close</span>
                         </button>
                     </div>
                 )}
@@ -365,9 +301,9 @@ export default function AuditLogs() {
                         <span>Search: "{searchTerm}"</span>
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-[10px] transition-colors"
+                            className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-label-caps transition-colors"
                         >
-                            <span className="material-symbols-outlined text-[10px]">close</span>
+                            <span className="material-symbols-outlined text-label-caps">close</span>
                         </button>
                     </div>
                 )}
@@ -388,12 +324,12 @@ export default function AuditLogs() {
                     <table className="w-full text-[11px] border-collapse">
                         <thead className="bg-surface-container border-b border-outline-variant sticky top-0 z-10">
                             <tr>
-                                <th className="px-4 py-2.5 text-left font-label-caps text-label-caps text-on-surface-variant text-[9px] w-[140px]">TIMESTAMP</th>
-                                <th className="px-4 py-2.5 text-left font-label-caps text-label-caps text-on-surface-variant text-[9px] w-[150px]">USER</th>
-                                <th className="px-4 py-2.5 text-left font-label-caps text-label-caps text-on-surface-variant text-[9px] w-[180px]">ACTION</th>
-                                <th className="px-4 py-2.5 text-left font-label-caps text-label-caps text-on-surface-variant text-[9px] w-[180px]">TARGET ENTITY</th>
-                                <th className="px-4 py-2.5 text-left font-label-caps text-label-caps text-on-surface-variant text-[9px] w-[120px]">IP ADDRESS</th>
-                                <th className="px-4 py-2.5 text-left font-label-caps text-label-caps text-on-surface-variant text-[9px]">CHANGE DETAILS</th>
+                                <th className="px-4 py-2.5 text-left font-label-caps  text-on-surface-variant text-[9px] w-35">TIMESTAMP</th>
+                                <th className="px-4 py-2.5 text-left font-label-caps  text-on-surface-variant text-[9px] w-37.5">USER</th>
+                                <th className="px-4 py-2.5 text-left font-label-caps  text-on-surface-variant text-[9px] w-45">ACTION</th>
+                                <th className="px-4 py-2.5 text-left font-label-caps  text-on-surface-variant text-[9px] w-45">TARGET ENTITY</th>
+                                <th className="px-4 py-2.5 text-left font-label-caps  text-on-surface-variant text-[9px] w-30">IP ADDRESS</th>
+                                <th className="px-4 py-2.5 text-left font-label-caps  text-on-surface-variant text-[9px]">CHANGE DETAILS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant">
@@ -451,12 +387,12 @@ export default function AuditLogs() {
                                         </td>
 
                                         {/* IP Address */}
-                                        <td className="px-4 py-3 text-on-surface-variant align-middle font-mono text-[10px]">
+                                        <td className="px-4 py-3 text-on-surface-variant align-middle font-mono text-label-caps">
                                             {log.ipAddress}
                                         </td>
 
                                         {/* Change Details */}
-                                        <td className="px-4 py-3 text-on-surface align-middle font-normal leading-relaxed max-w-[300px]">
+                                        <td className="px-4 py-3 text-on-surface align-middle font-normal leading-relaxed max-w-75">
                                             {log.details}
                                         </td>
                                     </tr>
@@ -487,19 +423,19 @@ export default function AuditLogs() {
                             className="p-1 rounded hover:bg-surface-container-lowest text-on-surface-variant transition-colors disabled:opacity-30 disabled:pointer-events-none"
                             title="Previous Page"
                         >
-                            <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                            <span className="material-symbols-outlined text-headline-md">chevron_left</span>
                         </button>
 
                         <div className="flex gap-0.5">
                             {getPageNumbers().map((page, pIdx) => {
                                 if (page === '...') {
-                                    return <span key={`dots-${pIdx}`} className="px-1.5 text-on-surface-variant self-end text-[10px] leading-tight select-none">...</span>;
+                                    return <span key={`dots-${pIdx}`} className="px-1.5 text-on-surface-variant self-end text-label-caps leading-tight select-none">...</span>;
                                 }
                                 return (
                                     <button
                                         key={page}
                                         onClick={() => setCurrentPage(page)}
-                                        className={`w-6 h-6 rounded text-[10px] font-semibold transition-all ${currentPage === page
+                                        className={`w-6 h-6 rounded text-label-caps font-semibold transition-all ${currentPage === page
                                             ? 'bg-primary text-on-primary shadow-xs font-bold scale-105'
                                             : 'hover:bg-surface-container-lowest text-on-surface'
                                             }`}
@@ -516,7 +452,7 @@ export default function AuditLogs() {
                             className="p-1 rounded hover:bg-surface-container-lowest text-on-surface-variant transition-colors disabled:opacity-30 disabled:pointer-events-none"
                             title="Next Page"
                         >
-                            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                            <span className="material-symbols-outlined text-headline-md">chevron_right</span>
                         </button>
                     </div>
                 </div>

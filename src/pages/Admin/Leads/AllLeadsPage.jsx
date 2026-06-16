@@ -112,7 +112,9 @@ export default function AllLeadsPage() {
     activityCount: false,
     conversionProb: false,
     location: false,
-    campaign: false
+    campaign: false,
+    ip: true,
+    device: true
   })
 
   // Double horizontal scrollbar state & refs
@@ -199,7 +201,9 @@ export default function AllLeadsPage() {
     score: 50,
     location: '',
     campaign: '',
-    query: ''
+    query: '',
+    ip: '',
+    device: ''
   })
 
   const handlePropSelection = (field, value) => {
@@ -222,7 +226,9 @@ export default function AllLeadsPage() {
         score: activeLeadDetails.score || 50,
         location: activeLeadDetails.location || '',
         campaign: activeLeadDetails.campaign || '',
-        query: activeLeadDetails.query || ''
+        query: activeLeadDetails.query || '',
+        ip: activeLeadDetails.ip || '',
+        device: activeLeadDetails.device || ''
       })
     }
   }, [activeLeadDetails])
@@ -1024,6 +1030,8 @@ export default function AllLeadsPage() {
       const mockLead = {
         ...newLead,
         id: `LS-${1022 + leads.length}`,
+        ip: '192.168.1.105',
+        device: 'Desktop',
         timeline: [
           {
             id: Date.now(),
@@ -1162,7 +1170,9 @@ export default function AllLeadsPage() {
       score: activeLeadDetails.score,
       location: activeLeadDetails.location,
       campaign: activeLeadDetails.campaign,
-      query: activeLeadDetails.query
+      query: activeLeadDetails.query,
+      ip: activeLeadDetails.ip,
+      device: activeLeadDetails.device
     })
     setShowMergeModal(true)
   }
@@ -1524,6 +1534,28 @@ export default function AllLeadsPage() {
                             <div className="flex items-center">
                               Campaign
                               {renderSortIndicator('campaign')}
+                            </div>
+                          </th>
+                        )}
+                        {visibleColumns.ip && (
+                          <th
+                            onClick={() => requestSort('ip')}
+                            className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11.5px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                          >
+                            <div className="flex items-center">
+                              IP Address
+                              {renderSortIndicator('ip')}
+                            </div>
+                          </th>
+                        )}
+                        {visibleColumns.device && (
+                          <th
+                            onClick={() => requestSort('device')}
+                            className="px-3 py-3 text-left text-body-md font-body-md text-on-surface text-[11.5px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors select-none bg-slate-50"
+                          >
+                            <div className="flex items-center">
+                              Device
+                              {renderSortIndicator('device')}
                             </div>
                           </th>
                         )}
@@ -1916,6 +1948,20 @@ export default function AllLeadsPage() {
                           )}
                           {visibleColumns.campaign && (
                             <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.campaign || '--'}</td>
+                          )}
+                          {visibleColumns.ip && (
+                            <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">{lead.ip || '--'}</td>
+                          )}
+                          {visibleColumns.device && (
+                            <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">
+                              <span className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {lead.device?.toLowerCase() === 'mobile' ? 'smartphone' : 
+                                   lead.device?.toLowerCase() === 'tablet' ? 'tablet_mac' : 'desktop_windows'}
+                                </span>
+                                {lead.device || 'Desktop'}
+                              </span>
+                            </td>
                           )}
                         </motion.tr>
                       ))}

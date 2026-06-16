@@ -328,7 +328,7 @@ export default function FormBuilder({
         { type: 'email', label: 'Email', icon: 'mail' },
         { type: 'phone', label: 'Phone', icon: 'phone' },
         { type: 'date', label: 'Date Picker', icon: 'calendar_today' },
-        { type: 'select', label: 'Select Box', icon: 'arrow_drop_down' },
+        { type: 'select', label: 'Drop Box', icon: 'arrow_drop_down' },
         { type: 'radio', label: 'Radio Button', icon: 'radio_button_checked' },
         { type: 'city', label: 'City', icon: 'location_city' }
     ]
@@ -667,15 +667,15 @@ export default function FormBuilder({
                 <div className="p-2 border-b border-outline-variant flex flex-col items-start gap-0.5 justify-center">
                     <div className="flex justify-between items-center w-full">
                         <h2 className="font-headline-md text-headline-md text-on-background text-[12px] field-library-title">Field Library</h2>
-                        <span className="material-symbols-outlined text-on-surface-variant text-[16px] cursor-pointer hover:text-on-surface">search</span>
+                        
                     </div>
                     <span className="text-[8.5px] text-slate-400 font-semibold select-none leading-none mt-0.5">Click standard fields to add them to your form</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 space-y-3">
                     <div>
-                        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">STANDARD FIELDS</h3>
-                        <div className="space-y-1">
+                        <h3 className="font-label-caps  text-on-surface-variant mb-1 text-[9px] field-library-section-title">STANDARD FIELDS</h3>
+                        <div className="space-y-1 ">
                             {standardFields.map(field => (
                                 <div
                                     key={field.label}
@@ -686,12 +686,12 @@ export default function FormBuilder({
                                         setIsDraggingActive(true)
                                     }}
                                     onDragEnd={handleDragEnd}
-                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
+                                    className="w-full h-8 flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
                                     role="button"
                                 >
-                                    <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
-                                    <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
-                                    <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
+                                    <span className="material-symbols-outlined text-outline-variant text-body-md">drag_indicator</span>
+                                    <span className="material-symbols-outlined text-primary text-[15px]!">{field.icon}</span>
+                                    <span className="font-body-md  text-on-surface text-[12px]!">{field.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -714,8 +714,8 @@ export default function FormBuilder({
                                     role="button"
                                 >
                                     <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
-                                    <span className="material-symbols-outlined text-tertiary text-[14px]">{field.icon}</span>
-                                    <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
+                                    <span className="material-symbols-outlined text-tertiary text-[15px]!">{field.icon}</span>
+                                    <span className="font-body-md text-on-surface text-[12px]!">{field.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -738,8 +738,8 @@ export default function FormBuilder({
                                     role="button"
                                 >
                                     <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
-                                    <span className="material-symbols-outlined text-primary text-[14px]">{field.icon}</span>
-                                    <span className="font-body-md text-body-md text-on-surface text-[11px]">{field.label}</span>
+                                    <span className="material-symbols-outlined text-primary text-[15px]!">{field.icon}</span>
+                                    <span className="font-body-md text-on-surface text-[12px]!">{field.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -756,7 +756,7 @@ export default function FormBuilder({
             <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3 form-builder-canvas">
                 <div className="w-full max-w-[880px] form-builder-content-container">
                     <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
-                        {/* Redesigned Premium SaaS Header Actions Layout */}
+                        
                         <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                             {/* Left Section: Back, Title, and Status Badge */}
                             <div className="flex items-center gap-2.5 flex-1 min-w-[240px]">
@@ -1155,7 +1155,7 @@ export default function FormBuilder({
                                         )}
 
                                         <div className={`relative text-left ${isDraggingActive ? 'pointer-events-none' : ''}`}>
-                                            <label className="flex items-center font-medium text-slate-700 mb-2.5 text-[13px] field-card-label">
+                                            <label className="flex items-center font-medium text-slate-700 mb-2.5 text-[10px]! field-card-label">
                                                 {field.label} {field.required && <span className="text-error ml-0.5">*</span>}
                                             </label>
 

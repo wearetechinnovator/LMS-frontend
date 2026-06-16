@@ -13,6 +13,67 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
 
   const [showNotifications, setShowNotifications] = useState(false)
   const [showFormsDropdown, setShowFormsDropdown] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [hasUnread, setHasUnread] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token || token === 'mock-jwt-token') return;
+
+    let isMounted = true;
+    let initialLoaded = false;
+    let currentSeenIds = new Set();
+
+    const fetchLeads = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        
+        if (!isMounted) return;
+
+        const newLeads = [];
+        data.forEach(lead => {
+          if (!currentSeenIds.has(lead.id)) {
+            currentSeenIds.add(lead.id);
+            if (initialLoaded) {
+              newLeads.push(lead);
+            }
+          }
+        });
+
+        if (newLeads.length > 0) {
+          const newNotifs = newLeads.map(lead => ({
+            id: lead.id,
+            title: "New Lead Received",
+            body: `${lead.name} from ${lead.source || 'Online Form'}`,
+            time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+            icon: 'person_add'
+          }));
+          setNotifications(prev => [...newNotifs, ...prev]);
+          setHasUnread(true);
+
+          window.dispatchEvent(new CustomEvent('lms-new-lead-received', { detail: newLeads }));
+        }
+
+        initialLoaded = true;
+      } catch (err) {
+        console.error("Error polling leads:", err);
+      }
+    };
+
+    fetchLeads();
+    const interval = setInterval(fetchLeads, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
   const [formsList, setFormsList] = useState([
     { name: 'ALL', displayName: 'All Leads', count: 7 },
     { name: 'B.Tech Admissions Form', displayName: 'B.Tech Admissions Form', count: 3 },
@@ -135,7 +196,12 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
         {/* Notifications Icon */}
         <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              setShowNotifications(!showNotifications)
+              if (!showNotifications) {
+                setHasUnread(false)
+              }
+            }}
             className="navbar-btn"
           >
             <span
@@ -145,7 +211,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
               notifications
             </span>
             {/* Notification Dot */}
-            <span className="navbar-badge"></span>
+            {hasUnread && <span className="navbar-badge"></span>}
           </button>
 
           {/* Notifications Dropdown */}
@@ -160,9 +226,22 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
               >
                 <div className="dropdown-title">Notifications</div>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  <div className="dropdown-empty">
-                    No new notifications
-                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="dropdown-empty">
+                      No new notifications
+                    </div>
+                  ) : (
+                    notifications.map(n => (
+                      <div key={n.id} className="p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors flex gap-2.5 items-start">
+                        <span className="material-symbols-outlined text-[16px] text-blue-600 mt-0.5" style={{ fontSize: '16px' }}>{n.icon || 'person_add'}</span>
+                        <div className="flex-1 min-w-0" style={{ textAlign: 'left' }}>
+                          <p className="text-xs font-bold text-slate-800 leading-snug" style={{ margin: 0 }}>{n.title}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5" style={{ margin: '2px 0 0 0' }}>{n.body}</p>
+                          <p className="text-[9px] text-slate-400 mt-1" style={{ margin: '4px 0 0 0' }}>{n.time}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </motion.div>
             </>

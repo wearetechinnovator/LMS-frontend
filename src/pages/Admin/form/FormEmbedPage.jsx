@@ -171,7 +171,7 @@ function LiveFormPreview({ form }) {
 }
 
 // ---------- Embed tab content ----------
-const BASE_URL = 'https://your-lms-domain.com'
+const BASE_URL = window.location.origin
 
 function EmbedOptions({ form, copiedKey, onCopy }) {
     const formUrl = `${BASE_URL}/embed/form/${form.id}`
@@ -205,27 +205,7 @@ function EmbedOptions({ form, copiedKey, onCopy }) {
             code: iframeCode,
             recommended: true
         },
-        {
-            key: 'script',
-            icon: 'integration_instructions',
-            label: 'JavaScript Snippet',
-            description: 'Renders natively in your page without an iframe.',
-            code: scriptCode,
-        },
-        {
-            key: 'popup',
-            icon: 'open_in_new',
-            label: 'Popup / Modal',
-            description: 'Trigger the form as a popup from any button.',
-            code: popupCode,
-        },
-        {
-            key: 'link',
-            icon: 'link',
-            label: 'Direct Link',
-            description: 'Share a standalone form URL via email or social.',
-            code: formUrl,
-        }
+
     ]
 
     return (
@@ -280,7 +260,13 @@ export default function FormEmbedPage() {
         const fetchForms = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                if (!token || token === 'mock-jwt-token') return;
+                if (!token || token === 'mock-jwt-token') {
+                    setFormsList(MOCK_FORMS);
+                    if (MOCK_FORMS.length > 0) {
+                        setSelectedForm(MOCK_FORMS[0]);
+                    }
+                    return;
+                }
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/get-form`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -292,9 +278,18 @@ export default function FormEmbedPage() {
                     if (data.length > 0) {
                         setSelectedForm(data[0]);
                     }
+                } else {
+                    setFormsList(MOCK_FORMS);
+                    if (MOCK_FORMS.length > 0) {
+                        setSelectedForm(MOCK_FORMS[0]);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load forms from backend:", err);
+                setFormsList(MOCK_FORMS);
+                if (MOCK_FORMS.length > 0) {
+                    setSelectedForm(MOCK_FORMS[0]);
+                }
             }
         };
         fetchForms();

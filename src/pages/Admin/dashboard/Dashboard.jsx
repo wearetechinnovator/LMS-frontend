@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DasboardStatsCard from '../../../components/Dashboard/DasboardStatsCard'
 import DashboardGraphCard from '../../../components/Dashboard/DashboardGraphCard'
@@ -29,7 +29,7 @@ export default function Dashboard() {
   ]
 
   // Sync leads from database or localStorage on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchLeads = async () => {
       const localData = localStorage.getItem('lms_leads_database')
       if (localData) {
@@ -66,7 +66,7 @@ export default function Dashboard() {
   }, []);
 
   // Listen for storage or custom update events to synchronize lead changes instantly
-  React.useEffect(() => {
+  useEffect(() => {
     const handleLeadsUpdated = () => {
       const localData = localStorage.getItem('lms_leads_database')
       if (localData) {

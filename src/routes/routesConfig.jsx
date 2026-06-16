@@ -20,7 +20,7 @@ const AdminAuditLogsPage = React.lazy(() => import('../pages/Admin/audit/AuditLo
 
 const AdminLmsSettingsPage = React.lazy(() => import('../pages/Admin/settings/LmsSettings'))
 
-const AdminFormEmbed = React.lazy(() => import('../pages/Admin/form/FormEmbed'))
+const AdminFormEmbed = React.lazy(() => import('../pages/Admin/form/FormEmbedPage'))
 
 const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/analysis/Analysis'))
 

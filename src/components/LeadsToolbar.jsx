@@ -226,7 +226,7 @@ export default function LeadsToolbar({
                           })}
                           className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350 text-primary"
                         />
-                        {col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
+                        {col === 'ip' ? 'IP Address' : col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
                       </label>
                     ))}
                   </div>
