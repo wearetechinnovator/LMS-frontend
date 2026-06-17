@@ -106,7 +106,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
               <span className="material-symbols-outlined icon">
-                {sidebarCollapsed ? 'last_page' : 'first_page'}
+                {sidebarCollapsed ? 'dock_to_left' : 'dock_to_right'}
               </span>
             </button>
           </div>

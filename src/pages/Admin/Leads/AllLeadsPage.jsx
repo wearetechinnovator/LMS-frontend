@@ -179,6 +179,31 @@ export default function AllLeadsPage() {
   const [showQuickLeadModal, setShowQuickLeadModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [showGlobalStageModal, setShowGlobalStageModal] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportFormat, setExportFormat] = useState('CSV')
+  const [exportColumns, setExportColumns] = useState({
+    id: true,
+    name: true,
+    email: true,
+    phone: true,
+    status: true,
+    assignedTo: true,
+    source: true,
+    score: true,
+    tier: true,
+    age: true,
+    query: true,
+    lastContacted: true,
+    nextFollowUp: true,
+    priority: true,
+    tags: true,
+    activityCount: true,
+    conversionProb: true,
+    location: true,
+    campaign: true,
+    ip: true,
+    device: true
+  })
   const [quickLeadForm, setQuickLeadForm] = useState({ name: '', email: '', phone: '', assignedTo: '', leadType: '', source: '', query: '' })
   const [uploadingBulk, setUploadingBulk] = useState(false)
   const [downloadingLeadsState, setDownloadingLeadsState] = useState(false)
@@ -419,6 +444,33 @@ export default function AllLeadsPage() {
     return () => window.removeEventListener('lms-form-filter-changed', handleFilterChange)
   }, [])
 
+  // Listen to filter requests from chatbot
+  React.useEffect(() => {
+    const handleBotFilter = (e) => {
+      const filters = e.detail || {}
+      if (filters.clear) {
+        setSearchQuery('')
+        setFilterStatus('all')
+        setDateRangeFilter('all')
+        setLeadOwnerFilter('all')
+        setSourceFilter('all')
+        setVerificationFilter('all')
+        setQueryFilter('all')
+        setActiveSavedTab('all')
+        setActiveBlockFilter('all')
+        setSelectedFormFilter('ALL')
+      } else {
+        if (filters.search !== undefined) setSearchQuery(filters.search)
+        if (filters.status !== undefined) setFilterStatus(filters.status.toUpperCase())
+        if (filters.query !== undefined) setQueryFilter(filters.query)
+        if (filters.source !== undefined) setSourceFilter(filters.source)
+        if (filters.owner !== undefined) setLeadOwnerFilter(filters.owner)
+      }
+    }
+    window.addEventListener('lms-bot-filter', handleBotFilter)
+    return () => window.removeEventListener('lms-bot-filter', handleBotFilter)
+  }, [])
+
   React.useEffect(() => {
     if (location.state && location.state.activeLeadId) {
       navigate(`/admin/leads/${location.state.activeLeadId}`, { replace: true })
@@ -603,6 +655,103 @@ export default function AllLeadsPage() {
 
   const totalPendingCount = useMemo(() => {
     return formFilteredLeads.filter(l => l.status === 'NEW').length
+  }, [formFilteredLeads])
+
+  const kpiTrends = useMemo(() => {
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    // 1. Total Leads
+    const currentTotal = formFilteredLeads.filter(l => l.createdAt && (now - new Date(l.createdAt)) <= 30 * dayMs).length;
+    const previousTotal = formFilteredLeads.filter(l => l.createdAt && (now - new Date(l.createdAt)) > 30 * dayMs && (now - new Date(l.createdAt)) <= 60 * dayMs).length;
+    let totalChange = '0% vs last month';
+    let totalUp = true;
+    if (previousTotal > 0) {
+      const pct = ((currentTotal - previousTotal) / previousTotal) * 100;
+      totalChange = `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}% vs last month`;
+      totalUp = pct >= 0;
+    } else {
+      totalChange = currentTotal > 0 ? `+${currentTotal}% vs last month` : '0% vs last month';
+      totalUp = true;
+    }
+
+    // 2. New Leads
+    const currentNew = formFilteredLeads.filter(l => l.status === 'NEW' && l.createdAt && (now - new Date(l.createdAt)) <= 7 * dayMs).length;
+    const previousNew = formFilteredLeads.filter(l => l.status === 'NEW' && l.createdAt && (now - new Date(l.createdAt)) > 7 * dayMs && (now - new Date(l.createdAt)) <= 14 * dayMs).length;
+    let newChange = '0% vs last week';
+    let newUp = true;
+    if (previousNew > 0) {
+      const pct = ((currentNew - previousNew) / previousNew) * 100;
+      newChange = `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}% vs last week`;
+      newUp = pct >= 0;
+    } else {
+      newChange = currentNew > 0 ? `+${currentNew}% vs last week` : '0% vs last week';
+      newUp = true;
+    }
+
+    // 3. Follow-Ups Today
+    const currentFollowUps = formFilteredLeads.filter(l => (l.status === 'FOLLOW UP' || l.status === 'FOLLOW_UP') && l.updatedAt && (now - new Date(l.updatedAt)) <= 1 * dayMs).length;
+    const previousFollowUps = formFilteredLeads.filter(l => (l.status === 'FOLLOW UP' || l.status === 'FOLLOW_UP') && l.updatedAt && (now - new Date(l.updatedAt)) > 1 * dayMs && (now - new Date(l.updatedAt)) <= 2 * dayMs).length;
+    let followUpsChange = '0% vs yesterday';
+    let followUpsUp = true;
+    if (previousFollowUps > 0) {
+      const pct = ((currentFollowUps - previousFollowUps) / previousFollowUps) * 100;
+      followUpsChange = `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}% vs yesterday`;
+      followUpsUp = pct >= 0;
+    } else {
+      followUpsChange = currentFollowUps > 0 ? `+${currentFollowUps}% vs yesterday` : '0% vs yesterday';
+      followUpsUp = true;
+    }
+
+    // 4. Qualified Leads
+    const currentQualified = formFilteredLeads.filter(l => l.status === 'QUALIFIED' && l.createdAt && (now - new Date(l.createdAt)) <= 7 * dayMs).length;
+    const previousQualified = formFilteredLeads.filter(l => l.status === 'QUALIFIED' && l.createdAt && (now - new Date(l.createdAt)) > 7 * dayMs && (now - new Date(l.createdAt)) <= 14 * dayMs).length;
+    let qualifiedChange = '0% vs last week';
+    let qualifiedUp = true;
+    if (previousQualified > 0) {
+      const pct = ((currentQualified - previousQualified) / previousQualified) * 100;
+      qualifiedChange = `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}% vs last week`;
+      qualifiedUp = pct >= 0;
+    } else {
+      qualifiedChange = currentQualified > 0 ? `+${currentQualified}% vs last week` : '0% vs last week';
+      qualifiedUp = true;
+    }
+
+    // 5. Pending Leads
+    const currentPending = formFilteredLeads.filter(l => ['NEW', 'CONTACTED'].includes(l.status) && l.createdAt && (now - new Date(l.createdAt)) <= 1 * dayMs).length;
+    const previousPending = formFilteredLeads.filter(l => ['NEW', 'CONTACTED'].includes(l.status) && l.createdAt && (now - new Date(l.createdAt)) > 1 * dayMs && (now - new Date(l.createdAt)) <= 2 * dayMs).length;
+    let pendingChange = '0% vs yesterday';
+    let pendingUp = true;
+    if (previousPending > 0) {
+      const pct = ((currentPending - previousPending) / previousPending) * 100;
+      pendingChange = `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}% vs yesterday`;
+      pendingUp = pct >= 0;
+    } else {
+      pendingChange = currentPending > 0 ? `+${currentPending}% vs yesterday` : '0% vs yesterday';
+      pendingUp = true;
+    }
+
+    // 6. Conversion Rate
+    const currentTotal30 = formFilteredLeads.filter(l => l.createdAt && (now - new Date(l.createdAt)) <= 30 * dayMs).length;
+    const currentQualified30 = formFilteredLeads.filter(l => l.status === 'QUALIFIED' && l.createdAt && (now - new Date(l.createdAt)) <= 30 * dayMs).length;
+    const currentConv = currentTotal30 > 0 ? (currentQualified30 / currentTotal30) * 100 : 0;
+    
+    const prevTotal30 = formFilteredLeads.filter(l => l.createdAt && (now - new Date(l.createdAt)) > 30 * dayMs && (now - new Date(l.createdAt)) <= 60 * dayMs).length;
+    const prevQualified30 = formFilteredLeads.filter(l => l.status === 'QUALIFIED' && l.createdAt && (now - new Date(l.createdAt)) > 30 * dayMs && (now - new Date(l.createdAt)) <= 60 * dayMs).length;
+    const prevConv = prevTotal30 > 0 ? (prevQualified30 / prevTotal30) * 100 : 0;
+    
+    const convDiff = currentConv - prevConv;
+    let convChange = `${convDiff >= 0 ? '+' : ''}${convDiff.toFixed(0)}% vs last month`;
+    let convUp = convDiff >= 0;
+
+    return {
+      totalChange, totalUp,
+      newChange, newUp,
+      followUpsChange, followUpsUp,
+      qualifiedChange, qualifiedUp,
+      pendingChange, pendingUp,
+      convChange, convUp
+    };
   }, [formFilteredLeads])
 
   const segmentStats = useMemo(() => {
@@ -1026,25 +1175,108 @@ export default function AllLeadsPage() {
         triggerToast(`Error: ${err.message}`);
       }
     } else {
-      // Mock fallback
+      // Mock fallback duplicate logic
+      let resolvedTier = "Primary";
+      let matches = [];
+      const cleanPhone = (newLead.phone || "").trim();
+      const cleanEmail = (newLead.email || "").trim();
+
+      const hasValidPhone = cleanPhone && cleanPhone !== "--" && cleanPhone !== "";
+      const hasValidEmail = cleanEmail && cleanEmail !== "--" && cleanEmail !== "";
+
+      if (hasValidPhone || hasValidEmail) {
+        matches = leads.filter(l => {
+          const dbPhone = (l.phone || "").trim();
+          const dbEmail = (l.email || "").trim();
+
+          const phoneMatch = hasValidPhone && dbPhone && dbPhone !== "--" && dbPhone !== "" && dbPhone === cleanPhone;
+          const emailMatch = hasValidEmail && dbEmail && dbEmail !== "--" && dbEmail !== "" && dbEmail.toLowerCase() === cleanEmail.toLowerCase();
+
+          return phoneMatch || emailMatch;
+        });
+
+        if (matches.length === 1) {
+          resolvedTier = "Secondary";
+        } else if (matches.length >= 2) {
+          resolvedTier = "Tertiary";
+        }
+      }
+
+      // Update existing mock matching leads in memory
+      let updatedLeads = leads.map(l => {
+        const dbPhone = (l.phone || "").trim();
+        const dbEmail = (l.email || "").trim();
+
+        const phoneMatch = hasValidPhone && dbPhone && dbPhone !== "--" && dbPhone !== "" && dbPhone === cleanPhone;
+        const emailMatch = hasValidEmail && dbEmail && dbEmail !== "--" && dbEmail !== "" && dbEmail.toLowerCase() === cleanEmail.toLowerCase();
+
+        if (phoneMatch || emailMatch) {
+          const updatedTimeline = [
+            {
+              id: Date.now() + Math.random(),
+              type: 'SYSTEM',
+              title: `Duplicate Submission Received`,
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+              body: `Another duplicate submission with matching details was received. Profile tier updated to ${resolvedTier}.`,
+              user: 'System Ingest',
+              ip: '192.168.1.105',
+              icon: 'star_half',
+              color: 'amber-600'
+            },
+            ...(l.timeline || [])
+          ];
+          return { ...l, tier: resolvedTier, timeline: updatedTimeline };
+        }
+        return l;
+      });
+
+      const initialTimeline = [
+        {
+          id: Date.now(),
+          type: 'CREATION',
+          title: `Lead Created (${formData.leadType || 'Online'} Add)`,
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+          body: `Added manually by counselor as ${formData.leadType || 'Online'} lead with source ${formData.source || 'Quick Add Form'}. Initialized with Starter Score 50.`,
+          user: 'Admin',
+          ip: '192.168.1.105',
+          icon: 'add_circle',
+          color: 'blue-600'
+        }
+      ];
+
+      if (resolvedTier === "Secondary") {
+        initialTimeline.unshift({
+          id: Date.now() + Math.random(),
+          type: 'SYSTEM',
+          title: `Duplicate Lead Ingested (Secondary)`,
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+          body: `Duplicate detected with matching phone number or email. Re-classified under Secondary Leads.`,
+          user: 'System Ingest',
+          ip: '192.168.1.105',
+          icon: 'star_half',
+          color: 'amber-600'
+        });
+      } else if (resolvedTier === "Tertiary") {
+        initialTimeline.unshift({
+          id: Date.now() + Math.random(),
+          type: 'SYSTEM',
+          title: `Multi-Duplicate Lead Ingested (Tertiary)`,
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+          body: `Duplicate detected 3+ times with matching phone number or email. Re-classified under Tertiary Leads.`,
+          user: 'System Ingest',
+          ip: '192.168.1.105',
+          icon: 'star_outline',
+          color: 'purple-600'
+        });
+      }
+
       const mockLead = {
         ...newLead,
         id: `LS-${1022 + leads.length}`,
         ip: '192.168.1.105',
         device: 'Desktop',
-        timeline: [
-          {
-            id: Date.now(),
-            type: 'CREATION',
-            title: `Lead Created (${formData.leadType || 'Online'} Add)`,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-            body: `Added manually by counselor as ${formData.leadType || 'Online'} lead with source ${formData.source || 'Quick Add Form'}. Initialized with Starter Score 50.`,
-            user: 'Admin',
-            ip: '192.168.1.105',
-            icon: 'add_circle',
-            color: 'blue-600'
-          }
-        ],
+        tier: resolvedTier,
+        timeline: initialTimeline,
         application: {
           appliedProgram: 'Standard Professional Tier',
           submissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -1056,7 +1288,8 @@ export default function AllLeadsPage() {
         },
         queries: []
       };
-      const updatedLeads = [mockLead, ...leads];
+
+      updatedLeads = [mockLead, ...updatedLeads];
       setLeads(updatedLeads);
       localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
       window.dispatchEvent(new CustomEvent('lms-leads-updated'));
@@ -1078,11 +1311,232 @@ export default function AllLeadsPage() {
   };
 
   const handleDownloadLeads = (format = 'CSV') => {
+    setExportFormat(format);
+    
+    // Pre-populate export columns selection to match current visibleColumns state
+    setExportColumns({
+      id: true,
+      name: visibleColumns.name !== false,
+      email: visibleColumns.name !== false,
+      phone: visibleColumns.phone !== false,
+      status: visibleColumns.status !== false,
+      assignedTo: visibleColumns.assignedTo !== false,
+      source: visibleColumns.source !== false,
+      score: visibleColumns.score !== false,
+      tier: true,
+      age: visibleColumns.age !== false,
+      query: visibleColumns.query !== false,
+      lastContacted: visibleColumns.lastContacted !== false,
+      nextFollowUp: visibleColumns.nextFollowUp !== false,
+      priority: visibleColumns.priority !== false,
+      tags: visibleColumns.tags !== false,
+      activityCount: visibleColumns.activityCount !== false,
+      conversionProb: visibleColumns.conversionProb !== false,
+      location: visibleColumns.location !== false,
+      campaign: visibleColumns.campaign !== false,
+      ip: visibleColumns.ip !== false,
+      device: visibleColumns.device !== false
+    });
+
+    setShowExportModal(true);
+  };
+
+  const executeExportLeads = () => {
+    const leadsToDownload = selectedLeads.length > 0
+      ? leads.filter(l => selectedLeads.includes(l.id))
+      : filteredAndSortedLeads;
+
+    if (leadsToDownload.length === 0) {
+      triggerToast('Warning: No leads found to export!');
+      return;
+    }
+
+    const getExportableEmail = (l) => {
+      const email = l.originalEmail || l.email || '';
+      return isMasked ? maskEmail(email) : email;
+    };
+
+    const getExportablePhone = (l) => {
+      const phone = l.phone || '';
+      return isMasked ? maskPhone(phone) : phone;
+    };
+
+    const columnDefinitions = [
+      { key: 'id', label: 'ID', getValue: (l) => l.id },
+      { key: 'name', label: 'Name', getValue: (l) => l.originalName || l.name },
+      { key: 'email', label: 'Email', getValue: (l) => getExportableEmail(l) },
+      { key: 'phone', label: 'Phone', getValue: (l) => getExportablePhone(l) },
+      { key: 'status', label: 'Status', getValue: (l) => l.status },
+      { key: 'assignedTo', label: 'Assigned To', getValue: (l) => l.assignedTo || 'Unassigned' },
+      { key: 'source', label: 'Source', getValue: (l) => l.source || 'Other' },
+      { key: 'score', label: 'Lead Score', getValue: (l) => l.score || 0 },
+      { key: 'tier', label: 'Tier', getValue: (l) => l.tier || 'Primary' },
+      { key: 'age', label: 'Age/Date', getValue: (l) => l.age || 'N/A' },
+      { key: 'query', label: 'Query', getValue: (l) => l.query || 'N/A' },
+      { key: 'lastContacted', label: 'Last Contacted', getValue: (l) => l.lastContacted || 'None' },
+      { key: 'nextFollowUp', label: 'Next Follow-Up', getValue: (l) => l.nextFollowUp || 'None' },
+      { key: 'priority', label: 'Priority', getValue: (l) => l.priority || 'Medium' },
+      { key: 'tags', label: 'Tags', getValue: (l) => Array.isArray(l.tags) ? l.tags.join(', ') : (l.tags || '') },
+      { key: 'activityCount', label: 'Activity Count', getValue: (l) => l.activityCount || 0 },
+      { key: 'conversionProb', label: 'Conversion Prob', getValue: (l) => (l.conversionProb || 0) + '%' },
+      { key: 'location', label: 'Location', getValue: (l) => l.location || 'N/A' },
+      { key: 'campaign', label: 'Campaign', getValue: (l) => l.campaign || 'N/A' },
+      { key: 'ip', label: 'IP Address', getValue: (l) => l.ip || 'N/A' },
+      { key: 'device', label: 'Device', getValue: (l) => l.device || 'Desktop' }
+    ];
+
+    const targetColumns = columnDefinitions.filter(col => exportColumns[col.key] === true);
+
+    if (targetColumns.length === 0) {
+      triggerToast('Warning: Please select at least one field to export!');
+      return;
+    }
+
     setDownloadingLeadsState(true);
-    setTimeout(() => {
+    setShowExportModal(false);
+
+    try {
+      const headers = targetColumns.map(c => c.label);
+      const rows = leadsToDownload.map(l => targetColumns.map(c => c.getValue(l)));
+
+      if (exportFormat === 'CSV') {
+        const csvString = [headers.join(','), ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `lms_leads_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else if (exportFormat === 'JSON') {
+        const exportData = leadsToDownload.map(l => {
+          const item = {};
+          targetColumns.forEach(c => {
+            item[c.label] = c.getValue(l);
+          });
+          return item;
+        });
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `lms_leads_${Date.now()}.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else if (exportFormat.includes('Excel') || exportFormat.includes('XLSX')) {
+        let tableHeaderHtml = '';
+        headers.forEach(h => {
+          tableHeaderHtml += '<th>' + h + '</th>';
+        });
+        
+        let tableBodyHtml = '';
+        rows.forEach(row => {
+          tableBodyHtml += '<tr>';
+          row.forEach(cell => {
+            tableBodyHtml += '<td>' + cell + '</td>';
+          });
+          tableBodyHtml += '</tr>';
+        });
+
+        const htmlTable = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Leads</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+            <style>
+              table { border-collapse: collapse; }
+              th { background-color: #f1f5f9; font-weight: bold; border: 1px solid #cbd5e1; padding: 6px; }
+              td { border: 1px solid #cbd5e1; padding: 6px; }
+            </style>
+          </head>
+          <body>
+            <table>
+              <thead>
+                <tr>${tableHeaderHtml}</tr>
+              </thead>
+              <tbody>
+                ${tableBodyHtml}
+              </tbody>
+            </table>
+          </body>
+          </html>
+        `;
+        const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `lms_leads_${Date.now()}.xls`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else if (exportFormat === 'PDF') {
+        const printWindow = window.open('', '_blank');
+        
+        let tableHeaderHtml = '';
+        headers.forEach(h => {
+          tableHeaderHtml += '<th>' + h + '</th>';
+        });
+        
+        let tableBodyHtml = '';
+        rows.forEach(row => {
+          tableBodyHtml += '<tr>';
+          row.forEach(cell => {
+            tableBodyHtml += '<td>' + cell + '</td>';
+          });
+          tableBodyHtml += '</tr>';
+        });
+
+        const fontSize = targetColumns.length > 12 ? '7px' : targetColumns.length > 8 ? '8.5px' : '10px';
+        const padding = targetColumns.length > 12 ? '4px 5px' : '6px 8px';
+        const pageSize = targetColumns.length > 8 ? 'landscape' : 'portrait';
+
+        printWindow.document.write(
+          '<html>' +
+          '<head>' +
+          '  <title>Leads Export - PDF</title>' +
+          '  <style>' +
+          '    @page { size: ' + pageSize + '; margin: 10mm; }' +
+          '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 10px; color: #1e293b; }' +
+          '    h1 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }' +
+          '    p { font-size: 9px; color: #64748b; margin-bottom: 15px; }' +
+          '    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: ' + fontSize + '; }' +
+          '    th, td { border: 1px solid #cbd5e1; padding: ' + padding + '; text-align: left; word-break: break-word; }' +
+          '    th { background-color: #f1f5f9; font-weight: 600; color: #475569; }' +
+          '  </style>' +
+          '</head>' +
+          '<body>' +
+          '  <h1>Lead Management System - Leads Export</h1>' +
+          '  <p>Generated on ' + new Date().toLocaleString() + ' | Total Leads: ' + leadsToDownload.length + '</p>' +
+          '  <table>' +
+          '    <thead>' +
+          '      <tr>' + tableHeaderHtml + '</tr>' +
+          '    </thead>' +
+          '    <tbody>' +
+          tableBodyHtml +
+          '    </tbody>' +
+          '  </table>' +
+          '</body>' +
+          '</html>'
+        );
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 500);
+      }
+      triggerToast(`Leads exported in ${exportFormat} format successfully!`);
+    } catch (err) {
+      console.error("Failed to export leads:", err);
+      triggerToast('Error: Failed to generate leads export.');
+    } finally {
       setDownloadingLeadsState(false);
-      triggerToast(`Generated leads ${format} download link successfully!`);
-    }, 1000);
+    }
   };
 
   const handleChangeLeadStageGlobal = () => {
@@ -1209,48 +1663,48 @@ export default function AllLeadsPage() {
                   {
                     label: 'Total Leads',
                     value: formFilteredLeads.length,
-                    trend: '+12% vs last month',
-                    trendUp: true,
+                    trend: kpiTrends.totalChange,
+                    trendUp: kpiTrends.totalUp,
                     color: 'indigo',
                     icon: 'groups'
                   },
                   {
                     label: 'New Leads',
                     value: formFilteredLeads.filter(l => l.status === 'NEW').length,
-                    trend: '+8% vs last week',
-                    trendUp: true,
+                    trend: kpiTrends.newChange,
+                    trendUp: kpiTrends.newUp,
                     color: 'blue',
                     icon: 'fiber_new'
                   },
                   {
                     label: 'Follow-Ups Today',
                     value: todayFollowUpCount,
-                    trend: '-5% vs yesterday',
-                    trendUp: false,
+                    trend: kpiTrends.followUpsChange,
+                    trendUp: kpiTrends.followUpsUp,
                     color: 'orange',
                     icon: 'calendar_today'
                   },
                   {
                     label: 'Qualified Leads',
                     value: formFilteredLeads.filter(l => l.status === 'QUALIFIED').length,
-                    trend: '+15% vs last week',
-                    trendUp: true,
+                    trend: kpiTrends.qualifiedChange,
+                    trendUp: kpiTrends.qualifiedUp,
                     color: 'green',
                     icon: 'verified'
                   },
                   {
                     label: 'Pending Leads',
                     value: formFilteredLeads.filter(l => ['NEW', 'CONTACTED'].includes(l.status)).length,
-                    trend: '-2% vs yesterday',
-                    trendUp: false,
+                    trend: kpiTrends.pendingChange,
+                    trendUp: kpiTrends.pendingUp,
                     color: 'amber',
                     icon: 'pending'
                   },
                   {
                     label: 'Conversion Rate',
                     value: `${formFilteredLeads.length > 0 ? Math.round((formFilteredLeads.filter(l => l.status === 'QUALIFIED').length / formFilteredLeads.length) * 100) : 0}%`,
-                    trend: '+3% vs last month',
-                    trendUp: true,
+                    trend: kpiTrends.convChange,
+                    trendUp: kpiTrends.convUp,
                     color: 'teal',
                     icon: 'leaderboard'
                   }
@@ -1844,7 +2298,7 @@ export default function AllLeadsPage() {
                                 </div>
                                 <div className="flex flex-col min-w-0 text-left">
                                   <span className="text-[12px] font-extrabold text-slate-800 hover:underline truncate flex items-center gap-1.5">
-                                    {lead.name}
+                                    {lead.originalName || lead.name}
                                     {lead.verified ? (
                                       <span className="material-symbols-outlined text-[12px]! font-bold text-emerald-500 select-none" title="Verified">check_circle</span>
                                     ) : (
@@ -1852,7 +2306,7 @@ export default function AllLeadsPage() {
                                     )}
                                   </span>
                                   <span className="text-[10px] text-slate-450 truncate">
-                                    {isMasked ? maskEmail(lead.email) : lead.email}
+                                    {isMasked ? maskEmail(lead.originalEmail || lead.email) : (lead.originalEmail || lead.email || '--')}
                                   </span>
                                 </div>
                               </div>
@@ -1956,8 +2410,8 @@ export default function AllLeadsPage() {
                             <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">
                               <span className="flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[14px]">
-                                  {lead.device?.toLowerCase() === 'mobile' ? 'smartphone' : 
-                                   lead.device?.toLowerCase() === 'tablet' ? 'tablet_mac' : 'desktop_windows'}
+                                  {lead.device?.toLowerCase() === 'mobile' ? 'smartphone' :
+                                    lead.device?.toLowerCase() === 'tablet' ? 'tablet_mac' : 'desktop_windows'}
                                 </span>
                                 {lead.device || 'Desktop'}
                               </span>
@@ -2009,7 +2463,7 @@ export default function AllLeadsPage() {
                         navigate(`/admin/leads/${lead.id}`)
                       }
                     }}
-                    className={`bg-white border border-slate-200 rounded-xl p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${role === 'admin' ? 'cursor-pointer' : ''}`}
+                    className={`bg-white border border-slate-200 rounded-[3px] p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${role === 'admin' ? 'cursor-pointer' : ''}`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
@@ -2018,10 +2472,10 @@ export default function AllLeadsPage() {
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="text-[12.5px] font-extrabold text-slate-800 truncate">
-                            {lead.name}
+                            {lead.originalName || lead.name}
                           </span>
                           <span className="text-[10px] text-slate-450 truncate">
-                            {isMasked ? maskEmail(lead.email) : lead.email}
+                            {isMasked ? maskEmail(lead.originalEmail || lead.email) : (lead.originalEmail || lead.email || '--')}
                           </span>
                         </div>
                       </div>
@@ -2103,7 +2557,7 @@ export default function AllLeadsPage() {
                 ))}
 
                 {filteredAndSortedLeads.length === 0 && (
-                  <div className="py-12 text-center bg-white border border-slate-200 rounded-xl">
+                  <div className="py-12 text-center bg-white border border-slate-200 rounded-[3px]">
                     <span className="material-symbols-outlined text-[32px] text-slate-450 block mb-2">folder_off</span>
                     <p className="text-[12px] font-bold text-slate-800">No Leads Found</p>
                   </div>
@@ -2115,16 +2569,16 @@ export default function AllLeadsPage() {
                 <span>Showing 1-{filteredAndSortedLeads.length} of {leads.length} leads</span>
                 <div className="flex items-center gap-2">
                   <span>Rows per page</span>
-                  <select className="px-2 h-6 border border-outline-variant rounded bg-surface text-[11px] cursor-pointer">
+                  <select className="px-2 h-6 border border-outline-variant rounded-[3px] bg-surface text-[11px] cursor-pointer">
                     <option>50</option>
                     <option>100</option>
                     <option>250</option>
                   </select>
                   <div className="flex items-center gap-1 ml-4">
-                    <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
+                    <button className="p-1 hover:bg-surface-container rounded-[3px] transition-colors cursor-pointer">
                       <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                     </button>
-                    <button className="p-1 hover:bg-surface-container rounded transition-colors cursor-pointer">
+                    <button className="p-1 hover:bg-surface-container rounded-[3px] transition-colors cursor-pointer">
                       <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                     </button>
                   </div>
@@ -2157,7 +2611,7 @@ export default function AllLeadsPage() {
                           <select
                             onChange={(e) => handleBulkStatusUpdate(e.target.value)}
                             defaultValue=""
-                            className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                            className="bg-slate-800 border border-slate-700 rounded-[3px] px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
                             style={{ color: 'white' }}
                           >
                             <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Update...</option>
@@ -2178,7 +2632,7 @@ export default function AllLeadsPage() {
                           <select
                             onChange={(e) => handleBulkAssignUpdate(e.target.value)}
                             defaultValue=""
-                            className="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
+                            className="bg-slate-800 border border-slate-700 rounded-[3px] px-2.5 py-1 text-[11px] outline-none !text-white cursor-pointer hover:bg-slate-700 transition-colors"
                             style={{ color: 'white' }}
                           >
                             <option value="" disabled style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>Assign to...</option>
@@ -2216,7 +2670,7 @@ export default function AllLeadsPage() {
             {showApplicationModal && activeModalLead && (
               <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
                 <motion.div
-                  className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
+                  className="bg-white rounded-[3px] border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
                   initial={{ scale: 0.95, opacity: 0, y: 20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -2244,8 +2698,8 @@ export default function AllLeadsPage() {
 
                   {/* Modal Body */}
                   <div className="p-6 space-y-4 text-left overflow-y-auto max-h-[70vh]">
-                    <div className="flex items-center gap-3 bg-blue-50/40 border border-blue-100/50 rounded-xl p-3.5 select-none">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary text-sm font-bold">
+                    <div className="flex items-center gap-3 bg-blue-50/40 border border-blue-100/50 rounded-[3px] p-3.5 select-none">
+                      <div className="w-10 h-10 rounded-[3px] bg-blue-100 flex items-center justify-center text-primary text-sm font-bold">
                         {getInitials(activeModalLead.name)}
                       </div>
                       <div>
@@ -2440,6 +2894,155 @@ export default function AllLeadsPage() {
                       className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[11.5px] font-bold transition-colors cursor-pointer shadow-sm"
                     >
                       Close Panel
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* EXPORT LEADS DIALOG/MODAL */}
+          <AnimatePresence>
+            {showExportModal && (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans animate-fade-in">
+                <motion.div
+                  className="bg-white rounded-[3px] border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
+                  initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                >
+                  {/* Modal Header */}
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <div className="text-left">
+                      <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[20px] text-blue-600">download_for_offline</span>
+                        Export Leads Options
+                      </h3>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Select the fields and the download format for export.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowExportModal(false)}
+                      className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer flex items-center justify-center transition-colors select-none"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6 space-y-4 text-left">
+                    {/* Select Format Card Selector */}
+                    <div>
+                      <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block mb-2">Export Format</span>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['CSV', 'Excel (XLSX)', 'JSON', 'PDF'].map((fmt) => (
+                          <button
+                            key={fmt}
+                            type="button"
+                            onClick={() => setExportFormat(fmt)}
+                            className={`py-2 px-3 text-[11px] font-bold rounded-[3px] border transition-all cursor-pointer text-center ${
+                              exportFormat === fmt
+                                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm'
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            {fmt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Columns Selector Grid */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Select Fields</span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const selectAll = {};
+                              Object.keys(exportColumns).forEach(k => { selectAll[k] = true; });
+                              setExportColumns(selectAll);
+                            }}
+                            className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer bg-none border-none p-0"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-slate-300 text-[10px]">•</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const deselectAll = {};
+                              Object.keys(exportColumns).forEach(k => { deselectAll[k] = false; });
+                              setExportColumns(deselectAll);
+                            }}
+                            className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer bg-none border-none p-0"
+                          >
+                            Deselect All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 max-h-[180px] overflow-y-auto border border-slate-100 rounded-[3px] p-3 bg-slate-50/50">
+                        {Object.keys(exportColumns).map((colKey) => {
+                          const labelMapping = {
+                            id: 'ID',
+                            name: 'Name',
+                            email: 'Email',
+                            phone: 'Phone',
+                            status: 'Status',
+                            assignedTo: 'Assigned To',
+                            source: 'Source',
+                            score: 'Lead Score',
+                            tier: 'Tier',
+                            age: 'Age/Date',
+                            query: 'Query',
+                            lastContacted: 'Last Contacted',
+                            nextFollowUp: 'Next Follow-Up',
+                            priority: 'Priority',
+                            tags: 'Tags',
+                            activityCount: 'Activity Count',
+                            conversionProb: 'Conversion Prob',
+                            location: 'Location',
+                            campaign: 'Campaign',
+                            ip: 'IP Address',
+                            device: 'Device'
+                          };
+                          return (
+                            <label key={colKey} className="flex items-center gap-2.5 py-1 text-[11px] text-slate-700 font-semibold cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={exportColumns[colKey] === true}
+                                onChange={(e) => setExportColumns({
+                                  ...exportColumns,
+                                  [colKey]: e.target.checked
+                                })}
+                                className="w-3.5 h-3.5 accent-blue-600 cursor-pointer rounded-[3px] border-slate-300"
+                              />
+                              {labelMapping[colKey] || colKey}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowExportModal(false)}
+                      className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-[3px] text-[11.5px] font-bold transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={executeExportLeads}
+                      className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-[3px] text-[11.5px] font-bold transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[15px] font-bold">download</span>
+                      Export File
                     </button>
                   </div>
                 </motion.div>

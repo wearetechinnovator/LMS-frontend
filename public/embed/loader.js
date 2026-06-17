@@ -118,13 +118,35 @@
                 return res.json();
             })
             .then(data => {
-                container.innerHTML = `
-                    <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box;">
-                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; border: 1px solid #d1fae5; color: #059669; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; font-weight: bold;">✓</div>
-                        <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #1e293b;">Thank you!</h3>
-                        <p style="margin: 0; font-size: 13px; color: #64748b;">Your submission has been received successfully.</p>
-                    </div>
-                `;
+                const settings = form.settings || {};
+                if (settings.redirect && settings.redirectUrl) {
+                    container.innerHTML = `
+                        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; border: 1px solid #d1fae5; color: #059669; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; font-weight: bold;">✓</div>
+                            <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #1e293b;">Thank you!</h3>
+                            <p style="margin: 0; font-size: 13px; color: #64748b;">Redirecting you now...</p>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        try {
+                            if (window.top) {
+                                window.top.location.href = settings.redirectUrl;
+                            } else {
+                                window.location.href = settings.redirectUrl;
+                            }
+                        } catch (e) {
+                            window.location.href = settings.redirectUrl;
+                        }
+                    }, 800);
+                } else {
+                    container.innerHTML = `
+                        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; border: 1px solid #d1fae5; color: #059669; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; font-weight: bold;">✓</div>
+                            <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #1e293b;">Thank you!</h3>
+                            <p style="margin: 0; font-size: 13px; color: #64748b;">Your submission has been received successfully.</p>
+                        </div>
+                    `;
+                }
             })
             .catch(err => {
                 console.error(err);

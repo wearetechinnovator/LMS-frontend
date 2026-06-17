@@ -115,7 +115,8 @@ export default function FormBuilderPage() {
             title: `${form.name} (Copy)`,
             description: form.description,
             fields: form.fields,
-            status: 'DRAFT'
+            status: 'DRAFT',
+            settings: form.settings || {}
           })
         });
         if (!response.ok) {
@@ -134,6 +135,7 @@ export default function FormBuilderPage() {
         id: `FRM-${Math.floor(1000 + Math.random() * 9000)}-D`,
         name: `${form.name} (Copy)`,
         status: 'DRAFT',
+        settings: form.settings || {},
         responses: 0,
         conversionRate: '0%',
         createdBy: 'System Admin',
@@ -165,7 +167,8 @@ export default function FormBuilderPage() {
               title: updatedData.title,
               description: updatedData.description,
               fields: updatedData.fields,
-              status: updatedData.status
+              status: updatedData.status,
+              settings: updatedData.settings || {}
             })
           });
           if (!response.ok) {
@@ -192,7 +195,8 @@ export default function FormBuilderPage() {
               title: updatedData.title,
               description: updatedData.description,
               fields: updatedData.fields,
-              status: updatedData.status
+              status: updatedData.status,
+              settings: updatedData.settings || {}
             })
           });
           if (!response.ok) {
@@ -217,7 +221,8 @@ export default function FormBuilderPage() {
               name: updatedData.title,
               description: updatedData.description,
               fields: updatedData.fields,
-              status: updatedData.status
+              status: updatedData.status,
+              settings: updatedData.settings || {}
             }
           }
           return form
@@ -230,6 +235,7 @@ export default function FormBuilderPage() {
           description: updatedData.description,
           fields: updatedData.fields,
           status: updatedData.status,
+          settings: updatedData.settings || {},
           responses: 0,
           conversionRate: '0%',
           createdBy: 'System Admin',
@@ -258,7 +264,8 @@ export default function FormBuilderPage() {
             title: updatedData.title,
             description: updatedData.description,
             fields: updatedData.fields,
-            status: 'TEMPLATE'
+            status: 'TEMPLATE',
+            settings: updatedData.settings || {}
           })
         });
         if (!response.ok) {
@@ -278,6 +285,7 @@ export default function FormBuilderPage() {
         description: updatedData.description,
         fields: updatedData.fields,
         status: 'TEMPLATE',
+        settings: updatedData.settings || {},
         responses: null,
         conversionRate: null,
         createdBy: 'System Admin',
@@ -351,7 +359,7 @@ export default function FormBuilderPage() {
             </div>
 
             {/* Forms Data Table */}
-            <div className="bg-surface rounded-lg border border-outline-variant overflow-hidden shadow-xs">
+            <div className="bg-surface border border-outline-variant overflow-hidden shadow-xs form-builder-page">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-outline-variant bg-surface-container/60">
@@ -366,7 +374,7 @@ export default function FormBuilderPage() {
                 <tbody>
                   {filteredForms.map((form) => (
                     <tr
-                      key={form.id}
+                       key={form.id}
                       className="border-b border-outline-variant hover:bg-slate-50/70 transition-colors"
                     >
                       {/* Name & ID Cell with hover preview */}
@@ -461,6 +469,7 @@ export default function FormBuilderPage() {
               initialFields={activeFormSchema.fields}
               initialStatus={activeFormSchema.status ? (activeFormSchema.status.charAt(0).toUpperCase() + activeFormSchema.status.slice(1).toLowerCase()) : 'Draft'}
               initialId={activeFormSchema.id || 'new'}
+              initialSettings={activeFormSchema.settings || {}}
               onBack={() => setActiveFormSchema(null)}
               onSave={handleSaveForm}
               onSaveAsTemplate={handleSaveAsTemplate}
@@ -591,8 +600,8 @@ export default function FormBuilderPage() {
                           onMouseEnter={() => setActivePreviewTemplate(template)}
                           onClick={() => handleSelectTemplate(template)}
                           className={`w-full text-left p-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${isActive
-                              ? 'border-purple-500 bg-purple-50/70 shadow-xs'
-                              : 'border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50'
+                            ? 'border-purple-500 bg-purple-50/70 shadow-xs'
+                            : 'border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50'
                             }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -607,8 +616,8 @@ export default function FormBuilderPage() {
                             </div>
                           </div>
                           <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded border shrink-0 ${isActive
-                              ? 'bg-purple-100/80 text-purple-800 border-purple-200'
-                              : 'bg-slate-50 text-slate-500 border-slate-200'
+                            ? 'bg-purple-100/80 text-purple-800 border-purple-200'
+                            : 'bg-slate-50 text-slate-500 border-slate-200'
                             }`}>
                             {template.fields?.length || 0} fields
                           </span>

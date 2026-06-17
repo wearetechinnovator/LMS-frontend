@@ -13,6 +13,7 @@ export default function FormBuilder({
     ],
     initialStatus = 'Draft',
     initialId = 'new',
+    initialSettings = {},
     onBack,
     onSave,
     onSaveAsTemplate
@@ -21,6 +22,7 @@ export default function FormBuilder({
     const [selectedFieldId, setSelectedFieldId] = useState(initialFields[0]?.id || null)
     const [formTitle, setFormTitle] = useState(initialTitle)
     const [formDescription, setFormDescription] = useState(initialDescription)
+    const [formSettings, setFormSettings] = useState(initialSettings)
     const [isEditingTitle, setIsEditingTitle] = useState(false)
     const [isEditingDescription, setIsEditingDescription] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
@@ -200,7 +202,7 @@ export default function FormBuilder({
         }
     }, [isResizingRight])
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isResizingRight) {
             window.addEventListener('mousemove', resizeRight)
             window.addEventListener('mouseup', stopResizingRight)
@@ -613,7 +615,8 @@ export default function FormBuilder({
             title: formTitle,
             description: formDescription,
             fields: JSON.stringify(formFields),
-            status: 'Draft'
+            status: 'Draft',
+            settings: formSettings
         }
         setSavedSnapshot(updatedSnapshot)
         setLastSavedTime(Date.now())
@@ -623,7 +626,8 @@ export default function FormBuilder({
                 title: formTitle,
                 description: formDescription,
                 fields: formFields,
-                status: 'DRAFT'
+                status: 'DRAFT',
+                settings: formSettings
             })
         }
         triggerLocalToast("✓ Draft saved successfully!")
@@ -636,7 +640,8 @@ export default function FormBuilder({
             title: formTitle,
             description: formDescription,
             fields: JSON.stringify(formFields),
-            status: 'Published'
+            status: 'Published',
+            settings: formSettings
         }
         setSavedSnapshot(updatedSnapshot)
         setLastSavedTime(Date.now())
@@ -646,7 +651,8 @@ export default function FormBuilder({
                 title: formTitle,
                 description: formDescription,
                 fields: formFields,
-                status: 'PUBLISHED'
+                status: 'PUBLISHED',
+                settings: formSettings
             })
         }
         setShowPublishDropdown(!showPublishDropdown)
@@ -667,7 +673,7 @@ export default function FormBuilder({
                 <div className="p-2 border-b border-outline-variant flex flex-col items-start gap-0.5 justify-center">
                     <div className="flex justify-between items-center w-full">
                         <h2 className="font-headline-md text-headline-md text-on-background text-[12px] field-library-title">Field Library</h2>
-                        
+
                     </div>
                     <span className="text-[8.5px] text-slate-400 font-semibold select-none leading-none mt-0.5">Click standard fields to add them to your form</span>
                 </div>
@@ -756,7 +762,7 @@ export default function FormBuilder({
             <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3 form-builder-canvas">
                 <div className="w-full max-w-[880px] form-builder-content-container">
                     <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
-                        
+
                         <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                             {/* Left Section: Back, Title, and Status Badge */}
                             <div className="flex items-center gap-2.5 flex-1 min-w-[240px]">
@@ -881,7 +887,8 @@ export default function FormBuilder({
                                                                         title: formTitle,
                                                                         description: formDescription,
                                                                         fields: formFields,
-                                                                        status: 'PUBLISHED'
+                                                                        status: 'PUBLISHED',
+                                                                        settings: formSettings
                                                                     });
                                                                 }
                                                                 setShowPublishDropdown(false);
@@ -898,7 +905,7 @@ export default function FormBuilder({
                                                             type: 'iframe',
                                                             label: 'Copy iFrame Code',
                                                             icon: 'devices',
-                                                            code: `<iframe src="${window.location.origin}/embed/form/${initialId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 8px;"></iframe>`
+                                                            code: `<iframe src="${window.location.origin}/embed/form/${initialId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 3px;"></iframe>`
                                                         },
                                                         {
                                                             type: 'script',
@@ -981,7 +988,8 @@ export default function FormBuilder({
                                                                     title: formTitle,
                                                                     description: formDescription,
                                                                     fields: formFields,
-                                                                    status: 'TEMPLATE'
+                                                                    status: 'TEMPLATE',
+                                                                    settings: formSettings
                                                                 });
                                                             } else {
                                                                 triggerLocalToast("✓ Saved as Template");
@@ -1281,8 +1289,29 @@ export default function FormBuilder({
                     onMouseDown={startResizingRight}
                     style={{ width: '4px', left: '-2px' }}
                 />
-                <div className="px-3 py-1.5 border-b border-outline-variant">
-                    <h2 className="text-[12px] font-bold text-on-background settings-pane-title">Field Settings</h2>
+                <div className="flex border-b border-outline-variant select-none bg-slate-50 shrink-0">
+                    <button
+                        type="button"
+                        onClick={() => setSelectedFieldId(null)}
+                        className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
+                            !selectedField
+                                ? 'border-primary text-primary bg-white font-black'
+                                : 'border-transparent text-slate-500 hover:text-slate-800'
+                        }`}
+                    >
+                        Form Settings
+                    </button>
+                    <button
+                        type="button"
+                        disabled={!selectedFieldId}
+                        className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider border-b-2 transition-all ${
+                            selectedField
+                                ? 'border-primary text-primary bg-white font-black cursor-pointer'
+                                : 'border-transparent text-slate-300 cursor-not-allowed'
+                        }`}
+                    >
+                        Field Settings
+                    </button>
                 </div>
 
                 {selectedField ? (
@@ -1803,8 +1832,36 @@ export default function FormBuilder({
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center h-full text-on-surface-variant font-body-md text-body-md text-[9px] text-center px-2">
-                        Select a field to configure
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-2.5 bg-surface-container border-b border-outline-variant flex items-center gap-1.5 text-primary text-[10px] settings-type-header select-none">
+                            <span className="material-symbols-outlined text-[14px]">settings</span>
+                            Form Settings
+                        </div>
+                        <div className="p-4 space-y-4">
+                            <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={formSettings.redirect || false}
+                                    onChange={(e) => setFormSettings({ ...formSettings, redirect: e.target.checked })}
+                                    className="w-4 h-4 accent-primary cursor-pointer rounded"
+                                />
+                                <span className="text-[11.5px] font-bold text-slate-700">Redirect after submission</span>
+                            </label>
+
+                            {formSettings.redirect && (
+                                <div className="space-y-1.5 animate-fade-in">
+                                    <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label select-none">Redirect URL</label>
+                                    <input
+                                        type="url"
+                                        placeholder="https://example.com/thank-you"
+                                        value={formSettings.redirectUrl || ''}
+                                        onChange={(e) => setFormSettings({ ...formSettings, redirectUrl: e.target.value })}
+                                        className="w-full h-8 px-2.5 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                    />
+                                    <p className="text-[9px] text-slate-400 select-none leading-relaxed">Users will be automatically redirected to this URL after submitting.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

@@ -42,6 +42,8 @@ export default function LeadDetailsPage() {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [showNurtureModal, setShowNurtureModal] = useState(false)
+  const [selectedCampaign, setSelectedCampaign] = useState('')
 
   const [statusesList, setStatusesList] = useState(() => getCustomStatuses())
   const [journeysList, setJourneysList] = useState(() => getCustomJourneys())
@@ -738,6 +740,280 @@ export default function LeadDetailsPage() {
     triggerToast(`Activity pin toggled!`)
   }
 
+  const CAMPAIGN_TEMPLATES = {
+    standard_drip: {
+      id: 'standard_drip',
+      name: 'Standard Admissions Drip',
+      description: 'Welcome drip sequence for newly registered/assigned leads. Schedules initial collateral distribution and check-in tasks.',
+      steps: [
+        { day: 1, type: 'EMAIL', label: 'Welcome Email', icon: 'mail', details: 'Sends introductory college curriculum, programs offered, and campus highlights.' },
+        { day: 2, type: 'WHATSAPP', label: 'WhatsApp Program Info', icon: 'chat', details: 'Auto-delivers program brochure and detailed fee structure directly to user WhatsApp.' },
+        { day: 5, type: 'CALL', label: 'Follow-up Call Task', icon: 'call', details: 'Schedules a counselor follow-up task on the dashboard for personalized onboarding query resolution.' }
+      ]
+    },
+    scholarship_drive: {
+      id: 'scholarship_drive',
+      name: 'Scholarship Drive Sequence',
+      description: 'Aimed at high-potential students showing interest in scholarship schemes and competitive entrance tests.',
+      steps: [
+        { day: 1, type: 'EMAIL', label: 'Scholarship Prospectus', icon: 'mail', details: 'Emails detailed eligibility criteria, test syllabus, fee waivers, and success stories of past scholars.' },
+        { day: 3, type: 'WHATSAPP', label: 'Assessment Prep / WhatsApp', icon: 'chat', details: 'Sends helpful preparatory links, sample questions, and assessment call setup links.' },
+        { day: 7, type: 'CALL', label: 'Admissions Deadline Warning', icon: 'call', details: 'Urgent callback call checklist entry to expedite applications prior to deadline closure.' }
+      ]
+    },
+    re_engagement: {
+      id: 're_engagement',
+      name: 'Re-engagement Flow',
+      description: 'Designed for cold or unresponsive leads who previously registered but stopped communicating.',
+      steps: [
+        { day: 1, type: 'EMAIL', label: 'Still Interested? Query', icon: 'mail', details: 'Re-activation email check-in asking if they are still pursuing higher education plans.' },
+        { day: 4, type: 'CALL', label: 'Feedback Check-in Call', icon: 'call', details: 'Callback task to get reasons for drop-off or assign to a senior counselor.' }
+      ]
+    }
+  };
+
+  const handleActivateCampaign = async (campaignId) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
+    const template = CAMPAIGN_TEMPLATES[campaignId];
+    if (!template) return;
+
+    const today = new Date();
+    const scheduledSteps = template.steps.map(step => {
+      const stepDate = new Date(today.getTime() + (step.day - 1) * 24 * 60 * 60 * 1000);
+      const formattedDateStr = stepDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return {
+        ...step,
+        completed: false,
+        scheduledDate: formattedDateStr
+      };
+    });
+
+    const nurturingData = {
+      campaignId: template.id,
+      campaignName: template.name,
+      status: 'Active',
+      startDate: today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      steps: scheduledSteps
+    };
+
+    const activationEvent = {
+      id: Date.now(),
+      type: 'SYSTEM',
+      title: 'Nurturing Campaign Activated',
+      date: today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${today.toLocaleTimeString('en-US', { hour12: false })}`,
+      body: `Lead enrolled in nurturing campaign: ${template.name}. Description: ${template.description}`,
+      user: 'Admin',
+      ip: '192.168.1.105',
+      icon: 'spa',
+      color: '#8b5cf6'
+    };
+
+    const stepEvents = scheduledSteps.map((step, idx) => ({
+      id: Date.now() + idx + 1,
+      type: 'NURTURING',
+      title: `${step.label} (Scheduled)`,
+      date: `Scheduled: ${step.scheduledDate}`,
+      body: `${template.name} - Day ${step.day}: ${step.details}`,
+      user: 'System',
+      ip: '127.0.0.1',
+      icon: step.icon,
+      color: '#c084fc',
+      nurturingStepType: step.type,
+      nurturingCampaignName: template.name
+    }));
+
+    const updatedTimeline = [activationEvent, ...stepEvents, ...activeLeadDetails.timeline];
+    const newScore = Math.min((activeLeadDetails.score || 50) + 10, 100);
+    const existingTags = activeLeadDetails.tags || [];
+    const newTags = existingTags.includes('Nurturing') ? existingTags : [...existingTags, 'Nurturing'];
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${activeLeadDetails.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            nurturing: nurturingData,
+            timeline: updatedTimeline,
+            score: newScore,
+            tags: newTags
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to activate campaign');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
+    setLeads(leads.map(lead => {
+      if (lead.id === activeLeadDetails.id) {
+        return {
+          ...lead,
+          nurturing: nurturingData,
+          timeline: updatedTimeline,
+          score: newScore,
+          tags: newTags
+        }
+      }
+      return lead;
+    }));
+
+    setShowNurtureModal(false);
+    setSelectedCampaign('');
+    triggerToast(`Successfully enrolled lead in '${template.name}'!`);
+  };
+
+  const handleCompleteNurtureStep = async (stepIndex) => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
+    const currentNurturing = activeLeadDetails.nurturing;
+    if (!currentNurturing || !currentNurturing.steps) return;
+
+    const updatedSteps = currentNurturing.steps.map((s, idx) => {
+      if (idx === stepIndex) return { ...s, completed: true }
+      return s;
+    });
+
+    const completedStep = currentNurturing.steps[stepIndex];
+    const newEvent = {
+      id: Date.now(),
+      type: 'NURTURING',
+      title: `Nurturing Step Completed: ${completedStep.label}`,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+      body: `Nurturing campaign step '${completedStep.label}' (${completedStep.type}) marked as completed. Details: ${completedStep.details}`,
+      user: 'Admin',
+      ip: '192.168.1.105',
+      icon: completedStep.icon,
+      color: '#7c3aed',
+      nurturingStepType: completedStep.type,
+      nurturingCampaignName: currentNurturing.campaignName
+    };
+
+    const filteredOldTimeline = activeLeadDetails.timeline.filter(event => {
+      return !(event.type === 'NURTURING' && event.title === `${completedStep.label} (Scheduled)`);
+    });
+
+    const updatedTimeline = [newEvent, ...filteredOldTimeline];
+    const allStepsCompleted = updatedSteps.every(s => s.completed);
+    const updatedNurturing = {
+      ...currentNurturing,
+      steps: updatedSteps,
+      status: allStepsCompleted ? 'Completed' : 'Active'
+    };
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${activeLeadDetails.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            nurturing: updatedNurturing,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to update nurturing step');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
+    setLeads(leads.map(lead => {
+      if (lead.id === activeLeadDetails.id) {
+        return {
+          ...lead,
+          nurturing: updatedNurturing,
+          timeline: updatedTimeline
+        }
+      }
+      return lead;
+    }));
+
+    triggerToast(`Nurturing step '${completedStep.label}' completed!`);
+  };
+
+  const handleCancelCampaign = async () => {
+    if (!hasPermission('leads_edit')) {
+      triggerToast("Error: You do not have permission to edit leads!");
+      return;
+    }
+    const currentNurturing = activeLeadDetails.nurturing;
+    if (!currentNurturing) return;
+
+    const cancelEvent = {
+      id: Date.now(),
+      type: 'SYSTEM',
+      title: 'Nurturing Campaign Cancelled',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+      body: `Nurturing campaign '${currentNurturing.campaignName}' was manually cancelled by the counselor.`,
+      user: 'Admin',
+      ip: '192.168.1.105',
+      icon: 'cancel',
+      color: '#ef4444'
+    };
+
+    const updatedTimeline = [cancelEvent, ...activeLeadDetails.timeline.filter(event => {
+      return !(event.type === 'NURTURING' && event.nurturingCampaignName === currentNurturing.campaignName && event.title.includes('(Scheduled)'));
+    })];
+
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${activeLeadDetails.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            nurturing: null,
+            timeline: updatedTimeline
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to cancel campaign');
+        }
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+        return;
+      }
+    }
+
+    setLeads(leads.map(lead => {
+      if (lead.id === activeLeadDetails.id) {
+        return {
+          ...lead,
+          nurturing: null,
+          timeline: updatedTimeline
+        }
+      }
+      return lead;
+    }));
+
+    triggerToast(`Nurturing campaign '${currentNurturing.campaignName}' cancelled.`);
+  };
+
   const handlePropSelection = (field, value) => {
     setMergeSelectedProps(prev => ({
       ...prev,
@@ -747,6 +1023,7 @@ export default function LeadDetailsPage() {
 
   const filteredTimeline = activeLeadDetails.timeline.filter(event => {
     if (timelineFilter !== 'ALL') {
+      if (timelineFilter === 'NURTURING' && event.type !== 'NURTURING') return false
       if (timelineFilter === 'CALLS' && event.type !== 'CALL') return false
       if (timelineFilter === 'EMAILS' && event.type !== 'EMAIL') return false
       if (timelineFilter === 'MEETINGS' && event.type !== 'MEETING') return false
@@ -990,7 +1267,7 @@ export default function LeadDetailsPage() {
             </div>
 
             {/* after lead name  */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-50/70 bg-white border border-slate-200 rounded-xl shadow-xs p-3.5 text-[11px] font-bold text-slate-655 select-none items-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/70 bg-white border border-slate-200 rounded-xl shadow-xs p-3.5 text-[11px] font-bold text-slate-655 select-none items-center">
               <div>
                 <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Rating</span>
                 <span className="text-rose-600 flex items-center gap-0.5 text-[11.5px] font-extrabold">
@@ -1012,18 +1289,6 @@ export default function LeadDetailsPage() {
                   </span>
                 </div>
               </div>
-              <div>
-                <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-1">Active Pipeline</span>
-                <select
-                  value={activeLeadDetails.journeyId || 'default'}
-                  onChange={(e) => handleLeadJourneyChange(activeLeadDetails.id, e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-[11px] outline-none text-slate-700 cursor-pointer font-bold shadow-2xs w-full max-w-[145px] focus:border-sky-500"
-                >
-                  {journeysList.map(j => (
-                    <option key={j.id} value={j.id}>{j.name}</option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <div className="flex items-center gap-2">
@@ -1037,7 +1302,21 @@ export default function LeadDetailsPage() {
 
             {/* Lead Journey Stepper */}
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 relative overflow-hidden">
+              {activeLeadDetails.status && (activeLeadDetails.status === 'WON' || activeLeadDetails.status === 'LOST') && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-[3px] flex items-center justify-center z-10 select-none animate-fade-in">
+                  <div className={`px-5 py-2 rounded-[3px] border text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 ${
+                    activeLeadDetails.status === 'WON'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                      : 'bg-rose-50 border-rose-200 text-rose-600'
+                  }`}>
+                    <span className="material-symbols-outlined text-[14px]">
+                      {activeLeadDetails.status === 'WON' ? 'emoji_events' : 'cancel'}
+                    </span>
+                    Lead {activeLeadDetails.status}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Journey</div>
                 <span className="text-[10px] bg-indigo-50 border border-indigo-150 text-indigo-700 px-2 py-0.5 rounded-md font-bold select-none">
@@ -1225,6 +1504,17 @@ export default function LeadDetailsPage() {
                                   <span className="material-symbols-outlined text-[13px] text-primary">link</span> Meeting Link
                                 </a>
                               </div>
+                            ) : event.type === 'NURTURING' ? (
+                              <div className="space-y-1.5">
+                                <p className="font-semibold text-slate-800">{event.body}</p>
+                                <div className="flex items-center gap-1.5 mt-2 flex-wrap select-none">
+                                  <span className="px-2 py-0.5 bg-violet-50 border border-violet-150 text-violet-700 text-[10px] font-bold rounded flex items-center gap-0.5">
+                                    <span className="material-symbols-outlined text-[12px]">{event.icon}</span>
+                                    {event.nurturingStepType || 'Nurturing Step'}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-semibold">{event.nurturingCampaignName}</span>
+                                </div>
+                              </div>
                             ) : (
                               <p>{event.body}</p>
                             )}
@@ -1366,6 +1656,95 @@ export default function LeadDetailsPage() {
                   Pricing Not Shared Yet
                 </div>
               </div>
+            </div>
+
+            {/* Lead Nurturing Campaign State */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-3.5 text-left hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-center select-none">
+                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Lead Nurturing</div>
+                <span className={`px-2 py-0.5 text-[8px] font-extrabold uppercase rounded border ${
+                  activeLeadDetails.nurturing?.status === 'Active' 
+                    ? 'bg-violet-50 text-violet-700 border-violet-100 animate-pulse' 
+                    : activeLeadDetails.nurturing?.status === 'Completed'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                      : 'bg-slate-50 text-slate-500 border-slate-100'
+                }`}>
+                  {activeLeadDetails.nurturing?.status || 'Inactive'}
+                </span>
+              </div>
+              {activeLeadDetails.nurturing ? (
+                <div className="space-y-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-violet-600">spa</span>
+                    <div>
+                      <span className="text-[12px] font-extrabold text-slate-800 block leading-tight">
+                        {activeLeadDetails.nurturing.campaignName}
+                      </span>
+                      <span className="text-[9.5px] text-slate-400 block font-medium">
+                        Started on {activeLeadDetails.nurturing.startDate}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] font-semibold text-slate-655 pt-2 border-t border-slate-100 space-y-2">
+                    <div className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wide flex justify-between items-center">
+                      <span>Progression</span>
+                      {activeLeadDetails.nurturing?.status === 'Active' && (
+                        <button
+                          onClick={handleCancelCampaign}
+                          className="text-[9px] text-red-500 hover:text-red-700 hover:underline font-bold cursor-pointer transition-colors"
+                        >
+                          Cancel Campaign
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative pl-4.5 border-l border-slate-200 space-y-3.5 mt-2 ml-1">
+                      {activeLeadDetails.nurturing.steps?.map((step, idx) => (
+                        <div key={idx} className="relative">
+                          <div className={`absolute -left-[22.5px] top-1 w-2 h-2 rounded-full border border-white ${
+                            step.completed ? 'bg-emerald-500 ring-2 ring-emerald-50' : 'bg-slate-300 ring-2 ring-slate-100'
+                          }`} />
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className={`text-[11px] font-bold block ${step.completed ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                                {step.label}
+                              </span>
+                              <span className="text-[9.5px] text-slate-400 block font-medium">
+                                Day {step.day} • {step.type}
+                              </span>
+                              {!step.completed && step.scheduledDate && (
+                                <span className="text-[8.5px] text-violet-600 block font-bold">
+                                  Scheduled: {step.scheduledDate}
+                                </span>
+                              )}
+                            </div>
+                            {!step.completed && activeLeadDetails.nurturing?.status === 'Active' && (
+                              <button
+                                onClick={() => handleCompleteNurtureStep(idx)}
+                                className="px-2 py-0.5 border border-slate-200 hover:border-violet-300 bg-white hover:bg-violet-50 text-[9px] text-slate-600 hover:text-violet-700 font-extrabold rounded transition-colors cursor-pointer select-none"
+                              >
+                                Done
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-4 text-center border border-dashed border-slate-200 rounded-xl space-y-2.5">
+                  <p className="text-[11px] text-slate-400 font-medium leading-relaxed px-4">
+                    This lead is not currently enrolled in any automatic nurturing campaign.
+                  </p>
+                  <button
+                    onClick={() => setShowNurtureModal(true)}
+                    className="px-3 py-1 bg-violet-50 hover:bg-violet-100 border border-violet-150 text-violet-700 text-[10px] font-bold rounded-lg transition-all active:scale-97 cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">spa</span>
+                    Enroll in Campaign
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Lead Score Breakdown */}
@@ -1576,6 +1955,118 @@ export default function LeadDetailsPage() {
                   className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold transition-all cursor-pointer shadow-sm select-none"
                 >
                   Confirm & Merge Profiles
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNurtureModal && (
+          <div className="fixed inset-0 bg-black/45 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text">
+            <motion.div
+              className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden flex flex-col font-sans"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              {/* Modal Header */}
+              <div className="px-5 py-4 border-b border-slate-150 bg-slate-50 flex justify-between items-center">
+                <div className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100">
+                    <span className="material-symbols-outlined text-[16px]">spa</span>
+                  </div>
+                  Nurture Lead Campaign Setup
+                </div>
+                <button
+                  onClick={() => { setShowNurtureModal(false); setSelectedCampaign(''); }}
+                  className="p-1 hover:bg-slate-200 rounded-full text-slate-500 cursor-pointer flex items-center justify-center select-none transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-5 text-left text-[12px] overflow-y-auto max-h-[500px]">
+                <p className="text-slate-500 leading-relaxed font-medium">
+                  Enroll <strong className="text-slate-800">{activeLeadDetails.name}</strong> in an automated nurturing drip sequence to schedule check-ins, WhatsApp outreach, and promotional information email drops automatically.
+                </p>
+
+                {/* Campaign Selector */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Select Nurturing Campaign Template</label>
+                  <select
+                    value={selectedCampaign}
+                    onChange={(e) => setSelectedCampaign(e.target.value)}
+                    className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-[12px] font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-50 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 transition-all shadow-2xs"
+                  >
+                    <option value="">-- Choose a Campaign Template --</option>
+                    {Object.values(CAMPAIGN_TEMPLATES).map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Campaign Preview Container */}
+                {selectedCampaign && CAMPAIGN_TEMPLATES[selectedCampaign] && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border border-violet-100 bg-violet-50/20 rounded-xl p-4.5 space-y-4"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[10.5px] font-extrabold text-violet-700 uppercase tracking-wider select-none">Campaign Strategy</div>
+                      <p className="text-[11.5px] text-slate-655 font-medium leading-relaxed">
+                        {CAMPAIGN_TEMPLATES[selectedCampaign].description}
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Sequence Timeline</div>
+                      
+                      <div className="relative border-l border-violet-200 ml-3.5 pl-6 space-y-4 mt-2 select-none">
+                        {CAMPAIGN_TEMPLATES[selectedCampaign].steps.map((step, idx) => (
+                          <div key={idx} className="relative">
+                            <div className="absolute -left-[29px] top-1 w-2.5 h-2.5 rounded-full bg-violet-500 border-2 border-white ring-2 ring-violet-50" />
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] font-extrabold text-slate-800">
+                                  Day {step.day}: {step.label}
+                                </span>
+                                <span className="px-1.5 py-0.2 bg-violet-50 border border-violet-100 text-violet-650 text-[9px] font-bold rounded flex items-center gap-0.5">
+                                  <span className="material-symbols-outlined text-[10px]">{step.icon}</span>
+                                  {step.type}
+                                </span>
+                              </div>
+                              <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed font-sans">
+                                {step.details}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-5 py-3.5 border-t border-slate-150 bg-slate-50 flex justify-end gap-2.5">
+                <button
+                  onClick={() => { setShowNurtureModal(false); setSelectedCampaign(''); }}
+                  className="px-4 py-2 border border-slate-250 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer select-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={!selectedCampaign}
+                  onClick={() => handleActivateCampaign(selectedCampaign)}
+                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 disabled:from-slate-350 disabled:to-slate-350 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-[11px] font-bold transition-all shadow-md hover:shadow-lg disabled:shadow-none active:scale-97 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed select-none flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[14px]">bolt</span>
+                  Enroll & Activate
                 </button>
               </div>
             </motion.div>

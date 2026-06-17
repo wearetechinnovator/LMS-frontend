@@ -7,7 +7,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  border-radius: 20px;
+  border-radius: 3px !important;
   border: 1px solid var(--color-outline-variant, #c3c6d7);
   background-color: var(--color-surface-container-lowest, #ffffff);
   color: var(--color-outline, #737686);
@@ -34,7 +34,7 @@
 .leads-chip-count {
   font-size: 10px;
   padding: 2px 6px;
-  border-radius: 10px;
+  border-radius: 3px !important;
   background-color: var(--color-surface-container-low, #eff4ff);
   color: var(--color-outline, #737686);
   font-weight: 600;

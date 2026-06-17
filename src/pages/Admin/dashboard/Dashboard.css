@@ -26,7 +26,7 @@
 .date-filter {
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 600;
@@ -43,6 +43,7 @@
 .date-filter:hover {
   border-color: #004ac6;
   background-color: #f8f9ff;
+
 }
 
 .date-filter .arrow-icon {
@@ -51,6 +52,10 @@
 }
 
 .date-filter .arrow-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.date-filter:hover .arrow-icon {
   transform: rotate(180deg);
 }
 
@@ -70,7 +75,7 @@
   left: 0;
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   box-shadow: 0 4px 20px rgba(0, 74, 198, 0.1);
   width: 160px;
   padding: 4px;
@@ -85,7 +90,7 @@
   font-size: 12px;
   font-weight: 500;
   color: #565e74;
-  border-radius: 6px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -162,21 +167,17 @@
 
 .stats-card {
   background-color: #ffffff;
-  border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border: 1px solid #e0e4ec;
+  border-radius: 3px;
   padding: 14px 18px;
-  box-shadow: 0 1px 3px rgba(0, 74, 198, 0.03);
+
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: all 0.2s ease;
 }
 
-.stats-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 74, 198, 0.06);
-  border-color: #cbdcfc;
-  transform: translateY(-1px);
-}
+
 
 .stats-card-label {
   font-size: 10.5px;
@@ -237,7 +238,7 @@
 .chart-card {
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 12px;
+  border-radius: 3px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 74, 198, 0.02);
   display: flex;
@@ -265,7 +266,7 @@
   display: flex;
   background-color: #f8f9ff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 3px;
   gap: 2px;
 }
@@ -273,7 +274,7 @@
 .chart-tab-btn {
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
@@ -322,7 +323,7 @@
 
 .bar {
   width: 24px;
-  border-radius: 4px 4px 0 0;
+  border-radius: 3px 3px 0 0;
   border-top: 1px solid;
   border-left: 1px solid;
   border-right: 1px solid;
@@ -338,7 +339,7 @@
   background-color: #0b1c30;
   color: #ffffff;
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 3px;
   font-size: 10px;
   display: flex;
   flex-direction: column;
@@ -406,7 +407,7 @@
 .deep-dive-card {
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 12px;
+  border-radius: 3px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 74, 198, 0.02);
   margin-bottom: 24px;
@@ -452,7 +453,7 @@
   display: flex;
   background-color: #f8f9ff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 3px;
   gap: 2px;
 }
@@ -460,7 +461,7 @@
 .deep-dive-tab-btn {
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 600;
@@ -490,8 +491,8 @@
 .deep-dive-select {
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 3px;
+  padding: 9px 0px;
   font-size: 12px;
   font-weight: 600;
   color: #565e74;
@@ -509,7 +510,7 @@
   display: flex;
   background-color: #f8f9ff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 3px;
   gap: 2px;
 }
@@ -517,7 +518,7 @@
 .view-toggle-btn {
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 6px 10px;
   font-size: 11px;
   font-weight: 600;
@@ -546,7 +547,7 @@
 
 .deep-dive-body {
   border: 1px solid #e5eeff;
-  border-radius: 12px;
+  border-radius: 3px;
   padding: 16px;
   background-color: #ffffff;
 }
@@ -560,7 +561,7 @@
   background-color: #0b1c30;
   color: #ffffff;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 3px;
   font-size: 10px;
   display: flex;
   flex-direction: column;
@@ -597,7 +598,7 @@
   align-items: center;
   background-color: #f8f9ff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 6px 12px;
   gap: 8px;
   width: 240px;
@@ -621,7 +622,7 @@
   background-color: #004ac6;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 8px 16px;
   font-size: 12px;
   font-weight: 600;
@@ -644,7 +645,7 @@
   width: 100%;
   overflow-x: auto;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
 }
 
 .report-table {
@@ -687,7 +688,7 @@
   background-color: #ecfeff;
   color: #0891b2;
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 3px;
   font-weight: 600;
 }
 
@@ -695,7 +696,7 @@
 .recent-leads-card {
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 12px;
+  border-radius: 3px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 74, 198, 0.02);
   margin-bottom: 24px;
@@ -733,7 +734,7 @@
   width: 100%;
   overflow-x: auto;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
 }
 
 .leads-table {
@@ -802,7 +803,7 @@
   background-color: #004ac6;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 600;
@@ -828,7 +829,7 @@
   right: 0;
   background-color: #ffffff;
   border: 1px solid #e5eeff;
-  border-radius: 8px;
+  border-radius: 3px;
   box-shadow: 0 4px 24px rgba(0, 74, 198, 0.12);
   width: 280px;
   padding: 8px;
@@ -861,19 +862,20 @@
   align-items: flex-start;
   gap: 10px;
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .export-dropdown-item:hover {
   background-color: #f8f9ff;
+  border-radius: 3px;
 }
 
 .export-dropdown-icon-wrapper {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -918,9 +920,12 @@
   min-width: 0;
   height: 100%;
   overflow-x: auto;
-  padding-top: 32px; /* Extra space at the top for tooltips to prevent clipping/hiding */
-  padding-bottom: 8px; /* Room for scrollbar */
-  margin-bottom: -8px; /* Negate padding to keep layout tight */
+  padding-top: 32px;
+  /* Extra space at the top for tooltips to prevent clipping/hiding */
+  padding-bottom: 8px;
+  /* Room for scrollbar */
+  margin-bottom: -8px;
+  /* Negate padding to keep layout tight */
   box-sizing: border-box;
 }
 
@@ -928,24 +933,29 @@
 .chart-scroll-container::-webkit-scrollbar {
   height: 6px;
 }
+
 .chart-scroll-container::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 3px;
 }
+
 .chart-scroll-container::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
 }
+
 .chart-scroll-container::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 .chart-scroll-inner {
-  min-width: 500px; /* Responsive minimum width, fits by default on most viewports without scrollbar */
+  min-width: 500px;
+  /* Responsive minimum width, fits by default on most viewports without scrollbar */
   width: 100%;
   position: relative;
   box-sizing: border-box;
-  padding: 0 24px; /* Prevent clipping at left/right edges for centered labels */
+  padding: 0 24px;
+  /* Prevent clipping at left/right edges for centered labels */
 }
 
 .bar-chart-inner {
@@ -954,7 +964,8 @@
   justify-content: space-between;
   gap: 8px;
   height: 100%;
-  padding: 24px 24px 0 24px; /* Padding for tooltips and edge label protection */
+  padding: 24px 24px 0 24px;
+  /* Padding for tooltips and edge label protection */
 }
 
 .chart-tooltip-overlay {
@@ -971,13 +982,15 @@
   position: absolute;
   font-size: 8px;
   font-weight: 700;
-  color: #004ac6; /* Match branding primary color */
+  color: #004ac6;
+  /* Match branding primary color */
   user-select: none;
   pointer-events: none;
   white-space: nowrap;
-  background-color: rgba(255, 255, 255, 0.85); /* subtle background for high contrast against graph lines */
+  background-color: rgba(255, 255, 255, 0.85);
+  /* subtle background for high contrast against graph lines */
   padding: 1px 3px;
-  border-radius: 4px;
+  border-radius: 3px;
   box-shadow: 0 1px 2px rgba(0, 74, 198, 0.05);
 }
 

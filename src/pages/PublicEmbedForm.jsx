@@ -160,6 +160,20 @@ export default function PublicEmbedForm() {
             });
             if (response.ok) {
                 setSubmitted(true);
+                const settings = form.settings || {};
+                if (settings.redirect && settings.redirectUrl) {
+                    setTimeout(() => {
+                        try {
+                            if (window.top) {
+                                window.top.location.href = settings.redirectUrl;
+                            } else {
+                                window.location.href = settings.redirectUrl;
+                            }
+                        } catch (e) {
+                            window.location.href = settings.redirectUrl;
+                        }
+                    }, 800);
+                }
             } else {
                 const errData = await response.json().catch(() => ({}));
                 setError(errData.error || "Failed to submit form.");

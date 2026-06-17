@@ -73,6 +73,15 @@
   --text-headline-md: 16px;
   --text-headline-lg: 20px;
   --text-label-caps: 10px;
+
+  /* Border Radii */
+  --radius-xs: 3px;
+  --radius-sm: 3px;
+  --radius-md: 3px;
+  --radius-lg: 3px;
+  --radius-xl: 3px;
+  --radius-2xl: 3px;
+  --radius-3xl: 3px;
 }
 
 /* Global Typography Scale for Enterprise CRM */
@@ -292,12 +301,12 @@ pre {
 
 .top-scrollbar::-webkit-scrollbar-track {
   background: #f1f5f9;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .top-scrollbar::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .top-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -310,12 +319,12 @@ pre {
 
 .table-scroll-container::-webkit-scrollbar-track {
   background: #f1f5f9;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .table-scroll-container::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .table-scroll-container::-webkit-scrollbar-thumb:hover {

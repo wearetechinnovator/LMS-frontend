@@ -28,7 +28,7 @@ export default function FormEmbed() {
 
         switch (type) {
             case 'iframe':
-                code = `<iframe src="${window.location.origin}/embed/form/${formId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 8px;"></iframe>`
+                code = `<iframe src="${window.location.origin}/embed/form/${formId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 3px;"></iframe>`
                 break
             case 'script':
                 code = `<div id="lms-form-${formId}"></div>\n<script src="${window.location.origin}/embed/js/form-${formId}.js" data-form-id="${formId}"></script>`

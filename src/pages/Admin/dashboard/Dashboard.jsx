@@ -265,12 +265,7 @@ export default function Dashboard() {
     })
 
     if (list.length === 0) {
-      return [
-        { name: 'Google Ads', percentage: 0, count: 0, color: '#4285F4' },
-        { name: 'Facebook', percentage: 0, count: 0, color: '#1877F2' },
-        { name: 'Website Organic', percentage: 0, count: 0, color: '#34A853' },
-        { name: 'Other', percentage: 0, count: 0, color: '#ABABAB' }
-      ]
+      return []
     }
 
     return list.sort((a, b) => b.count - a.count)
@@ -405,7 +400,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Graph cards */}
-      <DashboardGraphCard sources={sources} leads={filteredLeads} />
+      <DashboardGraphCard sources={sources} leads={filteredLeads} selectedDateRange={selectedDateRange} />
 
       {/* Deep Dive Counselor/Daily/Channel Analytics */}
       <DeepDiveAnalytics triggerToast={triggerToast} leads={filteredLeads} />

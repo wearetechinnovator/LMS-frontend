@@ -61,7 +61,7 @@
   overflow-x: auto;
   background-color: var(--color-surface-container-lowest, #ffffff);
   border: 1px solid var(--color-outline-variant, #c3c6d7);
-  border-radius: 12px;
+  border-radius: 3px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
@@ -167,7 +167,7 @@
   display: inline-flex;
   align-items: center;
   padding: 3px 8px;
-  border-radius: 12px;
+  border-radius: 3px;
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -259,7 +259,7 @@
   color: var(--color-outline, #737686);
   font-size: 10px;
   font-weight: 700;
-  border-radius: 4px;
+  border-radius: 3px;
   margin-right: 4px;
 }
 
@@ -270,7 +270,7 @@
   color: var(--color-outline, #737686);
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -440,7 +440,7 @@
   color: var(--color-outline, #737686);
   background-color: var(--color-surface-container-low, #eff4ff);
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 3px;
   border-left: 3px solid var(--color-primary, #004ac6);
 }
 
@@ -451,7 +451,7 @@
   gap: 12px;
   padding: 8px 12px;
   background-color: var(--color-surface-container-low, #eff4ff);
-  border-radius: 8px;
+  border-radius: 3px;
   margin-top: 8px;
   border: 1px solid var(--color-outline-variant, #c3c6d7);
 }
@@ -478,7 +478,7 @@
   flex: 1;
   height: 12px;
   background-color: var(--color-outline-variant, #c3c6d7);
-  border-radius: 6px;
+  border-radius: 3px;
   position: relative;
   overflow: hidden;
 }
@@ -510,7 +510,7 @@
 .leads-modal-content {
   background-color: var(--color-surface-container-lowest, #ffffff);
   border: 1px solid var(--color-outline-variant, #c3c6d7);
-  border-radius: 12px;
+  border-radius: 3px;
   width: 90%;
   max-width: 550px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -569,7 +569,7 @@
 
 .leads-stepper-container::-webkit-scrollbar-thumb {
   background-color: var(--color-outline-variant, #c3c6d7);
-  border-radius: 10px;
+  border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
@@ -591,7 +591,7 @@
   background-color: var(--color-slate-900, #0f172a);
   color: #ffffff;
   padding: 5px 8px;
-  border-radius: 6px;
+  border-radius: 3px;
   font-size: 10px;
   font-weight: 700;
   font-family: var(--font-sans, "Inter", sans-serif);

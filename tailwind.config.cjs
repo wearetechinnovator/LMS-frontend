@@ -6,6 +6,18 @@ module.exports = {
   ],
   theme: {
     extend: {
+      borderRadius: {
+        'none': '0',
+        'xs': '3px',
+        'sm': '3px',
+        DEFAULT: '3px',
+        'md': '3px',
+        'lg': '3px',
+        'xl': '3px',
+        '2xl': '3px',
+        '3xl': '3px',
+        'full': '9999px',
+      },
       fontFamily: {
         sans: ['Inter', 'Roboto', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },

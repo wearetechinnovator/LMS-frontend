@@ -48,7 +48,7 @@
     gap: 6px;
     background-color: var(--color-surface-container-low, #eff4ff);
     padding: 4px;
-    border-radius: 10px;
+    border-radius: 3px;
     border: 1px solid var(--color-outline-variant, #c3c6d7);
 }
 
@@ -62,7 +62,7 @@
     color: var(--color-outline, #737686);
     background: transparent;
     border: none;
-    border-radius: 8px;
+    border-radius: 3px;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -98,7 +98,7 @@
 .analytics-card {
     background-color: var(--color-surface-container-lowest, #ffffff);
     border: 1px solid var(--color-outline-variant, #c3c6d7);
-    border-radius: 16px;
+    border-radius: 3px;
     padding: 24px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
     display: flex;
@@ -143,7 +143,7 @@
     display: flex;
     background-color: var(--color-surface-container-low, #eff4ff);
     padding: 3px;
-    border-radius: 8px;
+    border-radius: 3px;
     border: 1px solid var(--color-outline-variant, #c3c6d7);
 }
 
@@ -154,7 +154,7 @@
     color: var(--color-outline, #737686);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: 3px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -203,7 +203,7 @@
 
 .stage-bar {
     width: 36px;
-    border-radius: 12px;
+    border-radius: 3px;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
@@ -360,7 +360,7 @@
     flex: 1;
     background-color: var(--color-surface-container-low, #eff4ff);
     height: 24px;
-    border-radius: 8px;
+    border-radius: 3px;
     overflow: hidden;
     position: relative;
     border: 1px solid var(--color-outline-variant, #c3c6d7);
@@ -369,7 +369,7 @@
 
 .source-row-bar {
     height: 100%;
-    border-radius: 6px;
+    border-radius: 3px;
     background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
     transition: opacity 0.2s ease;
 }
@@ -399,7 +399,7 @@
     background-color: rgba(11, 28, 48, 0.95);
     backdrop-filter: blur(4px);
     border: 1px solid #1e293b;
-    border-radius: 10px;
+    border-radius: 3px;
     padding: 10px 14px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
     color: #ffffff;
@@ -481,7 +481,7 @@
     border: 1px solid var(--color-outline-variant, #c3c6d7);
     background-color: var(--color-surface-container-low, #eff4ff);
     color: var(--color-on-background, #0b1c30);
-    border-radius: 8px;
+    border-radius: 3px;
     font-size: 12px;
     outline: none;
     font-weight: 600;
@@ -495,30 +495,27 @@
 }
 
 .export-btn {
-    display: inline-flex;
+    background-color: #004ac6;
+    color: #ffffff;
+    border: none;
+    border-radius: 3px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
     align-items: center;
     gap: 6px;
-    height: 34px;
-    padding: 0 16px;
-    background-color: var(--color-surface-container-lowest, #ffffff);
-    border: 1px solid var(--color-outline-variant, #c3c6d7);
-    color: var(--color-on-background, #0b1c30);
-    border-radius: 8px;
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 74, 198, 0.04);
 }
 
-.export-btn:hover {
-    background-color: var(--color-surface-container-low, #eff4ff);
-    border-color: var(--color-outline, #737686);
-}
+
 
 .report-table-wrapper {
     overflow-x: auto;
     border: 1px solid var(--color-outline-variant, #c3c6d7);
-    border-radius: 12px;
+    border-radius: 3px;
     background-color: var(--color-surface-container-lowest, #ffffff);
 }
 
@@ -569,7 +566,7 @@
     display: inline-flex;
     align-items: center;
     padding: 3px 10px;
-    border-radius: 12px;
+    border-radius: 3px;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.3px;
@@ -747,7 +744,7 @@
 .counselor-bar-track {
     background-color: var(--color-surface-container-low, #eff4ff);
     height: 12px;
-    border-radius: 6px;
+    border-radius: 3px;
     overflow: hidden;
     position: relative;
     border: 1px solid var(--color-outline-variant, #c3c6d7);
@@ -756,7 +753,7 @@
 .counselor-bar-assigned {
     height: 100%;
     background-color: #cbd5e1;
-    border-radius: 6px 0 0 6px;
+    border-radius: 3px 0 0 3px;
     position: absolute;
     left: 0;
     top: 0;
@@ -765,7 +762,7 @@
 .counselor-bar-converted {
     height: 100%;
     background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
-    border-radius: 6px 0 0 6px;
+    border-radius: 3px 0 0 3px;
     position: absolute;
     left: 0;
     top: 0;

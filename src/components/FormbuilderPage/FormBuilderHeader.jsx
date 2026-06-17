@@ -33,10 +33,10 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
 
     return (
         <div className="form-builder-header">
-            <Toast 
-                message={toastMessage} 
-                isVisible={showToast} 
-                onClose={() => setShowToast(false)} 
+            <Toast
+                message={toastMessage}
+                isVisible={showToast}
+                onClose={() => setShowToast(false)}
             />
 
             <div className="form-header-title-block">
@@ -62,7 +62,7 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
 
                     {isDropdownOpen && (
                         <div className="dropdown-menu">
-                            <button 
+                            <button
                                 className="dropdown-item"
                                 onClick={() => {
                                     handleCreateFromScratch()
@@ -75,7 +75,7 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                                     <span className="item-desc">Start with a blank canvas</span>
                                 </div>
                             </button>
-                            <button 
+                            <button
                                 className="dropdown-item"
                                 onClick={() => {
                                     handleOpenTemplateModal()

@@ -1,14 +1,19 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+import csv from '../assets/csv.png'
+import excel from '../assets/excel.png'
+import pdf from '../assets/pdf.png'
+import json from '../assets/json.png'
+
 export default function ExportButton({ triggerToast }) {
   const [showExportModal, setShowExportModal] = useState(false)
 
   const exportFormats = [
-    { id: 'Excel', label: 'Microsoft Excel', ext: '.xlsx', icon: 'grid_on', color: '#107c41', desc: 'Best for standard tables and calculations.' },
-    { id: 'CSV', label: 'CSV Document', ext: '.csv', icon: 'description', color: '#2563eb', desc: 'Universal raw data format, light and fast.' },
-    { id: 'PDF', label: 'PDF Report', ext: '.pdf', icon: 'picture_as_pdf', color: '#dc2626', desc: 'Formatted presentation, ready to share.' },
-    { id: 'JSON', label: 'JSON Data', ext: '.json', icon: 'code', color: '#7c3aed', desc: 'Structured developer-friendly raw format.' }
+    { id: 'Excel', label: 'Microsoft Excel', ext: '.xlsx', icon: excel, color: '#107c41', desc: 'Best for standard tables and calculations.' },
+    { id: 'CSV', label: 'CSV Document', ext: '.csv', icon: csv, color: '#2563eb', desc: 'Universal raw data format, light and fast.' },
+    { id: 'PDF', label: 'PDF Report', ext: '.pdf', icon: pdf, color: '#dc2626', desc: 'Formatted presentation, ready to share.' },
+    { id: 'JSON', label: 'JSON Data', ext: '.json', icon: json, color: '#7c3aed', desc: 'Structured developer-friendly raw format.' }
   ]
 
   return (
@@ -44,8 +49,8 @@ export default function ExportButton({ triggerToast }) {
                       }
                     }}
                   >
-                    <div className="export-dropdown-icon-wrapper" style={{ backgroundColor: `${format.color}12`, color: format.color }}>
-                      <span className="material-symbols-outlined">{format.icon}</span>
+                    <div className="export-dropdown-icon-wrapper">
+                      <img src={format.icon} alt={format.id} className="export-dropdown-icon" style={{ width: '25px', height: '25px' }} />
                     </div>
                     <div className="export-dropdown-details">
                       <div className="export-dropdown-name">

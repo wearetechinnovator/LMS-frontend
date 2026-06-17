@@ -174,24 +174,25 @@ function LiveFormPreview({ form }) {
 const BASE_URL = window.location.origin
 
 function EmbedOptions({ form, copiedKey, onCopy }) {
-    const formUrl = `${BASE_URL}/embed/form/${form.id}`
+    const tokenOrId = form.public_token || form.id;
+    const formUrl = `${BASE_URL}/embed/form/${tokenOrId}`
 
     const iframeCode = `<iframe
   src="${formUrl}"
   width="100%"
   height="600"
   frameborder="0"
-  style="border:none;border-radius:12px;"
+  style="border:none;border-radius:3px;"
   title="${form.name}"
 ></iframe>`
 
-    const scriptCode = `<div id="lms-form-${form.id}"></div>
+    const scriptCode = `<div id="lms-form-${tokenOrId}"></div>
 <script src="${BASE_URL}/embed/loader.js"
-  data-form="${form.id}"
-  data-target="lms-form-${form.id}">
+  data-form="${tokenOrId}"
+  data-target="lms-form-${tokenOrId}">
 </script>`
 
-    const popupCode = `<button onclick="LMSForms.open('${form.id}')">
+    const popupCode = `<button onclick="LMSForms.open('${tokenOrId}')">
   Open Form
 </button>
 <script src="${BASE_URL}/embed/popup.js"></script>`

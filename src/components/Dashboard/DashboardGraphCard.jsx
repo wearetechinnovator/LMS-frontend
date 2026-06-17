@@ -1,60 +1,137 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 
-export default function DashboardGraphCard({ sources = [], leads = [] }) {
+export default function DashboardGraphCard({ sources = [], leads = [], selectedDateRange = 'Last 30 Days' }) {
   const [activeTab, setActiveTab] = useState('volume')
   const [hoveredIndex, setHoveredIndex] = useState(null)
   const [chartStyle, setChartStyle] = useState('line') // 'line' | 'bar' | 'pie'
 
-  // Generate last 10 days of calendar dates
-  const days = React.useMemo(() => {
+  // Generate dynamic intervals (daily or hourly) based on the selected date range
+  const intervals = React.useMemo(() => {
     const arr = []
-    for (let i = 9; i >= 0; i--) {
-      const d = new Date()
-      d.setDate(d.getDate() - i)
-      arr.push({
-        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        toDateString: d.toDateString(),
-        dayOfMonth: d.getDate()
-      })
+    const now = new Date()
+    
+    if (selectedDateRange === 'Today') {
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+      for (let i = 0; i < 8; i++) {
+        const d = new Date(startOfDay.getTime() + i * 3 * 60 * 60 * 1000)
+        const hourStr = d.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
+        arr.push({
+          label: `Today ${hourStr}`,
+          bottomLabel: hourStr,
+          filterFn: (l) => {
+            if (!l.createdAt) return false
+            const ld = new Date(l.createdAt)
+            const sameDay = ld.toDateString() === d.toDateString()
+            const ldHour = ld.getHours()
+            const startHour = i * 3
+            const endHour = startHour + 3
+            return sameDay && ldHour >= startHour && ldHour < endHour
+          }
+        })
+      }
+    } else if (selectedDateRange === 'Yesterday') {
+      const yesterday = new Date(now)
+      yesterday.setDate(yesterday.getDate() - 1)
+      const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0)
+      for (let i = 0; i < 8; i++) {
+        const d = new Date(startOfYesterday.getTime() + i * 3 * 60 * 60 * 1000)
+        const hourStr = d.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
+        arr.push({
+          label: `Yesterday ${hourStr}`,
+          bottomLabel: hourStr,
+          filterFn: (l) => {
+            if (!l.createdAt) return false
+            const ld = new Date(l.createdAt)
+            const sameDay = ld.toDateString() === d.toDateString()
+            const ldHour = ld.getHours()
+            const startHour = i * 3
+            const endHour = startHour + 3
+            return sameDay && ldHour >= startHour && ldHour < endHour
+          }
+        })
+      }
+    } else if (selectedDateRange === 'Last 7 Days') {
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        arr.push({
+          label: dateLabel,
+          bottomLabel: String(d.getDate()),
+          filterFn: (l) => {
+            const ld = l.createdAt ? new Date(l.createdAt) : null
+            return ld && ld.toDateString() === d.toDateString()
+          }
+        })
+      }
+    } else if (selectedDateRange === 'Last 90 Days') {
+      for (let i = 12; i >= 0; i--) {
+        const dStart = new Date()
+        dStart.setDate(dStart.getDate() - (i * 7 + 6))
+        const dEnd = new Date()
+        dEnd.setDate(dEnd.getDate() - (i * 7))
+        const label = `${dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+        arr.push({
+          label: label,
+          bottomLabel: `${dStart.getDate()}-${dEnd.getDate()}`,
+          filterFn: (l) => {
+            if (!l.createdAt) return false
+            const ld = new Date(l.createdAt)
+            const startLimit = new Date(dStart.getFullYear(), dStart.getMonth(), dStart.getDate(), 0, 0, 0)
+            const endLimit = new Date(dEnd.getFullYear(), dEnd.getMonth(), dEnd.getDate(), 23, 59, 59)
+            return ld >= startLimit && ld <= endLimit
+          }
+        })
+      }
+    } else {
+      // Default: Last 30 Days (10 points at 3-day intervals)
+      for (let i = 9; i >= 0; i--) {
+        const dStart = new Date()
+        dStart.setDate(dStart.getDate() - (i * 3 + 2))
+        const dEnd = new Date()
+        dEnd.setDate(dEnd.getDate() - (i * 3))
+        const label = `${dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+        arr.push({
+          label: label,
+          bottomLabel: `${dStart.getDate()}-${dEnd.getDate()}`,
+          filterFn: (l) => {
+            if (!l.createdAt) return false
+            const ld = new Date(l.createdAt)
+            const startLimit = new Date(dStart.getFullYear(), dStart.getMonth(), dStart.getDate(), 0, 0, 0)
+            const endLimit = new Date(dEnd.getFullYear(), dEnd.getMonth(), dEnd.getDate(), 23, 59, 59)
+            return ld >= startLimit && ld <= endLimit
+          }
+        })
+      }
     }
     return arr
-  }, [])
+  }, [selectedDateRange])
 
   const tabs = React.useMemo(() => {
     // 1. Lead Volume per day
-    const volumeData = days.map(day => {
-      const count = leads.filter(l => {
-        const d = l.createdAt ? new Date(l.createdAt) : null
-        return d && d.toDateString() === day.toDateString
-      }).length
-      // Add a slight baseline so the chart is never completely empty
-      return { label: day.label, value: count || Math.floor((day.dayOfMonth % 5) + 2) }
+    const volumeData = intervals.map(interval => {
+      const count = leads.filter(interval.filterFn).length
+      return { label: interval.label, bottomLabel: interval.bottomLabel, value: count }
     })
 
     // 2. Conversion rate per day
-    const conversionData = days.map(day => {
-      const dayLeads = leads.filter(l => {
-        const d = l.createdAt ? new Date(l.createdAt) : null
-        return d && d.toDateString() === day.toDateString
-      })
-      const won = dayLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
-      const rate = dayLeads.length > 0 ? Math.round((won / dayLeads.length) * 100) : 0
-      return { label: day.label, value: rate || Math.round((day.dayOfMonth % 8) + 10) }
+    const conversionData = intervals.map(interval => {
+      const intervalLeads = leads.filter(interval.filterFn)
+      const won = intervalLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
+      const rate = intervalLeads.length > 0 ? Math.round((won / intervalLeads.length) * 100) : 0
+      return { label: interval.label, bottomLabel: interval.bottomLabel, value: rate }
     })
 
     // 3. Avg Response Time per day
-    const responseData = days.map(day => {
-      const dayLeads = leads.filter(l => {
-        const d = l.createdAt ? new Date(l.createdAt) : null
-        return d && d.toDateString() === day.toDateString
-      })
+    const responseData = intervals.map(interval => {
+      const intervalLeads = leads.filter(interval.filterFn)
       let sum = 0
-      dayLeads.forEach(l => {
+      intervalLeads.forEach(l => {
         sum += l.activityCount ? Math.max(1, 8 - l.activityCount) : 4
       })
-      const avg = dayLeads.length > 0 ? (sum / dayLeads.length) : (5.2 - (day.dayOfMonth % 3) * 0.4)
-      return { label: day.label, value: parseFloat(avg.toFixed(1)) }
+      const avg = intervalLeads.length > 0 ? (sum / intervalLeads.length) : 0
+      return { label: interval.label, bottomLabel: interval.bottomLabel, value: parseFloat(avg.toFixed(1)) }
     })
 
     return [
@@ -62,7 +139,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
       { id: 'conversion', label: 'Conversion Rate', icon: 'trending_up', unit: '%', data: conversionData },
       { id: 'response', label: 'Avg Response Time', icon: 'timer', unit: 'h', data: responseData }
     ]
-  }, [leads, days])
+  }, [leads, intervals])
 
   const activeTabObj = tabs.find(t => t.id === activeTab)
   const maxVal = Math.max(...activeTabObj.data.map(d => d.value), 1)
@@ -78,27 +155,15 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
         map[src].add(camp)
       }
     })
-    const fallbacks = {
-      'Google Ads': ['Google Brand Search', 'YouTube Review', 'Display Retargeting'],
-      'Facebook': ['Facebook Retargeting', 'Instagram Lead Gen'],
-      'Organic Search': ['SEO Optimization', 'Directory Referrals'],
-      'Website Organic': ['SEO Optimization', 'Directory Referrals'],
-      'Referral': ['Partner Referrals'],
-      'Other': ['B2B Outreach']
-    }
     const finalMap = {}
-    const keys = new Set([...Object.keys(map), ...Object.keys(fallbacks)])
-    keys.forEach(k => {
-      const set = map[k] || new Set()
-      const fallbackList = fallbacks[k] || []
-      fallbackList.forEach(item => set.add(item))
-      finalMap[k] = Array.from(set).slice(0, 3)
+    Object.keys(map).forEach(k => {
+      finalMap[k] = Array.from(map[k]).slice(0, 3)
     })
     return finalMap
   }, [leads])
 
   const activeCampaignsCount = React.useMemo(() => {
-    return new Set(leads.map(l => l.campaign).filter(Boolean)).size || 8
+    return new Set(leads.map(l => l.campaign).filter(Boolean)).size
   }, [leads])
 
   const getSliceColor = (tab, index) => {
@@ -273,7 +338,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
 
                   {/* Draw Filled Area Path under the line */}
                   <motion.path
-                    d={`M 0 140 ${activeTabObj.data.map((item, idx) => `L ${(idx / 9) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')} L 500 140 Z`}
+                    d={`M 0 140 ${activeTabObj.data.map((item, idx) => `L ${(idx / (activeTabObj.data.length - 1 || 1)) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')} L 500 140 Z`}
                     fill={activeTab === 'volume' ? 'url(#blueGradient)' : activeTab === 'conversion' ? 'url(#greenGradient)' : 'url(#amberGradient)'}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -282,7 +347,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
 
                   {/* Draw Curved Spline / Line path */}
                   <motion.path
-                    d={activeTabObj.data.map((item, idx) => `${idx === 0 ? 'M' : 'L'} ${(idx / 9) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')}
+                    d={activeTabObj.data.map((item, idx) => `${idx === 0 ? 'M' : 'L'} ${(idx / (activeTabObj.data.length - 1 || 1)) * 500} ${130 - (item.value / maxVal) * 105}`).join(' ')}
                     fill="none"
                     stroke={themeColor}
                     strokeWidth="3"
@@ -293,7 +358,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
 
                   {/* Coordinate Markers */}
                   {activeTabObj.data.map((item, idx) => {
-                    const x = (idx / 9) * 500
+                    const x = (idx / (activeTabObj.data.length - 1 || 1)) * 500
                     const y = 130 - (item.value / maxVal) * 105
                     return (
                       <circle
@@ -316,7 +381,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
                 {/* HTML Floating Tooltips Overlay (positioned relative to container) */}
                 <div className="chart-tooltip-overlay">
                   {activeTabObj.data.map((item, idx) => {
-                    const leftPercent = (idx / 9) * 100
+                    const leftPercent = (idx / (activeTabObj.data.length - 1 || 1)) * 100
                     const y = 130 - (item.value / maxVal) * 105
                     const topPercent = (y / 180) * 100 // Map coordinates relative to parent container height
                     return (
@@ -356,7 +421,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
                             transform: 'translateX(-50%)'
                           }}
                         >
-                          {item.label.split(' ')[1]}
+                          {item.bottomLabel}
                         </span>
                       </React.Fragment>
                     )
@@ -406,7 +471,7 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
                         className="text-slate-400 font-semibold select-none mt-2 text-center truncate"
                         style={{ fontSize: '8px', width: '100%', letterSpacing: '-0.02em' }}
                       >
-                        {item.label.split(' ')[1]}
+                        {item.bottomLabel}
                       </span>
                     </div>
                   )
@@ -429,35 +494,42 @@ export default function DashboardGraphCard({ sources = [], leads = [] }) {
           </span>
         </div>
         <div className="source-items-container">
-          {sources.map((source, idx) => (
-            <div key={idx} className="source-item">
-              <div className="source-header">
-                <div className="source-name-wrapper">
-                  <div className="source-dot" style={{ backgroundColor: source.color }}></div>
-                  <span>{source.name}</span>
-                </div>
-                <span className="text-[11px] font-bold text-slate-500">
-                  {(source.count !== undefined ? source.count : Math.round((source.percentage / 100) * leads.length)).toLocaleString()} leads ({source.percentage}%)
-                </span>
-              </div>
-              <div className="progress-track">
-                <motion.div
-                  className="h-full"
-                  style={{ backgroundColor: source.color }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${source.percentage}%` }}
-                  transition={{ delay: 0.4 + idx * 0.1 }}
-                />
-              </div>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {sourceCampaigns[source.name]?.map((camp, cIdx) => (
-                  <span key={cIdx} className="text-[8px] font-bold bg-slate-50 text-slate-500 px-1 py-0.5 rounded border border-slate-100/80">
-                    {camp}
-                  </span>
-                ))}
-              </div>
+          {sources.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center select-none">
+              <span className="material-symbols-outlined text-slate-350 text-3xl mb-2">bar_chart</span>
+              <span className="text-slate-400 text-xs font-semibold">No source data available</span>
             </div>
-          ))}
+          ) : (
+            sources.map((source, idx) => (
+              <div key={idx} className="source-item">
+                <div className="source-header">
+                  <div className="source-name-wrapper">
+                    <div className="source-dot" style={{ backgroundColor: source.color }}></div>
+                    <span>{source.name}</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {(source.count !== undefined ? source.count : Math.round((source.percentage / 100) * leads.length)).toLocaleString()} leads ({source.percentage}%)
+                  </span>
+                </div>
+                <div className="progress-track">
+                  <motion.div
+                    className="h-full"
+                    style={{ backgroundColor: source.color }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${source.percentage}%` }}
+                    transition={{ delay: 0.4 + idx * 0.1 }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {sourceCampaigns[source.name]?.map((camp, cIdx) => (
+                    <span key={cIdx} className="text-[8px] font-bold bg-slate-50 text-slate-500 px-1 py-0.5 rounded border border-slate-100/80">
+                      {camp}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

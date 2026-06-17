@@ -207,7 +207,7 @@ export default function LeadsToolbar({
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowColumnDropdown(false)} />
                 <motion.div
-                  className="absolute right-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-20 text-left font-sans"
+                  className="absolute right-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-[3px] shadow-xl p-3.5 z-20 text-left font-sans"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
@@ -216,7 +216,7 @@ export default function LeadsToolbar({
                   <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 select-none">Toggle Columns</div>
                   <div className="space-y-1.5 text-[11.5px] font-semibold text-slate-700">
                     {Object.keys(visibleColumns).map((col) => (
-                      <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-lg cursor-pointer capitalize">
+                      <label key={col} className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-[3px] cursor-pointer capitalize">
                         <input
                           type="checkbox"
                           checked={visibleColumns[col]}
@@ -224,7 +224,7 @@ export default function LeadsToolbar({
                             ...visibleColumns,
                             [col]: !visibleColumns[col]
                           })}
-                          className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350 text-primary"
+                          className="w-4 h-4 cursor-pointer accent-primary rounded-[3px] border-slate-350 text-primary"
                         />
                         {col === 'ip' ? 'IP Address' : col === 'assignedTo' ? 'Assigned' : col === 'email' ? 'Email' : col}
                       </label>
@@ -246,13 +246,12 @@ export default function LeadsToolbar({
               Actions
               <span className="material-symbols-outlined text-[15px] text-white leading-none">expand_more</span>
             </button>
-
             <AnimatePresence>
               {showGlobalActionsDropdown && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setShowGlobalActionsDropdown(false)} />
                   <motion.div
-                    className="absolute right-0 mt-1.5 w-52 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-40 text-left font-sans"
+                    className="absolute right-0 mt-1.5 w-52 bg-white border border-outline-variant rounded-[3px] shadow-xl p-1 z-40 text-left font-sans"
                     initial={{ opacity: 0, scale: 0.95, y: -5 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -5 }}
@@ -265,7 +264,7 @@ export default function LeadsToolbar({
                         setShowBulkUploadModal(true);
                         setShowGlobalActionsDropdown(false);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                     >
                       <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
                       Bulk Offline Upload
@@ -276,7 +275,7 @@ export default function LeadsToolbar({
                         setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' });
                         setShowGlobalActionsDropdown(false);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                     >
                       <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
                       Add Quick Lead
@@ -293,7 +292,7 @@ export default function LeadsToolbar({
                       onMouseLeave={() => setShowDownloadFormats(false)}
                     >
                       <button
-                        className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                        className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                       >
                         <div className="flex items-center gap-2.5">
                           <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">download</span>
@@ -305,7 +304,7 @@ export default function LeadsToolbar({
                       <AnimatePresence>
                         {showDownloadFormats && (
                           <motion.div
-                            className="absolute right-full top-0 w-36 bg-white border border-outline-variant rounded-xl shadow-xl p-1 z-50 text-left font-sans"
+                            className="absolute right-full top-0 w-36 bg-white border border-outline-variant rounded-[3px] shadow-xl p-1 z-50 text-left font-sans"
                             initial={{ opacity: 0, x: 10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 10 }}
@@ -316,7 +315,7 @@ export default function LeadsToolbar({
                                 handleDownloadLeads('CSV');
                                 setShowGlobalActionsDropdown(false);
                               }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                             >
                               <img src={csvIcon} alt="csv" className="w-4 h-4" />
                               CSV Format
@@ -326,7 +325,7 @@ export default function LeadsToolbar({
                                 handleDownloadLeads('Excel (XLSX)');
                                 setShowGlobalActionsDropdown(false);
                               }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                             >
                               <img src={excelIcon} alt="csv" className="w-4 h-4" />
                               Excel (XLSX)
@@ -336,7 +335,7 @@ export default function LeadsToolbar({
                                 handleDownloadLeads('PDF');
                                 setShowGlobalActionsDropdown(false);
                               }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                             >
                               <img src={pdfIcon} alt="csv" className="w-4 h-4" />
                               PDF Document
@@ -346,7 +345,7 @@ export default function LeadsToolbar({
                                 handleDownloadLeads('JSON');
                                 setShowGlobalActionsDropdown(false);
                               }}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                             >
                               <img src={jsonIcon} alt="csv" className="w-4 h-4" />
                               JSON Data
@@ -360,7 +359,7 @@ export default function LeadsToolbar({
                         handleChangeLeadStageGlobal();
                         setShowGlobalActionsDropdown(false);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-lg transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
                     >
                       <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">swap_horiz</span>
                       Change Lead Stage

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] }) {
+export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = [] }) {
   const [activeCategory, setActiveCategory] = useState('counselor') // 'counselor' | 'daily' | 'channel'
   const [viewType, setViewType] = useState('graph') // 'graph' | 'report'
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,7 +30,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
       const total = counselorLeads.length
       const won = counselorLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
       const conversion = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0
-      
+
       let responseTimeSum = 0
       counselorLeads.forEach(l => {
         responseTimeSum += l.activityCount ? Math.max(1.2, 8.5 - l.activityCount) : 4.5
@@ -41,13 +41,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
     })
 
     if (data.length === 0) {
-      return [
-        { name: 'Sarah Jenkins', leads: 0, conversion: 0, responseTime: 4.2 },
-        { name: 'Marcus Chan', leads: 0, conversion: 0, responseTime: 5.0 },
-        { name: 'Janet Smith', leads: 0, conversion: 0, responseTime: 6.1 },
-        { name: 'Michael Moore', leads: 0, conversion: 0, responseTime: 7.5 },
-        { name: 'Unassigned', leads: 0, conversion: 0, responseTime: 12.0 }
-      ]
+      return []
     }
 
     return data.sort((a, b) => b.leads - a.leads)
@@ -109,7 +103,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
       const total = channelLeads.length
       const won = channelLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
       const conversion = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0
-      
+
       const cpl = cplMap[name] !== undefined ? cplMap[name] : 5.0
       const cost = parseFloat((cpl * total).toFixed(1))
 
@@ -117,12 +111,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
     })
 
     if (data.length === 0) {
-      return [
-        { name: 'Google Ads', leads: 0, conversion: 0, cpl: 10.0, cost: 0 },
-        { name: 'Facebook Ads', leads: 0, conversion: 0, cpl: 10.0, cost: 0 },
-        { name: 'Referral', leads: 0, conversion: 0, cpl: 0, cost: 0 },
-        { name: 'Organic Search', leads: 0, conversion: 0, cpl: 2.3, cost: 0 }
-      ]
+      return []
     }
 
     return data.sort((a, b) => b.leads - a.leads)
@@ -170,7 +159,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
 
     // Filter by search query
     if (searchQuery.trim()) {
-      data = data.filter(item => 
+      data = data.filter(item =>
         item.label.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
@@ -227,10 +216,10 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
       rows = channelData.map(c => [c.name, c.leads, c.conversion, c.cpl, c.cost])
     }
 
-    const csvContent = 
-      "data:text/csv;charset=utf-8," + 
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
       [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-    
+
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement("a")
     link.setAttribute("href", encodedUri)
@@ -360,7 +349,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
           <div className="deep-dive-chart-container w-full h-[220px]">
             {activeDataset.length > 0 ? (
               <div className="relative w-full h-full flex items-end justify-between px-6 pt-6 pb-2">
-                
+
                 {/* Y-Axis Guideline helper (Dotted) */}
                 <div className="absolute left-6 right-6 top-8 border-t border-dashed border-slate-100 pointer-events-none" />
                 <div className="absolute left-6 right-6 top-28 border-t border-dashed border-slate-100 pointer-events-none" />
@@ -369,7 +358,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
                   const val = item[activeMetric] || 0
                   // Height scale (min 8%, max 82%)
                   const heightPercent = val > 0 ? (val / maxMetricValue) * 80 + 8 : 8
-                  
+
                   // Specific theme colors based on metric type
                   let barColor = 'linear-gradient(180deg, #4f46e5 0%, rgba(79, 70, 229, 0.2) 100%)'
                   let borderColor = '#4f46e5'
@@ -460,7 +449,10 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
                 </AnimatePresence>
               </div>
             ) : (
-              <span className="text-slate-400 font-semibold text-[11px] italic">No data matches your search</span>
+              <div className="flex flex-col items-center justify-center py-10 text-center select-none w-full h-full">
+                <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">analytics</span>
+                <span className="text-slate-400 text-xs font-semibold">No analytics data available</span>
+              </div>
             )}
           </div>
         ) : (
@@ -563,8 +555,9 @@ export default function DeepDiveAnalytics({ triggerToast = () => {}, leads = [] 
                   </tbody>
                 </table>
               ) : (
-                <div className="p-8 text-center text-slate-400 font-semibold italic">
-                  No data matches your search query
+                <div className="flex flex-col items-center justify-center py-12 text-center select-none w-full">
+                  <span className="material-symbols-outlined text-slate-350 text-3xl mb-2">table_rows</span>
+                  <span className="text-slate-400 text-xs font-semibold">No records found</span>
                 </div>
               )}
             </div>

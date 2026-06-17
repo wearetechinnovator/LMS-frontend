@@ -6,6 +6,7 @@ import { UnProtectRoute } from './components/ProtectRoute'
 import { RoleRoutes } from './routes/routesConfig'
 import Unauthorized from './pages/Unauthorized'
 import UserProvider from './contextApi.jsx'
+import ChatBot from './components/ChatBot'
 
 const PublicEmbedForm = React.lazy(() => import('./pages/PublicEmbedForm'))
 
@@ -45,7 +46,7 @@ function App() {
     setUsername(user.username)
     setIsAuthenticated(true)
     localStorage.setItem('username', user.username)
-    
+
     const role = localStorage.getItem('userRole') || user.role
     if (role === 'admin') {
       setOnboardingComplete(true)
@@ -109,6 +110,9 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        {/* {isAuthenticated && <ChatBot />} */}
+
+        {isAuthenticated}
       </Suspense>
     </UserProvider>
   )
