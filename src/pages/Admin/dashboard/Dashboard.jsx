@@ -313,7 +313,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-wrapper dashboard-page-scope">
+    <div className="dashboard-wrapper dashboard-page-scope" data-tour="dashboard-overview">
       {/* Export Toast Notification */}
       <AnimatePresence>
         {toastMsg && (

@@ -664,6 +664,7 @@ export default function FormBuilder({
 
             <div
                 className="bg-surface-container-lowest border-r border-outline-variant flex flex-col shrink-0"
+                data-tour="field-library"
                 style={{
                     width: `${leftWidth}px`,
                     transition: isResizingLeft ? 'none' : 'width 0.2s',
@@ -759,7 +760,7 @@ export default function FormBuilder({
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3 form-builder-canvas">
+            <div className="flex-1 flex flex-col items-center overflow-y-auto px-4 py-3 form-builder-canvas" data-tour="form-canvas">
                 <div className="w-full max-w-[880px] form-builder-content-container">
                     <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-outline-variant/60 font-sans w-full">
 
@@ -1278,6 +1279,7 @@ export default function FormBuilder({
 
             <div
                 className="bg-surface-container-lowest border-l border-outline-variant flex flex-col h-full shrink-0"
+                data-tour="properties-panel"
                 style={{
                     width: `${rightWidth}px`,
                     transition: isResizingRight ? 'none' : 'width 0.2s',

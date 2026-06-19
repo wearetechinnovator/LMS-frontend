@@ -1,8 +1,7 @@
-import React, { use, useContext, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import React, { use, useContext, useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { UserContext } from '../contextApi.jsx'
-import { useEffect } from 'react'
 import getUser from '../api/getUser.js'
 
 export default function Navbar({ username, onLogout, roleName = 'Admin Account' }) {
@@ -10,11 +9,21 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
   const name = useContext(UserContext);
 
   const location = useLocation()
+  const navigate = useNavigate()
 
   const [showNotifications, setShowNotifications] = useState(false)
   const [showFormsDropdown, setShowFormsDropdown] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [hasUnread, setHasUnread] = useState(false)
+  const [profileImg, setProfileImg] = useState(() => localStorage.getItem('userImg') || '')
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfileImg(localStorage.getItem('userImg') || '');
+    };
+    window.addEventListener('profile-updated', handleProfileUpdate);
+    return () => window.removeEventListener('profile-updated', handleProfileUpdate);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -111,7 +120,8 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
     '/roles': 'Role Management',
     '/audit-logs': 'Audit Logs',
     '/settings': 'Settings',
-    '/analytics': 'Analytics'
+    '/analytics': 'Analytics',
+    '/profile': 'Profile Settings'
   }
 
   const getPageTitle = () => {
@@ -248,21 +258,13 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
           )}
         </div>
 
-        {/* Help Icon */}
-        <button className="navbar-btn">
-          <span
-            className="material-symbols-outlined icon"
-            aria-hidden="true"
-          >
-            help
-          </span>
-        </button>
+        
 
         {/* Divider */}
         <div className="navbar-divider"></div>
 
         {/* User Profile */}
-        <div className="navbar-user">
+        <div className="navbar-user" data-tour="navbar-user" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/profile')}>
           <div className="user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '8px' }}>
             <span className="user-name" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0b1c30', lineHeight: '1.2' }}>
               {activeUsername}
@@ -271,8 +273,12 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
               {roleName || 'Admin Account'}
             </span>
           </div>
-          <div className="user-avatar">
-            {activeUsername.charAt(0).toUpperCase()}
+          <div className="user-avatar overflow-hidden flex items-center justify-center">
+            {profileImg ? (
+              <img src={profileImg} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              activeUsername.charAt(0).toUpperCase()
+            )}
           </div>
         </div>
       </div>

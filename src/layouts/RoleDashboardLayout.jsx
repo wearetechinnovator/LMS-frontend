@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
+import InteractiveTour from '../components/InteractiveTour'
 
 export default function RoleDashboardLayout({ username, onLogout, navigationItems, roleName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -21,6 +22,7 @@ export default function RoleDashboardLayout({ username, onLogout, navigationItem
           <Outlet />
         </div>
       </div>
+      <InteractiveTour username={username} />
     </div>
   )
 }

@@ -209,15 +209,10 @@ const initialRolePermissions = {
 
 export default function RoleUserManagement() {
     const [activeTab, setActiveTab] = useState('users') // 'users' or 'roles'
-    const [users, setUsers] = useState(initialUsers)
+    const [users, setUsers] = useState([])
     const [rolePermissions, setRolePermissions] = useState(initialRolePermissions)
-    const [customRoles, setCustomRoles] = useState([
-        { role_id: 'mock-1', role_name: 'System Admin' },
-        { role_id: 'mock-2', role_name: 'Campaign Manager' },
-        { role_id: 'mock-3', role_name: 'Admissions Counselor' },
-        { role_id: 'mock-4', role_name: 'Sales Executive' },
-        { role_id: 'mock-5', role_name: 'Auditor' }
-    ])
+    const [customRoles, setCustomRoles] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
     const [showCreateRoleModal, setShowCreateRoleModal] = useState(false)
     const [newRoleName, setNewRoleName] = useState('')
     
@@ -233,8 +228,12 @@ export default function RoleUserManagement() {
 
     useEffect(() => {
         const fetchUsers = async () => {
+            setIsLoading(true);
             const token = localStorage.getItem('authToken');
-            if (!token || token === 'mock-jwt-token') return;
+            if (!token) {
+                setIsLoading(false);
+                return;
+            }
             try {
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, {
                     headers: {
@@ -247,6 +246,8 @@ export default function RoleUserManagement() {
                 }
             } catch (err) {
                 console.error("Error fetching users from database:", err);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchUsers();
@@ -256,7 +257,7 @@ export default function RoleUserManagement() {
         const fetchRoles = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                if (!token || token === 'mock-jwt-token') return;
+                if (!token) return;
                 
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/get-role`, {
                     headers: {
@@ -373,7 +374,7 @@ export default function RoleUserManagement() {
         }
 
         const token = localStorage.getItem('authToken');
-        if (token && token !== 'mock-jwt-token') {
+        if (token) {
             try {
                 if (editingUser) {
                     const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/edit-user/${editingUser.id}`, {
@@ -474,7 +475,7 @@ export default function RoleUserManagement() {
     const handleToggleStatus = async (user) => {
         const nextStatus = user.status === 'Active' ? 'Suspended' : 'Active'
         const token = localStorage.getItem('authToken');
-        if (token && token !== 'mock-jwt-token') {
+        if (token) {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/edit-user/${user.id}`, {
                     method: 'PATCH',
@@ -505,7 +506,7 @@ export default function RoleUserManagement() {
     const handleDeleteUser = async (userId, userName) => {
         if (window.confirm(`Are you sure you want to remove user "${userName}"?`)) {
             const token = localStorage.getItem('authToken');
-            if (token && token !== 'mock-jwt-token') {
+            if (token) {
                 try {
                     const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/delete-user/${userId}`, {
                         method: 'DELETE',
@@ -566,7 +567,7 @@ export default function RoleUserManagement() {
         }
 
         const token = localStorage.getItem('authToken');
-        if (token && token !== 'mock-jwt-token') {
+        if (token) {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/update-permissions/${roleObj.role_id}`, {
                     method: 'PATCH',
@@ -678,7 +679,7 @@ export default function RoleUserManagement() {
         }
 
         const token = localStorage.getItem('authToken');
-        if (token && token !== 'mock-jwt-token') {
+        if (token) {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/create-role`, {
                     method: 'POST',
@@ -751,7 +752,7 @@ export default function RoleUserManagement() {
         if (!roleObj) return;
 
         const token = localStorage.getItem('authToken');
-        if (token && token !== 'mock-jwt-token' && !String(roleObj.role_id).startsWith('mock')) {
+        if (token && !String(roleObj.role_id).startsWith('mock')) {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/edit-role/${roleObj.role_id}`, {
                     method: 'PATCH',
@@ -799,7 +800,7 @@ export default function RoleUserManagement() {
         if (!roleObj) return;
 
         const token = localStorage.getItem('authToken');
-        if (token && token !== 'mock-jwt-token' && !String(roleObj.role_id).startsWith('mock')) {
+        if (token && !String(roleObj.role_id).startsWith('mock')) {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/role/delete-role/${roleObj.role_id}`, {
                     method: 'DELETE',
@@ -1045,6 +1046,15 @@ export default function RoleUserManagement() {
                                                 </td>
                                             </tr>
                                         ))
+                                    ) : isLoading ? (
+                                        <tr>
+                                            <td colSpan="6" className="px-4 py-8 text-center text-on-surface-variant font-medium">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></span>
+                                                    Loading user accounts...
+                                                </div>
+                                            </td>
+                                        </tr>
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="px-4 py-8 text-center text-on-surface-variant font-medium">

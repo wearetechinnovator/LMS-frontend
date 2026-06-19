@@ -47,6 +47,11 @@ function App() {
     setIsAuthenticated(true)
     localStorage.setItem('username', user.username)
 
+    // Automatically skip the tour for existing users logging in
+    if (user.isNewUser === false) {
+      localStorage.setItem(`lms_tour_completed_${user.username}`, 'true')
+    }
+
     const role = localStorage.getItem('userRole') || user.role
     if (role === 'admin') {
       setOnboardingComplete(true)

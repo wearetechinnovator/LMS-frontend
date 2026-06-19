@@ -82,6 +82,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
   return (
     <>
       <motion.aside
+        data-tour="sidebar-aside"
         className={`sidebar-aside ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}
         style={{
           width: sidebarCollapsed ? '64px' : `${width}px`,
@@ -141,6 +142,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                   }}
                   onMouseLeave={() => setHoveredItem(null)}
                   className={`nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
+                  data-tour={`sidebar-item-${item.id}`}
                 >
                   <span className="material-symbols-outlined icon">{item.icon}</span>
                   {!sidebarCollapsed && <span className="truncate">{item.label}</span>}

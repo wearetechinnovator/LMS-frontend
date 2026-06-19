@@ -5,6 +5,7 @@ import RoleDashboardLayout from '../layouts/RoleDashboardLayout'
 
 import AdminDashboard from '../pages/Admin/dashboard/Dashboard'
 import AdminRoleUserManagement from '../pages/Admin/RoleManage/RoleUserManagement'
+import AdminProfilePage from '../pages/Admin/profile/ProfilePage'
 
 const AdminAllLeadsPage = React.lazy(() => import('../pages/Admin/Leads/AllLeadsPage'))
 const AdminLeadDetailsPage = React.lazy(() => import('../pages/Admin/Leads/LeadDetailsPage'))
@@ -99,6 +100,9 @@ export const RoleRoutes = ({ username, handleLogout }) => {
           <PermissionGate permission="settings">
             <AdminRoleUserManagement />
           </PermissionGate>
+        } />
+        <Route path="profile" element={
+          <AdminProfilePage />
         } />
         <Route path="leads" element={
           <PermissionGate permission="leads_view" fallback={<Navigate to="/unauthorized" replace />}>

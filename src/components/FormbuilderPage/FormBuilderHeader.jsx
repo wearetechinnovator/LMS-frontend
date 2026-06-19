@@ -52,6 +52,7 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                     <button
                         onClick={toggleDropdown}
                         className="btn-create-form"
+                        data-tour="btn-create-form"
                     >
                         <span className="material-symbols-outlined create-icon">add</span>
                         Create New Form

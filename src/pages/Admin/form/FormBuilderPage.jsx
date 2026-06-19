@@ -61,6 +61,22 @@ export default function FormBuilderPage() {
     fetchForms();
   }, []);
 
+  // Handle programmatic opening/closing of form editor during the tutorial tour
+  useEffect(() => {
+    const handleTourOpen = () => {
+      handleCreateNewForm();
+    };
+    const handleTourClose = () => {
+      setActiveFormSchema(null);
+    };
+    window.addEventListener('lms_tour_open_editor', handleTourOpen);
+    window.addEventListener('lms_tour_close_editor', handleTourClose);
+    return () => {
+      window.removeEventListener('lms_tour_open_editor', handleTourOpen);
+      window.removeEventListener('lms_tour_close_editor', handleTourClose);
+    };
+  }, [formsList]);
+
   // Filter forms based on search query and status option selection
   const filteredForms = formsList.filter(form => {
     const nameStr = form.name || '';
@@ -372,81 +388,107 @@ export default function FormBuilderPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredForms.map((form) => (
-                    <tr
-                       key={form.id}
-                      className="border-b border-outline-variant hover:bg-slate-50/70 transition-colors"
-                    >
-                      {/* Name & ID Cell with hover preview */}
-                      <td className="px-5 py-1 text-left relative">
-                        <button
-                          onClick={() => setActiveFormSchema(form)}
-                          onMouseEnter={(e) => showPreview(form, e)}
-                          onMouseLeave={hidePreview}
-                          className="font-bold text-[12.5px] text-slate-800 hover:text-primary hover:underline transition-colors text-left cursor-pointer"
-                        >
-                          {form.name}
-                        </button>
-                        <p className="text-[10px] text-slate-400 font-mono mt-0">ID: {form.id}</p>
-                      </td>
-
-                      {/* Status Badges */}
-                      <td className="px-5 py-1">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${form.status === 'PUBLISHED'
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : form.status === 'TEMPLATE'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200'
-                              : 'bg-slate-50 text-slate-600 border-slate-200'
-                            }`}
-                        >
-                          {form.status}
-                        </span>
-                      </td>
-
-                      {/* Lead Responses Count */}
-                      <td className="px-5 py-1 text-right font-mono text-[12px] text-slate-700 font-medium">
-                        {form.responses !== null ? form.responses.toLocaleString() : '--'}
-                      </td>
-
-                      {/* Conversion Performance */}
-                      <td className="px-5 py-1 text-right font-mono text-[12px] text-slate-700 font-medium">
-                        {form.conversionRate || '--'}
-                      </td>
-
-                      {/* Author Details & Created Time */}
-                      <td className="px-5 py-1 text-left">
-                        <span className="font-semibold text-[11.5px] text-slate-700">{form.createdBy}</span>
-                        <p className="text-[10px] text-slate-400 mt-0">{form.createdDate}</p>
-                      </td>
-
-                      {/* Action Triggers */}
-                      <td className="px-5 py-1 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                  {formsList.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="p-8">
+                        <div className="w-full py-12 flex flex-col items-center justify-center gap-4 bg-white/35 backdrop-blur-md border border-dashed border-outline-variant rounded-xl shadow-xs">
+                          <div className="flex flex-col items-center text-center max-w-md px-6 space-y-1.5">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-1">
+                              <span className="material-symbols-outlined text-primary text-[24px]">
+                                border_color
+                              </span>
+                            </div>
+                            <h3 className="font-bold text-[14px] text-slate-800">Create Your First Form</h3>
+                            <p className="text-[11px] text-slate-500 max-w-xs leading-normal">
+                              Establish your lead flow by building a custom input form or launching a ready-made template.
+                            </p>
+                          </div>
                           <button
-                            onClick={() => setActiveFormSchema(form)}
-                            className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-primary transition-colors cursor-pointer"
-                            title="Edit Form Layout"
+                            onClick={handleCreateNewForm}
+                            className="px-5 py-2 bg-primary hover:bg-primary/95 text-white font-bold text-[12px] rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-97"
                           >
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
-                          </button>
-                          <button
-                            onClick={() => handleDuplicateForm(form)}
-                            className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
-                            title="Duplicate Form"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                            <span className="material-symbols-outlined text-[16px]">add</span>
+                            Create New Form
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))}
-                  {filteredForms.length === 0 && (
+                  ) : filteredForms.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="py-10 text-center text-on-surface-variant text-[12px] italic">
                         No forms found matching "{searchQuery}"
                       </td>
                     </tr>
+                  ) : (
+                    filteredForms.map((form) => (
+                      <tr
+                         key={form.id}
+                        className="border-b border-outline-variant hover:bg-slate-50/70 transition-colors"
+                      >
+                        {/* Name & ID Cell with hover preview */}
+                        <td className="px-5 py-1 text-left relative">
+                          <button
+                            onClick={() => setActiveFormSchema(form)}
+                            onMouseEnter={(e) => showPreview(form, e)}
+                            onMouseLeave={hidePreview}
+                            className="font-bold text-[12.5px] text-slate-800 hover:text-primary hover:underline transition-colors text-left cursor-pointer"
+                          >
+                            {form.name}
+                          </button>
+                          <p className="text-[10px] text-slate-400 font-mono mt-0">ID: {form.id}</p>
+                        </td>
+
+                        {/* Status Badges */}
+                        <td className="px-5 py-1">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${form.status === 'PUBLISHED'
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : form.status === 'TEMPLATE'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : 'bg-slate-50 text-slate-600 border-slate-200'
+                              }`}
+                          >
+                            {form.status}
+                          </span>
+                        </td>
+
+                        {/* Lead Responses Count */}
+                        <td className="px-5 py-1 text-right font-mono text-[12px] text-slate-700 font-medium">
+                          {form.responses !== null ? form.responses.toLocaleString() : '--'}
+                        </td>
+
+                        {/* Conversion Performance */}
+                        <td className="px-5 py-1 text-right font-mono text-[12px] text-slate-700 font-medium">
+                          {form.conversionRate || '--'}
+                        </td>
+
+                        {/* Author Details & Created Time */}
+                        <td className="px-5 py-1 text-left">
+                          <span className="font-semibold text-[11.5px] text-slate-700">{form.createdBy}</span>
+                          <p className="text-[10px] text-slate-400 mt-0">{form.createdDate}</p>
+                        </td>
+
+                        {/* Action Triggers */}
+                        <td className="px-5 py-1 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => setActiveFormSchema(form)}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-primary transition-colors cursor-pointer"
+                              title="Edit Form Layout"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleDuplicateForm(form)}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                              title="Duplicate Form"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
