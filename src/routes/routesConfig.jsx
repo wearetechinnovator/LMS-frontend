@@ -51,7 +51,7 @@ const adminNavItems = [
 
 export const RoleRoutes = ({ username, handleLogout }) => {
   const role = localStorage.getItem('userRole')
-  
+
   const filteredNavItems = adminNavItems.filter(item => {
     if (item.id === 'dashboard' || item.id === 'analytics') {
       return hasPermission('dashboard')

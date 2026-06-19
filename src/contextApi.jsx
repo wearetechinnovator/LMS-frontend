@@ -1,4 +1,3 @@
-// Context.js
 import React, { createContext, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import getUser from './api/getUser';
@@ -11,6 +10,8 @@ const UserProvider = ({ children }) => {
     useEffect(() => {
         getUser().then((res) => {
             setName(res[0]?.name);
+        }).catch((err) => {
+            console.error(err);
         });
     }, []);
 
