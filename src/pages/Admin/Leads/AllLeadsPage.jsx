@@ -7,9 +7,12 @@ import LeadsFilterChip from '../../../components/LeadsFilterChip'
 import LeadsToolbar from '../../../components/LeadsToolbar'
 import { getCustomStatuses, getStatusStyle } from '../../../helpers/statusHelper'
 
+import { LeadsSkeleton } from '../../../components/Skeletons'
 import { hasPermission } from '../../../components/ProtectRoute'
 
 export default function AllLeadsPage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [leads, setLeads] = useState([])
   const location = useLocation()
   const navigate = useNavigate()
   const [selectedLeads, setSelectedLeads] = useState([])
@@ -121,15 +124,28 @@ export default function AllLeadsPage() {
   const tableContainerRef = React.useRef(null)
   const topScrollbarRef = React.useRef(null)
   const [tableScrollWidth, setTableScrollWidth] = React.useState(0)
+  
+  const isScrollingTopRef = React.useRef(false)
+  const isScrollingTableRef = React.useRef(false)
 
   const handleTopScroll = () => {
+    if (isScrollingTableRef.current) {
+      isScrollingTableRef.current = false
+      return
+    }
     if (topScrollbarRef.current && tableContainerRef.current) {
+      isScrollingTopRef.current = true
       tableContainerRef.current.scrollLeft = topScrollbarRef.current.scrollLeft
     }
   }
 
   const handleTableScroll = () => {
+    if (isScrollingTopRef.current) {
+      isScrollingTopRef.current = false
+      return
+    }
     if (topScrollbarRef.current && tableContainerRef.current) {
+      isScrollingTableRef.current = true
       topScrollbarRef.current.scrollLeft = tableContainerRef.current.scrollLeft
     }
   }
@@ -165,7 +181,7 @@ export default function AllLeadsPage() {
         resizeObserver.disconnect()
       }
     }
-  }, [visibleColumns])
+  }, [visibleColumns, isLoading, leads])
 
   // -- NEW STATE HOOKS FOR LEAD ACTIONS POPUPS --
   const [activeDropdownLeadId, setActiveDropdownLeadId] = useState(null)
@@ -285,7 +301,6 @@ export default function AllLeadsPage() {
   }
 
   // Interactive local leads database array state
-  const [leads, setLeads] = useState([])
   const [dbUsers, setDbUsers] = useState([])
 
   // Synchronize leads array state to localStorage when changes occur
@@ -296,6 +311,7 @@ export default function AllLeadsPage() {
   // Sync leads from database on mount
   useEffect(() => {
     const fetchLeads = async () => {
+      const startTime = Date.now()
       try {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
@@ -312,6 +328,12 @@ export default function AllLeadsPage() {
         }
       } catch (err) {
         console.error("Failed to fetch leads from database:", err);
+      } finally {
+        const elapsed = Date.now() - startTime
+        const delay = Math.max(0, 500 - elapsed)
+        setTimeout(() => {
+          setIsLoading(false)
+        }, delay)
       }
     };
     fetchLeads();
@@ -482,10 +504,20 @@ export default function AllLeadsPage() {
   }
 
   const toggleSelectAll = () => {
-    if (selectedLeads.length === filteredAndSortedLeads.length) {
-      setSelectedLeads([])
+    const paginatedIds = paginatedLeads.map(lead => lead.id)
+    const allSelectedOnPage = paginatedIds.every(id => selectedLeads.includes(id))
+    if (allSelectedOnPage) {
+      setSelectedLeads(prev => prev.filter(id => !paginatedIds.includes(id)))
     } else {
-      setSelectedLeads(filteredAndSortedLeads.map(lead => lead.id))
+      setSelectedLeads(prev => {
+        const newSelection = [...prev]
+        paginatedIds.forEach(id => {
+          if (!newSelection.includes(id)) {
+            newSelection.push(id)
+          }
+        })
+        return newSelection
+      })
     }
   }
 
@@ -633,6 +665,36 @@ export default function AllLeadsPage() {
       return matchesSearch && matchesStatus && matchesDateRange && matchesOwner && matchesSource && matchesVerification && matchesQuery && matchesSavedTab && matchesBlock
     })
   }, [sortedLeads, searchQuery, filterStatus, dateRangeFilter, leadOwnerFilter, sourceFilter, verificationFilter, queryFilter, activeSavedTab, activeBlockFilter])
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [
+    searchQuery,
+    filterStatus,
+    dateRangeFilter,
+    leadOwnerFilter,
+    sourceFilter,
+    verificationFilter,
+    queryFilter,
+    activeSavedTab,
+    activeBlockFilter,
+    selectedFormFilter
+  ])
+
+  const paginatedLeads = useMemo(() => {
+    const startIndex = (currentPage - 1) * rowsPerPage
+    return filteredAndSortedLeads.slice(startIndex, startIndex + rowsPerPage)
+  }, [filteredAndSortedLeads, currentPage, rowsPerPage])
+
+  const totalItems = filteredAndSortedLeads.length
+  const totalPages = Math.ceil(totalItems / rowsPerPage)
+  const paginationStartIndex = totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage
+  const paginationEndIndex = Math.min(currentPage * rowsPerPage, totalItems)
 
   // Counts for Today and Total Leads stats display
   const todayLeadsCount = useMemo(() => {
@@ -1634,6 +1696,10 @@ export default function AllLeadsPage() {
   // INTERACTIVE ACTIVITY LOGGER
 
 
+  if (isLoading) {
+    return <LeadsSkeleton />
+  }
+
   return (
     <div className="p-4">
       <div className="leads-page-scope">
@@ -1785,6 +1851,43 @@ export default function AllLeadsPage() {
                 sources={sourcesList}
               />
 
+              {/* Top Pagination Controls */}
+              <div className="mb-4 flex items-center justify-between text-body-md font-body-md text-on-surface-variant text-[12px] select-none">
+                <span>Showing {totalItems === 0 ? 0 : paginationStartIndex + 1}-{paginationEndIndex} of {totalItems} leads</span>
+                <div className="flex items-center gap-2">
+                  <span>Rows per page</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="px-2 h-6 border border-outline-variant rounded-[3px] bg-surface text-[11px] cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <div className="flex items-center gap-1 ml-4">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1 rounded-[3px] transition-colors ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface-container cursor-pointer'}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`p-1 rounded-[3px] transition-colors ${(currentPage === totalPages || totalPages === 0) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface-container cursor-pointer'}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Desktop Table View */}
               <div className="leads-table-scroll-container">
                 {tableScrollWidth > (tableContainerRef.current?.clientWidth || 0) && (
@@ -1808,7 +1911,7 @@ export default function AllLeadsPage() {
                         <th className="px-3 py-3 text-left w-10 bg-slate-50">
                           <input
                             type="checkbox"
-                            checked={selectedLeads.length === filteredAndSortedLeads.length && filteredAndSortedLeads.length > 0}
+                            checked={paginatedLeads.length > 0 && paginatedLeads.every(lead => selectedLeads.includes(lead.id))}
                             onChange={toggleSelectAll}
                             className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-350"
                           />
@@ -2016,7 +2119,7 @@ export default function AllLeadsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredAndSortedLeads.map((lead, index) => (
+                      {paginatedLeads.map((lead, index) => (
                         <motion.tr
                           key={lead.id}
                           className={`border-b border-slate-200 hover:bg-slate-50/70 transition-colors ${role === 'admin' ? 'cursor-pointer' : ''}`}
@@ -2455,7 +2558,7 @@ export default function AllLeadsPage() {
 
               {/* Mobile Card Stack View */}
               <div className="block md:hidden space-y-4">
-                {filteredAndSortedLeads.map((lead) => (
+                {paginatedLeads.map((lead) => (
                   <div
                     key={lead.id}
                     onClick={() => {
@@ -2566,19 +2669,35 @@ export default function AllLeadsPage() {
 
               {/* Pagination Controls */}
               <div className="mt-6 flex items-center justify-between text-body-md font-body-md text-on-surface-variant text-[12px] select-none">
-                <span>Showing 1-{filteredAndSortedLeads.length} of {leads.length} leads</span>
+                <span>Showing {totalItems === 0 ? 0 : paginationStartIndex + 1}-{paginationEndIndex} of {totalItems} leads</span>
                 <div className="flex items-center gap-2">
                   <span>Rows per page</span>
-                  <select className="px-2 h-6 border border-outline-variant rounded-[3px] bg-surface text-[11px] cursor-pointer">
-                    <option>50</option>
-                    <option>100</option>
-                    <option>250</option>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="px-2 h-6 border border-outline-variant rounded-[3px] bg-surface text-[11px] cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
                   </select>
                   <div className="flex items-center gap-1 ml-4">
-                    <button className="p-1 hover:bg-surface-container rounded-[3px] transition-colors cursor-pointer">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1 rounded-[3px] transition-colors ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface-container cursor-pointer'}`}
+                    >
                       <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                     </button>
-                    <button className="p-1 hover:bg-surface-container rounded-[3px] transition-colors cursor-pointer">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`p-1 rounded-[3px] transition-colors ${(currentPage === totalPages || totalPages === 0) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface-container cursor-pointer'}`}
+                    >
                       <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                     </button>
                   </div>

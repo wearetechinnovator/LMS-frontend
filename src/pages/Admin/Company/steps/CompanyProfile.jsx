@@ -4,9 +4,20 @@ import { motion } from 'framer-motion'
 export default function CompanyProfile({ data, onChange }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0]
-    if (file) {
-      onChange('logoFile', file.name)
+    if (!file) return
+
+    const MAX_SIZE = 2 * 1024 * 1024
+    if (file.size > MAX_SIZE) {
+      alert('Error: Selected image size exceeds the 2MB limit.')
+      return
     }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const base64String = event.target.result
+      onChange('logoFile', base64String)
+    }
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -27,17 +38,26 @@ export default function CompanyProfile({ data, onChange }) {
           <span className="material-symbols-outlined mr-2 text-primary text-[20px]">cloud_upload</span>
           Organization Logo
         </h2>
-        <div className="upload-zone">
-          <div className="upload-icon-wrapper">
-            <span className="material-symbols-outlined text-primary" style={{ fontSize: '32px' }}>cloud_upload</span>
-          </div>
-          <span className="upload-click-label">Click to upload</span>
-          <span className="upload-hint">or drag and drop SVG, PNG, JPG (max. 2MB)</span>
+        <div className="upload-zone" onClick={() => document.getElementById('logo-file-input').click()}>
+          {data.logoFile ? (
+            <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-100 flex items-center justify-center bg-white shadow-xs">
+              <img src={data.logoFile} alt="Company logo preview" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="upload-icon-wrapper">
+              <span className="material-symbols-outlined text-primary" style={{ fontSize: '32px' }}>cloud_upload</span>
+            </div>
+          )}
+          <span className="upload-click-label">
+            {data.logoFile ? 'Change logo' : 'Click to upload'}
+          </span>
+          <span className="upload-hint">or drag and drop SVG, PNG, JPG, GIF (max. 2MB)</span>
           <input
             type="file"
+            id="logo-file-input"
             onChange={handleFileChange}
-            className="hidden"
-            accept=".svg,.png,.jpg,.jpeg"
+            style={{ display: 'none' }}
+            accept=".svg,.png,.jpg,.jpeg,.gif"
           />
         </div>
       </motion.div>

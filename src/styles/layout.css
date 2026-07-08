@@ -87,7 +87,7 @@
 
 .toggle-btn:hover {
   background-color: #eff4ff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 .toggle-btn .icon {
@@ -149,7 +149,7 @@
 
 .nav-item.active {
   background-color: #eeefff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   font-weight: 700;
 }
 
@@ -165,7 +165,7 @@
 }
 
 .nav-item.active .icon {
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 /* Sidebar Footer */
@@ -203,7 +203,7 @@
 
 .footer-btn.active {
   background-color: #eeefff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   font-weight: 700;
 }
 
@@ -226,7 +226,7 @@
 
 .sidebar-resize-handle:hover,
 .sidebar-resize-handle.resizing {
-  background-color: #004ac6;
+  background-color: var(--color-primary, #004ac6);
 }
 
 /* Main Layout View (Navbar + Page Content) */
@@ -289,7 +289,7 @@
 
 .navbar-btn:hover {
   background-color: #eff4ff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 .navbar-btn .icon {
@@ -336,7 +336,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: #004ac6;
+  background-color: var(--color-primary, #004ac6);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -427,7 +427,7 @@
 
 .sub-nav-item.active {
   background-color: #eeefff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   font-weight: 700;
 }
 
@@ -440,7 +440,7 @@
 }
 
 .sub-nav-item.active .sub-nav-dot {
-  background-color: #004ac6;
+  background-color: var(--color-primary, #004ac6);
 }
 
 /* ================== AI CHATBOT SYSTEM ================== */

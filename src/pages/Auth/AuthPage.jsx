@@ -344,7 +344,7 @@ export default function AuthPage({ onAuthSuccess }) {
               </div>
 
               <div className="auth-sidebar-footer">
-                <p className="auth-footer-title">TIS — Learning Management System</p>
+                <p className="auth-footer-title">TIS — Lead Management System</p>
                 <p className="auth-footer-copyright">© 2025 TIS. All rights reserved.</p>
               </div>
             </motion.div>

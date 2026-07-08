@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TeamsSkeleton } from '../../../components/Skeletons'
 
 export default function Teams() {
   const navigate = useNavigate()
@@ -29,6 +30,7 @@ export default function Teams() {
 
   // Fetch teams and active users
   const fetchData = async () => {
+    const startTime = Date.now()
     setLoading(true)
     const token = localStorage.getItem('authToken')
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -53,7 +55,11 @@ export default function Teams() {
       console.error('Fetch error:', err)
       showToast('Connection error to server', 'error')
     } finally {
-      setLoading(false)
+      const elapsed = Date.now() - startTime
+      const delay = Math.max(0, 500 - elapsed)
+      setTimeout(() => {
+        setLoading(false)
+      }, delay)
     }
   }
 
@@ -213,6 +219,10 @@ export default function Teams() {
     team.head.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  if (loading) {
+    return <TeamsSkeleton />
+  }
+
   return (
     <div className="p-4">
       <div className="space-y-6">
@@ -257,12 +267,7 @@ export default function Teams() {
           />
         </div>
 
-        {/* Loading state */}
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : filteredTeams.length === 0 ? (
+        {filteredTeams.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-xs">
             <span className="material-symbols-outlined text-slate-300 text-[48px] block mb-2">group_off</span>
             <p className="text-slate-500 font-bold text-sm">No teams found</p>

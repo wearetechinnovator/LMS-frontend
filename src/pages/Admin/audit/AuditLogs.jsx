@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ExportButton from '../../../components/ExportButton'
 import Toast from '../../../components/Toast'
+import { AuditLogsSkeleton } from '../../../components/Skeletons'
 
 // Static mockup of original records from the screenshot + a few extra for robust filtering
 
@@ -30,11 +31,14 @@ export default function AuditLogs() {
     // Fetch logs from DB
     React.useEffect(() => {
         const fetchLogs = async () => {
+            const startTime = Date.now()
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token || token === 'mock-jwt-token') {
                     setLogs(originalLogs);
-                    setLoading(false);
+                    const elapsed = Date.now() - startTime
+                    const delay = Math.max(0, 500 - elapsed)
+                    setTimeout(() => setLoading(false), delay)
                     return;
                 }
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/audit/get-audit-logs`, {
@@ -56,7 +60,11 @@ export default function AuditLogs() {
                 console.error("Failed to fetch audit logs:", err);
                 setLogs(originalLogs);
             } finally {
-                setLoading(false);
+                const elapsed = Date.now() - startTime
+                const delay = Math.max(0, 500 - elapsed)
+                setTimeout(() => {
+                    setLoading(false);
+                }, delay)
             }
         };
         fetchLogs();
@@ -173,6 +181,10 @@ export default function AuditLogs() {
         setCurrentPage(1)
     }
 
+    if (loading) {
+        return <AuditLogsSkeleton />
+    }
+
     return (
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative">
 
@@ -267,19 +279,7 @@ export default function AuditLogs() {
 
             {/* Active Filters tags bar */}
             <div className="flex items-center gap-2 text-[11px]">
-                <span className="font-bold text-on-surface-variant">Active Filters:</span>
-
-                {/* Action tag */}
-                <div className="flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 rounded px-2 py-0.5 font-semibold">
-                    <span>Activity Type: {selectedActionFilter}</span>
-                    <button
-                        onClick={() => setSelectedActionFilter('All')}
-                        className="hover:bg-primary/25 rounded-full flex items-center justify-center w-3 h-3 text-label-caps transition-colors"
-                        title="Remove Activity Type filter"
-                    >
-                        <span className="material-symbols-outlined text-label-caps">close</span>
-                    </button>
-                </div>
+                <span className="font-bold text-on-surface-variant">Active Filters: <span>{selectedActionFilter}</span></span>
 
                 {/* Date tag if modified */}
                 {selectedDateFilter !== 'Last 7 Days' && (
@@ -311,7 +311,7 @@ export default function AuditLogs() {
                 {(selectedActionFilter !== 'All' || selectedDateFilter !== 'Last 7 Days' || searchTerm) && (
                     <button
                         onClick={handleClearAllFilters}
-                        className="text-primary hover:text-primary/80 font-bold ml-2 transition-colors hover:underline"
+                        className="text-primary hover:text-primary/80 font-bold transition-colors hover:underline"
                     >
                         Clear all
                     </button>
@@ -333,16 +333,7 @@ export default function AuditLogs() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-8 text-on-surface-variant font-medium">
-                                        <div className="flex flex-col items-center justify-center space-y-2">
-                                            <span className="material-symbols-outlined text-[32px] animate-spin">sync</span>
-                                            <p>Loading audit logs...</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : currentEntries.length > 0 ? (
+                            {currentEntries.length > 0 ? (
                                 currentEntries.map((log) => (
                                     <tr key={log.id} className="hover:bg-surface-container/30 transition-colors">
 

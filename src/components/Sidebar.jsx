@@ -8,6 +8,7 @@ import { useContext } from 'react'
 export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogout, navigationItems = [], roleName = 'Admin Account', userName, username }) {
   const name = useContext(UserContext);
   const activeUsername = username || userName || localStorage.getItem('username') || 'ADMIN'
+  const companyName = localStorage.getItem('companyName') || ''
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -97,8 +98,21 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
           <div className={`header-content ${sidebarCollapsed ? 'header-content-collapsed' : 'header-content-expanded'}`}>
             {!sidebarCollapsed && (
               <div className="logo-info">
-                <h1 className="truncate" style={{ maxWidth: '120px' }}>{activeUsername}</h1>
-                <p>{roleName}</p>
+                {companyName ? (
+                  <>
+                    <h1 className="truncate font-bold text-[14px]" style={{ maxWidth: '145px' }} title={companyName}>
+                      {companyName}
+                    </h1>
+                    <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }} className="truncate">
+                      {activeUsername} • {roleName}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h1 className="truncate" style={{ maxWidth: '120px' }}>{activeUsername}</h1>
+                    <p>{roleName}</p>
+                  </>
+                )}
               </div>
             )}
             <button

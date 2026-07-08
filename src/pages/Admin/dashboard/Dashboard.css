@@ -30,7 +30,7 @@
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -41,7 +41,7 @@
 }
 
 .date-filter:hover {
-  border-color: #004ac6;
+  border-color: var(--color-primary, #004ac6);
   background-color: #f8f9ff;
 
 }
@@ -97,18 +97,18 @@
 
 .date-dropdown-item:hover {
   background-color: #eff4ff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 .date-dropdown-item.active {
   background-color: #eeefff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   font-weight: 700;
 }
 
 .date-dropdown-item .check-icon {
   font-size: 14px;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 /* Toast Alert Alert */
@@ -291,13 +291,13 @@
 }
 
 .chart-tab-btn:hover {
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   background-color: #eeefff;
 }
 
 .chart-tab-btn.active {
   background-color: #ffffff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   box-shadow: 0 1px 3px rgba(0, 74, 198, 0.06);
 }
 
@@ -478,13 +478,13 @@
 }
 
 .deep-dive-tab-btn:hover {
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   background-color: #eeefff;
 }
 
 .deep-dive-tab-btn.active {
   background-color: #ffffff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   box-shadow: 0 1px 3px rgba(0, 74, 198, 0.06);
 }
 
@@ -502,8 +502,8 @@
 }
 
 .deep-dive-select:hover {
-  border-color: #004ac6;
-  color: #004ac6;
+  border-color: var(--color-primary, #004ac6);
+  color: var(--color-primary, #004ac6);
 }
 
 .view-toggle-wrapper {
@@ -535,13 +535,13 @@
 }
 
 .view-toggle-btn:hover {
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   background-color: #eeefff;
 }
 
 .view-toggle-btn.active {
   background-color: #ffffff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   box-shadow: 0 1px 3px rgba(0, 74, 198, 0.06);
 }
 
@@ -619,7 +619,7 @@
 }
 
 .report-action-btn {
-  background-color: #004ac6;
+  background-color: var(--color-primary, #004ac6);
   color: #ffffff;
   border: none;
   border-radius: 3px;
@@ -673,7 +673,7 @@
 
 .report-table th:hover {
   background-color: #eeefff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 .report-table tr:last-child td {
@@ -720,7 +720,7 @@
 .recent-leads-header button {
   background: none;
   border: none;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   font-weight: 700;
   cursor: pointer;
   font-size: 12px;
@@ -776,7 +776,7 @@
 
 .status-badge.status-NEW {
   background-color: #eeefff;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
 }
 
 .status-badge.status-CONTACTED {
@@ -800,7 +800,7 @@
 }
 
 .export-btn {
-  background-color: #004ac6;
+  background-color: var(--color-primary, #004ac6);
   color: #ffffff;
   border: none;
   border-radius: 3px;
@@ -982,7 +982,7 @@
   position: absolute;
   font-size: 8px;
   font-weight: 700;
-  color: #004ac6;
+  color: var(--color-primary, #004ac6);
   /* Match branding primary color */
   user-select: none;
   pointer-events: none;

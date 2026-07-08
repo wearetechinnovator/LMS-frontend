@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import TeamStatsCard from '../../../components/TeamStateCard'
 import Toast from '../../../components/Toast'
+import { RolesSkeleton } from '../../../components/Skeletons'
 
 // Detailed realistic mock users data
 const initialUsers = [
@@ -228,10 +229,13 @@ export default function RoleUserManagement() {
 
     useEffect(() => {
         const fetchUsers = async () => {
+            const startTime = Date.now()
             setIsLoading(true);
             const token = localStorage.getItem('authToken');
             if (!token) {
-                setIsLoading(false);
+                const elapsed = Date.now() - startTime
+                const delay = Math.max(0, 500 - elapsed)
+                setTimeout(() => setIsLoading(false), delay)
                 return;
             }
             try {
@@ -247,7 +251,11 @@ export default function RoleUserManagement() {
             } catch (err) {
                 console.error("Error fetching users from database:", err);
             } finally {
-                setIsLoading(false);
+                const elapsed = Date.now() - startTime
+                const delay = Math.max(0, 500 - elapsed)
+                setTimeout(() => {
+                    setIsLoading(false);
+                }, delay)
             }
         };
         fetchUsers();
@@ -834,6 +842,10 @@ export default function RoleUserManagement() {
     const rolesList = customRoles.map(r => r.role_name)
     const statusTypes = ['Active', 'Suspended', 'Invited']
 
+    if (isLoading) {
+        return <RolesSkeleton />
+    }
+
     return (
         <div className="w-full h-full flex flex-col bg-linear-to-br from-background via-background to-surface-container-lowest p-4 space-y-4 overflow-hidden relative font-sans select-none">
 
@@ -1046,15 +1058,6 @@ export default function RoleUserManagement() {
                                                 </td>
                                             </tr>
                                         ))
-                                    ) : isLoading ? (
-                                        <tr>
-                                            <td colSpan="6" className="px-4 py-8 text-center text-on-surface-variant font-medium">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></span>
-                                                    Loading user accounts...
-                                                </div>
-                                            </td>
-                                        </tr>
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="px-4 py-8 text-center text-on-surface-variant font-medium">

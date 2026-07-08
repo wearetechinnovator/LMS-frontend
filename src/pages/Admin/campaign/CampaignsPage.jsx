@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ExportButton from '../../../components/ExportButton'
+import { CampaignsSkeleton } from '../../../components/Skeletons'
 
 // Initial Pre-populated campaigns data with added traffic & revenue fields for funnel
 const initialCampaigns = [
@@ -155,6 +156,15 @@ const initialActivities = [
 ]
 
 export default function CampaignsPage() {
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
   const role = localStorage.getItem('userRole') || 'admin'
   const isMasked = role === 'counselor' || role === 'vendor'
   const maskEmail = (email) => {
@@ -490,6 +500,10 @@ export default function CampaignsPage() {
       }
     }
     return indicators
+  }
+
+  if (isLoading) {
+    return <CampaignsSkeleton />
   }
 
   return (

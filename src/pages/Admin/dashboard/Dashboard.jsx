@@ -5,10 +5,12 @@ import DashboardGraphCard from '../../../components/Dashboard/DashboardGraphCard
 import DashboardRecentLeads from '../../../components/Dashboard/DashboardRecentLeads'
 import ExportButton from '../../../components/ExportButton'
 import DeepDiveAnalytics from '../../../components/Dashboard/DeepDiveAnalytics'
+import { DashboardSkeleton } from '../../../components/Skeletons'
 import './Dashboard.css'
 
 
 export default function Dashboard() {
+  const [isLoading, setIsLoading] = useState(true)
   const [toastMsg, setToastMsg] = useState(null)
   const [showDateDropdown, setShowDateDropdown] = useState(false)
   const [selectedDateRange, setSelectedDateRange] = useState('Last 30 Days')
@@ -31,6 +33,7 @@ export default function Dashboard() {
   // Sync leads from database or localStorage on mount
   useEffect(() => {
     const fetchLeads = async () => {
+      const startTime = Date.now()
       const localData = localStorage.getItem('lms_leads_database')
       if (localData) {
         try {
@@ -45,21 +48,28 @@ export default function Dashboard() {
 
       try {
         const token = localStorage.getItem('authToken');
-        if (!token || token === 'mock-jwt-token') return;
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            setLeads(data);
-            localStorage.setItem('lms_leads_database', JSON.stringify(data));
+        if (token && token !== 'mock-jwt-token') {
+          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+              setLeads(data);
+              localStorage.setItem('lms_leads_database', JSON.stringify(data));
+            }
           }
         }
       } catch (err) {
         console.error("Failed to fetch leads from database:", err);
+      } finally {
+        const elapsed = Date.now() - startTime
+        const delay = Math.max(0, 500 - elapsed)
+        setTimeout(() => {
+          setIsLoading(false)
+        }, delay)
       }
     };
     fetchLeads();
@@ -310,6 +320,10 @@ export default function Dashboard() {
       case 'JNI': return 'status-JNI'
       default: return 'status-default'
     }
+  }
+
+  if (isLoading) {
+    return <DashboardSkeleton />
   }
 
   return (

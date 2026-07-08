@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/layout.css";
+@import "./styles/shimmer.css";
 
 @theme {
   /* Colors */
@@ -328,5 +329,38 @@ pre {
 }
 
 .table-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark Mode Theme Variables */
+.dark {
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-container: #1e293b;
+  --color-surface-container-lowest: #0f172a;
+  --color-surface-container-low: #1e293b;
+  --color-surface-container-high: #334155;
+  --color-on-background: #f8fafc;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #cbd5e1;
+  --color-outline: #475569;
+  --color-outline-variant: #334155;
+}
+
+
+
+/* Double Scrollbar Customization */
+.double-scrollbar-top::-webkit-scrollbar {
+  height: 8px;
+}
+.double-scrollbar-top::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+.double-scrollbar-top::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.double-scrollbar-top::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }

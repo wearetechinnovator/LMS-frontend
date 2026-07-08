@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import CompanyProfile from './steps/CompanyProfile'
 import InitialConfig from './steps/InitialConfig'
+import './onboarding.css'
+
 export default function OnboardingPage({ username, onLogout, onComplete }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [companyData, setCompanyData] = useState({
@@ -15,6 +17,14 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
     adminPassword: ''
   })
 
+  const [stages, setStages] = useState([
+    { id: 1, name: 'New', color: '#2563eb' },
+    { id: 2, name: 'Contacted', color: '#bc4800' },
+    { id: 3, name: 'Callback', color: '#565e74' },
+    { id: 4, name: 'Interested', color: '#eab308' },
+    { id: 5, name: 'Converted', color: '#22c55e', locked: true }
+  ])
+
   const handleCompanyChange = (field, value) => {
     setCompanyData(prev => ({ ...prev, [field]: value }))
   }
@@ -23,7 +33,7 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
     if (currentStep < 2) {
       setCurrentStep(currentStep + 1)
     } else if (currentStep === 2 && onComplete) {
-      onComplete()
+      onComplete(companyData, stages)
     }
   }
 
@@ -47,7 +57,6 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
 
         <div className="onboarding-sidebar-nav">
           <div
-            onClick={() => setCurrentStep(1)}
             className={`onboarding-nav-item ${currentStep === 1 ? 'active' : ''}`}
           >
             <span className="material-symbols-outlined onboarding-nav-icon">business</span>
@@ -55,7 +64,6 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
           </div>
 
           <div
-            onClick={() => setCurrentStep(2)}
             className={`onboarding-nav-item ${currentStep === 2 ? 'active' : ''}`}
           >
             <span className="material-symbols-outlined onboarding-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>settings_suggest</span>
@@ -82,7 +90,7 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
             <CompanyProfile data={companyData} onChange={handleCompanyChange} />
           )}
           {currentStep === 2 && (
-            <InitialConfig />
+            <InitialConfig stages={stages} setStages={setStages} />
           )}
         </div>
 

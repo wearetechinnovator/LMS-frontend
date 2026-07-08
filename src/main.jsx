@@ -39,6 +39,51 @@ import { BrowserRouter } from 'react-router-dom'
   }
 })();
 
+// Self-executing fallback for global appearance initialization
+(() => {
+  try {
+    let accent = '';
+    let textSize = '';
+    let mode = '';
+    
+    try {
+      accent = localStorage.getItem('theme-accent') || '';
+      textSize = localStorage.getItem('theme-text-size') || '';
+      mode = mode || localStorage.getItem('theme-mode') || '';
+    } catch(e) {}
+
+    if (!accent || !textSize || !mode) {
+      const cookies = document.cookie.split('; ').reduce((acc, c) => {
+        const [k, v] = c.split('=')
+        if (k) acc[k.trim()] = decodeURIComponent(v || '')
+        return acc
+      }, {})
+      accent = accent || cookies['theme-accent'] || '#004ac6';
+      textSize = textSize || cookies['theme-text-size'] || '14px';
+      mode = mode || cookies['theme-mode'] || 'light';
+    }
+
+    document.documentElement.style.setProperty('--color-primary', accent);
+    document.documentElement.style.setProperty('--color-primary-fixed', `${accent}20`);
+
+    const sizeNum = parseInt(textSize);
+    document.documentElement.style.setProperty('--text-body-md', `${sizeNum}px`);
+    document.documentElement.style.setProperty('--text-body-sm', `${sizeNum - 2}px`);
+    document.documentElement.style.setProperty('--text-headline-md', `${sizeNum + 2}px`);
+    document.documentElement.style.setProperty('--text-headline-lg', `${sizeNum + 6}px`);
+
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  } catch (e) {
+    console.error("Failed to initialize appearance settings:", e);
+  }
+})();
+
 import './index.css'
 import App from './App.jsx'
 

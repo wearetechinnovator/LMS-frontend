@@ -495,7 +495,7 @@
 }
 
 .export-btn {
-    background-color: #004ac6;
+    background-color: var(--color-primary, #004ac6);
     color: #ffffff;
     border: none;
     border-radius: 3px;

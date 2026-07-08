@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AnalyticsSkeleton } from '../../../components/Skeletons'
 import './analysis.css'
 
 export default function Analytics({ activeTabProp = 'stage' }) {
@@ -17,6 +18,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      const startTime = Date.now()
       setLoading(true)
       const token = localStorage.getItem('authToken')
       if (!token || token === 'mock-jwt-token') {
@@ -44,7 +46,11 @@ export default function Analytics({ activeTabProp = 'stage' }) {
       } catch (err) {
         console.error("Error fetching analytics data:", err)
       } finally {
-        setLoading(false)
+        const elapsed = Date.now() - startTime
+        const delay = Math.max(0, 500 - elapsed)
+        setTimeout(() => {
+          setLoading(false)
+        }, delay)
       }
     }
     fetchData()
@@ -451,40 +457,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
   const maxCounselorAssigned = Math.max(...counselorData.map(c => c.assigned))
 
   if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '400px',
-        width: '100%',
-        backgroundColor: '#f8f9ff',
-        fontFamily: '"Inter", sans-serif',
-        gap: '12px'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid rgba(0, 74, 198, 0.15)',
-          borderTopColor: '#004ac6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <p style={{
-          fontSize: '11px',
-          fontWeight: 800,
-          color: '#737686',
-          textTransform: 'uppercase',
-          letterSpacing: '1px'
-        }}>Loading Analytics...</p>
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    )
+    return <AnalyticsSkeleton />
   }
 
   return (
@@ -515,7 +488,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
               </div>
               <div className="chart-wrapper stage-chart">
                 {stageData.map((item, idx) => {
-                  const heightPercent = maxStageCount > 0 ? (item.count / maxStageCount) * 80 + 10 : 10
+                  const heightPx = maxStageCount > 0 ? (item.count / maxStageCount) * 120 + 20 : 20
                   const isHovered = hoveredIndex === idx && hoveredSection === 'stage'
 
                   return (
@@ -541,7 +514,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                       <div
                         className={`stage-bar ${item.class}`}
                         style={{
-                          height: `${heightPercent}%`,
+                          height: `${heightPx}px`,
                           opacity: hoveredSection === 'stage' && hoveredIndex !== idx ? 0.4 : 1,
                           transition: 'height 0.3s ease, opacity 0.2s ease'
                         }}

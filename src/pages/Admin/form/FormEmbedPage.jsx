@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FormEmbedSkeleton } from '../../../components/Skeletons'
 import './form.css'
 
 // ---------- Shared mock forms (same data as FormBuilderPage) ----------
@@ -250,6 +251,7 @@ function EmbedOptions({ form, copiedKey, onCopy }) {
 
 // ---------- Main Page ----------
 export default function FormEmbedPage() {
+    const [isLoading, setIsLoading] = useState(true)
     const [formsList, setFormsList] = useState([])
     const [selectedForm, setSelectedForm] = useState(null)
     const [activeTab, setActiveTab] = useState('embed') // 'embed' | 'preview'
@@ -259,6 +261,7 @@ export default function FormEmbedPage() {
     // Fetch forms from database on mount
     useEffect(() => {
         const fetchForms = async () => {
+            const startTime = Date.now()
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token || token === 'mock-jwt-token') {
@@ -266,6 +269,9 @@ export default function FormEmbedPage() {
                     if (MOCK_FORMS.length > 0) {
                         setSelectedForm(MOCK_FORMS[0]);
                     }
+                    const elapsed = Date.now() - startTime
+                    const delay = Math.max(0, 500 - elapsed)
+                    setTimeout(() => setIsLoading(false), delay)
                     return;
                 }
                 const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/get-form`, {
@@ -291,6 +297,12 @@ export default function FormEmbedPage() {
                 if (MOCK_FORMS.length > 0) {
                     setSelectedForm(MOCK_FORMS[0]);
                 }
+            } finally {
+                const elapsed = Date.now() - startTime
+                const delay = Math.max(0, 500 - elapsed)
+                setTimeout(() => {
+                    setIsLoading(false);
+                }, delay)
             }
         };
         fetchForms();
@@ -300,6 +312,20 @@ export default function FormEmbedPage() {
         const nameStr = f.name || '';
         return nameStr.toLowerCase().includes(search.toLowerCase());
     })
+
+    // Pagination State for Forms
+    const [currentPage, setCurrentPage] = useState(1)
+    const formsPerPage = 5
+
+    // Reset pagination to page 1 when search query changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search])
+
+    const paginatedForms = filtered.slice(
+        (currentPage - 1) * formsPerPage,
+        (currentPage - 1) * formsPerPage + formsPerPage
+    )
 
     const handleCopy = (key, text) => {
         navigator.clipboard.writeText(text).catch(() => { })
@@ -311,6 +337,10 @@ export default function FormEmbedPage() {
         PUBLISHED: 'bg-green-100 text-green-700',
         DRAFT: 'bg-yellow-100 text-yellow-700',
         TEMPLATE: 'bg-blue-100 text-blue-700',
+    }
+
+    if (isLoading) {
+        return <FormEmbedSkeleton />
     }
 
     return (
@@ -346,7 +376,7 @@ export default function FormEmbedPage() {
                         {filtered.length === 0 && (
                             <p className="text-sm text-center text-on-surface-variant py-8">No forms found</p>
                         )}
-                        {filtered.map(form => (
+                        {paginatedForms.map(form => (
                             <button
                                 key={form.id}
                                 onClick={() => setSelectedForm(form)}
@@ -376,6 +406,29 @@ export default function FormEmbedPage() {
                             </button>
                         ))}
                     </div>
+
+                    {/* Compact Pagination Controls */}
+                    {filtered.length > formsPerPage && (
+                        <div className="flex items-center justify-between text-[11px] text-on-surface-variant select-none mt-2 px-1">
+                            <span>Page {currentPage} of {Math.ceil(filtered.length / formsPerPage)}</span>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className={`p-1 rounded-md transition-colors ${currentPage === 1 ? 'opacity-45 cursor-not-allowed' : 'hover:bg-surface-container cursor-pointer'}`}
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filtered.length / formsPerPage)))}
+                                    disabled={currentPage === Math.ceil(filtered.length / formsPerPage)}
+                                    className={`p-1 rounded-md transition-colors ${currentPage === Math.ceil(filtered.length / formsPerPage) ? 'opacity-45 cursor-not-allowed' : 'hover:bg-surface-container cursor-pointer'}`}
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── Right: Embed Panel ── */}
@@ -408,7 +461,7 @@ export default function FormEmbedPage() {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold border-b-2 transition-colors -mb-px ${activeTab === tab.id
+                                        className={`cursor-pointer flex items-center gap-1.5 px-4 py-3 text-sm font-semibold border-b-2 transition-colors -mb-px ${activeTab === tab.id
                                             ? 'border-primary text-primary'
                                             : 'border-transparent text-on-surface-variant hover:text-on-surface'
                                             }`}

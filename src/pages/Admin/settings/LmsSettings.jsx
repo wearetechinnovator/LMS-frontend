@@ -1,11 +1,21 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getCustomStatuses, saveCustomStatuses, getLeadJourney, saveLeadJourney, parseColorToRgb, getStatusStyle, getCustomJourneys, saveCustomJourneys } from '../../../helpers/statusHelper'
+import { SettingsSkeleton } from '../../../components/Skeletons'
 
 const COUNSELORS = ['Sarah Jenkins', 'Marcus Chan', 'Michael Chen', 'Unassigned']
 const SOURCES = ['Website Organic', 'Paid Search', 'Referral', 'Webinar', 'Cold Outreach', 'Direct Mail', 'Bulk Offline CSV']
 
 export default function LmsSettings() {
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
   const role = localStorage.getItem('userRole')
   const isMasked = role === 'counselor' || role === 'vendor'
   const maskEmail = (email) => {
@@ -96,6 +106,46 @@ export default function LmsSettings() {
   }, [journeysList, activeJourneyId])
 
   const journeySteps = activeJourney ? activeJourney.steps : []
+
+  // -- TAB 7: Appearance States --
+  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('theme-accent') || '#004ac6')
+  const [textSize, setTextSize] = useState(() => localStorage.getItem('theme-text-size') || '14px')
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('theme-mode') || 'light')
+
+  const handleSaveAppearance = (e) => {
+    if (e) e.preventDefault()
+    localStorage.setItem('theme-accent', accentColor)
+    localStorage.setItem('theme-text-size', textSize)
+    localStorage.setItem('theme-mode', themeMode)
+
+    // Also persist in cookies
+    const expires = new Date(Date.now() + 365 * 864e5).toUTCString()
+    document.cookie = `theme-accent=${encodeURIComponent(accentColor)}; expires=${expires}; path=/; SameSite=Lax`
+    document.cookie = `theme-text-size=${encodeURIComponent(textSize)}; expires=${expires}; path=/; SameSite=Lax`
+    document.cookie = `theme-mode=${encodeURIComponent(themeMode)}; expires=${expires}; path=/; SameSite=Lax`
+
+    // Apply accent color variables
+    document.documentElement.style.setProperty('--color-primary', accentColor)
+    document.documentElement.style.setProperty('--color-primary-fixed', `${accentColor}20`)
+
+    // Apply text size variable values
+    const sizeNum = parseInt(textSize)
+    document.documentElement.style.setProperty('--text-body-md', `${sizeNum}px`)
+    document.documentElement.style.setProperty('--text-body-sm', `${sizeNum - 2}px`)
+    document.documentElement.style.setProperty('--text-headline-md', `${sizeNum + 2}px`)
+    document.documentElement.style.setProperty('--text-headline-lg', `${sizeNum + 6}px`)
+
+    // Apply mode class name updates
+    if (themeMode === 'dark') {
+      document.documentElement.classList.add('dark')
+      document.documentElement.classList.remove('light')
+    } else {
+      document.documentElement.classList.add('light')
+      document.documentElement.classList.remove('dark')
+    }
+
+    setToastMsg('Appearance preferences updated successfully!')
+  }
 
   // -- Leads Database Sync state (for Export preview) --
   const [leadsList, setLeadsList] = useState(() => {
@@ -1021,6 +1071,10 @@ export default function LmsSettings() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  if (isLoading) {
+    return <SettingsSkeleton />
+  }
+
   return (
     <div className="w-full relative h-full flex flex-col font-sans select-none p-6 bg-white text-left">
       {/* Toast Notification */}
@@ -1088,6 +1142,14 @@ export default function LmsSettings() {
         >
           <span className="material-symbols-outlined text-[17px]">route</span>
           Lead Journey
+        </button>
+        <button
+          onClick={() => setActiveSettingsTab('appearance')}
+          className={`pb-2.5 font-bold text-[13px] border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSettingsTab === 'appearance' ? 'border-[#2f7d9e] text-[#2f7d9e]' : 'border-transparent text-slate-400 hover:text-slate-700'
+            }`}
+        >
+          <span className="material-symbols-outlined text-[17px]">palette</span>
+          Appearance
         </button>
       </div>
 
@@ -2313,6 +2375,128 @@ export default function LmsSettings() {
               </div>
             </div>
           </motion.div>
+        )}
+
+        {/* TAB 7: APPEARANCE PREFERENCES */}
+        {activeSettingsTab === 'appearance' && (
+          <motion.form
+            key="appearance-form"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
+            onSubmit={handleSaveAppearance}
+            className="w-full text-left space-y-6 bg-white border border-[#c3c6d7] rounded p-6 shadow-xs max-w-2xl font-sans"
+          >
+            <div>
+              <h2 className="text-[16px] font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-3">
+                <span className="material-symbols-outlined text-[#2f7d9e] text-[20px]">palette</span>
+                Appearance Settings
+              </h2>
+              <p className="text-[11px] text-slate-450 mt-1">
+                Customize accent branding colors, typographic layouts, and visual modes.
+              </p>
+            </div>
+
+            {/* Accent Theme Choice */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Accent Theme Color
+              </label>
+              <div className="grid grid-cols-6 gap-3">
+                {[
+                  { name: 'Classic Blue', color: '#004ac6' },
+                  { name: 'Royal Purple', color: '#4f46e5' },
+                  { name: 'Teal Green', color: '#0d9488' },
+                  { name: 'Sunset Orange', color: '#ea580c' },
+                  { name: 'Crimson Red', color: '#dc2626' },
+                  { name: 'Sleek Dark', color: '#0f172a' }
+                ].map((item) => (
+                  <button
+                    key={item.color}
+                    type="button"
+                    onClick={() => setAccentColor(item.color)}
+                    className={`h-11 rounded-lg flex flex-col items-center justify-center border-2 transition-all gap-1 cursor-pointer select-none text-[10px] font-semibold ${
+                      accentColor === item.color
+                        ? 'border-slate-800 scale-102 font-bold shadow-xs'
+                        : 'border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    <span 
+                      className="w-5 h-5 rounded-full" 
+                      style={{ backgroundColor: item.color }} 
+                    />
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Typography scale choice */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Base Typography Size
+              </label>
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Small (13px)', value: '13px' },
+                  { label: 'Normal (14px)', value: '14px' },
+                  { label: 'Medium (15px)', value: '15px' },
+                  { label: 'Large (16px)', value: '16px' }
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setTextSize(item.value)}
+                    className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer select-none text-[11px] font-medium ${
+                      textSize === item.value
+                        ? 'bg-slate-800 text-white border-slate-800 font-bold shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dark mode layout toggles */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Visual Palette Mode
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Light Mode Palette', value: 'light', icon: 'light_mode' },
+                  { label: 'Dark Mode Palette', value: 'dark', icon: 'dark_mode' }
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setThemeMode(item.value)}
+                    className={`py-2.5 px-4 rounded-lg border flex items-center justify-center gap-2 transition-all cursor-pointer select-none text-[11px] font-semibold ${
+                      themeMode === item.value
+                        ? 'bg-slate-800 text-white border-slate-800 font-bold shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Save settings action */}
+            <div className="border-t border-slate-100 pt-4 flex justify-end shrink-0 select-none">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-[#2f7d9e] hover:bg-[#206587] text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer border-0"
+              >
+                Save Appearance Settings
+              </button>
+            </div>
+          </motion.form>
         )}
       </AnimatePresence>
 

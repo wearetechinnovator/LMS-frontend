@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-export default function InitialConfig() {
+import React, { useState, useEffect } from 'react'
+export default function InitialConfig({ stages, setStages }) {
   const [selectedIndustry, setSelectedIndustry] = useState('')
   const [industries, setIndustries] = useState([
     { id: 'healthcare', name: 'Healthcare', icon: 'local_hospital', color: '#10b981' },
@@ -10,17 +10,62 @@ export default function InitialConfig() {
   const [isAddingIndustry, setIsAddingIndustry] = useState(false)
   const [newIndustryName, setNewIndustryName] = useState('')
 
-  const [stages, setStages] = useState([
-    { id: 1, name: 'New', color: '#2563eb' },
-    { id: 2, name: 'Contacted', color: '#bc4800' },
-    { id: 3, name: 'Callback', color: '#565e74' },
-    { id: 4, name: 'Interested', color: '#eab308' },
-    { id: 5, name: 'Converted', color: '#22c55e', locked: true }
-  ])
-
   const [showModal, setShowModal] = useState(false)
   const [newStage, setNewStage] = useState({ name: '', color: '#2563eb' })
   const [draggedItem, setDraggedItem] = useState(null)
+
+  useEffect(() => {
+    if (selectedIndustry) {
+      localStorage.setItem('companyIndustry', selectedIndustry)
+    }
+  }, [selectedIndustry])
+
+  useEffect(() => {
+    // Map stages to custom statuses list
+    const mappedStatuses = stages.map(s => {
+      const upperName = s.name.toUpperCase().trim();
+      return {
+        value: upperName,
+        label: s.name.trim(),
+        color: s.color,
+        isSystem: s.locked || false,
+        description: `${s.name} stage`
+      };
+    });
+
+    // Always ensure a LOST status exists for fallback/rejected deals
+    if (!mappedStatuses.some(s => s.value === 'LOST')) {
+      mappedStatuses.push({
+        value: 'LOST',
+        label: 'LOST',
+        color: '#ef4444',
+        isSystem: true,
+        description: 'Lead lost / deal closed'
+      });
+    }
+
+    // Save statuses to localStorage
+    localStorage.setItem('lms_custom_statuses', JSON.stringify(mappedStatuses));
+
+    // Save journey to localStorage
+    // The journey is the list of active step values (excluding LOST)
+    const journeySteps = stages.map(s => s.name.toUpperCase().trim());
+    const customJourneys = [
+      {
+        id: 'default',
+        name: 'Standard CRM Pipeline',
+        steps: journeySteps,
+        isDefault: true
+      }
+    ];
+    localStorage.setItem('lms_custom_journeys', JSON.stringify(customJourneys));
+    localStorage.setItem('lms_lead_journey', JSON.stringify(journeySteps));
+
+    // Dispatch update events to synchronize lead statuses and journeys
+    window.dispatchEvent(new CustomEvent('lms-statuses-updated'));
+    window.dispatchEvent(new CustomEvent('lms-journeys-updated'));
+    window.dispatchEvent(new CustomEvent('lms-journey-updated'));
+  }, [stages]);
 
   const handleRemoveStage = (id) => {
     if (!stages.find(s => s.id === id)?.locked) {

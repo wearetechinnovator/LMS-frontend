@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import FormBuilder from './FormBuilder'
 import FormBuilderHeader from '../../../components/FormbuilderPage/FormBuilderHeader'
 import Toast from '../../../components/Toast'
+import { FormBuilderSkeleton } from '../../../components/Skeletons'
 import './form.css'
 
 export default function FormBuilderPage() {
@@ -36,15 +37,21 @@ export default function FormBuilderPage() {
     setToastMessage(msg)
   }
 
-  // Detailed mock forms data structures matching the uploaded screenshot as fallback
+  const [isLoading, setIsLoading] = useState(true)
   const [formsList, setFormsList] = useState([])
 
   // Fetch forms from database on mount
   useEffect(() => {
     const fetchForms = async () => {
+      const startTime = Date.now()
       try {
         const token = localStorage.getItem('authToken');
-        if (!token || token === 'mock-jwt-token') return;
+        if (!token || token === 'mock-jwt-token') {
+          const elapsed = Date.now() - startTime
+          const delay = Math.max(0, 500 - elapsed)
+          setTimeout(() => setIsLoading(false), delay)
+          return;
+        }
         const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/get-form`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -56,6 +63,12 @@ export default function FormBuilderPage() {
         }
       } catch (err) {
         console.error("Failed to load forms from backend:", err);
+      } finally {
+        const elapsed = Date.now() - startTime
+        const delay = Math.max(0, 500 - elapsed)
+        setTimeout(() => {
+          setIsLoading(false)
+        }, delay)
       }
     };
     fetchForms();
@@ -86,6 +99,25 @@ export default function FormBuilderPage() {
     const matchesStatus = filterStatus === 'all' || form.status === filterStatus
     return matchesSearch && matchesStatus
   })
+
+  // Pagination State for Forms
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
+  // Reset page when search query or filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, filterStatus])
+
+  const paginatedForms = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * rowsPerPage
+    return filteredForms.slice(startIndex, startIndex + rowsPerPage)
+  }, [filteredForms, currentPage, rowsPerPage])
+
+  const totalItems = filteredForms.length
+  const totalPages = Math.ceil(totalItems / rowsPerPage)
+  const paginationStartIndex = totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage
+  const paginationEndIndex = Math.min(currentPage * rowsPerPage, totalItems)
 
   // Set up action to open fresh blank form builder
   const handleCreateNewForm = () => {
@@ -313,6 +345,10 @@ export default function FormBuilderPage() {
     setActiveFormSchema(null)
   }
 
+  if (isLoading && !activeFormSchema) {
+    return <FormBuilderSkeleton />
+  }
+
   return (
     <div className="p-6 h-full flex flex-col font-sans select-none overflow-y-auto">
       <AnimatePresence mode="wait">
@@ -374,6 +410,45 @@ export default function FormBuilderPage() {
               </div>
             </div>
 
+            {/* Top Pagination Controls */}
+            {formsList.length > 0 && (
+              <div className="flex items-center justify-between text-slate-500 text-[12px] select-none mb-3 px-1">
+                <span>Showing {totalItems === 0 ? 0 : paginationStartIndex + 1}-{paginationEndIndex} of {totalItems} forms</span>
+                <div className="flex items-center gap-2">
+                  <span>Rows per page</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="px-2 h-6 border border-outline-variant rounded bg-surface text-[11px] cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <div className="flex items-center gap-1 ml-4">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1 rounded transition-colors ${currentPage === 1 ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`p-1 rounded transition-colors ${(currentPage === totalPages || totalPages === 0) ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Forms Data Table */}
             <div className="bg-surface border border-outline-variant overflow-hidden shadow-xs form-builder-page">
               <table className="w-full text-left border-collapse">
@@ -420,7 +495,7 @@ export default function FormBuilderPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredForms.map((form) => (
+                    paginatedForms.map((form) => (
                       <tr
                          key={form.id}
                         className="border-b border-outline-variant hover:bg-slate-50/70 transition-colors"
@@ -493,6 +568,45 @@ export default function FormBuilderPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Bottom Pagination Controls */}
+            {formsList.length > 0 && (
+              <div className="flex items-center justify-between text-slate-500 text-[12px] select-none mt-4 px-1">
+                <span>Showing {totalItems === 0 ? 0 : paginationStartIndex + 1}-{paginationEndIndex} of {totalItems} forms</span>
+                <div className="flex items-center gap-2">
+                  <span>Rows per page</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="px-2 h-6 border border-outline-variant rounded bg-surface text-[11px] cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <div className="flex items-center gap-1 ml-4">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1 rounded transition-colors ${currentPage === 1 ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`p-1 rounded transition-colors ${(currentPage === totalPages || totalPages === 0) ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         ) : (
           /* FORM BUILDER DETAIL WORKSPACE VIEW */
