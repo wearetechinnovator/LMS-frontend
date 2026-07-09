@@ -1150,7 +1150,10 @@ export default function FormBuilder({
 
                                                 {/* Top-right card actions menu - touch-friendly floating buttons */}
                                                 <div className="absolute -top-3 right-4 flex gap-2 z-10">
-                                                    <button className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-primary text-primary hover:bg-primary/5 active:bg-primary/10 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedFieldId(field.id); }}
+                                                        className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-primary text-primary hover:bg-primary/5 active:bg-primary/10 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer"
+                                                    >
                                                         <span className="material-symbols-outlined text-[18px]">settings</span>
                                                     </button>
                                                     <button
@@ -1799,6 +1802,8 @@ export default function FormBuilder({
                                     <input
                                         type="text"
                                         placeholder="e.g., phone_input_01"
+                                        value={selectedField.customId || ''}
+                                        onChange={(e) => updateField(selectedField.id, { customId: e.target.value })}
                                         className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] settings-input"
                                     />
                                 </div>
@@ -1807,6 +1812,8 @@ export default function FormBuilder({
                                     <input
                                         type="text"
                                         placeholder="e.g., custom-style p-4"
+                                        value={selectedField.customClasses || ''}
+                                        onChange={(e) => updateField(selectedField.id, { customClasses: e.target.value })}
                                         className="w-full h-7 px-2 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] settings-input"
                                     />
                                 </div>

@@ -1167,7 +1167,7 @@ export default function LeadDetailsPage() {
           <div className="sticky top-5 space-y-5 max-h-[calc(100vh-3rem)] overflow-y-auto pr-1 scrollbar-none">
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-5">
               <button
-                onClick={() => navigate('/admin/leads')}
+                onClick={() => navigate(-1)}
                 className="p-1.5 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer text-slate-500 mb-2 w-8 h-8"
                 title="Back to Leads list"
               >
