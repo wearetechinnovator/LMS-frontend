@@ -32,6 +32,11 @@ export default function AllLeadsPage() {
   const [showTooltip, setShowTooltip] = useState(false)
   const role = localStorage.getItem('userRole')
   const isMasked = role !== 'admin' && role !== 'Admin' && role !== 'System Admin'
+  const [revealedPhoneLeadIds, setRevealedPhoneLeadIds] = useState({})
+  const [followUpLead, setFollowUpLead] = useState(null)
+  const [followUpType, setFollowUpType] = useState('Call')
+  const [followUpDate, setFollowUpDate] = useState('')
+  const [followUpTime, setFollowUpTime] = useState('')
   const maskEmail = (email) => {
     if (!email) return ''
     const atIdx = email.indexOf('@')
@@ -46,6 +51,45 @@ export default function AllLeadsPage() {
     if (str.length <= 4) return '******'
     return str.slice(0, 2) + '******' + str.slice(-2)
   }
+
+  const renderNextFollowUpCell = (val) => {
+    if (!val || val === 'None' || val === '--') return <span className="text-slate-400 font-normal">--</span>;
+    if (typeof val === 'string' && val.includes(' | ')) {
+      const parts = val.split(' | ');
+      const type = parts[0];
+      const dateTime = parts[1];
+      
+      let icon = 'schedule';
+      let iconColor = 'text-slate-400';
+      let bgColor = 'bg-slate-50/50 border-slate-200/50 text-slate-600';
+      
+      if (type === 'WhatsApp') {
+        icon = 'chat';
+        iconColor = 'text-emerald-500';
+        bgColor = 'bg-emerald-50/30 border-emerald-100 text-slate-700 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-300';
+      } else if (type === 'Call') {
+        icon = 'call';
+        iconColor = 'text-blue-500';
+        bgColor = 'bg-blue-50/30 border-blue-100 text-slate-700 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-300';
+      } else if (type === 'Mail') {
+        icon = 'mail';
+        iconColor = 'text-amber-500';
+        bgColor = 'bg-amber-50/30 border-amber-100 text-slate-700 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-300';
+      } else if (type === 'Other') {
+        icon = 'event';
+        iconColor = 'text-purple-500';
+        bgColor = 'bg-purple-50/30 border-purple-100 text-slate-700 dark:bg-purple-950/20 dark:border-purple-900/50 dark:text-purple-300';
+      }
+      
+      return (
+        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-bold ${bgColor}`}>
+          <span className={`material-symbols-outlined text-[13px] ${iconColor}`}>{icon}</span>
+          <span>{dateTime}</span>
+        </div>
+      );
+    }
+    return <span className="text-slate-600 dark:text-slate-300">{val}</span>;
+  };
 
   // Detect when cursor stops moving for 2 seconds to show tooltip
   useEffect(() => {
@@ -1066,6 +1110,17 @@ export default function AllLeadsPage() {
   const handleQuickLogDirect = (leadId, actionTitle, actionBody) => {
     const targetLead = leads.find(l => l.id === leadId)
     if (!targetLead) return
+
+    const newEvent = {
+      id: Date.now() + Math.random(),
+      type: actionTitle.includes('Call') ? 'CALL' : 'COMMENT',
+      title: actionTitle,
+      body: actionBody,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+      user: 'System',
+      icon: actionTitle.includes('Call') ? 'call' : 'comment',
+      color: actionTitle.includes('Call') ? 'blue-600' : 'slate-600'
+    }
 
     const updatedTimeline = [newEvent, ...(targetLead.timeline || [])]
     const sortedTimeline = [
@@ -2122,12 +2177,12 @@ export default function AllLeadsPage() {
                       {paginatedLeads.map((lead, index) => (
                         <motion.tr
                           key={lead.id}
-                          className={`border-b border-slate-200 hover:bg-slate-50/70 transition-colors ${role === 'admin' ? 'cursor-pointer' : ''}`}
+                          className={`border-b border-slate-200 hover:bg-slate-50/70 transition-colors ${hasPermission('leads_details_view') ? 'cursor-pointer' : ''}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: index * 0.04 }}
                           onClick={() => {
-                            if (role === 'admin') {
+                            if (hasPermission('leads_details_view')) {
                               navigate(`/admin/leads/${lead.id}`)
                               setHoveredLeadId(null)
                             }
@@ -2202,7 +2257,7 @@ export default function AllLeadsPage() {
                                         transition={{ duration: 0.15 }}
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        {role === 'admin' && (
+                                        {hasPermission('leads_details_view') && (
                                           <button
                                             onClick={() => {
                                               navigate(`/admin/leads/${lead.id}`);
@@ -2218,7 +2273,15 @@ export default function AllLeadsPage() {
                                         <button
                                           onClick={() => {
                                             handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                                            triggerToast('Voice call simulator initialized!');
+                                            triggerToast('Number will be visible for 5 seconds!');
+                                            setRevealedPhoneLeadIds(prev => ({ ...prev, [lead.id]: true }));
+                                            setTimeout(() => {
+                                              setRevealedPhoneLeadIds(prev => {
+                                                const updated = { ...prev };
+                                                delete updated[lead.id];
+                                                return updated;
+                                              });
+                                            }, 5000);
                                             setActiveDropdownLeadId(null);
                                           }}
                                           className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
@@ -2237,6 +2300,20 @@ export default function AllLeadsPage() {
                                         >
                                           <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
                                           Send Email
+                                        </button>
+
+                                        <button
+                                          onClick={() => {
+                                            setFollowUpLead(lead);
+                                            setFollowUpType('Call');
+                                            setFollowUpDate('');
+                                            setFollowUpTime('');
+                                            setActiveDropdownLeadId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
+                                        >
+                                          <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">calendar_month</span>
+                                          Follow Up
                                         </button>
 
                                         <div className="h-px bg-slate-100 my-1" />
@@ -2416,7 +2493,7 @@ export default function AllLeadsPage() {
                             </td>
                           )}
                           {visibleColumns.phone && (
-                            <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
+                            <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{(isMasked && !revealedPhoneLeadIds[lead.id]) ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
                           )}
                           {visibleColumns.score && (
                             <td className="px-3 py-4">
@@ -2464,7 +2541,7 @@ export default function AllLeadsPage() {
                             <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.lastContacted}</td>
                           )}
                           {visibleColumns.nextFollowUp && (
-                            <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold">{lead.nextFollowUp}</td>
+                            <td className="px-3 py-4">{renderNextFollowUpCell(lead.nextFollowUp)}</td>
                           )}
                           {visibleColumns.age && (
                             <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-mono">{lead.age}</td>
@@ -2562,11 +2639,11 @@ export default function AllLeadsPage() {
                   <div
                     key={lead.id}
                     onClick={() => {
-                      if (role === 'admin') {
+                      if (hasPermission('leads_details_view')) {
                         navigate(`/admin/leads/${lead.id}`)
                       }
                     }}
-                    className={`bg-white border border-slate-200 rounded-[3px] p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${role === 'admin' ? 'cursor-pointer' : ''}`}
+                    className={`bg-white border border-slate-200 rounded-[3px] p-4 space-y-3.5 shadow-2xs hover:border-primary/40 transition-all text-left ${hasPermission('leads_details_view') ? 'cursor-pointer' : ''}`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
@@ -2593,7 +2670,7 @@ export default function AllLeadsPage() {
                     <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-[11px] border-t border-slate-100 pt-3 text-slate-600 font-medium">
                       <div>
                         <span className="text-slate-400 block text-[9.5px]">Phone</span>
-                        <span className="font-semibold text-slate-700">{isMasked ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
+                        <span className="font-semibold text-slate-700">{(isMasked && !revealedPhoneLeadIds[lead.id]) ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
                       </div>
                       <div>
                         <span className="text-slate-400 block text-[9.5px]">Score</span>
@@ -2620,6 +2697,12 @@ export default function AllLeadsPage() {
                         <span className="text-slate-400 block text-[9.5px]">Query</span>
                         <span className="font-semibold text-slate-700">{lead.query || '--'}</span>
                       </div>
+                      {lead.nextFollowUp && lead.nextFollowUp !== 'None' && lead.nextFollowUp !== '--' && (
+                        <div className="col-span-2 flex flex-col items-start gap-0.5 mt-1 border-t border-slate-50 pt-2 w-full">
+                          <span className="text-slate-400 text-[9.5px]">Next Follow-Up</span>
+                          {renderNextFollowUpCell(lead.nextFollowUp)}
+                        </div>
+                      )}
                     </div>
 
                     {/* Mobile Row Hover Actions equivalent */}
@@ -2627,7 +2710,15 @@ export default function AllLeadsPage() {
                       <button
                         onClick={() => {
                           handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                          triggerToast('Voice call simulator initialized!');
+                          triggerToast('Number will be visible for 5 seconds!');
+                          setRevealedPhoneLeadIds(prev => ({ ...prev, [lead.id]: true }));
+                          setTimeout(() => {
+                            setRevealedPhoneLeadIds(prev => {
+                              const updated = { ...prev };
+                              delete updated[lead.id];
+                              return updated;
+                            });
+                          }, 5000);
                         }}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-150 text-[10px] font-bold transition-all cursor-pointer"
                       >
@@ -2644,7 +2735,7 @@ export default function AllLeadsPage() {
                         <span className="material-symbols-outlined text-[12px]">mail</span>
                         Email
                       </button>
-                      {role === 'admin' && (
+                      {hasPermission('leads_details_view') && (
                         <button
                           onClick={() => {
                             navigate(`/admin/leads/${lead.id}`);
@@ -3534,6 +3625,180 @@ export default function AllLeadsPage() {
                       Close
                     </button>
                   </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* FOLLOW UP MODAL */}
+          <AnimatePresence>
+            {followUpLead && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 select-text">
+                <motion.div
+                  style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', color: '#1e293b' }}
+                  className="rounded-2xl border shadow-2xl w-full max-w-sm overflow-hidden flex flex-col font-sans"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {/* Modal Header */}
+                  <div 
+                    style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+                    className="px-5 py-4 border-b flex justify-between items-center"
+                  >
+                    <h3 
+                      style={{ color: '#1e293b' }}
+                      className="text-[13px] font-extrabold flex items-center gap-1.5 uppercase tracking-wide"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-purple-500">calendar_month</span>
+                      Schedule Follow-up
+                    </h3>
+                    <button
+                      onClick={() => setFollowUpLead(null)}
+                      className="p-1 hover:bg-slate-100 rounded-full text-slate-400 cursor-pointer flex items-center justify-center transition-colors"
+                      type="button"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const formatted = `${followUpType} | ${followUpDate} ${followUpTime}`;
+                      const newEvent = {
+                        id: Date.now() + Math.random(),
+                        type: 'COMMENT',
+                        title: `Scheduled Follow-up (${followUpType})`,
+                        body: `Next follow-up planned for ${followUpDate} at ${followUpTime}`,
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
+                        user: 'System',
+                        ip: '192.168.1.105',
+                        icon: 'event',
+                        color: 'purple-600'
+                      };
+                      const updatedTimeline = [newEvent, ...(followUpLead.timeline || [])];
+
+                      const token = localStorage.getItem('authToken');
+                      if (token && token !== 'mock-jwt-token') {
+                        try {
+                          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/edit-lead/${followUpLead.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                              nextFollowUp: formatted,
+                              timeline: updatedTimeline
+                            })
+                          });
+                          if (!response.ok) {
+                            const errData = await response.json();
+                            throw new Error(errData.error || 'Failed to schedule follow-up');
+                          }
+                        } catch (err) {
+                          triggerToast(`Error: ${err.message}`);
+                          return;
+                        }
+                      }
+
+                      const updatedLeads = leads.map(l => {
+                        if (l.id === followUpLead.id) {
+                          return { ...l, nextFollowUp: formatted, timeline: updatedTimeline };
+                        }
+                        return l;
+                      });
+                      setLeads(updatedLeads);
+                      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads));
+                      triggerToast('Follow-up scheduled successfully!');
+                      setFollowUpLead(null);
+                    }}
+                    className="p-5 space-y-4 text-left"
+                  >
+                    <div>
+                      <label 
+                        style={{ color: '#94a3b8' }}
+                        className="block text-[11px] font-extrabold uppercase tracking-wider mb-2"
+                      >
+                        Follow-Up Type
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'WhatsApp', label: 'WhatsApp', icon: 'chat', color: 'emerald-500', activeStyle: { borderColor: '#10b981', backgroundColor: '#ecfdf5', color: '#047857' } },
+                          { id: 'Call', label: 'Call', icon: 'call', color: 'blue-500', activeStyle: { borderColor: '#3b82f6', backgroundColor: '#eff6ff', color: '#1d4ed8' } },
+                          { id: 'Mail', label: 'Email', icon: 'mail', color: 'amber-500', activeStyle: { borderColor: '#f59e0b', backgroundColor: '#fff7ed', color: '#b45309' } },
+                        ].map(opt => {
+                          const isActive = followUpType === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setFollowUpType(opt.id)}
+                              style={isActive ? opt.activeStyle : { backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#475569' }}
+                              className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer hover:bg-slate-50"
+                            >
+                              <span className={`material-symbols-outlined text-[16px] text-${opt.color}`}>{opt.icon}</span>
+                              <span>{opt.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label 
+                        style={{ color: '#94a3b8' }}
+                        className="block text-[11px] font-extrabold uppercase tracking-wider mb-1.5"
+                      >
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        value={followUpDate}
+                        onChange={(e) => setFollowUpDate(e.target.value)}
+                        style={{ backgroundColor: '#ffffff', color: '#1e293b', borderColor: '#cbd5e1' }}
+                        className="w-full border rounded-xl px-3 py-2 text-[12px] focus:outline-none focus:border-purple-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label 
+                        style={{ color: '#94a3b8' }}
+                        className="block text-[11px] font-extrabold uppercase tracking-wider mb-1.5"
+                      >
+                        Time
+                      </label>
+                      <input
+                        type="time"
+                        value={followUpTime}
+                        onChange={(e) => setFollowUpTime(e.target.value)}
+                        style={{ backgroundColor: '#ffffff', color: '#1e293b', borderColor: '#cbd5e1' }}
+                        className="w-full border rounded-xl px-3 py-2 text-[12px] focus:outline-none focus:border-purple-500"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setFollowUpLead(null)}
+                        style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#475569' }}
+                        className="px-4 py-2 border rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:bg-slate-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm"
+                      >
+                        Schedule
+                      </button>
+                    </div>
+                  </form>
                 </motion.div>
               </div>
             )}

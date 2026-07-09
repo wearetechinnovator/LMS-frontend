@@ -115,7 +115,8 @@ export default function LeadDetailsDrawer({
           {/* Journey tracker */}
           {(() => {
             const journeys = getCustomJourneys()
-            const leadJourney = journeys.find(j => j.id === (activeLeadDetails.journeyId || 'default')) || journeys.find(j => j.isDefault) || journeys[0]
+            const activeJourneyId = activeLeadDetails.journeyId && activeLeadDetails.journeyId !== 'default' ? activeLeadDetails.journeyId : journeys.find(j => j.isDefault)?.id || 'default'
+            const leadJourney = journeys.find(j => j.id === activeJourneyId) || journeys.find(j => j.isDefault) || journeys[0]
             const steps = leadJourney ? leadJourney.steps : []
             const customStatuses = getCustomStatuses()
             const JOURNEY_STAGES = steps.map(stepVal => {
@@ -133,11 +134,12 @@ export default function LeadDetailsDrawer({
               const local = localStorage.getItem('lms_leads_database')
               if (local) {
                 try {
-                  const dbLeads = JSON.parse(local)
-                  const updated = dbLeads.map(l => {
-                    if (l.id === activeLeadDetails.id) {
-                      const prevJourney = journeys.find(j => j.id === (activeLeadDetails.journeyId || 'default'))?.name || 'Standard CRM Pipeline'
-                      const nextJourney = journeys.find(j => j.id === newJourneyId)?.name || newJourneyId
+                   const dbLeads = JSON.parse(local)
+                   const updated = dbLeads.map(l => {
+                     if (l.id === activeLeadDetails.id) {
+                        const currentJourneyId = activeLeadDetails.journeyId && activeLeadDetails.journeyId !== 'default' ? activeLeadDetails.journeyId : journeys.find(j => j.isDefault)?.id || 'default'
+                        const prevJourney = journeys.find(j => j.id === currentJourneyId)?.name || 'Standard CRM Pipeline'
+                        const nextJourney = journeys.find(j => j.id === newJourneyId)?.name || newJourneyId
                       const updatedTimeline = [
                         {
                           id: Date.now(),
@@ -174,7 +176,7 @@ export default function LeadDetailsDrawer({
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9.5px] text-slate-400 font-bold uppercase">Pipeline:</span>
                     <select
-                      value={activeLeadDetails.journeyId || 'default'}
+                      value={activeLeadDetails.journeyId || activeJourneyId}
                       onChange={(e) => handleLeadJourneyChangeLocal(e.target.value)}
                       className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] outline-none text-slate-700 cursor-pointer font-bold shadow-2xs focus:border-sky-500"
                     >

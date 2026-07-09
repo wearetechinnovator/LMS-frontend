@@ -110,7 +110,7 @@ export const RoleRoutes = ({ username, handleLogout }) => {
           </PermissionGate>
         } />
         <Route path="leads/:id" element={
-          <PermissionGate permission="leads_view">
+          <PermissionGate permission="leads_details_view" fallback={<Navigate to="/unauthorized" replace />}>
             <AdminLeadDetailsPage />
           </PermissionGate>
         } />
@@ -160,9 +160,7 @@ export const RoleRoutes = ({ username, handleLogout }) => {
           </PermissionGate>
         } />
         <Route path="settings" element={
-          <PermissionGate permission="settings">
-            <AdminLmsSettingsPage />
-          </PermissionGate>
+          <AdminLmsSettingsPage />
         } />
         <Route path="analytics">
           <Route index element={<Navigate to="stage" replace />} />

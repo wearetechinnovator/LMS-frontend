@@ -39,6 +39,7 @@ export default function LeadDetailsPage() {
   const [timelineSearchQuery, setTimelineSearchQuery] = useState('')
   const [detailsActiveTab, setDetailsActiveTab] = useState('overview')
   const [toastMsg, setToastMsg] = useState(null)
+  const [revealedPhone, setRevealedPhone] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -64,9 +65,13 @@ export default function LeadDetailsPage() {
   }, [])
 
   const leadJourney = useMemo(() => {
-    if (!activeLeadDetails) return journeysList[0];
-    const assignedId = activeLeadDetails.journeyId || 'default';
-    return journeysList.find(j => j.id === assignedId) || journeysList.find(j => j.isDefault) || journeysList[0];
+    if (!activeLeadDetails) return journeysList.find(j => j.isDefault) || journeysList[0];
+    const assignedId = activeLeadDetails.journeyId;
+    if (assignedId && assignedId !== 'default') {
+      const found = journeysList.find(j => j.id === assignedId);
+      if (found) return found;
+    }
+    return journeysList.find(j => j.isDefault) || journeysList.find(j => j.id === 'default') || journeysList[0];
   }, [activeLeadDetails, journeysList])
 
   const journeySteps = leadJourney ? leadJourney.steps : []
@@ -256,7 +261,7 @@ export default function LeadDetailsPage() {
     if (!val) return '--'
     if (isMasked) {
       if (key === 'email') return maskEmail(val)
-      if (key === 'phone') return maskPhone(val)
+      if (key === 'phone') return revealedPhone ? val : maskPhone(val)
     }
     return val
   }
@@ -337,8 +342,9 @@ export default function LeadDetailsPage() {
       triggerToast("Error: You do not have permission to edit leads!");
       return;
     }
-    const prevJourney = journeysList.find(j => j.id === (activeLeadDetails.journeyId || 'default'))?.name || 'Standard CRM Pipeline'
-    const nextJourney = journeysList.find(j => j.id === newJourneyId)?.name || newJourneyId
+    const currentJourneyId = activeLeadDetails.journeyId || journeysList.find(j => j.isDefault)?.id || 'default';
+    const prevJourney = journeysList.find(j => j.id === currentJourneyId)?.name || 'Standard CRM Pipeline';
+    const nextJourney = journeysList.find(j => j.id === newJourneyId)?.name || newJourneyId;
     const updatedTimeline = [
       {
         id: Date.now(),
@@ -1134,33 +1140,33 @@ export default function LeadDetailsPage() {
 
               <div className="space-y-3 pt-4 border-t border-slate-100">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metadata</div>
-                <div className="space-y-2.5 text-[12px] font-semibold text-slate-655">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Source</span>
-                    <span className="text-slate-800 font-bold">{activeLeadDetails.source || 'Organic Search'}</span>
+                <div className="space-y-2.5 text-[11px] font-sans">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-slate-400 font-medium shrink-0">Source</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words">{activeLeadDetails.source || 'Organic Search'}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Campaign</span>
-                    <span className="text-slate-800 font-bold truncate max-w-[100px]" title={activeLeadDetails.campaign || 'Direct_Ingest'}>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-slate-400 font-medium shrink-0">Campaign</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words" title={activeLeadDetails.campaign || 'Direct_Ingest'}>
                       {activeLeadDetails.campaign || 'Direct_Ingest'}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">UTM Medium</span>
-                    <span className="text-slate-850 font-bold font-sans">cpc</span>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-slate-400 font-medium shrink-0">UTM Medium</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right">cpc</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium font-sans">Query</span>
-                    <span className="text-slate-800 font-bold font-sans">{activeLeadDetails.query || '--'}</span>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-slate-400 font-medium shrink-0">Query</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words">{activeLeadDetails.query || '--'}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">IP Address</span>
-                    <span className="text-slate-800 font-bold">{activeLeadDetails.ip || 'N/A'}</span>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-slate-400 font-medium shrink-0">IP Address</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right">{activeLeadDetails.ip || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Device</span>
-                    <span className="text-slate-800 font-bold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-slate-400 font-medium shrink-0">Device</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right flex items-center gap-1 justify-end">
+                      <span className="material-symbols-outlined text-[13px]">
                         {activeLeadDetails.device?.toLowerCase() === 'mobile' ? 'smartphone' : 
                          activeLeadDetails.device?.toLowerCase() === 'tablet' ? 'tablet_mac' : 'desktop_windows'}
                       </span>
@@ -1180,15 +1186,9 @@ export default function LeadDetailsPage() {
                     disabled={!hasPermission('leads_edit')}
                     className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <option value="NEW">NEW</option>
-                    <option value="ASSIGNED">ASSIGNED</option>
-                    <option value="CONTACTED">CONTACTED</option>
-                    <option value="QUALIFIED">QUALIFIED</option>
-                    <option value="DEMO">DEMO SCHEDULED</option>
-                    <option value="PROPOSAL">PROPOSAL</option>
-                    <option value="NEGOTIATION">NEGOTIATION</option>
-                    <option value="WON">WON</option>
-                    <option value="LOST">LOST</option>
+                    {statusesList.map(status => (
+                      <option key={status.value} value={status.value}>{status.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1224,7 +1224,13 @@ export default function LeadDetailsPage() {
                     <h1 className="text-xl font-extrabold text-slate-800 leading-tight">{activeLeadDetails.name}</h1>
                     <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => triggerToast('Voice call simulator initialized!')}
+                        onClick={() => {
+                          triggerToast('Number will be visible for 5 seconds!')
+                          setRevealedPhone(true)
+                          setTimeout(() => {
+                            setRevealedPhone(false)
+                          }, 5000)
+                        }}
                         className="p-1.5 bg-blue-50 hover:bg-blue-100 hover:scale-105 active:scale-95 text-blue-600 rounded-lg border border-blue-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
                         data-tooltip="Call"
                       >
@@ -1658,94 +1664,7 @@ export default function LeadDetailsPage() {
               </div>
             </div>
 
-            {/* Lead Nurturing Campaign State */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-3.5 text-left hover:shadow-md transition-all duration-300">
-              <div className="flex justify-between items-center select-none">
-                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Lead Nurturing</div>
-                <span className={`px-2 py-0.5 text-[8px] font-extrabold uppercase rounded border ${
-                  activeLeadDetails.nurturing?.status === 'Active' 
-                    ? 'bg-violet-50 text-violet-700 border-violet-100 animate-pulse' 
-                    : activeLeadDetails.nurturing?.status === 'Completed'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                      : 'bg-slate-50 text-slate-500 border-slate-100'
-                }`}>
-                  {activeLeadDetails.nurturing?.status || 'Inactive'}
-                </span>
-              </div>
-              {activeLeadDetails.nurturing ? (
-                <div className="space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[20px] text-violet-600">spa</span>
-                    <div>
-                      <span className="text-[12px] font-extrabold text-slate-800 block leading-tight">
-                        {activeLeadDetails.nurturing.campaignName}
-                      </span>
-                      <span className="text-[9.5px] text-slate-400 block font-medium">
-                        Started on {activeLeadDetails.nurturing.startDate}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-[11px] font-semibold text-slate-655 pt-2 border-t border-slate-100 space-y-2">
-                    <div className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wide flex justify-between items-center">
-                      <span>Progression</span>
-                      {activeLeadDetails.nurturing?.status === 'Active' && (
-                        <button
-                          onClick={handleCancelCampaign}
-                          className="text-[9px] text-red-500 hover:text-red-700 hover:underline font-bold cursor-pointer transition-colors"
-                        >
-                          Cancel Campaign
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative pl-4.5 border-l border-slate-200 space-y-3.5 mt-2 ml-1">
-                      {activeLeadDetails.nurturing.steps?.map((step, idx) => (
-                        <div key={idx} className="relative">
-                          <div className={`absolute -left-[22.5px] top-1 w-2 h-2 rounded-full border border-white ${
-                            step.completed ? 'bg-emerald-500 ring-2 ring-emerald-50' : 'bg-slate-300 ring-2 ring-slate-100'
-                          }`} />
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className={`text-[11px] font-bold block ${step.completed ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
-                                {step.label}
-                              </span>
-                              <span className="text-[9.5px] text-slate-400 block font-medium">
-                                Day {step.day} • {step.type}
-                              </span>
-                              {!step.completed && step.scheduledDate && (
-                                <span className="text-[8.5px] text-violet-600 block font-bold">
-                                  Scheduled: {step.scheduledDate}
-                                </span>
-                              )}
-                            </div>
-                            {!step.completed && activeLeadDetails.nurturing?.status === 'Active' && (
-                              <button
-                                onClick={() => handleCompleteNurtureStep(idx)}
-                                className="px-2 py-0.5 border border-slate-200 hover:border-violet-300 bg-white hover:bg-violet-50 text-[9px] text-slate-600 hover:text-violet-700 font-extrabold rounded transition-colors cursor-pointer select-none"
-                              >
-                                Done
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-4 text-center border border-dashed border-slate-200 rounded-xl space-y-2.5">
-                  <p className="text-[11px] text-slate-400 font-medium leading-relaxed px-4">
-                    This lead is not currently enrolled in any automatic nurturing campaign.
-                  </p>
-                  <button
-                    onClick={() => setShowNurtureModal(true)}
-                    className="px-3 py-1 bg-violet-50 hover:bg-violet-100 border border-violet-150 text-violet-700 text-[10px] font-bold rounded-lg transition-all active:scale-97 cursor-pointer inline-flex items-center gap-1 shadow-2xs"
-                  >
-                    <span className="material-symbols-outlined text-[13px]">spa</span>
-                    Enroll in Campaign
-                  </button>
-                </div>
-              )}
-            </div>
+            
 
             {/* Lead Score Breakdown */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-3.5 text-left select-none hover:shadow-md transition-all duration-300">

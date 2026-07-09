@@ -1,4 +1,4 @@
-import React, { useState, Suspense, useEffect, useRef } from 'react'
+import React, { useState, Suspense, useEffect, useRef, useMemo } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import AuthPage from './pages/Auth/AuthPage'
 import OnboardingPage from './pages/Admin/Company/OnboardingPage'
@@ -108,7 +108,7 @@ function App() {
           if (data.primary_email) localStorage.setItem('companyEmail', data.primary_email)
           if (data.support_phone) localStorage.setItem('companyPhone', data.support_phone)
           if (data.logo_file) localStorage.setItem('companyLogo', data.logo_file)
-          
+
           // Trigger sidebar update
           window.dispatchEvent(new Event('profile-updated'))
         }
@@ -118,10 +118,38 @@ function App() {
     }
   }
 
+  const fetchAndCacheStatuses = async (token) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead-status/get-lead-status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map(item => ({
+            id: item.lead_status_id,
+            value: item.lead_status_name,
+            label: item.lead_status_name,
+            color: item.color || '#3b82f6',
+            description: item.description || 'Custom lead status',
+            isSystem: ['NEW', 'ASSIGNED', 'CONTACTED', 'QUALIFIED', 'DEMO', 'PROPOSAL', 'NEGOTIATION', 'WON', 'LOST'].includes(item.lead_status_name)
+          }))
+          localStorage.setItem('lms_custom_statuses', JSON.stringify(mapped))
+          window.dispatchEvent(new CustomEvent('lms-statuses-updated'))
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching lead statuses from database:", err)
+    }
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('authToken')
     if (isAuthenticated && token && token !== 'mock-jwt-token') {
       fetchAndCacheCompany(token)
+      fetchAndCacheStatuses(token)
     }
   }, [isAuthenticated])
 
@@ -162,13 +190,14 @@ function App() {
     const token = localStorage.getItem('authToken')
     if (token && token !== 'mock-jwt-token') {
       fetchAndCacheCompany(token)
+      fetchAndCacheStatuses(token)
     }
   }
 
   const handleOnboardingComplete = async (data, stages) => {
     setOnboardingComplete(true)
     localStorage.setItem('onboardingComplete', 'true')
-    
+
     // Save locally
     if (data) {
       if (data.companyName) localStorage.setItem('companyName', data.companyName)
@@ -248,22 +277,26 @@ function App() {
     return '/admin/dashboard'
   }
 
+  const adminRoutes = useMemo(() => {
+    return RoleRoutes({ username, handleLogout })
+  }, [username])
+
   return (
     <UserProvider>
       {showBar && (
-        <div 
-          style={{ 
+        <div
+          style={{
             position: 'fixed',
             top: 0,
             left: 0,
-            width: `${progress}%`, 
+            width: `${progress}%`,
             height: '3px',
             backgroundColor: 'rgb(2, 137, 247)',
             zIndex: 999999,
             opacity: progress === 100 ? 0 : 1,
             transition: 'width 0.2s ease, opacity 0.4s ease',
             pointerEvents: 'none'
-          }} 
+          }}
         />
       )}
       <Suspense fallback={<LoadingSpinner />}>
@@ -294,7 +327,7 @@ function App() {
             }
           />
 
-          {RoleRoutes({ username, handleLogout })}
+          {adminRoutes}
 
           <Route path="/embed/form/:formId" element={<PublicEmbedForm />} />
 

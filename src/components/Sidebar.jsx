@@ -139,10 +139,6 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                   onClick={() => {
                     if (hasSubItems) {
                       setExpandedItems(prev => ({ ...prev, [item.id]: !prev[item.id] }))
-                      // If expanding and not already inside a sub-route, navigate to first sub-item
-                      if (!location.pathname.includes(item.path)) {
-                        navigate(item.subItems[0].path)
-                      }
                     } else {
                       navigate(item.path)
                     }
@@ -151,7 +147,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                     if (sidebarCollapsed) {
                       const rect = e.currentTarget.getBoundingClientRect()
                       setTooltipTop(rect.top + rect.height / 2)
-                      setHoveredItem(item.label)
+                      setHoveredItem(item)
                     }
                   }}
                   onMouseLeave={() => setHoveredItem(null)}
@@ -159,7 +155,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                   data-tour={`sidebar-item-${item.id}`}
                 >
                   <span className="material-symbols-outlined icon">{item.icon}</span>
-                  {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                  {!sidebarCollapsed && <span className="truncate text-left flex-1" title={item.label}>{item.label}</span>}
                   {!sidebarCollapsed && hasSubItems && (
                     <span className="material-symbols-outlined sub-menu-arrow">
                       {isExpanded ? 'expand_less' : 'expand_more'}
@@ -179,7 +175,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                           className={`sub-nav-item ${isSubActive ? 'active' : ''}`}
                         >
                           <span className="sub-nav-dot" />
-                          <span className="truncate">{subItem.label}</span>
+                          <span className="truncate text-left flex-1" title={subItem.label}>{subItem.label}</span>
                         </button>
                       )
                     })}
@@ -198,7 +194,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
               if (sidebarCollapsed) {
                 const rect = e.currentTarget.getBoundingClientRect()
                 setTooltipTop(rect.top + rect.height / 2)
-                setHoveredItem('Settings')
+                setHoveredItem({ label: 'Settings', path: getSettingsPath(), icon: 'settings' })
               }
             }}
             onMouseLeave={() => setHoveredItem(null)}
@@ -213,7 +209,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
               if (sidebarCollapsed) {
                 const rect = e.currentTarget.getBoundingClientRect()
                 setTooltipTop(rect.top + rect.height / 2)
-                setHoveredItem('Logout')
+                setHoveredItem({ label: 'Logout', isLogout: true, icon: 'logout' })
               }
             }}
             onMouseLeave={() => setHoveredItem(null)}
@@ -232,18 +228,67 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
       </motion.aside>
 
       {sidebarCollapsed && hoveredItem && (
-        <div
-          style={{
-            position: 'fixed',
-            left: '72px',
-            top: `${tooltipTop}px`,
-            transform: 'translateY(-50%)',
-            zIndex: 9999
-          }}
-          className="bg-slate-900/95 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-md border border-slate-800 flex items-center select-none whitespace-nowrap leading-none tracking-wide"
-        >
-          {hoveredItem}
-        </div>
+        hoveredItem.subItems && hoveredItem.subItems.length > 0 ? (
+          <div
+            style={{
+              position: 'fixed',
+              left: '52px',
+              top: `${tooltipTop}px`,
+              transform: 'translateY(-50%)',
+              zIndex: 9999
+            }}
+            onMouseEnter={() => setHoveredItem(hoveredItem)}
+            onMouseLeave={() => setHoveredItem(null)}
+            className="pl-3 py-1 bg-transparent"
+          >
+            <div className="bg-[#1e293b] border border-slate-700/80 rounded-xl shadow-xl overflow-hidden py-1.5 min-w-[160px] text-left select-none font-sans">
+              {/* Header/Title of parent */}
+              <div className="px-3.5 py-1.5 border-b border-slate-700/50 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[14px]">{hoveredItem.icon || 'folder'}</span>
+                {hoveredItem.label}
+              </div>
+              
+              {/* Sub-menu items */}
+              <div className="py-1">
+                {hoveredItem.subItems.map(sub => {
+                  const isSubActive = location.pathname === sub.path
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        navigate(sub.path)
+                        setHoveredItem(null)
+                      }}
+                      className={`w-full px-3.5 py-2 text-left text-[12px] font-semibold flex items-center gap-2 cursor-pointer border-0 bg-transparent ${
+                        isSubActive 
+                          ? 'text-[#2f7d9e]' 
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                      {sub.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Simple text tooltip for items without subItems */
+          <div
+            style={{
+              position: 'fixed',
+              left: '72px',
+              top: `${tooltipTop}px`,
+              transform: 'translateY(-50%)',
+              zIndex: 9999,
+              pointerEvents: 'none'
+            }}
+            className="bg-slate-900/95 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-md border border-slate-800 flex items-center select-none whitespace-nowrap leading-none tracking-wide"
+          >
+            {hoveredItem.label || hoveredItem}
+          </div>
+        )
       )}
     </>
   )

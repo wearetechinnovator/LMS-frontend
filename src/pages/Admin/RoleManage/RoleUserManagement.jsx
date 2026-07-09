@@ -73,6 +73,7 @@ const initialRolePermissions = {
     'Admin': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: true,
         leads_assign: true,
@@ -90,6 +91,7 @@ const initialRolePermissions = {
     'Counselor': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: false,
         leads_assign: false,
@@ -107,6 +109,7 @@ const initialRolePermissions = {
     'Vendor': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: false,
         leads_assign: true,
@@ -124,6 +127,7 @@ const initialRolePermissions = {
     'System Admin': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: true,
         leads_assign: true,
@@ -141,6 +145,7 @@ const initialRolePermissions = {
     'Campaign Manager': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: false,
         leads_assign: true,
@@ -158,6 +163,7 @@ const initialRolePermissions = {
     'Admissions Counselor': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: false,
         leads_assign: false,
@@ -175,6 +181,7 @@ const initialRolePermissions = {
     'Sales Executive': {
         dashboard: true,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: true,
         leads_delete: false,
         leads_assign: true,
@@ -192,6 +199,7 @@ const initialRolePermissions = {
     'Auditor': {
         dashboard: false,
         leads_view: true,
+        leads_details_view: true,
         leads_edit: false,
         leads_delete: false,
         leads_assign: false,
@@ -543,6 +551,7 @@ export default function RoleUserManagement() {
             const rolePerms = prev[role] || {
                 dashboard: false,
                 leads_view: false,
+                leads_details_view: false,
                 leads_edit: false,
                 leads_delete: false,
                 leads_assign: false,
@@ -615,6 +624,7 @@ export default function RoleUserManagement() {
             [selectedRole]: {
                 dashboard: false,
                 leads_view: false,
+                leads_details_view: false,
                 leads_edit: false,
                 leads_delete: false,
                 leads_assign: false,
@@ -649,6 +659,7 @@ export default function RoleUserManagement() {
                 [selectedRole]: {
                     dashboard: false,
                     leads_view: false,
+                    leads_details_view: false,
                     leads_edit: false,
                     leads_delete: false,
                     leads_assign: false,
@@ -716,6 +727,7 @@ export default function RoleUserManagement() {
             [formattedRole]: {
                 dashboard: false,
                 leads_view: false,
+                leads_details_view: false,
                 leads_edit: false,
                 leads_delete: false,
                 leads_assign: false,
@@ -1222,6 +1234,19 @@ export default function RoleUserManagement() {
                                         <div>
                                             <p className="text-on-background">View Leads Database</p>
                                             <p className="text-[9px] text-on-surface-variant mt-0.5">Allows accessing the All Leads table index.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-2.5 cursor-pointer font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={rolePermissions[selectedRole]?.leads_details_view || false}
+                                            onChange={() => handleTogglePermission(selectedRole, 'leads_details_view')}
+                                            className="w-4 h-4 accent-primary mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-on-background">View Lead Details</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Allows viewing client details, timeline, and history profiles.</p>
                                         </div>
                                     </label>
 

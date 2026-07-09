@@ -47,10 +47,13 @@ import { BrowserRouter } from 'react-router-dom'
     let mode = '';
     
     try {
-      accent = localStorage.getItem('theme-accent') || '';
-      textSize = localStorage.getItem('theme-text-size') || '';
-      mode = mode || localStorage.getItem('theme-mode') || '';
-    } catch(e) {}
+      const username = localStorage.getItem('username') || '';
+      accent = (username && localStorage.getItem(`theme-accent-${username}`)) || localStorage.getItem('theme-accent') || '';
+      textSize = (username && localStorage.getItem(`theme-text-size-${username}`)) || localStorage.getItem('theme-text-size') || '';
+      mode = (username && localStorage.getItem(`theme-mode-${username}`)) || localStorage.getItem('theme-mode') || '';
+    } catch(e) {
+      // Ignore errors when reading local storage in restricted environments
+    }
 
     if (!accent || !textSize || !mode) {
       const cookies = document.cookie.split('; ').reduce((acc, c) => {

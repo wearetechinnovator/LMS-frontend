@@ -1015,3 +1015,58 @@
   font-size: 9px;
   color: #94a3b8 !important;
 }
+
+/* ================== DARK MODE OVERRIDES ================== */
+.dark .dashboard-container {
+  background-color: var(--color-background, #0f172a) !important;
+}
+
+.dark .dashboard-header {
+  background-color: var(--color-background, #0f172a) !important;
+  border-bottom: 1px solid var(--color-outline-variant, #334155) !important;
+}
+
+.dark .kpi-card,
+.dark .chart-card,
+.dark .breakdown-card,
+.dark .recent-leads-card,
+.dark .activity-feed-card,
+.dark .campaign-card,
+.dark .funnel-card,
+.dark .lead-source-card,
+.dark .modal-content {
+  background-color: var(--color-surface, #1e293b) !important;
+  border-color: var(--color-outline-variant, #334155) !important;
+}
+
+.dark .dashboard-container h1,
+.dark .dashboard-container h2,
+.dark .dashboard-container h3,
+.dark .dashboard-container h4,
+.dark .dashboard-container p,
+.dark .dashboard-container span,
+.dark .dashboard-container label,
+.dark .dashboard-container td,
+.dark .dashboard-container th {
+  color: var(--color-on-background, #f8fafc) !important;
+}
+
+.dark .recent-leads-table th {
+  background-color: var(--color-surface-container-high, #334155) !important;
+}
+
+.dark .recent-leads-table tr:hover {
+  background-color: var(--color-surface-container, #1e293b) !important;
+}
+
+.dark .metric-trend {
+  color: var(--color-primary, #2563eb) !important;
+}
+
+.dark .chart-coordinate-value {
+  background-color: var(--color-surface, #1e293b) !important;
+}
+
+.dark .bar-value-label {
+  color: var(--color-on-background, #f8fafc) !important;
+}

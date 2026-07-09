@@ -16,7 +16,8 @@ export function getCustomStatuses() {
   const local = localStorage.getItem('lms_custom_statuses');
   if (local) {
     try {
-      return JSON.parse(local);
+      const parsed = JSON.parse(local);
+      if (Array.isArray(parsed)) return parsed;
     } catch (e) {
       console.error('Error parsing lms_custom_statuses from localStorage:', e);
     }
@@ -32,24 +33,39 @@ export function saveCustomStatuses(statuses) {
 }
 
 export function getCustomJourneys() {
+  let journeys = [];
   const local = localStorage.getItem('lms_custom_journeys');
   if (local) {
     try {
-      return JSON.parse(local);
+      journeys = JSON.parse(local);
     } catch (e) {
       console.error('Error parsing lms_custom_journeys from localStorage:', e);
     }
   }
-  const defaultJourneys = [
-    {
+
+  const customStatuses = getCustomStatuses();
+  const customStatusValues = customStatuses.filter(s => s.value !== 'LOST').map(s => s.value);
+
+  let defaultJourney = journeys.find(j => j.id === 'default' || j.isDefault);
+  if (!defaultJourney) {
+    defaultJourney = {
       id: 'default',
       name: 'Standard CRM Pipeline',
-      steps: DEFAULT_JOURNEY,
+      steps: customStatusValues.length > 0 ? customStatusValues : DEFAULT_JOURNEY,
       isDefault: true
+    };
+    journeys = [defaultJourney, ...journeys.filter(j => j.id !== 'default')];
+    localStorage.setItem('lms_custom_journeys', JSON.stringify(journeys));
+  } else {
+    if (customStatusValues.length > 0 && 
+        (JSON.stringify(defaultJourney.steps) === JSON.stringify(DEFAULT_JOURNEY) || 
+         defaultJourney.steps.some(step => !customStatusValues.includes(step)))) {
+      defaultJourney.steps = customStatusValues;
+      localStorage.setItem('lms_custom_journeys', JSON.stringify(journeys));
     }
-  ];
-  localStorage.setItem('lms_custom_journeys', JSON.stringify(defaultJourneys));
-  return defaultJourneys;
+  }
+
+  return journeys;
 }
 
 export function saveCustomJourneys(journeys) {

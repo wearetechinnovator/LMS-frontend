@@ -167,6 +167,21 @@ export default function ProfilePage() {
     fetchProfile()
   }, [])
 
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setCompanyDetails({
+        companyName: localStorage.getItem('companyName') || '',
+        industry: localStorage.getItem('companyIndustry') || '',
+        companySize: localStorage.getItem('companySize') || '',
+        primaryEmail: localStorage.getItem('companyEmail') || '',
+        supportPhone: localStorage.getItem('companyPhone') || '',
+        logoFile: localStorage.getItem('companyLogo') || ''
+      })
+    }
+    window.addEventListener('profile-updated', handleProfileUpdate)
+    return () => window.removeEventListener('profile-updated', handleProfileUpdate)
+  }, [])
+
   const handleProfileChange = (e) => {
     const { name, value } = e.target
     setProfile(prev => ({ ...prev, [name]: value }))
