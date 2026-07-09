@@ -28,6 +28,48 @@ export default function LeadDetailsPage() {
     return leads.find(l => l.id === id)
   }, [leads, id])
 
+  const currentUsername = localStorage.getItem('username') || 'Admin'
+  const currentIP = activeLeadDetails?.ip || '127.0.0.1'
+
+  const leadDates = useMemo(() => {
+    if (!activeLeadDetails?.createdAt) {
+      return { relative: 'N/A', absolute: 'N/A' }
+    }
+    try {
+      const date = new Date(activeLeadDetails.createdAt)
+      if (isNaN(date.getTime())) return { relative: 'N/A', absolute: 'N/A' }
+      
+      const absolute = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+      
+      const now = new Date()
+      const diffMs = now.getTime() - date.getTime()
+      const diffMins = Math.floor(diffMs / (1000 * 60))
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      
+      let relative = ''
+      if (diffMins < 1) {
+        relative = 'just now'
+      } else if (diffMins < 60) {
+        relative = `${diffMins}m ago`
+      } else if (diffHours < 24) {
+        relative = `${diffHours}h ago`
+      } else if (diffDays === 1) {
+        relative = '1d ago'
+      } else {
+        relative = `${diffDays}d ago`
+      }
+      
+      return { relative, absolute }
+    } catch (e) {
+      return { relative: 'N/A', absolute: 'N/A' }
+    }
+  }, [activeLeadDetails])
+
   const [playingRecording, setPlayingRecording] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState('1x')
@@ -274,8 +316,7 @@ export default function LeadDetailsPage() {
     return parts[0] ? parts[0].slice(0, 2).toUpperCase() : 'LD'
   }
 
-  const getStatusColor = () => ''
-  const getStatusBadgeStyles = () => ''
+
 
   const triggerToast = (msg) => {
     setToastMsg(msg)
@@ -296,8 +337,8 @@ export default function LeadDetailsPage() {
         type: 'STATUS_CHANGE',
         title: `Status changed to ${newStatus === 'NEW' ? 'Callback Later' : newStatus}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-        user: 'Admin',
-        ip: '192.168.1.105',
+        user: currentUsername,
+        ip: currentIP,
         icon: 'swap_horiz',
         color: 'slate-400'
       },
@@ -352,8 +393,8 @@ export default function LeadDetailsPage() {
         title: 'Pipeline Shifted',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
         body: `Shifted lead pipeline from '${prevJourney}' to '${nextJourney}'`,
-        user: 'Admin',
-        ip: '192.168.1.105',
+        user: currentUsername,
+        ip: currentIP,
         icon: 'route',
         color: 'indigo-600'
       },
@@ -406,8 +447,8 @@ export default function LeadDetailsPage() {
         title: `Counselor Assigned`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
         body: `Assigned counselor changed from ${prevCounselor} to ${newCounselor}`,
-        user: 'Admin',
-        ip: '192.168.1.105',
+        user: currentUsername,
+        ip: currentIP,
         icon: 'person_add',
         color: 'blue-600'
       },
@@ -460,8 +501,8 @@ export default function LeadDetailsPage() {
         title: `Score adjusted`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
         body: `Adjusted score from ${prevScore} to ${newScore}`,
-        user: 'Admin',
-        ip: '192.168.1.105',
+        user: currentUsername,
+        ip: currentIP,
         icon: 'grade',
         color: 'blue-600'
       },
@@ -519,8 +560,8 @@ export default function LeadDetailsPage() {
         title: `Support query resolved`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
         body: `Replied to query "${activeLeadDetails.queries.find(x => x.id === queryId).question}": "${responseText}"`,
-        user: 'Admin',
-        ip: '192.168.1.105',
+        user: currentUsername,
+        ip: currentIP,
         icon: 'check_circle',
         color: 'green-600'
       },
@@ -573,8 +614,8 @@ export default function LeadDetailsPage() {
         title: 'Profiles Merged & Consolidated',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
         body: `Consolidated record for ${mergeSelectedProps.name}. Timelines merged from duplicate profiles.`,
-        user: 'Admin',
-        ip: '192.168.1.105',
+        user: currentUsername,
+        ip: currentIP,
         icon: 'merge_type',
         color: 'green-600'
       },
@@ -658,8 +699,8 @@ export default function LeadDetailsPage() {
       title: title,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
       body: bodyText,
-      user: 'Admin',
-      ip: '192.168.1.105',
+      user: currentUsername,
+      ip: currentIP,
       icon: icon,
       color: color
     }
@@ -811,8 +852,8 @@ export default function LeadDetailsPage() {
       title: 'Nurturing Campaign Activated',
       date: today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${today.toLocaleTimeString('en-US', { hour12: false })}`,
       body: `Lead enrolled in nurturing campaign: ${template.name}. Description: ${template.description}`,
-      user: 'Admin',
-      ip: '192.168.1.105',
+      user: currentUsername,
+      ip: currentIP,
       icon: 'spa',
       color: '#8b5cf6'
     };
@@ -900,8 +941,8 @@ export default function LeadDetailsPage() {
       title: `Nurturing Step Completed: ${completedStep.label}`,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
       body: `Nurturing campaign step '${completedStep.label}' (${completedStep.type}) marked as completed. Details: ${completedStep.details}`,
-      user: 'Admin',
-      ip: '192.168.1.105',
+      user: currentUsername,
+      ip: currentIP,
       icon: completedStep.icon,
       color: '#7c3aed',
       nurturingStepType: completedStep.type,
@@ -972,8 +1013,8 @@ export default function LeadDetailsPage() {
       title: 'Nurturing Campaign Cancelled',
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
       body: `Nurturing campaign '${currentNurturing.campaignName}' was manually cancelled by the counselor.`,
-      user: 'Admin',
-      ip: '192.168.1.105',
+      user: currentUsername,
+      ip: currentIP,
       icon: 'cancel',
       color: '#ef4444'
     };
@@ -1052,10 +1093,45 @@ export default function LeadDetailsPage() {
   const handleExportTimeline = () => {
     if (exporting) return
     setExporting(true)
-    setTimeout(() => {
-      setExporting(false)
+    try {
+      const headers = ['Date', 'Action', 'User', 'IP', 'Description']
+      const rows = filteredTimeline.map(event => {
+        const escapeCSV = (val) => {
+          if (val === undefined || val === null) return ''
+          const str = String(val)
+          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`
+          }
+          return str
+        }
+        return [
+          escapeCSV(event.date),
+          escapeCSV(event.type || event.title),
+          escapeCSV(event.user),
+          escapeCSV(event.ip),
+          escapeCSV(event.body || event.title)
+        ]
+      })
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.setAttribute('href', url)
+      link.setAttribute('download', `lead_${activeLeadDetails.name || 'details'}_timeline_export.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
       triggerToast('Timeline interactions exported successfully as CSV')
-    }, 1200)
+    } catch (err) {
+      console.error(err)
+      triggerToast('Error: Failed to export timeline.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const stepperStages = useMemo(() => {
@@ -1133,7 +1209,7 @@ export default function LeadDetailsPage() {
                   </div>
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-[16px] text-slate-400">location_on</span>
-                    <span className="text-slate-700">{activeLeadDetails.location || 'London, UK'}</span>
+                    <span className="text-slate-700">{activeLeadDetails.location || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -1143,17 +1219,17 @@ export default function LeadDetailsPage() {
                 <div className="space-y-2.5 text-[11px] font-sans">
                   <div className="flex justify-between items-start gap-4">
                     <span className="text-slate-400 font-medium shrink-0">Source</span>
-                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words">{activeLeadDetails.source || 'Organic Search'}</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words">{activeLeadDetails.source || 'Organic'}</span>
                   </div>
                   <div className="flex justify-between items-start gap-4">
                     <span className="text-slate-400 font-medium shrink-0">Campaign</span>
-                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words" title={activeLeadDetails.campaign || 'Direct_Ingest'}>
-                      {activeLeadDetails.campaign || 'Direct_Ingest'}
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right max-w-[170px] leading-snug break-words" title={activeLeadDetails.campaign || 'N/A'}>
+                      {activeLeadDetails.campaign || 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between items-start gap-4">
                     <span className="text-slate-400 font-medium shrink-0">UTM Medium</span>
-                    <span style={{ color: '#1e293b' }} className="font-semibold text-right">cpc</span>
+                    <span style={{ color: '#1e293b' }} className="font-semibold text-right">{activeLeadDetails.utm_medium || 'Organic'}</span>
                   </div>
                   <div className="flex justify-between items-start gap-4">
                     <span className="text-slate-400 font-medium shrink-0">Query</span>
@@ -1299,9 +1375,9 @@ export default function LeadDetailsPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Created at</span>
-                  <span className="p-1 text-[10px] text-slate-400 font-semibold">3d ago</span>
+                  <span className="p-1 text-[10px] text-slate-400 font-semibold">{leadDates.relative}</span>
                 </div>
-                <span className="text-slate-800 text-[11.5px] font-extrabold truncate">09/12/2026</span>
+                <span className="text-slate-800 text-[11.5px] font-extrabold truncate">{leadDates.absolute}</span>
 
               </div>
             </div>
@@ -1606,65 +1682,71 @@ export default function LeadDetailsPage() {
             {/* Lead Health */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-3 hover:shadow-md transition-all duration-300">
               <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Health</div>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                {[
-                  { label: 'Last Response', val: '2h Ago', isUp: true },
-                  { label: 'Email Opens', val: '7 Opens', isUp: true },
-                  { label: 'Link Clicks', val: '4 Clicks', isUp: true },
-                  { label: 'Website Visits', val: '12 Visits', isUp: true },
-                  { label: 'Meetings', val: '2 Attended', isUp: true },
-                  { label: 'Response Rate', val: '90%', isUp: true }
-                ].map((stat, idx) => (
-                  <div key={idx} className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between select-none">
-                    <span className="text-[8.5px] text-slate-400 uppercase font-bold tracking-wider mb-1">{stat.label}</span>
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-slate-800 truncate">{stat.val}</span>
-                      <span className={`text-[10px] font-extrabold shrink-0 ${stat.isUp ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {stat.isUp ? '↑' : '↓'}
-                      </span>
+              {activeLeadDetails.metrics && (Array.isArray(activeLeadDetails.metrics) ? activeLeadDetails.metrics.length > 0 : Object.keys(activeLeadDetails.metrics).length > 0) ? (
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  {(Array.isArray(activeLeadDetails.metrics)
+                    ? activeLeadDetails.metrics
+                    : Object.entries(activeLeadDetails.metrics).map(([key, val]) => ({
+                        label: key.replace(/([A-Z])/g, ' $1').trim(),
+                        val: String(val),
+                        isUp: true
+                      }))
+                  ).map((stat, idx) => (
+                    <div key={idx} className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between select-none">
+                      <span className="text-[8.5px] text-slate-400 uppercase font-bold tracking-wider mb-1">{stat.label}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-slate-800 truncate">{stat.val}</span>
+                        <span className={`text-[10px] font-extrabold shrink-0 ${stat.isUp ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {stat.isUp ? '↑' : '↓'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-400 text-center py-4 font-semibold">
+                  No interaction metrics tracked yet
+                </div>
+              )}
             </div>
 
             {/* Conversion Insights */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-3.5 text-left hover:shadow-md transition-all duration-300">
               <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Conversion Insights</div>
-              <div className="flex items-center gap-3 select-none">
-                <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path className="text-slate-100" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path className="text-emerald-500" strokeDasharray="82, 100" strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <span className="absolute text-[11px] font-extrabold text-slate-800">82%</span>
+              {activeLeadDetails.conversionInsights ? (
+                <>
+                  <div className="flex items-center gap-3 select-none">
+                    <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path className="text-slate-100" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="text-emerald-500" strokeDasharray={`${activeLeadDetails.conversionInsights.probability || 0}, 100`} strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <span className="absolute text-[11px] font-extrabold text-slate-800">{activeLeadDetails.conversionInsights.probability || 0}%</span>
+                    </div>
+                    <div>
+                      <span className="text-[12px] font-extrabold text-slate-800 block leading-tight">{activeLeadDetails.conversionInsights.heading || 'Medium Probability'}</span>
+                      <span className="text-[10px] text-slate-400 block font-medium">Updated minutes ago</span>
+                    </div>
+                  </div>
+                  {activeLeadDetails.conversionInsights.bulletPoints && activeLeadDetails.conversionInsights.bulletPoints.length > 0 && (
+                    <div className="space-y-1.5 text-[11px] font-semibold text-slate-655 pt-2 border-t border-slate-100">
+                      {activeLeadDetails.conversionInsights.bulletPoints.map((bp, idx) => (
+                        <div key={idx} className={`flex items-center gap-1.5 ${bp.type === 'warning' ? 'text-amber-700 pt-1' : 'text-emerald-700'}`}>
+                          <span className="material-symbols-outlined text-[13px] font-extrabold">
+                            {bp.type === 'warning' ? 'warning' : 'check'}
+                          </span>
+                          {bp.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-[11px] text-slate-400 text-center py-4 font-semibold">
+                  No interaction metrics tracked yet
                 </div>
-                <div>
-                  <span className="text-[12px] font-extrabold text-slate-800 block leading-tight">High Conversion Probability</span>
-                  <span className="text-[10px] text-slate-400 block font-medium">Updated minutes ago</span>
-                </div>
-              </div>
-              <div className="space-y-1.5 text-[11px] font-semibold text-slate-655 pt-2 border-t border-slate-100">
-                <div className="flex items-center gap-1.5 text-emerald-700">
-                  <span className="material-symbols-outlined text-[13px] text-emerald-600 font-extrabold">check</span>
-                  Responds Quickly
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-700">
-                  <span className="material-symbols-outlined text-[13px] text-emerald-600 font-extrabold">check</span>
-                  Attended Meeting
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-700">
-                  <span className="material-symbols-outlined text-[13px] text-emerald-600 font-extrabold">check</span>
-                  Opened Proposal
-                </div>
-                <div className="flex items-center gap-1.5 text-amber-700 pt-1">
-                  <span className="material-symbols-outlined text-[13px] text-amber-600 font-extrabold">warning</span>
-                  Pricing Not Shared Yet
-                </div>
-              </div>
+              )}
             </div>
-
-            
 
             {/* Lead Score Breakdown */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-3.5 text-left select-none hover:shadow-md transition-all duration-300">
@@ -1676,24 +1758,28 @@ export default function LeadDetailsPage() {
                 <span className="text-2xl font-extrabold text-slate-855 tracking-tight">{activeLeadDetails.score}</span>
                 <span className="text-[11px] text-slate-400 font-bold">/ 100</span>
               </div>
-              <div className="space-y-1.5 text-[11px] font-medium text-slate-655 pt-2.5 border-t border-slate-100">
-                <div className="flex justify-between">
-                  <span>Email Opens</span>
-                  <span className="text-emerald-600 font-bold">+20</span>
+              {activeLeadDetails.scoreBreakdown ? (
+                <div className="space-y-1.5 text-[11px] font-medium text-slate-655 pt-2.5 border-t border-slate-100">
+                  {(Array.isArray(activeLeadDetails.scoreBreakdown)
+                    ? activeLeadDetails.scoreBreakdown
+                    : Object.entries(activeLeadDetails.scoreBreakdown).map(([label, scoreChange]) => ({
+                        label,
+                        change: scoreChange
+                      }))
+                  ).map((item, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{item.label}</span>
+                      <span className={`${item.change >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-bold`}>
+                        {item.change >= 0 ? `+${item.change}` : item.change}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-between">
-                  <span>Meeting Attended</span>
-                  <span className="text-emerald-600 font-bold">+25</span>
+              ) : (
+                <div className="text-[11px] text-slate-400 text-center py-4 font-semibold border-t border-slate-100 mt-2">
+                  No interaction metrics tracked yet
                 </div>
-                <div className="flex justify-between">
-                  <span>Website Activity</span>
-                  <span className="text-emerald-600 font-bold">+15</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Positive Call Outcome</span>
-                  <span className="text-emerald-600 font-bold">+35</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
