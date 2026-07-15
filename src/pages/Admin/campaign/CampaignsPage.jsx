@@ -167,6 +167,22 @@ export default function CampaignsPage() {
 
   const role = localStorage.getItem('userRole') || 'admin'
   const isMasked = role === 'counselor' || role === 'vendor'
+  const shouldMaskLead = (lead) => {
+    if (!lead) return false
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin') {
+      return false
+    }
+    const currentUsername = localStorage.getItem('username')
+    if (lead.assignedTo && currentUsername && lead.assignedTo === currentUsername) {
+      return false
+    }
+    if (role === 'vendor' || role === 'Vendor') {
+      if (lead.importedBy && currentUsername && lead.importedBy === currentUsername) {
+        return false
+      }
+    }
+    return true
+  }
   const maskEmail = (email) => {
     if (!email) return ''
     const atIdx = email.indexOf('@')
@@ -1350,7 +1366,7 @@ export default function CampaignsPage() {
                             <tr key={idx} className="hover:bg-slate-50/30">
                               <td className="px-4 py-2 font-bold text-slate-700">{lead.name}</td>
                               <td className="px-4 py-2 text-center text-slate-550 font-mono">
-                                {isMasked ? maskEmail(lead.email) : lead.email}
+                                {shouldMaskLead(lead) ? maskEmail(lead.email) : lead.email}
                               </td>
                               <td className="px-4 py-2 text-center font-mono">
                                 <span className={`inline-block px-1.5 py-0.2 rounded font-bold text-[9px] ${lead.score >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :

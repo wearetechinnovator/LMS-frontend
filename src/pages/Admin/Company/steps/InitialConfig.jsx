@@ -44,8 +44,13 @@ export default function InitialConfig({ stages, setStages }) {
       });
     }
 
+    const username = localStorage.getItem('username');
+    const statusesKey = username ? `lms_custom_statuses_${username}` : 'lms_custom_statuses';
+    const journeysKey = username ? `lms_custom_journeys_${username}` : 'lms_custom_journeys';
+    const leadJourneyKey = username ? `lms_lead_journey_${username}` : 'lms_lead_journey';
+
     // Save statuses to localStorage
-    localStorage.setItem('lms_custom_statuses', JSON.stringify(mappedStatuses));
+    localStorage.setItem(statusesKey, JSON.stringify(mappedStatuses));
 
     // Save journey to localStorage
     // The journey is the list of active step values (excluding LOST)
@@ -58,8 +63,8 @@ export default function InitialConfig({ stages, setStages }) {
         isDefault: true
       }
     ];
-    localStorage.setItem('lms_custom_journeys', JSON.stringify(customJourneys));
-    localStorage.setItem('lms_lead_journey', JSON.stringify(journeySteps));
+    localStorage.setItem(journeysKey, JSON.stringify(customJourneys));
+    localStorage.setItem(leadJourneyKey, JSON.stringify(journeySteps));
 
     // Dispatch update events to synchronize lead statuses and journeys
     window.dispatchEvent(new CustomEvent('lms-statuses-updated'));

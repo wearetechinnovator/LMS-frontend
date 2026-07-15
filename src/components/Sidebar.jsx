@@ -1,12 +1,12 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { UserContext } from '../contextApi.jsx'
+
 import { useContext } from 'react'
 
 
 export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogout, navigationItems = [], roleName = 'Admin Account', userName, username }) {
-  const name = useContext(UserContext);
+
   const activeUsername = username || userName || localStorage.getItem('username') || 'ADMIN'
   const companyName = localStorage.getItem('companyName') || ''
 

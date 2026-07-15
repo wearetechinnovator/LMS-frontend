@@ -19,6 +19,35 @@ export default function LmsSettings() {
 
   const role = localStorage.getItem('userRole')
   const isMasked = role === 'counselor' || role === 'vendor'
+  const shouldMaskLead = (lead) => {
+    if (!lead) return false
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin') {
+      return false
+    }
+    if (role === 'vendor' || role === 'Vendor') {
+      const currentUsername = localStorage.getItem('username')
+      if (lead.importedBy && currentUsername && lead.importedBy === currentUsername) {
+        return false
+      }
+      return true
+    }
+    return true
+  }
+  const getVisibleTabs = () => {
+    const tabs = []
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin' || canManageSettings) {
+      tabs.push({ id: 'session', label: 'Session Creation', icon: 'event_note' })
+      tabs.push({ id: 'import', label: 'Import Leads', icon: 'publish' })
+      tabs.push({ id: 'export', label: 'Export Leads', icon: 'download' })
+      tabs.push({ id: 'bulk', label: 'Bulk Messaging', icon: 'chat' })
+      tabs.push({ id: 'statuses', label: 'Custom Statuses', icon: 'category' })
+      tabs.push({ id: 'journey', label: 'Lead Journey', icon: 'route' })
+    } else if (role === 'vendor' || role === 'Vendor') {
+      tabs.push({ id: 'import', label: 'Import Leads', icon: 'publish' })
+      tabs.push({ id: 'export', label: 'Export Leads', icon: 'download' })
+    }
+    return tabs
+  }
   const maskEmail = (email) => {
     if (!email) return ''
     const atIdx = email.indexOf('@')
@@ -34,8 +63,51 @@ export default function LmsSettings() {
     return str.slice(0, 2) + '******' + str.slice(-2)
   }
   const canManageSettings = hasPermission('settings')
-  const [activeSettingsTab, setActiveSettingsTab] = useState(() => canManageSettings ? 'session' : 'appearance')
+  const [activeSettingsTab, setActiveSettingsTab] = useState(() => {
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin' || canManageSettings) {
+      return 'session'
+    }
+    if (role === 'vendor' || role === 'Vendor') {
+      return 'import'
+    }
+    return 'appearance'
+  })
   const [toastMsg, setToastMsg] = useState(null)
+  const [dbUsers, setDbUsers] = useState([])
+  
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('authToken')
+        if (!token || token === 'mock-jwt-token') return
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (Array.isArray(data)) {
+            setDbUsers(data)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch users in settings:", err)
+      }
+    }
+    fetchUsers()
+  }, [])
+
+  const counselorsList = useMemo(() => {
+    const list = new Set()
+    dbUsers.forEach(u => {
+      if (u.status === 'Active' && u.name) {
+        list.add(u.name)
+      }
+    })
+    list.add('Unassigned')
+    return Array.from(list)
+  }, [dbUsers])
 
   // -- TAB 1: Session Creation States --
   const [sessionOption, setSessionOption] = useState('yes') // 'yes' | 'inline_two'
@@ -44,12 +116,14 @@ export default function LmsSettings() {
   const [otpSent, setOtpSent] = useState(false)
   const [otpVerified, setOtpVerified] = useState(false)
   const [otpError, setOtpError] = useState(null)
-  const [currentSessionDate, setCurrentSessionDate] = useState('01/15/2020 - 02/21/2020')
+  const [currentSessionDate, setCurrentSessionDate] = useState(() => {
+    return localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020'
+  })
   const [newSessionDate, setNewSessionDate] = useState('06/04/2026 - 07/04/2026')
   const [creatingSession, setCreatingSession] = useState(false)
 
   // -- TAB 2: Import Leads States --
-  const [assignedTo, setAssignedTo] = useState('Sarah Jenkins')
+  const [assignedTo, setAssignedTo] = useState('Unassigned')
   const [leadSource, setLeadSource] = useState('Website Organic')
   const [file, setFile] = useState(null)
   const [parsedData, setParsedData] = useState([])
@@ -223,6 +297,12 @@ export default function LmsSettings() {
   // Memoize filtered leads for the Export tab preview
   const filteredLeads = useMemo(() => {
     return leadsList.filter(lead => {
+      if (role === 'vendor' || role === 'Vendor') {
+        const currentUsername = localStorage.getItem('username')
+        if (!lead.importedBy || lead.importedBy !== currentUsername) {
+          return false
+        }
+      }
       const matchCounselor = filterCounselor === 'All Counselors' || lead.assignedTo === filterCounselor
       const matchSource = filterSource === 'All Sources' || lead.source === filterSource
       const matchStatus = filterStatus === 'All Statuses' || lead.status === filterStatus
@@ -767,15 +847,32 @@ export default function LmsSettings() {
     }
   }
 
-  const handleCreateSessionSubmit = (e) => {
+  const handleCreateSessionSubmit = async (e) => {
     e.preventDefault()
     if (!otpVerified) {
       triggerToast("Error: OTP must be verified to start a session.")
       return
     }
     setCreatingSession(true)
-    setTimeout(() => {
+
+    try {
       setCurrentSessionDate(newSessionDate)
+      localStorage.setItem('lms_active_session', newSessionDate)
+
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead?session=${encodeURIComponent(newSessionDate)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('lms_leads_database', JSON.stringify(data))
+        setLeadsList(data)
+      }
+
+      window.dispatchEvent(new CustomEvent('lms-session-updated'))
+      window.dispatchEvent(new CustomEvent('lms-leads-updated'))
       triggerToast(`Session successfully created! Range: ${newSessionDate}`)
 
       // Reset Verification
@@ -784,8 +881,12 @@ export default function LmsSettings() {
       setOtpCode('')
       setSessionPhone('')
       setNewSessionDate('06/04/2026 - 07/04/2026')
+    } catch (err) {
+      console.error(err)
+      triggerToast("Failed to reload leads for new session.")
+    } finally {
       setCreatingSession(false)
-    }, 1200)
+    }
   }
 
   // --- CSV PARSING HANDLERS (Lead Import) ---
@@ -918,7 +1019,7 @@ export default function LmsSettings() {
     triggerToast("Sample CSV Template downloaded!")
   }
 
-  const handleImportLeadsSubmit = (e) => {
+  const handleImportLeadsSubmit = async (e) => {
     e.preventDefault()
     if (!file || parsedData.length === 0) {
       triggerToast("Error: Please provide a valid parsed CSV file before importing.")
@@ -926,33 +1027,22 @@ export default function LmsSettings() {
     }
 
     setImporting(true)
-    setTimeout(() => {
-      // Load current leads from localStorage
-      const localLeads = localStorage.getItem('lms_leads_database')
-      let leadsList = []
-      if (localLeads) {
-        try {
-          leadsList = JSON.parse(localLeads)
-        } catch (err) {
-          console.error(err)
-        }
-      }
+    const token = localStorage.getItem('authToken')
 
-      let nextIdNumber = 1022
-      if (leadsList.length > 0) {
-        const ids = leadsList.map(l => parseInt(l.id.replace('LS-', ''))).filter(n => !isNaN(n))
-        if (ids.length > 0) {
-          nextIdNumber = Math.max(...ids) + 1
-        }
-      }
+    const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020'
+    const [startStr, endStr] = activeSession.split(' - ')
+    const startDate = new Date(startStr)
+    const endDate = new Date(endStr)
+    const now = new Date()
+    let leadCreationDate = startDate
+    if (now >= startDate && now <= endDate) {
+      leadCreationDate = now
+    }
 
-      const newLeads = parsedData.map((row, index) => {
-        const idNum = nextIdNumber + index
-        const leadId = `LS-${idNum}`
+    try {
+      const importPromises = parsedData.map(async (row) => {
         const scoreValue = parseInt(row.score) || Math.floor(40 + Math.random() * 45)
-
-        return {
-          id: leadId,
+        const leadBody = {
           name: row.name || 'Anonymous Lead',
           email: row.email || 'no-email@domain.com',
           phone: row.phone || 'N/A',
@@ -966,47 +1056,50 @@ export default function LmsSettings() {
           verified: Math.random() > 0.3,
           formName: 'Bulk Offline CSV',
           createdToday: true,
-          lastContacted: 'None',
-          nextFollowUp: 'None',
-          age: '1 day',
-          priority: scoreValue >= 80 ? 'High' : scoreValue >= 50 ? 'Medium' : 'Low',
-          tags: ['CSV Import'],
-          activityCount: 0,
-          conversionProb: scoreValue,
           leadType: 'Offline',
-          timeline: [
-            {
-              id: Date.now() + index,
-              type: 'CREATION',
-              title: 'Lead Ingested (CSV Import)',
-              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + `, ${new Date().toLocaleTimeString('en-US', { hour12: false })}`,
-              body: `Uploaded via Lead Import under Source: ${leadSource}`,
-              user: 'Admin',
-              ip: '192.168.1.100',
-              icon: 'upload_file',
-              color: 'green-600'
-            }
-          ],
+          tags: ['CSV Import'],
+          importedBy: localStorage.getItem('username'),
+          createdAt: leadCreationDate.toISOString(),
           application: {
             appliedProgram: 'Starter Solo Plan',
             submissionDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             companyName: 'N/A',
             companySize: 'Unknown',
             annualRevenue: 'N/A',
-            useCase: `CSV Lead Import`,
+            useCase: 'CSV Lead Import',
             notes: `Lead assigned to counselor ${assignedTo}`
-          },
-          queries: []
+          }
         }
+
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/create-lead`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(leadBody)
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to import a lead')
+        }
+        return await response.json()
       })
 
-      const updatedLeads = [...newLeads, ...leadsList]
-      localStorage.setItem('lms_leads_database', JSON.stringify(updatedLeads))
+      await Promise.all(importPromises)
 
-      // Dispatch custom storage update event to alert any mounted lead tables
+      // Fetch all leads from the database to keep local storage synchronized
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('lms_leads_database', JSON.stringify(data))
+      }
+
       window.dispatchEvent(new CustomEvent('lms-leads-updated'))
-
-      setImporting(false)
       triggerToast(`Successfully imported ${parsedData.length} leads!`)
 
       // Reset Import Tab Form
@@ -1015,7 +1108,12 @@ export default function LmsSettings() {
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
-    }, 1500)
+    } catch (error) {
+      console.error("Error importing leads:", error)
+      triggerToast("Error: Failed to import leads to database.")
+    } finally {
+      setImporting(false)
+    }
   }
 
   // --- EXPORT HANDLERS ---
@@ -1103,32 +1201,21 @@ export default function LmsSettings() {
 
       {/* Tab Navigation Menu */}
       <div className="flex flex-wrap items-center bg-[#f8fafc] border border-slate-200/60 p-1 rounded-xl gap-1 mb-6 select-none max-w-fit shadow-3xs">
-        {canManageSettings && (
-          <>
-            {[
-              { id: 'session', label: 'Session Creation', icon: 'event_note' },
-              { id: 'import', label: 'Import Leads', icon: 'publish' },
-              { id: 'export', label: 'Export Leads', icon: 'download' },
-              { id: 'bulk', label: 'Bulk Messaging', icon: 'chat' },
-              { id: 'statuses', label: 'Custom Statuses', icon: 'category' },
-              { id: 'journey', label: 'Lead Journey', icon: 'route' }
-            ].map(item => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveSettingsTab(item.id)}
-                className={`px-3.5 py-2 rounded-lg font-bold text-[12px] transition-all flex items-center gap-1.5 cursor-pointer border-0 select-none ${
-                  activeSettingsTab === item.id 
-                    ? 'bg-white text-slate-900 shadow-2xs border border-slate-100' 
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
-                }`}
-              >
-                <span className={`material-symbols-outlined text-[16px] ${activeSettingsTab === item.id ? 'text-[#2f7d9e]' : 'text-slate-400'}`}>{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-          </>
-        )}
+        {getVisibleTabs().map(item => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setActiveSettingsTab(item.id)}
+            className={`px-3.5 py-2 rounded-lg font-bold text-[12px] transition-all flex items-center gap-1.5 cursor-pointer border-0 select-none ${
+              activeSettingsTab === item.id 
+                ? 'bg-white text-slate-900 shadow-2xs border border-slate-100' 
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+            }`}
+          >
+            <span className={`material-symbols-outlined text-[16px] ${activeSettingsTab === item.id ? 'text-[#2f7d9e]' : 'text-slate-400'}`}>{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => setActiveSettingsTab('appearance')}
@@ -1339,7 +1426,7 @@ export default function LmsSettings() {
                   onChange={(e) => setAssignedTo(e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500"
                 >
-                  {COUNSELORS.map(name => (
+                  {counselorsList.map(name => (
                     <option key={name} value={name}>{name}</option>
                   ))}
                 </select>
@@ -1478,8 +1565,8 @@ export default function LmsSettings() {
                           {parsedData.slice(0, 5).map((row, idx) => (
                             <tr key={idx} className="hover:bg-slate-50 text-slate-700 font-medium">
                               <td className="py-2 px-2.5 truncate max-w-[100px]" title={row.name}>{row.name || 'N/A'}</td>
-                              <td className="py-2 px-2.5 truncate max-w-[120px]" title={isMasked ? maskEmail(row.email) : row.email}>{isMasked ? maskEmail(row.email) : (row.email || 'N/A')}</td>
-                              <td className="py-2 px-2.5 truncate max-w-[100px]" title={isMasked ? maskPhone(row.phone) : row.phone}>{isMasked ? maskPhone(row.phone) : (row.phone || 'N/A')}</td>
+                              <td className="py-2 px-2.5 truncate max-w-[120px]" title={row.email}>{row.email || 'N/A'}</td>
+                              <td className="py-2 px-2.5 truncate max-w-[100px]" title={row.phone}>{row.phone || 'N/A'}</td>
                               <td className="py-2 px-2.5 truncate max-w-[80px]" title={row.location}>{row.location || 'N/A'}</td>
                               <td className="py-2 px-2.5 truncate max-w-[80px]" title={row.campaign}>{row.campaign || 'N/A'}</td>
                             </tr>
@@ -1534,7 +1621,7 @@ export default function LmsSettings() {
                   className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-800 text-[12px] font-semibold outline-none focus:border-sky-500"
                 >
                   <option value="All Counselors">All Counselors</option>
-                  {COUNSELORS.map(name => (
+                  {counselorsList.map(name => (
                     <option key={name} value={name}>{name}</option>
                   ))}
                 </select>
@@ -1848,7 +1935,7 @@ export default function LmsSettings() {
                       className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-850 text-[12px] font-semibold outline-none focus:border-sky-500"
                     >
                       <option value="All Counselors">All Counselors</option>
-                      {COUNSELORS.map(name => (
+                      {counselorsList.map(name => (
                         <option key={name} value={name}>{name}</option>
                       ))}
                     </select>

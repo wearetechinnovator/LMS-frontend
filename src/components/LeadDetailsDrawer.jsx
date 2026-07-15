@@ -46,6 +46,22 @@ export default function LeadDetailsDrawer({
   const dupe = getDuplicateRecord(activeLeadDetails)
   const role = localStorage.getItem('userRole')
   const isMasked = role === 'counselor' || role === 'vendor'
+  const shouldMaskLead = (lead) => {
+    if (!lead) return false
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin') {
+      return false
+    }
+    const currentUsername = localStorage.getItem('username')
+    if (lead.assignedTo && currentUsername && lead.assignedTo === currentUsername) {
+      return false
+    }
+    if (role === 'vendor' || role === 'Vendor') {
+      if (lead.importedBy && currentUsername && lead.importedBy === currentUsername) {
+        return false
+      }
+    }
+    return true
+  }
   const maskEmail = (email) => {
     if (!email) return ''
     const atIdx = email.indexOf('@')
@@ -62,7 +78,7 @@ export default function LeadDetailsDrawer({
   }
   const getDisplayValue = (key, val) => {
     if (!val) return '--'
-    if (isMasked) {
+    if (shouldMaskLead(activeLeadDetails)) {
       if (key === 'email') return maskEmail(val)
       if (key === 'phone') return maskPhone(val)
     }
@@ -272,7 +288,7 @@ export default function LeadDetailsDrawer({
                   <div className="space-y-2.5 text-[11.5px] font-semibold text-slate-655">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[15px] text-slate-400">mail</span>
-                      {isMasked ? (
+                      {shouldMaskLead(activeLeadDetails) ? (
                         <span>{maskEmail(activeLeadDetails.email)}</span>
                       ) : (
                         <a href={`mailto:${activeLeadDetails.email}`} className="hover:underline hover:text-primary transition-colors">{activeLeadDetails.email}</a>
@@ -280,7 +296,7 @@ export default function LeadDetailsDrawer({
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[15px] text-slate-400">phone</span>
-                      {isMasked ? (
+                      {shouldMaskLead(activeLeadDetails) ? (
                         <span>{maskPhone(activeLeadDetails.phone)}</span>
                       ) : (
                         <a href={`tel:${activeLeadDetails.phone}`} className="hover:underline hover:text-primary transition-colors">{activeLeadDetails.phone}</a>
@@ -751,7 +767,7 @@ export default function LeadDetailsDrawer({
                         </div>
                         <h4 className="text-[13px] font-extrabold text-slate-800">No Duplicates Found</h4>
                         <p className="text-[11.5px] text-slate-505 mt-1 max-w-xs mx-auto leading-normal">
-                          This lead's email (<span className="font-mono text-slate-700 font-bold">{isMasked ? maskEmail(activeLeadDetails.email) : activeLeadDetails.email}</span>) is unique.
+                          This lead's email (<span className="font-mono text-slate-700 font-bold">{shouldMaskLead(activeLeadDetails) ? maskEmail(activeLeadDetails.email) : activeLeadDetails.email}</span>) is unique.
                         </p>
                       </div>
                     )

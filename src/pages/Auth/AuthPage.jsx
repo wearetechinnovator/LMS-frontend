@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import AuthForm from './AuthForm'
 import LoginSVG from './LoginSVG'
@@ -9,6 +10,7 @@ import Toast from '../../components/Toast'
 import './auth.css'
 
 export default function AuthPage({ onAuthSuccess }) {
+  const location = useLocation()
   const [mounted, setMounted] = useState(false)
   const [isLogin, setIsLogin] = useState(true)
   const [step, setStep] = useState('auth') // 'auth' or 'otp'
@@ -28,6 +30,13 @@ export default function AuthPage({ onAuthSuccess }) {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (location.state && location.state.errorMessage) {
+      triggerToast(location.state.errorMessage)
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   useEffect(() => {
     let interval = null

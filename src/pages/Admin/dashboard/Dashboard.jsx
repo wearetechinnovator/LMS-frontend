@@ -30,7 +30,7 @@ export default function Dashboard() {
     { label: 'This Session', value: 'This Session' }
   ]
 
-  // Sync leads from database or localStorage on mount
+  // Sync leads from database or localStorage on mount or session change
   useEffect(() => {
     const fetchLeads = async () => {
       const startTime = Date.now()
@@ -49,7 +49,8 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem('authToken');
         if (token && token !== 'mock-jwt-token') {
-          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
+          const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020';
+          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead?session=${encodeURIComponent(activeSession)}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -73,6 +74,10 @@ export default function Dashboard() {
       }
     };
     fetchLeads();
+    window.addEventListener('lms-session-updated', fetchLeads);
+    return () => {
+      window.removeEventListener('lms-session-updated', fetchLeads);
+    }
   }, []);
 
   // Listen for storage or custom update events to synchronize lead changes instantly
@@ -211,7 +216,7 @@ export default function Dashboard() {
       avgCloseTime = totalDiffMs / wonLeads.length / (1000 * 60 * 60 * 24)
     }
 
-    let displayCloseTime = '4.2d'
+    let displayCloseTime = 'N/A'
     if (avgCloseTime > 0) {
       displayCloseTime = `${avgCloseTime.toFixed(1)}d`
     } else {

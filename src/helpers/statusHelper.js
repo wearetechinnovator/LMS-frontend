@@ -1,45 +1,53 @@
 const DEFAULT_STATUSES = [
-  { value: 'NEW', label: 'NEW', color: '#3b82f6', isSystem: true, description: 'System default for new leads' },
-  { value: 'ASSIGNED', label: 'ASSIGNED', color: '#64748b', isSystem: true, description: 'Lead assigned to counselor' },
-  { value: 'CONTACTED', label: 'CONTACTED', color: '#f97316', isSystem: true, description: 'Contact established with lead' },
-  { value: 'QUALIFIED', label: 'QUALIFIED', color: '#10b981', isSystem: true, description: 'Lead qualified for next steps' },
-  { value: 'DEMO', label: 'DEMO SCHEDULED', color: '#a855f7', isSystem: true, description: 'Product demo scheduled' },
-  { value: 'PROPOSAL', label: 'PROPOSAL', color: '#14b8a6', isSystem: true, description: 'Proposal sent to lead' },
-  { value: 'NEGOTIATION', label: 'NEGOTIATION', color: '#f59e0b', isSystem: true, description: 'Negotiation on pricing or terms' },
-  { value: 'WON', label: 'WON', color: '#10b981', isSystem: true, description: 'Lead won / deal closed' },
-  { value: 'LOST', label: 'LOST', color: '#ef4444', isSystem: true, description: 'Lead lost / deal closed' }
+  {value: 'HOT',label: 'Assigned',color: '#64748b',isSystem: true,description: 'Lead has been assigned to a counselor.'},
+  {value: 'COLD',label: 'Contacted',color: '#f97316',isSystem: true,description: 'Initial contact has been established with the lead.'},
+  {value: 'WARM',label: 'Qualified',color: '#10b981',isSystem: true,description: 'Lead has been qualified and is ready for the next stage.'},
+  {value: 'DEAD',label: 'Demo Scheduled',color: '#a855f7',isSystem: true,description: 'A product demonstration has been scheduled with the lead.'}
 ];
 
 const DEFAULT_JOURNEY = ['NEW', 'ASSIGNED', 'CONTACTED', 'QUALIFIED', 'DEMO', 'PROPOSAL', 'NEGOTIATION', 'WON'];
 
+function getStatusesKey() {
+  const username = localStorage.getItem('username');
+  return username ? `lms_custom_statuses_${username}` : 'lms_custom_statuses';
+}
+
+function getJourneysKey() {
+  const username = localStorage.getItem('username');
+  return username ? `lms_custom_journeys_${username}` : 'lms_custom_journeys';
+}
+
 export function getCustomStatuses() {
-  const local = localStorage.getItem('lms_custom_statuses');
+  const key = getStatusesKey();
+  const local = localStorage.getItem(key);
   if (local) {
     try {
       const parsed = JSON.parse(local);
       if (Array.isArray(parsed)) return parsed;
     } catch (e) {
-      console.error('Error parsing lms_custom_statuses from localStorage:', e);
+      console.error(`Error parsing ${key} from localStorage:`, e);
     }
   }
   // Initialize if not present
-  localStorage.setItem('lms_custom_statuses', JSON.stringify(DEFAULT_STATUSES));
+  localStorage.setItem(key, JSON.stringify(DEFAULT_STATUSES));
   return DEFAULT_STATUSES;
 }
 
 export function saveCustomStatuses(statuses) {
-  localStorage.setItem('lms_custom_statuses', JSON.stringify(statuses));
+  const key = getStatusesKey();
+  localStorage.setItem(key, JSON.stringify(statuses));
   window.dispatchEvent(new CustomEvent('lms-statuses-updated'));
 }
 
 export function getCustomJourneys() {
   let journeys = [];
-  const local = localStorage.getItem('lms_custom_journeys');
+  const key = getJourneysKey();
+  const local = localStorage.getItem(key);
   if (local) {
     try {
       journeys = JSON.parse(local);
     } catch (e) {
-      console.error('Error parsing lms_custom_journeys from localStorage:', e);
+      console.error(`Error parsing ${key} from localStorage:`, e);
     }
   }
 
@@ -55,13 +63,13 @@ export function getCustomJourneys() {
       isDefault: true
     };
     journeys = [defaultJourney, ...journeys.filter(j => j.id !== 'default')];
-    localStorage.setItem('lms_custom_journeys', JSON.stringify(journeys));
+    localStorage.setItem(key, JSON.stringify(journeys));
   } else {
-    if (customStatusValues.length > 0 && 
-        (JSON.stringify(defaultJourney.steps) === JSON.stringify(DEFAULT_JOURNEY) || 
-         defaultJourney.steps.some(step => !customStatusValues.includes(step)))) {
+    if (customStatusValues.length > 0 &&
+      (JSON.stringify(defaultJourney.steps) === JSON.stringify(DEFAULT_JOURNEY) ||
+        defaultJourney.steps.some(step => !customStatusValues.includes(step)))) {
       defaultJourney.steps = customStatusValues;
-      localStorage.setItem('lms_custom_journeys', JSON.stringify(journeys));
+      localStorage.setItem(key, JSON.stringify(journeys));
     }
   }
 
@@ -69,7 +77,8 @@ export function getCustomJourneys() {
 }
 
 export function saveCustomJourneys(journeys) {
-  localStorage.setItem('lms_custom_journeys', JSON.stringify(journeys));
+  const key = getJourneysKey();
+  localStorage.setItem(key, JSON.stringify(journeys));
   window.dispatchEvent(new CustomEvent('lms-journeys-updated'));
 }
 
@@ -77,6 +86,11 @@ export function getLeadJourney() {
   const journeys = getCustomJourneys();
   const def = journeys.find(j => j.isDefault) || journeys[0];
   return def ? def.steps : DEFAULT_JOURNEY;
+}
+
+function getLeadJourneyKey() {
+  const username = localStorage.getItem('username');
+  return username ? `lms_lead_journey_${username}` : 'lms_lead_journey';
 }
 
 export function saveLeadJourney(journey) {
@@ -88,7 +102,8 @@ export function saveLeadJourney(journey) {
     return j;
   });
   saveCustomJourneys(updated);
-  localStorage.setItem('lms_lead_journey', JSON.stringify(journey));
+  const key = getLeadJourneyKey();
+  localStorage.setItem(key, JSON.stringify(journey));
   window.dispatchEvent(new CustomEvent('lms-journey-updated'));
 }
 

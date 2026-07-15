@@ -5,7 +5,7 @@ import OnboardingPage from './pages/Admin/Company/OnboardingPage'
 import { UnProtectRoute } from './components/ProtectRoute'
 import { RoleRoutes } from './routes/routesConfig'
 import Unauthorized from './pages/Unauthorized'
-import UserProvider from './contextApi.jsx'
+
 import ChatBot from './components/ChatBot'
 
 const PublicEmbedForm = React.lazy(() => import('./pages/PublicEmbedForm'))
@@ -136,7 +136,9 @@ function App() {
             description: item.description || 'Custom lead status',
             isSystem: ['NEW', 'ASSIGNED', 'CONTACTED', 'QUALIFIED', 'DEMO', 'PROPOSAL', 'NEGOTIATION', 'WON', 'LOST'].includes(item.lead_status_name)
           }))
-          localStorage.setItem('lms_custom_statuses', JSON.stringify(mapped))
+          const username = localStorage.getItem('username')
+          const key = username ? `lms_custom_statuses_${username}` : 'lms_custom_statuses'
+          localStorage.setItem(key, JSON.stringify(mapped))
           window.dispatchEvent(new CustomEvent('lms-statuses-updated'))
         }
       }
@@ -273,6 +275,18 @@ function App() {
     localStorage.removeItem('companyLogo')
   }
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      console.warn("Session expired or unauthorized (401). Logging out...");
+      handleLogout();
+      navigate('/', { state: { errorMessage: 'Your session has expired. Please login again.' } });
+    };
+    window.addEventListener('lms-unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('lms-unauthorized', handleUnauthorized);
+    };
+  }, [navigate]);
+
   const getRedirectPath = () => {
     return '/admin/dashboard'
   }
@@ -282,7 +296,7 @@ function App() {
   }, [username])
 
   return (
-    <UserProvider>
+    <>
       {showBar && (
         <div
           style={{
@@ -338,7 +352,7 @@ function App() {
 
         {isAuthenticated}
       </Suspense>
-    </UserProvider>
+    </>
   )
 }
 

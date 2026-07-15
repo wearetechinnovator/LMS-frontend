@@ -1,13 +1,9 @@
 import React, { use, useContext, useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { UserContext } from '../contextApi.jsx'
-import getUser from '../api/getUser.js'
+
 
 export default function Navbar({ username, onLogout, roleName = 'Admin Account' }) {
-
-  const name = useContext(UserContext);
-
   const location = useLocation()
   const navigate = useNavigate()
 

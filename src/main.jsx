@@ -87,6 +87,22 @@ import { BrowserRouter } from 'react-router-dom'
   }
 })();
 
+// Intercept global fetch calls to broadcast 401 Unauthorized / expired token events
+(() => {
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    try {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        window.dispatchEvent(new CustomEvent('lms-unauthorized'));
+      }
+      return response;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+})();
+
 import './index.css'
 import App from './App.jsx'
 

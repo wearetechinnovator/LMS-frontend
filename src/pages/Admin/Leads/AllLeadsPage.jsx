@@ -32,6 +32,22 @@ export default function AllLeadsPage() {
   const [showTooltip, setShowTooltip] = useState(false)
   const role = localStorage.getItem('userRole')
   const isMasked = role !== 'admin' && role !== 'Admin' && role !== 'System Admin'
+  const shouldMaskLead = (lead) => {
+    if (!lead) return false
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin') {
+      return false
+    }
+    const currentUsername = localStorage.getItem('username')
+    if (lead.assignedTo && currentUsername && lead.assignedTo === currentUsername) {
+      return false
+    }
+    if (role === 'vendor' || role === 'Vendor') {
+      if (lead.importedBy && currentUsername && lead.importedBy === currentUsername) {
+        return false
+      }
+    }
+    return true
+  }
   const [revealedPhoneLeadIds, setRevealedPhoneLeadIds] = useState({})
   const [followUpLead, setFollowUpLead] = useState(null)
   const [followUpType, setFollowUpType] = useState('Call')
@@ -352,14 +368,15 @@ export default function AllLeadsPage() {
     localStorage.setItem('lms_leads_database', JSON.stringify(leads))
   }, [leads])
 
-  // Sync leads from database on mount
+  // Sync leads from database on mount or session change
   useEffect(() => {
     const fetchLeads = async () => {
       const startTime = Date.now()
       try {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
+        const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020';
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead?session=${encodeURIComponent(activeSession)}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -381,6 +398,10 @@ export default function AllLeadsPage() {
       }
     };
     fetchLeads();
+    window.addEventListener('lms-session-updated', fetchLeads);
+    return () => {
+      window.removeEventListener('lms-session-updated', fetchLeads);
+    }
   }, []);
 
   // Sync users from database on mount to map active counselors
@@ -454,15 +475,9 @@ export default function AllLeadsPage() {
         list.add(u.name)
       }
     })
-    leads.forEach(l => {
-      if (l.assignedTo) {
-        list.add(l.assignedTo)
-      }
-    })
-    const defaultCounselors = ['Unassigned']
-    defaultCounselors.forEach(c => list.add(c))
+    list.add('Unassigned')
     return Array.from(list)
-  }, [leads, dbUsers])
+  }, [dbUsers])
 
   const sourcesList = useMemo(() => {
     const list = new Set()
@@ -1250,6 +1265,17 @@ export default function AllLeadsPage() {
 
   const handleAddQuickLead = async (formData) => {
     if (!formData.name.trim() || !formData.email.trim()) return;
+
+    const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020'
+    const [startStr, endStr] = activeSession.split(' - ')
+    const startDate = new Date(startStr)
+    const endDate = new Date(endStr)
+    const now = new Date()
+    let leadCreationDate = startDate
+    if (now >= startDate && now <= endDate) {
+      leadCreationDate = now
+    }
+
     const newLead = {
       name: formData.name,
       email: formData.email,
@@ -1264,7 +1290,8 @@ export default function AllLeadsPage() {
       verified: false,
       createdToday: true,
       query: formData.query || 'BCA',
-      leadType: formData.leadType || 'Online'
+      leadType: formData.leadType || 'Online',
+      createdAt: leadCreationDate.toISOString()
     };
 
     const token = localStorage.getItem('authToken');
@@ -1470,12 +1497,12 @@ export default function AllLeadsPage() {
 
     const getExportableEmail = (l) => {
       const email = l.originalEmail || l.email || '';
-      return isMasked ? maskEmail(email) : email;
+      return shouldMaskLead(l) ? maskEmail(email) : email;
     };
 
     const getExportablePhone = (l) => {
       const phone = l.phone || '';
-      return isMasked ? maskPhone(phone) : phone;
+      return shouldMaskLead(l) ? maskPhone(phone) : phone;
     };
 
     const columnDefinitions = [
@@ -2486,14 +2513,14 @@ export default function AllLeadsPage() {
                                     )}
                                   </span>
                                   <span className="text-[10px] text-slate-450 truncate">
-                                    {isMasked ? maskEmail(lead.originalEmail || lead.email) : (lead.originalEmail || lead.email || '--')}
+                                    {shouldMaskLead(lead) ? maskEmail(lead.originalEmail || lead.email) : (lead.originalEmail || lead.email || '--')}
                                   </span>
                                 </div>
                               </div>
                             </td>
                           )}
                           {visibleColumns.phone && (
-                            <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{(isMasked && !revealedPhoneLeadIds[lead.id]) ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
+                            <td className="px-3 py-4 text-[12px] text-slate-600 font-semibold font-sans">{(shouldMaskLead(lead) && !revealedPhoneLeadIds[lead.id]) ? maskPhone(lead.phone) : (lead.phone || '--')}</td>
                           )}
                           {visibleColumns.score && (
                             <td className="px-3 py-4">
@@ -2655,7 +2682,7 @@ export default function AllLeadsPage() {
                             {lead.originalName || lead.name}
                           </span>
                           <span className="text-[10px] text-slate-450 truncate">
-                            {isMasked ? maskEmail(lead.originalEmail || lead.email) : (lead.originalEmail || lead.email || '--')}
+                            {shouldMaskLead(lead) ? maskEmail(lead.originalEmail || lead.email) : (lead.originalEmail || lead.email || '--')}
                           </span>
                         </div>
                       </div>
@@ -2670,7 +2697,7 @@ export default function AllLeadsPage() {
                     <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-[11px] border-t border-slate-100 pt-3 text-slate-600 font-medium">
                       <div>
                         <span className="text-slate-400 block text-[9.5px]">Phone</span>
-                        <span className="font-semibold text-slate-700">{(isMasked && !revealedPhoneLeadIds[lead.id]) ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
+                        <span className="font-semibold text-slate-700">{(shouldMaskLead(lead) && !revealedPhoneLeadIds[lead.id]) ? maskPhone(lead.phone) : (lead.phone || '--')}</span>
                       </div>
                       <div>
                         <span className="text-slate-400 block text-[9.5px]">Score</span>
@@ -2914,7 +2941,7 @@ export default function AllLeadsPage() {
                       </div>
                       <div>
                         <h4 className="text-[13px] font-bold text-slate-800 leading-tight">{activeModalLead.name}</h4>
-                        <p className="text-[11px] text-slate-505 mt-0.5">{isMasked ? maskEmail(activeModalLead.email) : activeModalLead.email} • {isMasked ? maskPhone(activeModalLead.phone) : (activeModalLead.phone || '--')}</p>
+                        <p className="text-[11px] text-slate-505 mt-0.5">{shouldMaskLead(activeModalLead) ? maskEmail(activeModalLead.email) : activeModalLead.email} • {shouldMaskLead(activeModalLead) ? maskPhone(activeModalLead.phone) : (activeModalLead.phone || '--')}</p>
                       </div>
                     </div>
 
@@ -3018,7 +3045,7 @@ export default function AllLeadsPage() {
                       </div>
                       <div>
                         <h4 className="text-[13px] font-bold text-slate-800 leading-tight">{activeModalLead.name}</h4>
-                        <p className="text-[11px] text-slate-505 mt-0.5">{isMasked ? maskEmail(activeModalLead.email) : activeModalLead.email}</p>
+                        <p className="text-[11px] text-slate-505 mt-0.5">{shouldMaskLead(activeModalLead) ? maskEmail(activeModalLead.email) : activeModalLead.email}</p>
                       </div>
                     </div>
 
@@ -3593,7 +3620,7 @@ export default function AllLeadsPage() {
                       <span className="col-span-5 font-medium">John Doe &lt;john.doe@leadpro.com&gt;</span>
 
                       <span className="col-span-1 text-slate-400 font-semibold">To:</span>
-                      <span className="col-span-5 font-medium">{activeLeadDetails.name} &lt;{isMasked ? maskEmail(activeLeadDetails.email) : activeLeadDetails.email}&gt;</span>
+                      <span className="col-span-5 font-medium">{activeLeadDetails.name} &lt;{shouldMaskLead(activeLeadDetails) ? maskEmail(activeLeadDetails.email) : activeLeadDetails.email}&gt;</span>
 
                       <span className="col-span-1 text-slate-400 font-semibold">Subject:</span>
                       <span className="col-span-5 font-bold text-slate-900">Introduction to LeadPro CRM</span>

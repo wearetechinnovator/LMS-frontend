@@ -282,6 +282,22 @@ export default function LeadDetailsPage() {
   const dupe = leads.find(l => l.id !== activeLeadDetails.id && l.email === activeLeadDetails.email)
   const role = localStorage.getItem('userRole')
   const isMasked = role !== 'admin' && role !== 'Admin' && role !== 'System Admin'
+  const shouldMaskLead = (lead) => {
+    if (!lead) return false
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin') {
+      return false
+    }
+    const currentUsername = localStorage.getItem('username')
+    if (lead.assignedTo && currentUsername && lead.assignedTo === currentUsername) {
+      return false
+    }
+    if (role === 'vendor' || role === 'Vendor') {
+      if (lead.importedBy && currentUsername && lead.importedBy === currentUsername) {
+        return false
+      }
+    }
+    return true
+  }
 
   const maskEmail = (email) => {
     if (!email) return ''
@@ -301,7 +317,7 @@ export default function LeadDetailsPage() {
 
   const getDisplayValue = (key, val) => {
     if (!val) return '--'
-    if (isMasked) {
+    if (shouldMaskLead(activeLeadDetails)) {
       if (key === 'email') return maskEmail(val)
       if (key === 'phone') return revealedPhone ? val : maskPhone(val)
     }
@@ -1179,7 +1195,7 @@ export default function LeadDetailsPage() {
                 <div className="space-y-3 text-[12px] font-semibold text-slate-655">
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-[16px] text-slate-400">mail</span>
-                    {isMasked ? (
+                    {shouldMaskLead(activeLeadDetails) ? (
                       <span className="text-slate-500 truncate" title="Masked for Counselor/Vendor">
                         {getDisplayValue('email', activeLeadDetails.email)}
                       </span>
@@ -1194,7 +1210,7 @@ export default function LeadDetailsPage() {
                   </div>
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-[16px] text-slate-400">phone</span>
-                    {isMasked ? (
+                    {shouldMaskLead(activeLeadDetails) ? (
                       <span className="text-slate-500" title="Masked for Counselor/Vendor">
                         {getDisplayValue('phone', activeLeadDetails.phone)}
                       </span>
@@ -1262,9 +1278,11 @@ export default function LeadDetailsPage() {
                     disabled={!hasPermission('leads_edit')}
                     className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {statusesList.map(status => (
-                      <option key={status.value} value={status.value}>{status.label}</option>
-                    ))}
+                    {statusesList
+                      .filter(status => journeySteps.includes(status.value) || status.value === activeLeadDetails.status)
+                      .map(status => (
+                        <option key={status.value} value={status.value}>{status.label}</option>
+                      ))}
                   </select>
                 </div>
 

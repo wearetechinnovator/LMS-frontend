@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Toast from '../../../components/Toast'
+import { getCustomJourneys, getCustomStatuses, saveCustomJourneys, saveCustomStatuses } from '../../../helpers/statusHelper'
 import './form.css'
 
 export default function FormBuilder({
@@ -37,6 +38,109 @@ export default function FormBuilder({
     const triggerLocalToast = (msg) => {
         setToastMessage(msg)
     }
+
+    const [isCreatingJourney, setIsCreatingJourney] = useState(false)
+    const [newJourneyName, setNewJourneyName] = useState('')
+    const [selectedJourneySteps, setSelectedJourneySteps] = useState([])
+
+    const handleSaveInlineJourney = () => {
+        const name = newJourneyName.trim();
+        if (!name) {
+            triggerLocalToast("Error: Journey name is required.");
+            return;
+        }
+        if (selectedJourneySteps.length === 0) {
+            triggerLocalToast("Error: Please select at least one pipeline step.");
+            return;
+        }
+
+        const id = 'journey_' + Date.now();
+        const newJourney = {
+            id,
+            name,
+            steps: selectedJourneySteps,
+            isDefault: false
+        };
+
+        const updated = [...getCustomJourneys(), newJourney];
+        saveCustomJourneys(updated);
+        setFormSettings({ ...formSettings, journeyId: id });
+        setIsCreatingJourney(false);
+        setNewJourneyName('');
+        setSelectedJourneySteps([]);
+        triggerLocalToast(`✓ Journey '${name}' created & assigned!`);
+    };
+
+    const [statusesList, setStatusesList] = useState(() => getCustomStatuses())
+    const [showInlineAddStage, setShowInlineAddStage] = useState(false)
+    const [inlineStageName, setInlineStageName] = useState('')
+    const [inlineStageColor, setInlineStageColor] = useState('#3b82f6')
+
+    const handleSaveInlineStage = async () => {
+        const name = inlineStageName.trim();
+        if (!name) {
+            triggerLocalToast("Error: Stage Name is required.");
+            return;
+        }
+
+        const value = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+        if (!value) {
+            triggerLocalToast("Error: Stage name must contain letters or numbers.");
+            return;
+        }
+
+        const currentStatuses = getCustomStatuses();
+        if (currentStatuses.some(s => s.value === value)) {
+            triggerLocalToast("Error: This stage name/value already exists.");
+            return;
+        }
+
+        const newStatus = {
+            value,
+            label: name,
+            color: inlineStageColor,
+            isSystem: false,
+            description: 'Created inline via Form Builder'
+        };
+
+        const token = localStorage.getItem('authToken');
+        if (token && token !== 'mock-jwt-token') {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead-status/create-lead-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        status_name: newStatus.value,
+                        color: newStatus.color,
+                        description: newStatus.description
+                    })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to create status in database');
+                }
+                const savedStatus = await response.json();
+                newStatus.id = savedStatus.lead_status_id;
+            } catch (err) {
+                triggerLocalToast(`Error: ${err.message}`);
+                return;
+            }
+        } else {
+            newStatus.id = `mock-${Date.now()}`;
+        }
+
+        const updatedStatuses = [...currentStatuses, newStatus];
+        saveCustomStatuses(updatedStatuses);
+        setStatusesList(updatedStatuses);
+
+        setSelectedJourneySteps([...selectedJourneySteps, value]);
+        setInlineStageName('');
+        setShowInlineAddStage(false);
+        triggerLocalToast(`✓ Custom Stage '${name}' added & selected!`);
+    };
 
     const [showPublishDropdown, setShowPublishDropdown] = useState(false)
     const [showMoreMenu, setShowMoreMenu] = useState(false)
@@ -2122,6 +2226,175 @@ export default function FormBuilder({
                                     <p className="text-[9px] text-slate-400 select-none leading-relaxed">Customize the text displayed on the main form submission button.</p>
                                 </div>
                             )}
+
+                            <div className="space-y-1.5 pt-2 border-t border-outline-variant/30 animate-fade-in">
+                                <div className="flex items-center justify-between">
+                                    <label className="block font-label-caps text-label-caps text-on-surface text-[8px] settings-label select-none">Lead Journey</label>
+                                    {!isCreatingJourney && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                setIsCreatingJourney(true);
+                                                setSelectedJourneySteps(statusesList.filter(s => s.value !== 'LOST').map(s => s.value));
+                                            }}
+                                            className="text-[9.5px] text-primary font-bold hover:underline focus:outline-none cursor-pointer select-none"
+                                        >
+                                            + Create New
+                                        </button>
+                                    )}
+                                </div>
+
+                                {isCreatingJourney ? (
+                                    <div className="space-y-3.5 p-3.5 border border-outline-variant rounded bg-slate-50/50 animate-fade-in mt-2">
+                                        <div className="font-bold text-[10px] text-slate-800">Create Custom Journey</div>
+                                        
+                                        <div className="space-y-1">
+                                            <label className="block text-[8px] font-bold text-slate-500 uppercase">Journey Name</label>
+                                            <input
+                                                type="text"
+                                                value={newJourneyName}
+                                                onChange={(e) => setNewJourneyName(e.target.value)}
+                                                placeholder="e.g. Sales Pipeline"
+                                                className="w-full h-8 px-2.5 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="block text-[8px] font-bold text-slate-500 uppercase">Select Pipeline Steps</label>
+                                            <div className="max-h-36 overflow-y-auto space-y-1.5 border border-outline-variant/50 rounded p-2 bg-white">
+                                                {statusesList.map(status => (
+                                                    <label key={status.value} className="flex items-center gap-2 cursor-pointer select-none">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedJourneySteps.includes(status.value)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedJourneySteps([...selectedJourneySteps, status.value]);
+                                                                } else {
+                                                                    setSelectedJourneySteps(selectedJourneySteps.filter(v => v !== status.value));
+                                                                }
+                                                            }}
+                                                            className="w-3.5 h-3.5 accent-primary cursor-pointer rounded"
+                                                        />
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span 
+                                                                className="w-2.5 h-2.5 rounded-full inline-block"
+                                                                style={{ backgroundColor: status.color || '#3b82f6' }}
+                                                            />
+                                                            <span className="text-[10px] text-slate-700 font-medium">{status.label}</span>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            {showInlineAddStage ? (
+                                                <div className="p-2.5 border border-outline-variant rounded bg-white space-y-2 animate-fade-in">
+                                                    <div className="text-[9px] font-bold text-slate-700">Add Custom Stage</div>
+                                                    
+                                                    <div className="space-y-1">
+                                                        <input
+                                                            type="text"
+                                                            value={inlineStageName}
+                                                            onChange={(e) => setInlineStageName(e.target.value)}
+                                                            placeholder="Stage Name (e.g. Doc Verif)"
+                                                            className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <label className="block text-[7.5px] font-bold text-slate-500 uppercase">Stage Color</label>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {['#3b82f6', '#64748b', '#f97316', '#10b981', '#a855f7', '#14b8a6', '#f59e0b', '#ef4444'].map(color => (
+                                                                <button
+                                                                    key={color}
+                                                                    type="button"
+                                                                    onClick={() => setInlineStageColor(color)}
+                                                                    className="w-4 h-4 rounded-full border border-white hover:scale-110 transition-transform cursor-pointer relative"
+                                                                    style={{ 
+                                                                        backgroundColor: color,
+                                                                        boxShadow: inlineStageColor === color ? '0 0 0 1.5px rgba(2, 137, 247, 0.6)' : 'none'
+                                                                    }}
+                                                                >
+                                                                    {inlineStageColor === color && (
+                                                                        <span className="absolute inset-0 flex items-center justify-center text-white text-[8px] font-bold">✓</span>
+                                                                    )}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex gap-1.5 pt-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleSaveInlineStage}
+                                                            className="flex-1 py-1 bg-primary text-on-primary text-[9px] font-bold rounded hover:bg-primary/95 transition-colors cursor-pointer text-center"
+                                                        >
+                                                            Add
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setShowInlineAddStage(false);
+                                                                setInlineStageName('');
+                                                                setInlineStageColor('#3b82f6');
+                                                            }}
+                                                            className="flex-1 py-1 border border-slate-300 text-slate-600 text-[9px] font-bold rounded hover:bg-slate-100 transition-colors cursor-pointer text-center"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowInlineAddStage(true)}
+                                                    className="w-full py-1 border border-dashed border-primary/40 text-primary text-[9.5px] font-bold rounded hover:bg-primary/5 transition-colors cursor-pointer text-center select-none"
+                                                >
+                                                    + Add Custom Stage
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="flex gap-2 pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={handleSaveInlineJourney}
+                                                className="flex-1 py-1.5 bg-primary text-on-primary text-[10px] font-bold rounded hover:bg-primary/95 transition-colors cursor-pointer text-center"
+                                            >
+                                                Save
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsCreatingJourney(false);
+                                                    setNewJourneyName('');
+                                                    setSelectedJourneySteps([]);
+                                                }}
+                                                className="flex-1 py-1.5 border border-slate-300 text-slate-600 text-[10px] font-bold rounded hover:bg-slate-100 transition-colors cursor-pointer text-center"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <select
+                                            value={formSettings.journeyId || 'default'}
+                                            onChange={(e) => setFormSettings({ ...formSettings, journeyId: e.target.value })}
+                                            className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        >
+                                            {getCustomJourneys().map((j) => (
+                                                <option key={j.id} value={j.id}>
+                                                    {j.name} {j.isDefault ? '(Default)' : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <p className="text-[9px] text-slate-400 select-none leading-relaxed">Select the journey pipeline that new leads from this form will follow.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
