@@ -28,10 +28,17 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
     let isMounted = true;
     let initialLoaded = false;
     let currentSeenIds = new Set();
+    let lastFetched = '';
 
     const fetchLeads = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead`, {
+        const url = lastFetched 
+          ? `${import.meta.env.VITE_BASE_URL}/lead/get-lead?since=${encodeURIComponent(lastFetched)}`
+          : `${import.meta.env.VITE_BASE_URL}/lead/get-lead`;
+        
+        const nextFetchedTimestamp = new Date().toISOString();
+
+        const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -65,6 +72,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
           window.dispatchEvent(new CustomEvent('lms-new-lead-received', { detail: newLeads }));
         }
 
+        lastFetched = nextFetchedTimestamp;
         initialLoaded = true;
       } catch (err) {
         console.error("Error polling leads:", err);
@@ -80,10 +88,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
     };
   }, []);
   const [formsList, setFormsList] = useState([
-    { name: 'ALL', displayName: 'All Leads', count: 7 },
-    { name: 'B.Tech Admissions Form', displayName: 'B.Tech Admissions Form', count: 3 },
-    { name: 'MBA Scholarship Form', displayName: 'MBA Scholarship Form', count: 2 },
-    { name: 'General Inquiry Form', displayName: 'General Inquiry Form', count: 2 }
+    { name: 'ALL', displayName: 'All Leads', count: 0 }
   ])
   const [activeFormName, setActiveFormName] = useState('ALL')
 

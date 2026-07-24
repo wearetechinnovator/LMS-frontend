@@ -194,6 +194,40 @@ export default function FormBuilderPage() {
     }
   }
 
+  // Delete form from database or state
+  const handleDeleteForm = async (formId) => {
+    const token = localStorage.getItem('authToken');
+    const isRealDatabaseId = formId && !String(formId).startsWith('FRM-') && !String(formId).startsWith('TMP-');
+    
+    if (token && token !== 'mock-jwt-token' && isRealDatabaseId) {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/form/delete-form/${formId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to delete form');
+        }
+        setFormsList(prev => prev.filter(form => form.id !== formId));
+        if (activeFormSchema && activeFormSchema.id === formId) {
+          setActiveFormSchema(null);
+        }
+        triggerToast("Form deleted successfully!");
+      } catch (err) {
+        triggerToast(`Error: ${err.message}`);
+      }
+    } else {
+      setFormsList(prev => prev.filter(form => form.id !== formId));
+      if (activeFormSchema && activeFormSchema.id === formId) {
+        setActiveFormSchema(null);
+      }
+      triggerToast("Form deleted successfully!");
+    }
+  };
+
   // Save edited or created form
   const handleSaveForm = async (updatedData) => {
     const token = localStorage.getItem('authToken');
@@ -253,6 +287,7 @@ export default function FormBuilderPage() {
           }
           const saved = await response.json();
           setFormsList(prev => [saved, ...prev]);
+          setActiveFormSchema(prev => ({ ...prev, id: saved.id, name: saved.name, title: saved.name }));
           triggerToast(`New form "${updatedData.title}" created successfully!`);
         } catch (err) {
           triggerToast(`Error: ${err.message}`);
@@ -289,12 +324,11 @@ export default function FormBuilderPage() {
           createdBy: 'System Admin',
           createdDate: 'Just now'
         }
-        setFormsList([newForm, ...formsList])
+        setFormsList(prev => [newForm, ...prev])
+        setActiveFormSchema(prev => ({ ...prev, id: newForm.id }))
         triggerToast(`New form "${updatedData.title}" created successfully!`)
       }
     }
-
-    setActiveFormSchema(null)
   }
 
   // Save form as template
@@ -560,6 +594,13 @@ export default function FormBuilderPage() {
                             >
                               <span className="material-symbols-outlined text-[16px]">content_copy</span>
                             </button>
+                            <button
+                              onClick={() => handleDeleteForm(form.id)}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                              title="Delete Form"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -628,6 +669,7 @@ export default function FormBuilderPage() {
               initialSettings={activeFormSchema.settings || {}}
               onBack={() => setActiveFormSchema(null)}
               onSave={handleSaveForm}
+              onDelete={() => handleDeleteForm(activeFormSchema.id)}
               onSaveAsTemplate={handleSaveAsTemplate}
             />
           </motion.div>

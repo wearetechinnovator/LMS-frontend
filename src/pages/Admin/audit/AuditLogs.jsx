@@ -35,7 +35,7 @@ export default function AuditLogs() {
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token || token === 'mock-jwt-token') {
-                    setLogs(originalLogs);
+                    setLogs([]);
                     const elapsed = Date.now() - startTime
                     const delay = Math.max(0, 500 - elapsed)
                     setTimeout(() => setLoading(false), delay)
@@ -48,17 +48,13 @@ export default function AuditLogs() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    if (Array.isArray(data)) {
-                        setLogs(data.length > 0 ? data : originalLogs);
-                    } else {
-                        setLogs(originalLogs);
-                    }
+                    setLogs(Array.isArray(data) ? data : []);
                 } else {
-                    setLogs(originalLogs);
+                    setLogs([]);
                 }
             } catch (err) {
                 console.error("Failed to fetch audit logs:", err);
-                setLogs(originalLogs);
+                setLogs([]);
             } finally {
                 const elapsed = Date.now() - startTime
                 const delay = Math.max(0, 500 - elapsed)

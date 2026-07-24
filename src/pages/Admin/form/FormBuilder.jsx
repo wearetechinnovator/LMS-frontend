@@ -18,6 +18,7 @@ export default function FormBuilder({
     initialSettings = {},
     onBack,
     onSave,
+    onDelete,
     onSaveAsTemplate
 }) {
     const [formFields, setFormFields] = useState(initialFields)
@@ -149,6 +150,7 @@ export default function FormBuilder({
 
     const [formStatus, setFormStatus] = useState(initialStatus || 'Draft')
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const [showUnsavedConfirmModal, setShowUnsavedConfirmModal] = useState(false)
     const [lastSavedText, setLastSavedText] = useState('✓ Saved Just Now')
     const [lastSavedTime, setLastSavedTime] = useState(Date.now())
     const [savedSnapshot, setSavedSnapshot] = useState({
@@ -157,6 +159,25 @@ export default function FormBuilder({
         fields: JSON.stringify(initialFields),
         status: initialStatus || 'Draft'
     })
+
+    const handleBackClick = () => {
+        if (hasUnsavedChanges) {
+            setShowUnsavedConfirmModal(true)
+        } else if (onBack) {
+            onBack()
+        }
+    }
+
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault()
+                e.returnValue = ''
+            }
+        }
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [hasUnsavedChanges])
 
     useEffect(() => {
         if (!showMoreMenu) return
@@ -1006,7 +1027,7 @@ export default function FormBuilder({
                             <div className="flex items-center gap-2.5 flex-1 min-w-[240px]">
                                 {onBack && (
                                     <button
-                                        onClick={onBack}
+                                        onClick={handleBackClick}
                                         className="flex items-center gap-1 px-2.5 py-1 hover:bg-slate-100/80 active:bg-slate-200/50 rounded-lg text-slate-700 hover:text-slate-900 transition-all font-semibold text-[11px] cursor-pointer shrink-0 border border-slate-200/60 bg-white/50 shadow-2xs h-[30px]"
                                         title="Back to Form Management"
                                     >
@@ -1044,6 +1065,18 @@ export default function FormBuilder({
                                             </span>
                                         )
                                     })()}
+
+                                    {hasUnsavedChanges ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-800 text-[10px] font-bold shadow-2xs animate-pulse select-none" title="You have unsaved changes">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                            Unsaved Changes
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-emerald-600 ml-1 select-none">
+                                            <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                                            {lastSavedText}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -1057,10 +1090,12 @@ export default function FormBuilder({
                                 </button>
 
                                 <button
+                                    type="button"
                                     onClick={handleSaveDraft}
-                                    className="px-3 py-1 text-[11px] font-semibold text-slate-750 bg-white hover:bg-slate-50 border border-slate-250 rounded-lg shadow-2xs transition-colors cursor-pointer h-[30px]"
+                                    className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-1 h-[30px] border-none"
                                 >
-                                    Save Draft
+                                    <span className="material-symbols-outlined text-[14px]">save</span>
+                                    Save Changes
                                 </button>
 
                                 <div className="publish-dropdown-container relative shrink-0">
@@ -1290,8 +1325,8 @@ export default function FormBuilder({
                                                     <button
                                                         onClick={() => {
                                                             setShowMoreMenu(false);
-                                                            triggerLocalToast("✓ Form deleted.");
-                                                            if (onBack) onBack();
+                                                            if (onDelete) onDelete();
+                                                            else if (onBack) onBack();
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 bg-rose-50/50 hover:bg-rose-100/80 text-rose-600 hover:text-rose-700 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer border border-rose-100/30"
                                                     >
@@ -2395,6 +2430,17 @@ export default function FormBuilder({
                                     </div>
                                 )}
                             </div>
+
+                            <div className="pt-3 border-t border-outline-variant/40 mt-4 select-none">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveDraft}
+                                    className="w-full py-2 bg-primary hover:bg-primary/90 active:bg-primary/95 text-white text-[11.5px] font-bold rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 border-none"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">save</span>
+                                    Save Form Settings
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -2670,6 +2716,66 @@ export default function FormBuilder({
                             </form>
                         </motion.div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* UNSAVED CHANGES CONFIRMATION MODAL */}
+            <AnimatePresence>
+                {showUnsavedConfirmModal && (
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 select-none font-sans">
+                        <motion.div
+                            className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm overflow-hidden flex flex-col"
+                            initial={{ scale: 0.95, opacity: 0, y: 15 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                        >
+                            <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[18px] text-amber-500">warning</span>
+                                    Unsaved Changes
+                                </h3>
+                                <button
+                                    onClick={() => setShowUnsavedConfirmModal(false)}
+                                    className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+                            <div className="p-5 text-left">
+                                <p className="text-[12px] text-slate-600 leading-relaxed font-medium">
+                                    You have unsaved changes in this form. Leaving without saving will discard your updates.
+                                </p>
+                            </div>
+                            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex flex-wrap justify-end gap-2">
+                                <button
+                                    onClick={() => setShowUnsavedConfirmModal(false)}
+                                    className="px-3 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-[11px] font-bold transition-all cursor-pointer bg-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowUnsavedConfirmModal(false)
+                                        if (onBack) onBack()
+                                    }}
+                                    className="px-3 py-1.5 border border-red-200 hover:bg-red-50 text-red-600 rounded-lg text-[11px] font-bold transition-all cursor-pointer bg-white"
+                                >
+                                    Leave Without Saving
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handleSaveDraft()
+                                        setShowUnsavedConfirmModal(false)
+                                        if (onBack) onBack()
+                                    }}
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-xs border-none"
+                                >
+                                    Save & Leave
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
 

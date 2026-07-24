@@ -3,57 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FormEmbedSkeleton } from '../../../components/Skeletons'
 import './form.css'
 
-// ---------- Shared mock forms (same data as FormBuilderPage) ----------
-const MOCK_FORMS = [
-    {
-        id: 'FRM-8921-A',
-        name: 'Q3 Enterprise Webinar Registration',
-        status: 'PUBLISHED',
-        responses: 1245,
-        fields: [
-            { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe' },
-            { id: 2, type: 'email', label: 'Work Email', required: true, placeholder: 'john.doe@company.com' },
-            { id: 3, type: 'text', label: 'Company Name', required: true, placeholder: 'Acme Corp' },
-            { id: 4, type: 'text', label: 'Job Title', required: false, placeholder: 'Director of Product' },
-            { id: 5, type: 'select', label: 'Company Size', required: true, placeholder: 'Select...', options: ['1-50 employees', '51-200 employees', '201-1000 employees', '1000+ employees'] }
-        ]
-    },
-    {
-        id: 'FRM-3320-B',
-        name: 'SaaS Demo Request - Main Landing',
-        status: 'PUBLISHED',
-        responses: 8982,
-        fields: [
-            { id: 1, type: 'text', label: 'First Name', required: true, placeholder: 'Sarah' },
-            { id: 2, type: 'text', label: 'Last Name', required: true, placeholder: 'Miller' },
-            { id: 3, type: 'email', label: 'Corporate Email', required: true, placeholder: 'sarah.miller@example.com' },
-            { id: 4, type: 'phone', label: 'Phone Number', required: true, placeholder: '+1 (555) 019-2834' },
-            { id: 5, type: 'radio', label: 'Primary Goal', required: true, options: ['Improve Conversion Rate', 'Automate Lead Routing', 'Audit Logging & Compliance', 'Other'] }
-        ]
-    },
-    {
-        id: 'FRM-0091-F',
-        name: 'Newsletter Signup - Footer',
-        status: 'PUBLISHED',
-        responses: 45192,
-        fields: [
-            { id: 1, type: 'email', label: 'Email Address', required: true, placeholder: 'subscriber@domain.com' },
-            { id: 2, type: 'checkbox', label: 'Interests', required: false, options: ['Product Updates', 'Weekly Tips & Tricks', 'Partner Integrations', 'Case Studies'] }
-        ]
-    },
-    {
-        id: 'TMP-0001-C',
-        name: 'General Contact Inquiry',
-        status: 'TEMPLATE',
-        responses: null,
-        fields: [
-            { id: 1, type: 'text', label: 'Full Name', required: true, placeholder: 'John Doe' },
-            { id: 2, type: 'email', label: 'Email Address', required: true, placeholder: 'john@example.com' },
-            { id: 3, type: 'text', label: 'Inquiry Subject', required: true, placeholder: 'How can we help?' },
-            { id: 4, type: 'text', label: 'Detailed Message', required: true, placeholder: 'Type your message...' }
-        ]
-    },
-]
+// FormEmbedPage - Dynamic Database Integration
 
 // ---------- Mini live form preview ----------
 function LiveFormPreview({ form }) {
@@ -258,17 +208,14 @@ export default function FormEmbedPage() {
     const [copiedKey, setCopiedKey] = useState(null)
     const [search, setSearch] = useState('')
 
-    // Fetch forms from database on mount
     useEffect(() => {
         const fetchForms = async () => {
             const startTime = Date.now()
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token || token === 'mock-jwt-token') {
-                    setFormsList(MOCK_FORMS);
-                    if (MOCK_FORMS.length > 0) {
-                        setSelectedForm(MOCK_FORMS[0]);
-                    }
+                    setFormsList([]);
+                    setSelectedForm(null);
                     const elapsed = Date.now() - startTime
                     const delay = Math.max(0, 500 - elapsed)
                     setTimeout(() => setIsLoading(false), delay)
@@ -286,17 +233,13 @@ export default function FormEmbedPage() {
                         setSelectedForm(data[0]);
                     }
                 } else {
-                    setFormsList(MOCK_FORMS);
-                    if (MOCK_FORMS.length > 0) {
-                        setSelectedForm(MOCK_FORMS[0]);
-                    }
+                    setFormsList([]);
+                    setSelectedForm(null);
                 }
             } catch (err) {
                 console.error("Failed to load forms from backend:", err);
-                setFormsList(MOCK_FORMS);
-                if (MOCK_FORMS.length > 0) {
-                    setSelectedForm(MOCK_FORMS[0]);
-                }
+                setFormsList([]);
+                setSelectedForm(null);
             } finally {
                 const elapsed = Date.now() - startTime
                 const delay = Math.max(0, 500 - elapsed)

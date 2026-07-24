@@ -4,69 +4,7 @@ import TeamStatsCard from '../../../components/TeamStateCard'
 import Toast from '../../../components/Toast'
 import { RolesSkeleton } from '../../../components/Skeletons'
 
-// Detailed realistic mock users data
-const initialUsers = [
-    {
-        id: 'USR-001',
-        name: 'Sarah Jenkins',
-        email: 'sarah.j@techinnovator.com',
-        phoneNumber: '9876543210',
-        role: 'Campaign Manager',
-        department: 'Marketing',
-        lastActive: 'Just now',
-        status: 'Active',
-        avatar: 'SJ',
-        color: 'bg-primary/10 text-primary border-primary/20'
-    },
-    {
-        id: 'USR-002',
-        name: 'David K.',
-        email: 'david.k@techinnovator.com',
-        phoneNumber: '9876543211',
-        role: 'System Admin',
-        department: 'IT & Operations',
-        lastActive: '10 mins ago',
-        status: 'Active',
-        avatar: 'DK',
-        color: 'bg-red-500/10 text-red-600 border-red-500/20'
-    },
-    {
-        id: 'USR-003',
-        name: 'Michael Chang',
-        email: 'm.chang@techinnovator.com',
-        phoneNumber: '9876543212',
-        role: 'Admissions Counselor',
-        department: 'Admissions',
-        lastActive: '2 hours ago',
-        status: 'Active',
-        avatar: 'MC',
-        color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-    },
-    {
-        id: 'USR-004',
-        name: 'Emily Watson',
-        email: 'emily.w@techinnovator.com',
-        phoneNumber: '9876543213',
-        role: 'Sales Executive',
-        department: 'Sales',
-        lastActive: 'Yesterday',
-        status: 'Suspended',
-        avatar: 'EW',
-        color: 'bg-rose-500/10 text-rose-600 border-rose-500/20'
-    },
-    {
-        id: 'USR-005',
-        name: 'Robert Stark',
-        email: 'robert.s@techinnovator.com',
-        phoneNumber: '9876543214',
-        role: 'Auditor',
-        department: 'Compliance',
-        lastActive: '3 days ago',
-        status: 'Invited',
-        avatar: 'RS',
-        color: 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-    }
-]
+// RoleUserManagement - Dynamic DB User & Permissions Management
 
 // Granular permissions template scoped for each Role type
 const initialRolePermissions = {

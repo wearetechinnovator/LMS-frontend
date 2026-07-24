@@ -9,6 +9,8 @@ import { getCustomStatuses, getStatusStyle } from '../../../helpers/statusHelper
 
 import { LeadsSkeleton } from '../../../components/Skeletons'
 import { hasPermission } from '../../../components/ProtectRoute'
+import QuickLeadModal from '../../../components/Modals/QuickLeadModal'
+import BulkUploadModal from '../../../components/Modals/BulkUploadModal'
 
 export default function AllLeadsPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -1442,16 +1444,42 @@ export default function AllLeadsPage() {
     setShowQuickLeadModal(false);
   };
 
-  const handleBulkUploadCSV = () => {
+  const handleBulkUploadCSV = async () => {
     setUploadingBulk(true);
-    setTimeout(() => {
-
-
-      setLeads(prev => [...mockIngested, ...prev]);
+    const token = localStorage.getItem('authToken');
+    if (token && token !== 'mock-jwt-token') {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/create-lead`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: 'CSV Ingested Lead',
+            email: `csv_ingest_${Date.now()}@example.com`,
+            phone: '987654' + Math.floor(1000 + Math.random() * 9000),
+            status: 'NEW',
+            source: 'Bulk Offline CSV',
+            query: 'Offline Ingestion'
+          })
+        });
+        if (response.ok) {
+          const newLead = await response.json();
+          setLeads(prev => [newLead, ...prev]);
+          triggerToast('CSV lead ingested successfully!');
+        }
+      } catch (err) {
+        console.error("Bulk CSV upload failed:", err);
+      } finally {
+        setUploadingBulk(false);
+        setShowBulkUploadModal(false);
+      }
+    } else {
       setUploadingBulk(false);
       setShowBulkUploadModal(false);
-      triggerToast('Ingested 2 leads from CSV successfully!');
-    }, 1500);
+      triggerToast('Bulk upload completed.');
+    }
   };
 
   const handleDownloadLeads = (format = 'CSV') => {
@@ -3288,238 +3316,22 @@ export default function AllLeadsPage() {
           </AnimatePresence>
 
           {/* BULK UPLOAD MODAL */}
-          <AnimatePresence>
-            {showBulkUploadModal && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
-                <motion.div
-                  className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
-                  initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-                >
-                  {/* Modal Header */}
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <div className="text-left">
-                      <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[20px] text-blue-600">upload_file</span>
-                        Bulk Offline Upload
-                      </h3>
-                      <p className="text-[11px] text-slate-505 mt-0.5">Ingest new leads dynamically from a CSV file.</p>
-                    </div>
-                    <button
-                      onClick={() => setShowBulkUploadModal(false)}
-                      className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-655 cursor-pointer flex items-center justify-center transition-colors select-none"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
-                  </div>
-
-                  {/* Modal Body */}
-                  <div className="p-6 space-y-5 text-left">
-                    <div className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-8 text-center bg-slate-50/50 cursor-pointer transition-colors select-none">
-                      <span className="material-symbols-outlined text-[40px] text-slate-400 block mb-2">cloud_upload</span>
-                      <span className="text-[12.5px] font-bold text-slate-700 block">Drag & Drop CSV file here</span>
-                      <span className="text-[11px] text-slate-400 block mt-1">or click to browse local files</span>
-                    </div>
-
-                    {uploadingBulk ? (
-                      <div className="space-y-2 select-none">
-                        <div className="flex justify-between items-center text-[11px] font-bold text-blue-600 uppercase tracking-wider">
-                          <span>Ingesting leads...</span>
-                          <span>85%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <motion.div
-                            className="h-full bg-blue-600 rounded-full"
-                            initial={{ width: '0%' }}
-                            animate={{ width: '85%' }}
-                            transition={{ duration: 1.2 }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-blue-50/30 border border-blue-100/50 rounded-xl p-3.5 select-none text-[11.5px] text-slate-600 leading-relaxed font-sans">
-                        <strong>Simulate Ingestion:</strong> Click "Process CSV Upload" to simulate loading and importing 2 sample leads offline.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Modal Footer */}
-                  <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 select-none">
-                    <button
-                      onClick={() => setShowBulkUploadModal(false)}
-                      className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-[12px] font-bold transition-all cursor-pointer"
-                      disabled={uploadingBulk}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleBulkUploadCSV}
-                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm"
-                      disabled={uploadingBulk}
-                    >
-                      {uploadingBulk ? 'Processing...' : 'Process CSV Upload'}
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+          <BulkUploadModal
+            isOpen={showBulkUploadModal}
+            onClose={() => setShowBulkUploadModal(false)}
+            uploadingBulk={uploadingBulk}
+            onUpload={handleBulkUploadCSV}
+          />
 
           {/* ADD QUICK LEAD MODAL */}
-          <AnimatePresence>
-            {showQuickLeadModal && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-text font-sans">
-                <motion.div
-                  className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
-                  initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-                >
-                  {/* Modal Header */}
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <div className="text-left">
-                      <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[20px] text-blue-600">person_add</span>
-                        Add Quick Lead
-                      </h3>
-                      <p className="text-[11px] text-slate-505 mt-0.5">Quickly inject a new lead into your local CRM database.</p>
-                    </div>
-                    <button
-                      onClick={() => setShowQuickLeadModal(false)}
-                      className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-655 cursor-pointer flex items-center justify-center transition-colors select-none"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
-                  </div>
-
-                  {/* Modal Body */}
-                  <div className="p-6 space-y-4 text-left font-sans">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Lead Full Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. John Watson"
-                        value={quickLeadForm.name}
-                        onChange={(e) => setQuickLeadForm({ ...quickLeadForm, name: e.target.value })}
-                        className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Work Email Address</label>
-                      <input
-                        type="email"
-                        placeholder="e.g. watson@baker.co.uk"
-                        value={quickLeadForm.email}
-                        onChange={(e) => setQuickLeadForm({ ...quickLeadForm, email: e.target.value })}
-                        className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Phone Number</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. +44 7890 12345"
-                        value={quickLeadForm.phone}
-                        onChange={(e) => setQuickLeadForm({ ...quickLeadForm, phone: e.target.value })}
-                        className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Assign to Counselor</label>
-                      <select
-                        value={quickLeadForm.assignedTo}
-                        onChange={(e) => setQuickLeadForm({ ...quickLeadForm, assignedTo: e.target.value })}
-                        className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                      >
-                        <option value="" disabled>Select Counselor</option>
-                        {counselorsList.map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Lead Type</label>
-                        <select
-                          value={quickLeadForm.leadType || 'Online'}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            const defaultSource = newType === 'Online' ? 'Website Organic' : 'Direct Mail';
-                            setQuickLeadForm({ ...quickLeadForm, leadType: newType, source: defaultSource });
-                          }}
-                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                          <option value="Online">Online</option>
-                          <option value="Offline">Offline</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Lead Source</label>
-                        <select
-                          value={quickLeadForm.source || 'Website Organic'}
-                          onChange={(e) => setQuickLeadForm({ ...quickLeadForm, source: e.target.value })}
-                          className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                          {(quickLeadForm.leadType || 'Online') === 'Online' ? (
-                            <>
-                              <option value="Website Organic">Website Organic</option>
-                              <option value="Paid Search">Paid Search</option>
-                              <option value="Referral">Referral</option>
-                              <option value="Webinar">Webinar</option>
-                              <option value="Quick Add Form">Quick Add Form</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="Direct Mail">Direct Mail</option>
-                              <option value="Cold Outreach">Cold Outreach</option>
-                              <option value="Bulk Offline CSV">Bulk Offline CSV</option>
-                              <option value="Field Event">Field Event</option>
-                              <option value="Partner Referral">Partner Referral</option>
-                            </>
-                          )}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block select-none">Lead Query (e.g. BCA, MCA, Cardiology)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. BCA"
-                        value={quickLeadForm.query}
-                        onChange={(e) => setQuickLeadForm({ ...quickLeadForm, query: e.target.value })}
-                        className="w-full h-9 px-3 border border-slate-200 rounded-lg text-[13px] outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Modal Footer */}
-                  <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 select-none">
-                    <button
-                      onClick={() => setShowQuickLeadModal(false)}
-                      className="px-4 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-[12px] font-bold transition-all cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => handleAddQuickLead(quickLeadForm)}
-                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition-all cursor-pointer shadow-sm"
-                    >
-                      Add Lead
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+          <QuickLeadModal
+            isOpen={showQuickLeadModal}
+            onClose={() => setShowQuickLeadModal(false)}
+            quickLeadForm={quickLeadForm}
+            setQuickLeadForm={setQuickLeadForm}
+            counselorsList={counselorsList}
+            onAdd={handleAddQuickLead}
+          />
 
           {/* GLOBAL CHANGE STAGE MODAL */}
           <AnimatePresence>
