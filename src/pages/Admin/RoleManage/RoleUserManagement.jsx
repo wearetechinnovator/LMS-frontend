@@ -13,6 +13,7 @@ const initialRolePermissions = {
         leads_view: true,
         leads_details_view: true,
         leads_edit: true,
+        leads_nurture: true,
         leads_delete: true,
         leads_assign: true,
         forms_view: true,
@@ -30,7 +31,8 @@ const initialRolePermissions = {
         dashboard: true,
         leads_view: true,
         leads_details_view: true,
-        leads_edit: true,
+        leads_edit: false,
+        leads_nurture: true,
         leads_delete: false,
         leads_assign: false,
         forms_view: true,
@@ -49,6 +51,7 @@ const initialRolePermissions = {
         leads_view: true,
         leads_details_view: true,
         leads_edit: true,
+        leads_nurture: true,
         leads_delete: false,
         leads_assign: true,
         forms_view: true,
@@ -67,6 +70,7 @@ const initialRolePermissions = {
         leads_view: true,
         leads_details_view: true,
         leads_edit: true,
+        leads_nurture: true,
         leads_delete: true,
         leads_assign: true,
         forms_view: true,
@@ -85,6 +89,7 @@ const initialRolePermissions = {
         leads_view: true,
         leads_details_view: true,
         leads_edit: true,
+        leads_nurture: true,
         leads_delete: false,
         leads_assign: true,
         forms_view: true,
@@ -102,7 +107,8 @@ const initialRolePermissions = {
         dashboard: true,
         leads_view: true,
         leads_details_view: true,
-        leads_edit: true,
+        leads_edit: false,
+        leads_nurture: true,
         leads_delete: false,
         leads_assign: false,
         forms_view: true,
@@ -120,7 +126,8 @@ const initialRolePermissions = {
         dashboard: true,
         leads_view: true,
         leads_details_view: true,
-        leads_edit: true,
+        leads_edit: false,
+        leads_nurture: true,
         leads_delete: false,
         leads_assign: true,
         forms_view: false,
@@ -139,6 +146,7 @@ const initialRolePermissions = {
         leads_view: true,
         leads_details_view: true,
         leads_edit: false,
+        leads_nurture: false,
         leads_delete: false,
         leads_assign: false,
         forms_view: true,
@@ -491,6 +499,7 @@ export default function RoleUserManagement() {
                 leads_view: false,
                 leads_details_view: false,
                 leads_edit: false,
+                leads_nurture: false,
                 leads_delete: false,
                 leads_assign: false,
                 forms_view: false,
@@ -564,6 +573,7 @@ export default function RoleUserManagement() {
                 leads_view: false,
                 leads_details_view: false,
                 leads_edit: false,
+                leads_nurture: false,
                 leads_delete: false,
                 leads_assign: false,
                 forms_view: false,
@@ -599,6 +609,7 @@ export default function RoleUserManagement() {
                     leads_view: false,
                     leads_details_view: false,
                     leads_edit: false,
+                    leads_nurture: false,
                     leads_delete: false,
                     leads_assign: false,
                     forms_view: false,
@@ -667,6 +678,7 @@ export default function RoleUserManagement() {
                 leads_view: false,
                 leads_details_view: false,
                 leads_edit: false,
+                leads_nurture: false,
                 leads_delete: false,
                 leads_assign: false,
                 forms_view: false,
@@ -1197,7 +1209,20 @@ export default function RoleUserManagement() {
                                         />
                                         <div>
                                             <p className="text-on-background">Edit Lead Profiles</p>
-                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Enables modifying contact records, details, and activity trails.</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Modify lead data: name, phone, email, score, merge profiles.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-2.5 cursor-pointer font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={rolePermissions[selectedRole]?.leads_nurture || false}
+                                            onChange={() => handleTogglePermission(selectedRole, 'leads_nurture')}
+                                            className="w-4 h-4 accent-primary mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-on-background">Nurture Leads</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Change status, log interactions, activate campaigns, respond to queries.</p>
                                         </div>
                                     </label>
 

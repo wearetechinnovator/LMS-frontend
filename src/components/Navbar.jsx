@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 
+import Icon from './Icon'
+
 export default function Navbar({ username, onLogout, roleName = 'Admin Account' }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -14,6 +16,27 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
   const [profileImg, setProfileImg] = useState(() => localStorage.getItem('userImg') || '')
 
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token || token === 'mock-jwt-token') return;
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem('userImg', data.user_img || '');
+          setProfileImg(data.user_img || '');
+        }
+      } catch (err) {
+        console.error("Error fetching profile in navbar:", err);
+      }
+    };
+
+    fetchUserProfile();
+
     const handleProfileUpdate = () => {
       setProfileImg(localStorage.getItem('userImg') || '');
     };
@@ -215,12 +238,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
             }}
             className="navbar-btn"
           >
-            <span
-              className="material-symbols-outlined icon"
-              aria-hidden="true"
-            >
-              notifications
-            </span>
+            <Icon name="notifications" size={18} />
             {/* Notification Dot */}
             {hasUnread && <span className="navbar-badge"></span>}
           </button>
@@ -244,7 +262,7 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
                   ) : (
                     notifications.map(n => (
                       <div key={n.id} className="p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors flex gap-2.5 items-start">
-                        <span className="material-symbols-outlined text-[16px] text-blue-600 mt-0.5" style={{ fontSize: '16px' }}>{n.icon || 'person_add'}</span>
+                        <Icon name={n.icon || 'person_add'} size={16} className="text-blue-600 mt-0.5" />
                         <div className="flex-1 min-w-0" style={{ textAlign: 'left' }}>
                           <p className="text-xs font-bold text-slate-800 leading-snug" style={{ margin: 0 }}>{n.title}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5" style={{ margin: '2px 0 0 0' }}>{n.body}</p>

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import Icon from '../components/Icon';
 
 export default function PublicEmbedForm() {
     const { formId } = useParams();
+    const [searchParams] = useSearchParams();
     const [form, setForm] = useState(null);
     const [vals, setVals] = useState({});
     const [captchaData, setCaptchaData] = useState({});
@@ -11,6 +13,48 @@ export default function PublicEmbedForm() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+
+    // Parse appearance customisation from URL params
+    const appearance = useMemo(() => {
+        const p = (key, fallback) => searchParams.get(key) || fallback;
+        const pColor = (key, fallback) => {
+            const v = searchParams.get(key);
+            return v ? `#${v}` : fallback;
+        };
+        const pInt = (key, fallback) => {
+            const v = searchParams.get(key);
+            return v ? parseInt(v, 10) : fallback;
+        };
+        return {
+            bgColor: pColor('bg', '#f8fafc'),
+            cardBg: pColor('cardBg', '#ffffff'),
+            textColor: pColor('textColor', '#1e293b'),
+            labelColor: pColor('labelColor', '#64748b'),
+            btnColor: pColor('btnColor', '#0284c7'),
+            btnTextColor: pColor('btnText', '#ffffff'),
+            borderRadius: pInt('radius', 16),
+            inputRadius: pInt('inputRadius', 12),
+            fontFamily: p('font', 'System'),
+            maxWidth: pInt('maxW', 512),
+            padding: pInt('pad', 24),
+            hideHeader: searchParams.get('hideHeader') === '1',
+        };
+    }, [searchParams]);
+
+    // Load Google Font if a custom font is specified
+    useEffect(() => {
+        if (appearance.fontFamily && appearance.fontFamily !== 'System') {
+            const fontName = appearance.fontFamily.replace(/ /g, '+');
+            const linkId = `gfont-${fontName}`;
+            if (!document.getElementById(linkId)) {
+                const link = document.createElement('link');
+                link.id = linkId;
+                link.rel = 'stylesheet';
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;500;600;700;800&display=swap`;
+                document.head.appendChild(link);
+            }
+        }
+    }, [appearance.fontFamily]);
 
     const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1';
 
@@ -349,12 +393,14 @@ export default function PublicEmbedForm() {
         }
     };
 
+    const fontStyle = appearance.fontFamily !== 'System' ? { fontFamily: `'${appearance.fontFamily}', sans-serif` } : {};
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.bgColor, ...fontStyle }}>
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm font-semibold text-slate-500">Loading form...</p>
+                    <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${appearance.btnColor}40`, borderTopColor: 'transparent', borderLeftColor: appearance.btnColor }}></div>
+                    <p className="text-sm font-semibold" style={{ color: appearance.labelColor }}>Loading form...</p>
                 </div>
             </div>
         );
@@ -362,14 +408,14 @@ export default function PublicEmbedForm() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-sm text-center space-y-4">
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.bgColor, ...fontStyle }}>
+                <div className="max-w-md w-full border border-slate-200 p-6 shadow-sm text-center space-y-4" style={{ background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
                     <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
-                        <span className="material-symbols-outlined text-[24px]">warning</span>
+                        <Icon name="warning" size={24} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-slate-800 text-lg">Unable to Load Form</h3>
-                        <p className="text-sm text-slate-500 mt-1">{error}</p>
+                        <h3 className="font-bold text-lg" style={{ color: appearance.textColor }}>Unable to Load Form</h3>
+                        <p className="text-sm mt-1" style={{ color: appearance.labelColor }}>{error}</p>
                     </div>
                 </div>
             </div>
@@ -378,18 +424,19 @@ export default function PublicEmbedForm() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.bgColor, ...fontStyle }}>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center space-y-5"
+                    className="max-w-md w-full border border-slate-200 p-8 shadow-sm text-center space-y-5"
+                    style={{ background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}
                 >
                     <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner border border-emerald-100">
-                        <span className="material-symbols-outlined text-[32px] font-bold">check</span>
+                        <Icon name="check" size={32} />
                     </div>
                     <div className="space-y-1.5">
-                        <h3 className="font-extrabold text-slate-800 text-xl">Thank you!</h3>
-                        <p className="text-sm text-slate-500 leading-relaxed">Your submission has been received successfully. We will get back to you shortly.</p>
+                        <h3 className="font-extrabold text-xl" style={{ color: appearance.textColor }}>Thank you!</h3>
+                        <p className="text-sm leading-relaxed" style={{ color: appearance.labelColor }}>Your submission has been received successfully. We will get back to you shortly.</p>
                     </div>
                 </motion.div>
             </div>
@@ -399,16 +446,18 @@ export default function PublicEmbedForm() {
     const fields = form.fields || [];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="max-w-lg w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-                    <h2 className="font-extrabold text-slate-800 text-lg">{form.name}</h2>
-                    <p className="text-xs text-slate-400 mt-1">Please fill out the form below.</p>
-                </div>
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <div className="min-h-screen flex items-center justify-center" style={{ background: appearance.bgColor, padding: `${appearance.padding}px`, ...fontStyle }}>
+            <div className="w-full border border-slate-200 shadow-sm overflow-hidden" style={{ maxWidth: `${appearance.maxWidth}px`, background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
+                {!appearance.hideHeader && (
+                    <div className="px-6 py-5 border-b border-slate-100" style={{ background: appearance.cardBg }}>
+                        <h2 className="font-extrabold text-lg" style={{ color: appearance.textColor }}>{form.name}</h2>
+                        <p className="text-xs mt-1" style={{ color: appearance.labelColor }}>Please fill out the form below.</p>
+                    </div>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-5" style={{ padding: `${appearance.padding}px` }}>
                     {fields.filter(field => isFieldVisible(field, fields, vals)).map((field) => (
                         <div key={field.id} className="space-y-1.5 text-left">
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <label className="block text-xs font-bold uppercase tracking-wider" style={{ color: appearance.labelColor }}>
                                 {field.label}
                                 {field.required && <span className="text-rose-500 ml-1 font-bold">*</span>}
                             </label>
@@ -417,7 +466,8 @@ export default function PublicEmbedForm() {
                                     value={vals[field.id] || ''}
                                     onChange={e => setVals({ ...vals, [field.id]: e.target.value })}
                                     required={field.required}
-                                    className="w-full h-10 px-3.5 border border-slate-205 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all cursor-pointer font-semibold"
+                                    className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                    style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor, borderColor: '#e2e8f0', '--tw-ring-color': `${appearance.btnColor}20` }}
                                 >
                                     <option value="">{field.placeholder || 'Select option...'}</option>
                                     {(field.options || [])
@@ -444,9 +494,10 @@ export default function PublicEmbedForm() {
                                                         checked={vals[field.id] === val}
                                                         onChange={() => setVals({ ...vals, [field.id]: val })}
                                                         required={field.required}
-                                                        className="w-4 h-4 accent-sky-600 cursor-pointer"
+                                                        className="w-4 h-4 cursor-pointer"
+                                                        style={{ accentColor: appearance.btnColor }}
                                                     />
-                                                    <span className="text-sm font-semibold text-slate-600 group-hover:text-sky-600 transition-colors">{label}</span>
+                                                    <span className="text-sm font-semibold transition-colors" style={{ color: appearance.textColor }}>{label}</span>
                                                 </label>
                                             );
                                         })}
@@ -470,9 +521,10 @@ export default function PublicEmbedForm() {
                                                                 [field.id]: e.target.checked ? [...cur, val] : cur.filter(v => v !== val)
                                                             });
                                                         }}
-                                                        className="w-4 h-4 accent-sky-600 cursor-pointer rounded"
+                                                        className="w-4 h-4 cursor-pointer rounded"
+                                                        style={{ accentColor: appearance.btnColor }}
                                                     />
-                                                    <span className="text-sm font-semibold text-slate-600 group-hover:text-sky-600 transition-colors">{label}</span>
+                                                    <span className="text-sm font-semibold transition-colors" style={{ color: appearance.textColor }}>{label}</span>
                                                 </label>
                                             );
                                         })}
@@ -490,7 +542,8 @@ export default function PublicEmbedForm() {
                                                 [field.id]: `${code} ${num}`
                                             });
                                         }}
-                                        className="w-28 h-10 px-3 border border-slate-205 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all cursor-pointer font-semibold"
+                                        className="w-28 h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                        style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     >
                                         <option value="+1">US (+1)</option>
                                         <option value="+91">IN (+91)</option>
@@ -516,7 +569,8 @@ export default function PublicEmbedForm() {
                                         }}
                                         placeholder={field.placeholder || ''}
                                         required={field.required}
-                                        className="flex-1 h-10 px-3.5 border border-slate-205 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all font-semibold placeholder:text-slate-300"
+                                        className="flex-1 h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     />
                                 </div>
                             ) : field.type === 'captcha' ? (
@@ -533,14 +587,14 @@ export default function PublicEmbedForm() {
                                                     )}
                                                     {field.captchaType === 'recaptcha_v3' && (
                                                         <div className="text-[11px] text-slate-400 bg-slate-50 border p-2 rounded flex items-center gap-1.5 font-medium">
-                                                            <span className="material-symbols-outlined text-slate-555 text-[14px]">security</span>
+                                                            <Icon name="security" size={14} className="text-slate-555" />
                                                             Secured by Google reCAPTCHA v3
                                                         </div>
                                                     )}
                                                 </>
                                             ) : (
                                                 <div className="text-xs text-amber-600 border border-amber-250 bg-amber-50 p-2.5 rounded flex items-center gap-1.5 font-bold">
-                                                    <span className="material-symbols-outlined text-[16px]">warning</span>
+                                                    <Icon name="warning" size={16} />
                                                     reCAPTCHA site key is not configured.
                                                 </div>
                                             )}
@@ -564,7 +618,7 @@ export default function PublicEmbedForm() {
                                                     className="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 text-slate-500 border border-slate-200 transition-colors cursor-pointer"
                                                     title="Refresh CAPTCHA"
                                                 >
-                                                    <span className="material-symbols-outlined text-[16px] font-bold">refresh</span>
+                                                    <Icon name="refresh" size={16} />
                                                 </button>
                                             </div>
                                             <input
@@ -578,6 +632,74 @@ export default function PublicEmbedForm() {
                                         </>
                                     )}
                                 </div>
+                            ) : field.type === 'file' ? (
+                                <div className="space-y-2">
+                                    <div 
+                                        className="w-full border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative"
+                                        style={{ borderRadius: `${appearance.inputRadius}px` }}
+                                        onClick={() => document.getElementById(`file-input-${field.id}`).click()}
+                                    >
+                                        <Icon name="cloud_upload" size={28} className="text-slate-400" />
+                                        <div className="text-[12.5px] font-bold text-slate-700 mt-1">
+                                            {vals[field.id] && vals[field.id].length > 0 
+                                                ? `${vals[field.id].length} file(s) selected` 
+                                                : "Drag and drop files here, or browse"
+                                            }
+                                        </div>
+                                        <div className="text-[9.5px] text-slate-400 mt-0.5">
+                                            Minimum: {field.minFiles || 1}, Maximum: {field.maxFiles || 1} file(s) ({field.minFileSize || 0.1}MB - {field.maxFileSize || 10}MB)
+                                        </div>
+                                        <input
+                                            type="file"
+                                            id={`file-input-${field.id}`}
+                                            multiple={(field.maxFiles || 1) > 1}
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const files = Array.from(e.target.files || []);
+                                                const min = field.minFiles || 1;
+                                                const max = field.maxFiles || 1;
+                                                const minSize = field.minFileSize || 0.1;
+                                                const maxSize = field.maxFileSize || 10;
+
+                                                if (files.length < min) {
+                                                    alert(`Minimum ${min} file(s) required.`);
+                                                    return;
+                                                }
+                                                if (files.length > max) {
+                                                    alert(`Maximum ${max} file(s) allowed.`);
+                                                    return;
+                                                }
+
+                                                for (const file of files) {
+                                                    const sizeInMB = file.size / (1024 * 1024);
+                                                    if (sizeInMB < minSize) {
+                                                        alert(`File "${file.name}" is too small. Minimum file size allowed is ${minSize}MB.`);
+                                                        return;
+                                                    }
+                                                    if (sizeInMB > maxSize) {
+                                                        alert(`File "${file.name}" is too large. Maximum file size allowed is ${maxSize}MB.`);
+                                                        return;
+                                                    }
+                                                }
+
+                                                setVals({
+                                                    ...vals,
+                                                    [field.id]: files.map(f => f.name)
+                                                });
+                                            }}
+                                        />
+                                    </div>
+                                    {vals[field.id] && vals[field.id].length > 0 && (
+                                        <div className="text-[10px] text-slate-550 font-semibold space-y-1 pl-1">
+                                            Selected files:
+                                            <ul className="list-disc list-inside font-medium text-slate-650">
+                                                {vals[field.id].map((fname, fidx) => (
+                                                    <li key={fidx}>{fname}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <input
                                     type={field.type === 'email' ? 'email' : 'text'}
@@ -585,7 +707,8 @@ export default function PublicEmbedForm() {
                                     onChange={e => setVals({ ...vals, [field.id]: e.target.value })}
                                     placeholder={field.placeholder || ''}
                                     required={field.required}
-                                    className="w-full h-10 px-3.5 border border-slate-205 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all font-semibold placeholder:text-slate-300"
+                                    className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                    style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                 />
                             )}
                         </div>
@@ -594,11 +717,12 @@ export default function PublicEmbedForm() {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full h-11 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-sm transition-all shadow-xs hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full h-11 font-bold text-sm transition-all shadow-xs hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: appearance.btnColor, color: appearance.btnTextColor, borderRadius: `${appearance.inputRadius}px`, border: 'none' }}
                     >
                         {submitting ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${appearance.btnTextColor}60`, borderTopColor: 'transparent' }}></div>
                                 Submitting...
                             </>
                         ) : (form?.settings?.useCustomSubmitButton ? (form?.settings?.submitButtonText || 'Submit') : 'Submit')}

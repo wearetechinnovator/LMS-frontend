@@ -4,6 +4,7 @@ import FormBuilder from './FormBuilder'
 import FormBuilderHeader from '../../../components/FormbuilderPage/FormBuilderHeader'
 import Toast from '../../../components/Toast'
 import { FormBuilderSkeleton } from '../../../components/Skeletons'
+import Icon from '../../../components/Icon'
 import './form.css'
 
 export default function FormBuilderPage() {
@@ -411,9 +412,7 @@ export default function FormBuilderPage() {
               <div className="flex items-center gap-2.5 flex-1 max-w-lg">
                 {/* Search Bar Input */}
                 <div className="relative flex-1">
-                  <span className="material-symbols-outlined text-[16px] text-slate-400 absolute left-3 top-1/2 -translate-y-1/2">
-                    search
-                  </span>
+                  <Icon name="search" size={14} className="text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchQuery}
@@ -425,7 +424,7 @@ export default function FormBuilderPage() {
 
                 {/* Filter Trigger Dropdown */}
                 <div className="flex items-center gap-1 px-3 h-8 border border-outline-variant rounded bg-surface cursor-pointer text-[12px] text-slate-700 hover:bg-slate-50 transition-colors select-none">
-                  <span className="material-symbols-outlined text-[16px] text-slate-500">filter_alt</span>
+                  <Icon name="filter" size={14} className="text-slate-500" />
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
@@ -469,14 +468,14 @@ export default function FormBuilderPage() {
                       disabled={currentPage === 1}
                       className={`p-1 rounded transition-colors ${currentPage === 1 ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
                     >
-                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                      <Icon name="chevron_left" size={14} />
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages || totalPages === 0}
                       className={`p-1 rounded transition-colors ${(currentPage === totalPages || totalPages === 0) ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
                     >
-                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                      <Icon name="chevron_right" size={14} />
                     </button>
                   </div>
                 </div>
@@ -503,9 +502,7 @@ export default function FormBuilderPage() {
                         <div className="w-full py-12 flex flex-col items-center justify-center gap-4 bg-white/35 backdrop-blur-md border border-dashed border-outline-variant rounded-xl shadow-xs">
                           <div className="flex flex-col items-center text-center max-w-md px-6 space-y-1.5">
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-1">
-                              <span className="material-symbols-outlined text-primary text-[24px]">
-                                border_color
-                              </span>
+                              <Icon name="border_color" size={20} className="text-primary" />
                             </div>
                             <h3 className="font-bold text-[14px] text-slate-800">Create Your First Form</h3>
                             <p className="text-[11px] text-slate-500 max-w-xs leading-normal">
@@ -516,7 +513,7 @@ export default function FormBuilderPage() {
                             onClick={handleCreateNewForm}
                             className="px-5 py-2 bg-primary hover:bg-primary/95 text-white font-bold text-[12px] rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-97"
                           >
-                            <span className="material-symbols-outlined text-[16px]">add</span>
+                            <Icon name="add" size={14} />
                             Create New Form
                           </button>
                         </div>
@@ -585,21 +582,21 @@ export default function FormBuilderPage() {
                               className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-primary transition-colors cursor-pointer"
                               title="Edit Form Layout"
                             >
-                              <span className="material-symbols-outlined text-[16px]">edit</span>
+                              <Icon name="edit" size={14} />
                             </button>
                             <button
                               onClick={() => handleDuplicateForm(form)}
                               className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
                               title="Duplicate Form"
                             >
-                              <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                              <Icon name="copy" size={14} />
                             </button>
                             <button
                               onClick={() => handleDeleteForm(form.id)}
                               className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
                               title="Delete Form"
                             >
-                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                              <Icon name="delete" size={14} />
                             </button>
                           </div>
                         </td>
@@ -635,14 +632,14 @@ export default function FormBuilderPage() {
                       disabled={currentPage === 1}
                       className={`p-1 rounded transition-colors ${currentPage === 1 ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
                     >
-                      <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                      <Icon name="chevron_left" size={14} />
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages || totalPages === 0}
                       className={`p-1 rounded transition-colors ${(currentPage === totalPages || totalPages === 0) ? 'opacity-45 cursor-not-allowed' : 'hover:bg-slate-100 cursor-pointer'}`}
                     >
-                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                      <Icon name="chevron_right" size={14} />
                     </button>
                   </div>
                 </div>
@@ -717,9 +714,11 @@ export default function FormBuilderPage() {
               <div className="space-y-1.5">
                 {hoveredForm.fields?.slice(0, 5).map((field, idx) => (
                   <div key={field.id || idx} className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[13px] text-primary/70 shrink-0">
-                      {field.type === 'email' ? 'mail' : field.type === 'phone' ? 'phone' : field.type === 'select' ? 'arrow_drop_down_circle' : field.type === 'radio' ? 'radio_button_checked' : field.type === 'date' ? 'calendar_today' : field.type === 'checkbox' ? 'check_box' : 'text_fields'}
-                    </span>
+                    <Icon
+                      name={field.type === 'email' ? 'mail' : field.type === 'phone' ? 'phone' : field.type === 'select' ? 'arrow_drop_down_circle' : field.type === 'radio' ? 'radio_button_checked' : field.type === 'date' ? 'calendar_today' : field.type === 'checkbox' ? 'check_box' : 'text_fields'}
+                      size={12}
+                      className="text-primary/70"
+                    />
                     <div className="flex-1 min-w-0">
                       <span className="text-[10px] font-medium text-slate-700 truncate block">{field.label}</span>
                     </div>
@@ -735,7 +734,7 @@ export default function FormBuilderPage() {
 
             {/* Footer hint */}
             <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[13px] text-slate-400">mouse</span>
+              <Icon name="mouse" size={12} className="text-slate-400" />
               <p className="text-[9px] text-slate-400">Click to open in Form Builder</p>
             </div>
           </motion.div>
@@ -767,7 +766,7 @@ export default function FormBuilderPage() {
               <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white">
                 <div>
                   <h3 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-purple-600 text-[22px]">grid_view</span>
+                    <Icon name="grid_view" size={20} className="text-purple-600" />
                     Create from Template
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-1">
@@ -778,7 +777,7 @@ export default function FormBuilderPage() {
                   onClick={() => setShowTemplateModal(false)}
                   className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[20px]">close</span>
+                  <Icon name="close" size={18} />
                 </button>
               </div>
 
@@ -803,9 +802,7 @@ export default function FormBuilderPage() {
                             }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className={`material-symbols-outlined text-[18px] shrink-0 ${isActive ? 'text-purple-600' : 'text-slate-400'}`}>
-                              article
-                            </span>
+                            <Icon name="article" size={16} className={isActive ? 'text-purple-600' : 'text-slate-400'} />
                             <div className="min-w-0">
                               <p className={`text-[11.5px] font-bold truncate ${isActive ? 'text-purple-950 font-bold' : 'text-slate-800'}`}>
                                 {template.name}
@@ -871,9 +868,11 @@ export default function FormBuilderPage() {
                             {activePreviewTemplate.fields?.map((field, idx) => (
                               <div key={field.id || idx} className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 last:border-b-0 last:pb-0 gap-3">
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <span className="material-symbols-outlined text-[13px] text-purple-600/70 shrink-0">
-                                    {field.type === 'email' ? 'mail' : field.type === 'phone' ? 'phone' : field.type === 'select' ? 'arrow_drop_down_circle' : field.type === 'radio' ? 'radio_button_checked' : field.type === 'date' ? 'calendar_today' : field.type === 'checkbox' ? 'check_box' : 'text_fields'}
-                                  </span>
+                                  <Icon
+                                    name={field.type === 'email' ? 'mail' : field.type === 'phone' ? 'phone' : field.type === 'select' ? 'arrow_drop_down_circle' : field.type === 'radio' ? 'radio_button_checked' : field.type === 'date' ? 'calendar_today' : field.type === 'checkbox' ? 'check_box' : 'text_fields'}
+                                    size={12}
+                                    className="text-purple-600/70"
+                                  />
                                   <span className="text-[10.5px] font-semibold text-slate-700 truncate">{field.label}</span>
                                   {field.required && <span className="text-rose-500 text-[10px] shrink-0 font-bold">*</span>}
                                 </div>
@@ -894,14 +893,14 @@ export default function FormBuilderPage() {
                           onClick={() => handleSelectTemplate(activePreviewTemplate)}
                           className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[11.5px] font-bold rounded-lg shadow-sm transition-all duration-150 flex items-center gap-1.5 active:scale-98 cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-[15px]">auto_awesome</span>
+                          <Icon name="auto_awesome" size={14} />
                           Use Template
                         </button>
                       </div>
                     </motion.div>
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2">
-                      <span className="material-symbols-outlined text-[36px]">article</span>
+                      <Icon name="article" size={32} />
                       <p className="text-[12px] italic">Hover over a template to view details</p>
                     </div>
                   )}

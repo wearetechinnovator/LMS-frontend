@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getCustomStatuses, saveCustomStatuses, getLeadJourney, saveLeadJourney, parseColorToRgb, getStatusStyle, getCustomJourneys, saveCustomJourneys } from '../../../helpers/statusHelper'
 import { SettingsSkeleton } from '../../../components/Skeletons'
 import { hasPermission } from '../../../components/ProtectRoute'
+import Icon from '../../../components/Icon'
 
 const COUNSELORS = ['Sarah Jenkins', 'Marcus Chan', 'Michael Chen', 'Unassigned']
 const SOURCES = ['Website Organic', 'Paid Search', 'Referral', 'Webinar', 'Cold Outreach', 'Direct Mail', 'Bulk Offline CSV']
@@ -36,14 +37,14 @@ export default function LmsSettings() {
   const getVisibleTabs = () => {
     const tabs = []
     if (role === 'admin' || role === 'Admin' || role === 'System Admin' || canManageSettings) {
-      tabs.push({ id: 'session', label: 'Session Creation', icon: 'event_note' })
-      tabs.push({ id: 'import', label: 'Import Leads', icon: 'publish' })
+      tabs.push({ id: 'session', label: 'Session Creation', icon: 'clock-fading' })
+      tabs.push({ id: 'import', label: 'Import Leads', icon: 'file-up' })
       tabs.push({ id: 'export', label: 'Export Leads', icon: 'download' })
-      tabs.push({ id: 'bulk', label: 'Bulk Messaging', icon: 'chat' })
-      tabs.push({ id: 'statuses', label: 'Custom Statuses', icon: 'category' })
+      tabs.push({ id: 'bulk', label: 'Bulk Messaging', icon: 'messages-square' })
+      tabs.push({ id: 'statuses', label: 'Custom Statuses', icon: 'chart-spline' })
       tabs.push({ id: 'journey', label: 'Lead Journey', icon: 'route' })
     } else if (role === 'vendor' || role === 'Vendor') {
-      tabs.push({ id: 'import', label: 'Import Leads', icon: 'publish' })
+      tabs.push({ id: 'import', label: 'Import Leads', icon: 'file-up' })
       tabs.push({ id: 'export', label: 'Export Leads', icon: 'download' })
     }
     return tabs
@@ -117,7 +118,7 @@ export default function LmsSettings() {
   const [otpVerified, setOtpVerified] = useState(false)
   const [otpError, setOtpError] = useState(null)
   const [currentSessionDate, setCurrentSessionDate] = useState(() => {
-    return localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020'
+    return localStorage.getItem('lms_active_session') || '01/01/2020 - 12/31/2030'
   })
   const [newSessionDate, setNewSessionDate] = useState('06/04/2026 - 07/04/2026')
   const [creatingSession, setCreatingSession] = useState(false)
@@ -1029,7 +1030,7 @@ export default function LmsSettings() {
     setImporting(true)
     const token = localStorage.getItem('authToken')
 
-    const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020'
+    const activeSession = localStorage.getItem('lms_active_session') || '01/01/2020 - 12/31/2030'
     const [startStr, endStr] = activeSession.split(' - ')
     const startDate = new Date(startStr)
     const endDate = new Date(endStr)
@@ -1212,7 +1213,7 @@ export default function LmsSettings() {
                 : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
             }`}
           >
-            <span className={`material-symbols-outlined text-[16px] ${activeSettingsTab === item.id ? 'text-[#2f7d9e]' : 'text-slate-400'}`}>{item.icon}</span>
+            <Icon name={item.icon} size={16} className={activeSettingsTab === item.id ? 'text-[#2f7d9e]' : 'text-slate-400'} />
             {item.label}
           </button>
         ))}
@@ -1225,7 +1226,7 @@ export default function LmsSettings() {
               : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
           }`}
         >
-          <span className={`material-symbols-outlined text-[16px] ${activeSettingsTab === 'appearance' ? 'text-[#2f7d9e]' : 'text-slate-400'}`}>palette</span>
+          <Icon name="palette" size={16} className={activeSettingsTab === 'appearance' ? 'text-[#2f7d9e]' : 'text-slate-400'} />
           Appearance
         </button>
       </div>

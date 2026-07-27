@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Toast from '../../../components/Toast'
 import { ProfileSkeleton } from '../../../components/Skeletons'
+import Icon from '../../../components/Icon'
 
 const AVATAR_OPTIONS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
@@ -148,6 +149,8 @@ export default function ProfilePage() {
         if (response.ok) {
           const data = await response.json()
           setProfile(data)
+          localStorage.setItem('userImg', data.user_img || '')
+          window.dispatchEvent(new Event('profile-updated'))
         } else {
           const errMsg = await parseErrorResponse(response, 'Failed to load profile')
           triggerToast(`Error: ${errMsg}`)
@@ -345,7 +348,7 @@ export default function ProfilePage() {
             activeTab === 'personal' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-[17px]">person</span>
+          <Icon name="person" size={17} />
           Personal & Security
         </button>
         <button
@@ -354,7 +357,7 @@ export default function ProfilePage() {
             activeTab === 'company' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-[17px]">business</span>
+          <Icon name="business" size={17} />
           Company Details
         </button>
       </div>
@@ -380,7 +383,7 @@ export default function ProfilePage() {
               onClick={() => document.getElementById('avatar-file-input').click()}
               className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:shadow-xs active:scale-97"
             >
-              <span className="material-symbols-outlined text-[13px]">upload</span>
+              <Icon name="upload" size={13} />
               Upload from Device
             </button>
             <input
@@ -441,7 +444,7 @@ export default function ProfilePage() {
             {/* General Information Card */}
             <form onSubmit={handleProfileSubmit} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4 text-[11px]">
               <h2 className="text-[14px] font-bold text-slate-800 border-b border-slate-100 pb-2.5 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-primary text-[18px]">person</span>
+                <Icon name="person" size={18} className="text-primary" />
                 Personal Details
               </h2>
 
@@ -504,7 +507,7 @@ export default function ProfilePage() {
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined text-[15px]">save</span>
+                      <Icon name="save" size={15} />
                       Save Profile Changes
                     </>
                   )}
@@ -515,7 +518,7 @@ export default function ProfilePage() {
             {/* Password Settings Card */}
             <form onSubmit={handlePasswordSubmit} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4 text-[11px]">
               <h2 className="text-[14px] font-bold text-slate-800 border-b border-slate-100 pb-2.5 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-primary text-[18px]">lock</span>
+                <Icon name="lock" size={18} className="text-primary" />
                 Update Password
               </h2>
 
@@ -570,7 +573,7 @@ export default function ProfilePage() {
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined text-[15px]">vpn_key</span>
+                      <Icon name="lock" size={15} />
                       Change Password
                     </>
                   )}
@@ -594,7 +597,7 @@ export default function ProfilePage() {
           {/* Left Column: Organization Logo Card */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col items-center space-y-4">
             <h2 className="text-[14px] font-bold text-slate-800 border-b border-slate-100 pb-2.5 w-full flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-primary text-[18px]">cloud_upload</span>
+              <Icon name="cloud_upload" size={18} className="text-primary" />
               Organization Logo
             </h2>
 
@@ -603,7 +606,7 @@ export default function ProfilePage() {
                 {companyDetails.logoFile ? (
                   <img src={companyDetails.logoFile} alt="Company Logo" className="w-full h-full object-contain" />
                 ) : (
-                  <span className="material-symbols-outlined text-slate-300" style={{ fontSize: '48px' }}>business</span>
+                  <Icon name="business" size={48} className="text-slate-300" />
                 )}
               </div>
 
@@ -612,7 +615,7 @@ export default function ProfilePage() {
                 onClick={() => document.getElementById('company-logo-input').click()}
                 className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:shadow-xs active:scale-97"
               >
-                <span className="material-symbols-outlined text-[13px]">upload</span>
+                <Icon name="upload" size={13} />
                 Upload Logo
               </button>
               <input
@@ -637,7 +640,7 @@ export default function ProfilePage() {
           <div className="lg:col-span-2">
             <form onSubmit={handleCompanySubmit} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4 text-[11px]">
               <h2 className="text-[14px] font-bold text-slate-800 border-b border-slate-100 pb-2.5 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-primary text-[18px]">business</span>
+                <Icon name="business" size={18} className="text-primary" />
                 Organization Details
               </h2>
 
@@ -712,7 +715,7 @@ export default function ProfilePage() {
                   type="submit"
                   className="px-5 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-98"
                 >
-                  <span className="material-symbols-outlined text-[15px]">save</span>
+                  <Icon name="save" size={15} />
                   Save Company Details
                 </button>
               </div>

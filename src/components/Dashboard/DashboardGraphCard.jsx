@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
+import Icon from '../Icon'
 
 export default function DashboardGraphCard({ sources = [], leads = [], selectedDateRange = 'Last 30 Days' }) {
   const [activeTab, setActiveTab] = useState('volume')
@@ -195,7 +196,7 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
                     onClick={() => setActiveTab(tab.id)}
                     className={`chart-tab-btn ${isActive ? 'active' : ''}`}
                   >
-                    <span className="material-symbols-outlined">{tab.icon}</span>
+                    <Icon name={tab.icon} size={14} />
                     <span>{tab.label}</span>
                   </button>
                 )
@@ -210,7 +211,7 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
                 style={{ padding: '3px 6px' }}
                 title="Line Area Chart"
               >
-                <span className="material-symbols-outlined">show_chart</span>
+                <Icon name="show_chart" size={14} />
               </button>
               <button
                 onClick={() => setChartStyle('bar')}
@@ -218,7 +219,7 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
                 style={{ padding: '3px 6px' }}
                 title="Bar Chart"
               >
-                <span className="material-symbols-outlined">bar_chart</span>
+                <Icon name="bar_chart" size={14} />
               </button>
               <button
                 onClick={() => setChartStyle('pie')}
@@ -226,7 +227,7 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
                 style={{ padding: '3px 6px' }}
                 title="Pie Donut Chart"
               >
-                <span className="material-symbols-outlined">pie_chart</span>
+                <Icon name="pie_chart" size={14} />
               </button>
             </div>
           </div>
@@ -496,7 +497,7 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
         <div className="source-items-container">
           {sources.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center select-none">
-              <span className="material-symbols-outlined text-slate-350 text-3xl mb-2">bar_chart</span>
+              <Icon name="bar_chart" size={28} className="text-slate-350 mb-2" />
               <span className="text-slate-400 text-xs font-semibold">No source data available</span>
             </div>
           ) : (

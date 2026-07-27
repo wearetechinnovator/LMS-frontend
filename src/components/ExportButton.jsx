@@ -6,6 +6,8 @@ import excel from '../assets/excel.png'
 import pdf from '../assets/pdf.png'
 import json from '../assets/json.png'
 
+import Icon from './Icon'
+
 export default function ExportButton({ triggerToast }) {
   const [showExportModal, setShowExportModal] = useState(false)
 
@@ -19,7 +21,7 @@ export default function ExportButton({ triggerToast }) {
   return (
     <div className="export-dropdown-wrapper">
       <button className="export-btn" onClick={() => setShowExportModal(!showExportModal)}>
-        <span className="material-symbols-outlined">download</span>
+        <Icon name="download" size={16} />
         Export
       </button>
 

@@ -377,7 +377,7 @@ export default function AllLeadsPage() {
       try {
         const token = localStorage.getItem('authToken');
         if (!token || token === 'mock-jwt-token') return;
-        const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020';
+        const activeSession = localStorage.getItem('lms_active_session') || '01/01/2020 - 12/31/2030';
         const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead?session=${encodeURIComponent(activeSession)}`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -936,6 +936,10 @@ export default function AllLeadsPage() {
 
   // BULK ACTIONS HANDLERS
   const handleBulkStatusUpdate = async (newStatus) => {
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
+      return;
+    }
     if (!newStatus || selectedLeads.length === 0) return;
     const token = localStorage.getItem('authToken');
     if (token && token !== 'mock-jwt-token') {
@@ -1268,7 +1272,7 @@ export default function AllLeadsPage() {
   const handleAddQuickLead = async (formData) => {
     if (!formData.name.trim() || !formData.email.trim()) return;
 
-    const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020'
+    const activeSession = localStorage.getItem('lms_active_session') || '01/01/2020 - 12/31/2030'
     const [startStr, endStr] = activeSession.split(' - ')
     const startDate = new Date(startStr)
     const endDate = new Date(endStr)
@@ -1860,14 +1864,14 @@ export default function AllLeadsPage() {
                     color: 'orange',
                     icon: 'calendar_today'
                   },
-                  {
-                    label: 'Qualified Leads',
-                    value: formFilteredLeads.filter(l => l.status === 'QUALIFIED').length,
-                    trend: kpiTrends.qualifiedChange,
-                    trendUp: kpiTrends.qualifiedUp,
-                    color: 'green',
-                    icon: 'verified'
-                  },
+                  // {
+                  //   label: 'Qualified Leads',
+                  //   value: formFilteredLeads.filter(l => l.status === 'QUALIFIED').length,
+                  //   trend: kpiTrends.qualifiedChange,
+                  //   trendUp: kpiTrends.qualifiedUp,
+                  //   color: 'green',
+                  //   icon: 'verified'
+                  // },
                   {
                     label: 'Pending Leads',
                     value: formFilteredLeads.filter(l => ['NEW', 'CONTACTED'].includes(l.status)).length,
@@ -1876,14 +1880,14 @@ export default function AllLeadsPage() {
                     color: 'amber',
                     icon: 'pending'
                   },
-                  {
-                    label: 'Conversion Rate',
-                    value: `${formFilteredLeads.length > 0 ? Math.round((formFilteredLeads.filter(l => l.status === 'QUALIFIED').length / formFilteredLeads.length) * 100) : 0}%`,
-                    trend: kpiTrends.convChange,
-                    trendUp: kpiTrends.convUp,
-                    color: 'teal',
-                    icon: 'leaderboard'
-                  }
+                  // {
+                  //   label: 'Conversion Rate',
+                  //   value: `${formFilteredLeads.length > 0 ? Math.round((formFilteredLeads.filter(l => l.status === 'QUALIFIED').length / formFilteredLeads.length) * 100) : 0}%`,
+                  //   trend: kpiTrends.convChange,
+                  //   trendUp: kpiTrends.convUp,
+                  //   color: 'teal',
+                  //   icon: 'leaderboard'
+                  // }
 
                 ].map((card, idx) => (
                   <LeadsKpiCard
@@ -2867,7 +2871,7 @@ export default function AllLeadsPage() {
                       <span className="text-[11.5px] font-semibold text-slate-300">selected</span>
                     </div>
 
-                    {hasPermission('leads_edit') && (
+                    {hasPermission('leads_nurture') && (
                       <>
                         <div className="h-4 w-px bg-slate-800" />
                         {/* Mass Status Option */}

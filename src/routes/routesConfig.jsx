@@ -28,7 +28,7 @@ const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/analysis/Anal
 const adminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/admin/dashboard' },
   { id: 'form-builder', label: 'Form Builder', icon: 'build', path: '/admin/form-builder' },
-  { id: 'leads', label: 'All Leads', icon: 'people', path: '/admin/leads' },
+  { id: 'leads', label: 'All Leads', icon: 'handshake', path: '/admin/leads' },
   {
     id: 'analytics',
     label: 'Analytics',
@@ -44,9 +44,9 @@ const adminNavItems = [
   },
   { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/admin/departments' },
   { id: 'teams', label: 'Teams', icon: 'group', path: '/admin/teams' },
-  { id: 'audit-logs', label: 'Audit Logs', icon: 'receipt_long', path: '/admin/audit-logs' },
-  { id: 'roles', label: 'Roles', icon: 'perm_identity', path: '/admin/roles' },
-  { id: 'form-embed', label: 'Form Embed', icon: 'integration_instructions', path: '/admin/form-embed' },
+  { id: 'audit-logs', label: 'Audit Logs', icon: 'clipboard_clock', path: '/admin/audit-logs' },
+  { id: 'roles', label: 'Roles', icon: 'user_shield', path: '/admin/roles' },
+  { id: 'form-embed', label: 'Form Embed', icon: 'paperclip', path: '/admin/form-embed' },
 ]
 
 export const RoleRoutes = ({ username, handleLogout }) => {

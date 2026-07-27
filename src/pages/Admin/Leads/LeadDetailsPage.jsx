@@ -342,8 +342,8 @@ export default function LeadDetailsPage() {
   }
 
   const handleLeadStatusChange = async (leadId, newStatus) => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     const prevStatus = activeLeadDetails.status
@@ -395,8 +395,8 @@ export default function LeadDetailsPage() {
   }
 
   const handleLeadJourneyChange = async (leadId, newJourneyId) => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     const currentJourneyId = activeLeadDetails.journeyId || journeysList.find(j => j.isDefault)?.id || 'default';
@@ -558,8 +558,8 @@ export default function LeadDetailsPage() {
   }
 
   const handleSendQueryResponse = async (leadId, queryId, responseText) => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     if (!responseText.trim()) return
@@ -682,8 +682,8 @@ export default function LeadDetailsPage() {
   }
 
   const handleLogInteraction = async () => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     if (!newComment.trim()) return
@@ -756,8 +756,8 @@ export default function LeadDetailsPage() {
   }
 
   const handleTogglePinEvent = async (eventId) => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     const updatedTimeline = activeLeadDetails.timeline.map(event => {
@@ -836,8 +836,8 @@ export default function LeadDetailsPage() {
   };
 
   const handleActivateCampaign = async (campaignId) => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     const template = CAMPAIGN_TEMPLATES[campaignId];
@@ -938,8 +938,8 @@ export default function LeadDetailsPage() {
   };
 
   const handleCompleteNurtureStep = async (stepIndex) => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     const currentNurturing = activeLeadDetails.nurturing;
@@ -1016,8 +1016,8 @@ export default function LeadDetailsPage() {
   };
 
   const handleCancelCampaign = async () => {
-    if (!hasPermission('leads_edit')) {
-      triggerToast("Error: You do not have permission to edit leads!");
+    if (!hasPermission('leads_nurture')) {
+      triggerToast("Error: You do not have permission to nurture leads!");
       return;
     }
     const currentNurturing = activeLeadDetails.nurturing;
@@ -1268,36 +1268,49 @@ export default function LeadDetailsPage() {
                 </div>
               </div>
 
+
               <div className="space-y-3 pt-4 border-t border-slate-100">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lead Operations</div>
                 <div className="space-y-1.5">
                   <div className="text-[12px] font-bold text-slate-400 uppercase tracking-wider block">Lead Status</div>
-                  <select
-                    value={activeLeadDetails.status}
-                    onChange={(e) => handleLeadStatusChange(activeLeadDetails.id, e.target.value)}
-                    disabled={!hasPermission('leads_edit')}
-                    className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {statusesList
-                      .filter(status => journeySteps.includes(status.value) || status.value === activeLeadDetails.status)
-                      .map(status => (
-                        <option key={status.value} value={status.value}>{status.label}</option>
-                      ))}
-                  </select>
+                  {hasPermission('leads_nurture') ? (
+                    <select
+                      value={activeLeadDetails.status}
+                      onChange={(e) => handleLeadStatusChange(activeLeadDetails.id, e.target.value)}
+                      className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors"
+                    >
+                      {statusesList
+                        .filter(status => journeySteps.includes(status.value) || status.value === activeLeadDetails.status)
+                        .map(status => (
+                          <option key={status.value} value={status.value}>{status.label}</option>
+                        ))}
+                    </select>
+                  ) : (
+                    <div className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700 flex items-center gap-1.5 select-none" style={getStatusStyle(activeLeadDetails.status, statusesList)}>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: getStatusStyle(activeLeadDetails.status, statusesList).color }} />
+                      {activeLeadDetails.status}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Counselor</label>
-                  <select
-                    value={activeLeadDetails.assignedTo || 'Unassigned'}
-                    onChange={(e) => handleLeadCounselorChange(activeLeadDetails.id, e.target.value)}
-                    disabled={!hasPermission('leads_assign')}
-                    className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {counselorsList.map(counselor => (
-                      <option key={counselor} value={counselor}>{counselor}</option>
-                    ))}
-                  </select>
+                  {hasPermission('leads_assign') ? (
+                    <select
+                      value={activeLeadDetails.assignedTo || 'Unassigned'}
+                      onChange={(e) => handleLeadCounselorChange(activeLeadDetails.id, e.target.value)}
+                      className="w-full h-8 px-2 border border-slate-205 rounded-lg bg-white text-[12px] font-semibold outline-none cursor-pointer hover:bg-slate-50 focus:border-primary transition-colors"
+                    >
+                      {counselorsList.map(counselor => (
+                        <option key={counselor} value={counselor}>{counselor}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700 flex items-center gap-2 select-none">
+                      <span className="material-symbols-outlined text-[15px] text-slate-400">person</span>
+                      {activeLeadDetails.assignedTo || 'Unassigned'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1316,55 +1329,93 @@ export default function LeadDetailsPage() {
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h1 className="text-xl font-extrabold text-slate-800 leading-tight">{activeLeadDetails.name}</h1>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => {
-                          triggerToast('Number will be visible for 5 seconds!')
-                          setRevealedPhone(true)
-                          setTimeout(() => {
-                            setRevealedPhone(false)
-                          }, 5000)
-                        }}
-                        className="p-1.5 bg-blue-50 hover:bg-blue-100 hover:scale-105 active:scale-95 text-blue-600 rounded-lg border border-blue-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
-                        data-tooltip="Call"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">call</span>
-                      </button>
-                      <button
-                        onClick={() => setShowEmailModal(true)}
-                        className="p-1.5 bg-emerald-50 hover:bg-emerald-100 hover:scale-105 active:scale-95 text-emerald-600 rounded-lg border border-emerald-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
-                        data-tooltip="Send Email"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">mail</span>
-                      </button>
-                      <button
-                        onClick={() => triggerToast('WhatsApp message draft initialized!')}
-                        className="p-1.5 bg-green-50 hover:bg-green-100 hover:scale-105 active:scale-95 text-green-600 rounded-lg border border-green-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
-                        data-tooltip="WhatsApp"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">chat</span>
-                      </button>
-                      <button
-                        onClick={() => triggerToast('Meeting scheduler simulator initialized!')}
-                        className="p-1.5 bg-indigo-50 hover:bg-indigo-100 hover:scale-105 active:scale-95 text-indigo-600 rounded-lg border border-indigo-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
-                        data-tooltip="Schedule Meeting"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">video_call</span>
-                      </button>
-                      <button
-                        onClick={() => triggerToast('Task creation console initialized!')}
-                        className="p-1.5 bg-slate-50 hover:bg-slate-100 hover:scale-105 active:scale-95 text-slate-600 rounded-lg border border-slate-205 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
-                        data-tooltip="Create Task"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">task_alt</span>
-                      </button>
-                    </div>
+                    {hasPermission('leads_nurture') && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            triggerToast('Number will be visible for 5 seconds!')
+                            setRevealedPhone(true)
+                            setTimeout(() => {
+                              setRevealedPhone(false)
+                            }, 5000)
+                          }}
+                          className="p-1.5 bg-blue-50 hover:bg-blue-100 hover:scale-105 active:scale-95 text-blue-600 rounded-lg border border-blue-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
+                          data-tooltip="Call"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">call</span>
+                        </button>
+                        <button
+                          onClick={() => setShowEmailModal(true)}
+                          className="p-1.5 bg-emerald-50 hover:bg-emerald-100 hover:scale-105 active:scale-95 text-emerald-600 rounded-lg border border-emerald-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
+                          data-tooltip="Send Email"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">mail</span>
+                        </button>
+                        <button
+                          onClick={() => triggerToast('WhatsApp message draft initialized!')}
+                          className="p-1.5 bg-green-50 hover:bg-green-100 hover:scale-105 active:scale-95 text-green-600 rounded-lg border border-green-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
+                          data-tooltip="WhatsApp"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">chat</span>
+                        </button>
+                        <button
+                          onClick={() => triggerToast('Meeting scheduler simulator initialized!')}
+                          className="p-1.5 bg-indigo-50 hover:bg-indigo-100 hover:scale-105 active:scale-95 text-indigo-600 rounded-lg border border-indigo-200 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
+                          data-tooltip="Schedule Meeting"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">video_call</span>
+                        </button>
+                        <button
+                          onClick={() => triggerToast('Task creation console initialized!')}
+                          className="p-1.5 bg-slate-50 hover:bg-slate-100 hover:scale-105 active:scale-95 text-slate-600 rounded-lg border border-slate-205 flex items-center justify-center cursor-pointer transition-all w-7.5 h-7.5"
+                          data-tooltip="Create Task"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">task_alt</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Lead ID: {activeLeadDetails.id.replace('LS-', 'L-')}</p>
-
                 </div>
               </div>
             </div>
+
+            {/* duplicate merge alert banner */}
+            {dupe && hasPermission('leads_edit') && (
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-amber-600 text-[24px]">warning</span>
+                  <div>
+                    <h3 className="font-extrabold text-amber-850 text-[13px]">Duplicate profile detected!</h3>
+                    <p className="text-[11px] text-amber-700 mt-0.5">
+                      Another profile exists for <strong>{dupe.name}</strong> with the same email (<strong>{dupe.email}</strong>).
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setMergeSelectedProps({
+                      name: activeLeadDetails.name,
+                      email: activeLeadDetails.email,
+                      phone: activeLeadDetails.phone,
+                      score: activeLeadDetails.score,
+                      status: activeLeadDetails.status,
+                      assignedTo: activeLeadDetails.assignedTo,
+                      source: activeLeadDetails.source,
+                      location: activeLeadDetails.location,
+                      campaign: activeLeadDetails.campaign,
+                      query: activeLeadDetails.query,
+                      ip: activeLeadDetails.ip,
+                      device: activeLeadDetails.device
+                    });
+                    setShowMergeModal(true);
+                  }}
+                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-xs cursor-pointer select-none shrink-0"
+                >
+                  Consolidate & Merge Profiles
+                </button>
+              </div>
+            )}
 
             {/* after lead name  */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/70 bg-white border border-slate-200 rounded-xl shadow-xs p-3.5 text-[11px] font-bold text-slate-655 select-none items-center">
@@ -1376,7 +1427,48 @@ export default function LeadDetailsPage() {
               </div>
               <div>
                 <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Lead Score</span>
-                <span className="text-slate-800 text-[11.5px] font-extrabold">{activeLeadDetails.score} / 100</span>
+                {editingScore ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      defaultValue={activeLeadDetails.score}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val) && val >= 0 && val <= 100) {
+                          handleLeadScoreChange(activeLeadDetails.id, val);
+                        }
+                        setEditingScore(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 0 && val <= 100) {
+                            handleLeadScoreChange(activeLeadDetails.id, val);
+                          }
+                          setEditingScore(false);
+                        }
+                      }}
+                      className="w-14 h-6 px-1 border border-slate-300 rounded font-extrabold outline-none text-slate-800 text-[11px]"
+                      autoFocus
+                    />
+                    <span className="text-slate-400">/ 100</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-800 text-[11.5px] font-extrabold">{activeLeadDetails.score} / 100</span>
+                    {hasPermission('leads_edit') && (
+                      <button
+                        onClick={() => setEditingScore(true)}
+                        className="p-0.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center cursor-pointer"
+                        title="Edit Score"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">edit</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Current Stage</span>
@@ -1396,13 +1488,11 @@ export default function LeadDetailsPage() {
                   <span className="p-1 text-[10px] text-slate-400 font-semibold">{leadDates.relative}</span>
                 </div>
                 <span className="text-slate-800 text-[11.5px] font-extrabold truncate">{leadDates.absolute}</span>
-
               </div>
             </div>
 
             {/* Lead Journey Stepper */}
-
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4 relative overflow-hidden mt-5">
               {activeLeadDetails.status && (activeLeadDetails.status === 'WON' || activeLeadDetails.status === 'LOST') && (
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[3px] flex items-center justify-center z-10 select-none animate-fade-in">
                   <div className={`px-5 py-2 rounded-[3px] border text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 ${
@@ -1475,40 +1565,42 @@ export default function LeadDetailsPage() {
 
 
           {/* Quick Log Console + Activity Input */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-            <div className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Quick Log Console</div>
+          {hasPermission('leads_nurture') && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Quick Log Console</div>
 
-            <div className="space-y-3">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Type comments, task assignments, phone notes..."
-                rows="2"
-                className="w-full text-[11.5px] p-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 resize-none font-sans"
-              />
-              <div className="flex items-center justify-between gap-4 select-none">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[12px] text-slate-400 font-bold uppercase tracking-wider">Type:</span>
-                  <select
-                    value={interactionType}
-                    onChange={(e) => setInteractionType(e.target.value)}
-                    className="bg-white border border-slate-200 p-5 shadow-xs space-y-4 rounded-lg px-2.5 py-1 text-[11px] outline-none text-slate-700 cursor-pointer font-bold shadow-2xs"
+              <div className="space-y-3">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Type comments, task assignments, phone notes..."
+                  rows="2"
+                  className="w-full text-[11.5px] p-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 resize-none font-sans"
+                />
+                <div className="flex items-center justify-between gap-4 select-none">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] text-slate-400 font-bold uppercase tracking-wider">Type:</span>
+                    <select
+                      value={interactionType}
+                      onChange={(e) => setInteractionType(e.target.value)}
+                      className="bg-white border border-slate-200 p-5 shadow-xs space-y-4 rounded-lg px-2.5 py-1 text-[11px] outline-none text-slate-700 cursor-pointer font-bold shadow-2xs"
+                    >
+                      <option value="COMMENT">Note / Comment</option>
+                      <option value="TASK">Task / Reminder</option>
+                      <option value="CALL">Call Summary</option>
+                      <option value="MEETING">Meeting</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleLogInteraction}
+                    className="px-4 py-1.5 bg-primary text-white rounded-lg text-[11px] font-bold hover:bg-primary/95 transition-all shadow-xs cursor-pointer hover:shadow-md active:scale-98"
                   >
-                    <option value="COMMENT">Note / Comment</option>
-                    <option value="TASK">Task / Reminder</option>
-                    <option value="CALL">Call Summary</option>
-                    <option value="MEETING">Meeting</option>
-                  </select>
+                    Add to Timeline
+                  </button>
                 </div>
-                <button
-                  onClick={handleLogInteraction}
-                  className="px-4 py-1.5 bg-primary text-white rounded-lg text-[11px] font-bold hover:bg-primary/95 transition-all shadow-xs cursor-pointer hover:shadow-md active:scale-98"
-                >
-                  Add to Timeline
-                </button>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Activity Trail / Timeline */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
@@ -1567,13 +1659,15 @@ export default function LeadDetailsPage() {
                           </span>
                           <div className="flex items-center gap-1.5 select-none">
                             <span className="text-[9.5px] text-slate-400 font-medium">{event.date}</span>
-                            <button
-                              onClick={() => handleTogglePinEvent(event.id)}
-                              className="p-0.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-655 transition-colors flex items-center justify-center cursor-pointer"
-                              title={event.pinned ? 'Unpin' : 'Pin'}
-                            >
-                              <span className={`material-symbols-outlined text-[12px] ${event.pinned ? 'text-amber-500 fill-amber-500' : ''}`}>push_pin</span>
-                            </button>
+                            {hasPermission('leads_nurture') && (
+                              <button
+                                onClick={() => handleTogglePinEvent(event.id)}
+                                className="p-0.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-655 transition-colors flex items-center justify-center cursor-pointer"
+                                title={event.pinned ? 'Unpin' : 'Pin'}
+                              >
+                                <span className={`material-symbols-outlined text-[12px] ${event.pinned ? 'text-amber-500 fill-amber-500' : ''}`}>push_pin</span>
+                              </button>
+                            )}
                           </div>
                         </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import ExportButton from '../ExportButton'
 import Toast from '../Toast'
+import Icon from '../Icon'
 
 export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenTemplateModal }) {
     const [toastMessage, setToastMessage] = useState('')
@@ -54,11 +55,9 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                         className="btn-create-form"
                         data-tour="btn-create-form"
                     >
-                        <span className="material-symbols-outlined create-icon">add</span>
+                        <Icon name="add" className="create-icon" size={16} />
                         Create New Form
-                        <span className={`material-symbols-outlined caret-icon ${isDropdownOpen ? 'open' : ''}`}>
-                            expand_more
-                        </span>
+                        <Icon name="expand_more" className={`caret-icon ${isDropdownOpen ? 'open' : ''}`} size={16} />
                     </button>
 
                     {isDropdownOpen && (
@@ -70,7 +69,7 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                                     setIsDropdownOpen(false)
                                 }}
                             >
-                                <span className="material-symbols-outlined item-icon text-indigo-500">edit_note</span>
+                                <Icon name="edit_note" className="item-icon text-indigo-500" size={18} />
                                 <div className="item-text-container">
                                     <span className="item-title">Create from Scratch</span>
                                     <span className="item-desc">Start with a blank canvas</span>
@@ -83,7 +82,7 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                                     setIsDropdownOpen(false)
                                 }}
                             >
-                                <span className="material-symbols-outlined item-icon text-purple-500">grid_view</span>
+                                <Icon name="grid_view" className="item-icon text-purple-500" size={18} />
                                 <div className="item-text-container">
                                     <span className="item-title">Create from Template</span>
                                     <span className="item-desc">Use pre-designed blueprints</span>

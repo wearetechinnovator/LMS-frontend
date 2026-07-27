@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Toast from '../../../components/Toast'
 import { getCustomJourneys, getCustomStatuses, saveCustomJourneys, saveCustomStatuses } from '../../../helpers/statusHelper'
+import Icon from '../../../components/Icon'
 import './form.css'
 
 export default function FormBuilder({
@@ -35,6 +36,30 @@ export default function FormBuilder({
     const [draggedIndex, setDraggedIndex] = useState(null)
     const [isDraggingActive, setIsDraggingActive] = useState(false)
     const [toastMessage, setToastMessage] = useState(null)
+    const [counselorsList, setCounselorsList] = useState([])
+    
+    useEffect(() => {
+        const fetchCounselors = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token || token === 'mock-jwt-token') return;
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/get-users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        setCounselorsList(data.filter(u => u.status === 'Active'));
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load counselors in FormBuilder:", err);
+            }
+        };
+        fetchCounselors();
+    }, []);
     
     const triggerLocalToast = (msg) => {
         setToastMessage(msg)
@@ -618,12 +643,11 @@ export default function FormBuilder({
         { type: 'date', label: 'Date Picker', icon: 'calendar_today' },
         { type: 'select', label: 'Drop Box', icon: 'arrow_drop_down' },
         { type: 'radio', label: 'Radio Button', icon: 'radio_button_checked' },
-        { type: 'city', label: 'City', icon: 'location_city' }
+        { type: 'city', label: 'City', icon: 'location_city' },
+        { type: 'file', label: 'File Upload', icon: 'upload_file' }
     ]
 
-    const advancedFields = [
-        { type: 'custom', label: 'Custom Field', icon: 'tune' }
-    ]
+    const advancedFields = []
 
     const securityFields = [
         { type: 'captcha', label: 'CAPTCHA', icon: 'verified_user' },
@@ -682,6 +706,10 @@ export default function FormBuilder({
             placeholder: '',
             helperText: '',
             captchaType: type === 'captcha' ? 'math' : undefined,
+            minFiles: type === 'file' ? 1 : undefined,
+            maxFiles: type === 'file' ? 1 : undefined,
+            minFileSize: type === 'file' ? 0.1 : undefined,
+            maxFileSize: type === 'file' ? 10 : undefined,
             options: (type === 'select' || type === 'radio' || type === 'checkbox') ? ['Option 1'] : [],
             conditional: {
                 enabled: false,
@@ -896,12 +924,23 @@ export default function FormBuilder({
     }
 
     const handleSaveDraft = () => {
-        setFormStatus('Draft')
+        const isPublished = formStatus === 'Published' || String(formStatus).toUpperCase() === 'PUBLISHED';
+        
+        if (isPublished) {
+            const proceed = window.confirm("It is a published form. Saving changes will reflect in live. Do you want to proceed?");
+            if (!proceed) return;
+        } else {
+            setFormStatus('Draft');
+        }
+
+        const nextStatus = isPublished ? 'Published' : 'Draft';
+        const nextStatusPayload = isPublished ? 'PUBLISHED' : 'DRAFT';
+
         const updatedSnapshot = {
             title: formTitle,
             description: formDescription,
             fields: JSON.stringify(formFields),
-            status: 'Draft',
+            status: nextStatus,
             settings: formSettings
         }
         setSavedSnapshot(updatedSnapshot)
@@ -912,11 +951,11 @@ export default function FormBuilder({
                 title: formTitle,
                 description: formDescription,
                 fields: formFields,
-                status: 'DRAFT',
+                status: nextStatusPayload,
                 settings: formSettings
             })
         }
-        triggerLocalToast("✓ Draft saved successfully!")
+        triggerLocalToast(isPublished ? "✓ Form changes saved live!" : "✓ Draft saved successfully!")
     }
 
     return (
@@ -955,37 +994,39 @@ export default function FormBuilder({
                                     className="w-full h-8 flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
                                     role="button"
                                 >
-                                    <span className="material-symbols-outlined text-outline-variant text-body-md">drag_indicator</span>
-                                    <span className="material-symbols-outlined text-primary text-[15px]!">{field.icon}</span>
+                                    <Icon name="drag_indicator" size={10} className="text-outline-variant" />
+                                    <Icon name={field.icon} size={14} className="text-primary" />
                                     <span className="font-body-md text-on-surface text-[12px]!">{field.label}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div>
-                        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">ADVANCED</h3>
-                        <div className="space-y-1">
-                            {advancedFields.map(field => (
-                                <div
-                                    key={field.label}
-                                    onClick={() => addField(field.type)}
-                                    draggable={true}
-                                    onDragStart={(e) => {
-                                        e.dataTransfer.setData('fieldType', field.type)
-                                        setIsDraggingActive(true)
-                                    }}
-                                    onDragEnd={handleDragEnd}
-                                    className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
-                                    role="button"
-                                >
-                                    <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
-                                    <span className="material-symbols-outlined text-tertiary text-[15px]!">{field.icon}</span>
-                                    <span className="font-body-md text-on-surface text-[12px]!">{field.label}</span>
-                                </div>
-                            ))}
+                    {advancedFields.length > 0 && (
+                        <div>
+                            <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">ADVANCED</h3>
+                            <div className="space-y-1">
+                                {advancedFields.map(field => (
+                                    <div
+                                        key={field.label}
+                                        onClick={() => addField(field.type)}
+                                        draggable={true}
+                                        onDragStart={(e) => {
+                                            e.dataTransfer.setData('fieldType', field.type)
+                                            setIsDraggingActive(true)
+                                        }}
+                                        onDragEnd={handleDragEnd}
+                                        className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
+                                        role="button"
+                                    >
+                                        <Icon name="drag_indicator" size={10} className="text-outline-variant" />
+                                        <Icon name={field.icon} size={14} className="text-tertiary" />
+                                        <span className="font-body-md text-on-surface text-[12px]!">{field.label}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div>
                         <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-1 text-[9px] field-library-section-title">SECURITY & CUSTOM</h3>
@@ -1003,8 +1044,8 @@ export default function FormBuilder({
                                     className="w-full flex items-center gap-2 p-1.5 bg-surface-container-lowest border border-outline-variant rounded shadow-sm hover:border-primary hover:bg-surface-container-low transition-colors field-library-btn cursor-grab active:cursor-grabbing select-none"
                                     role="button"
                                 >
-                                    <span className="material-symbols-outlined text-outline-variant text-[14px]">drag_indicator</span>
-                                    <span className="material-symbols-outlined text-primary text-[15px]!">{field.icon}</span>
+                                    <Icon name="drag_indicator" size={10} className="text-outline-variant" />
+                                    <Icon name={field.icon} size={14} className="text-primary" />
                                     <span className="font-body-md text-on-surface text-[12px]!">{field.label}</span>
                                 </div>
                             ))}
@@ -1031,7 +1072,7 @@ export default function FormBuilder({
                                         className="flex items-center gap-1 px-2.5 py-1 hover:bg-slate-100/80 active:bg-slate-200/50 rounded-lg text-slate-700 hover:text-slate-900 transition-all font-semibold text-[11px] cursor-pointer shrink-0 border border-slate-200/60 bg-white/50 shadow-2xs h-[30px]"
                                         title="Back to Form Management"
                                     >
-                                        <span className="material-symbols-outlined text-[14px] font-bold">arrow_back</span>
+                                        <Icon name="arrow_back" size={12} />
                                         Back
                                     </button>
                                 )}
@@ -1073,7 +1114,7 @@ export default function FormBuilder({
                                         </span>
                                     ) : (
                                         <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-emerald-600 ml-1 select-none">
-                                            <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                                            <Icon name="check_circle" size={12} />
                                             {lastSavedText}
                                         </span>
                                     )}
@@ -1083,9 +1124,9 @@ export default function FormBuilder({
                             <div className="flex gap-2 items-center justify-end shrink-0 flex-wrap">
                                 <button
                                     onClick={handleOpenPreview}
-                                    className="px-2.5 py-1 text-[11px] font-semibold text-slate-705 hover:text-slate-900 hover:bg-slate-100/80 active:bg-slate-200/65 rounded-lg border border-slate-200/50 bg-white/40 transition-colors cursor-pointer flex items-center gap-1 h-[30px] shadow-2xs"
+                                    className="px-2.5 py-1 text-[11px] font-semibold text-slate-750 hover:text-slate-900 hover:bg-slate-100/80 active:bg-slate-200/65 rounded-lg border border-slate-200/50 bg-white/40 transition-colors cursor-pointer flex items-center gap-1 h-[30px] shadow-2xs"
                                 >
-                                    <span className="material-symbols-outlined text-[14px] text-slate-550">visibility</span>
+                                    <Icon name="visibility" size={12} className="text-slate-550" />
                                     Preview
                                 </button>
 
@@ -1094,7 +1135,7 @@ export default function FormBuilder({
                                     onClick={handleSaveDraft}
                                     className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-1 h-[30px] border-none"
                                 >
-                                    <span className="material-symbols-outlined text-[14px]">save</span>
+                                    <Icon name="save" size={12} />
                                     Save Changes
                                 </button>
 
@@ -1107,7 +1148,7 @@ export default function FormBuilder({
                                         className="px-3 py-1 h-[30px] text-[11px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm transition-all font-semibold cursor-pointer flex items-center justify-center gap-1.5 leading-none"
                                     >
                                         Publish Form
-                                        <span className="material-symbols-outlined text-[14px]">{showPublishDropdown ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
+                                        <Icon name={showPublishDropdown ? 'chevron_up' : 'chevron_down'} size={12} />
                                     </button>
 
                                     <AnimatePresence>
@@ -1209,7 +1250,7 @@ export default function FormBuilder({
                                     className="p-1.5 border border-slate-250 bg-white hover:bg-slate-50 text-slate-655 hover:text-slate-900 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center justify-center h-[30px] w-[30px] shrink-0"
                                     title="Toggle Fullscreen"
                                 >
-                                    <span className="material-symbols-outlined text-[16px]">{isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
+                                    <Icon name={isFullscreen ? 'fullscreen_exit' : 'fullscreen'} size={14} />
                                 </button>
 
                                 <div className="more-menu-container relative shrink-0">
@@ -1218,7 +1259,7 @@ export default function FormBuilder({
                                         className="p-1.5 border border-slate-250 bg-white hover:bg-slate-50 text-slate-650 hover:text-slate-950 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center justify-center h-[30px] w-[30px]"
                                         title="More Actions"
                                     >
-                                        <span className="material-symbols-outlined text-[16px] font-semibold">more_horiz</span>
+                                        <Icon name="more_horiz" size={14} />
                                     </button>
                                     <AnimatePresence>
                                         {showMoreMenu && (
@@ -1247,7 +1288,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">article</span>
+                                                        <Icon name="article" size={14} className="text-slate-400" />
                                                         Save as Template
                                                     </button>
                                                     <button
@@ -1257,7 +1298,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">content_copy</span>
+                                                        <Icon name="content_copy" size={14} className="text-slate-400" />
                                                         Duplicate Form
                                                     </button>
                                                 </div>
@@ -1272,7 +1313,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">upload</span>
+                                                        <Icon name="upload" size={14} className="text-slate-400" />
                                                         Import Form
                                                     </button>
                                                     <button
@@ -1288,7 +1329,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">download</span>
+                                                        <Icon name="download" size={14} className="text-slate-400" />
                                                         Export Form
                                                     </button>
                                                 </div>
@@ -1303,7 +1344,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">history</span>
+                                                        <Icon name="history" size={14} className="text-slate-400" />
                                                         Version History
                                                     </button>
                                                     <button
@@ -1314,7 +1355,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-slate-400">archive</span>
+                                                        <Icon name="archive" size={14} className="text-slate-400" />
                                                         Archive Form
                                                     </button>
                                                 </div>
@@ -1330,7 +1371,7 @@ export default function FormBuilder({
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 bg-rose-50/50 hover:bg-rose-100/80 text-rose-600 hover:text-rose-700 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer border border-rose-100/30"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] text-rose-500">delete</span>
+                                                        <Icon name="delete" size={14} className="text-rose-500" />
                                                         Delete Form
                                                     </button>
                                                 </div>
@@ -1389,7 +1430,7 @@ export default function FormBuilder({
                                         {isSelected && (
                                             <>
                                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 flex justify-center items-center bg-white border border-primary/30 rounded shadow-sm z-10 w-[16px] h-[22px] text-primary hover:bg-slate-50 cursor-grab">
-                                                    <span className="material-symbols-outlined text-[12px]">drag_indicator</span>
+                                                    <Icon name="drag_indicator" size={10} />
                                                 </div>
 
                                                 <div className="absolute -top-3 right-4 flex gap-2 z-10">
@@ -1397,13 +1438,13 @@ export default function FormBuilder({
                                                         onClick={(e) => { e.stopPropagation(); setSelectedFieldId(field.id); }}
                                                         className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-primary text-primary hover:bg-primary/5 active:bg-primary/10 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[18px]">settings</span>
+                                                        <Icon name="settings" size={16} />
                                                     </button>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); deleteField(field.id); }}
                                                         className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-rose-300 text-slate-500 hover:text-rose-600 hover:bg-rose-50/50 active:bg-rose-100/50 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer"
                                                     >
-                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                        <Icon name="delete" size={16} />
                                                     </button>
                                                 </div>
                                             </>
@@ -1416,7 +1457,7 @@ export default function FormBuilder({
 
                                             {field.conditional?.enabled && (
                                                 <div className="field-conditional-badge">
-                                                    <span className="material-symbols-outlined">settings_accessibility</span>
+                                                    <Icon name="settings_accessibility" size={11} className="mr-1 shrink-0" />
                                                     <span>
                                                         Show only when <strong>{formFields.find(f => f.id === Number(field.conditional.dependentFieldId))?.label || `Field #${field.conditional.dependentFieldId}`}</strong>{' '}
                                                         {field.conditional.operator === 'equals' ? 'equals' : field.conditional.operator === 'not_equals' ? 'does not equal' : field.conditional.operator === 'contains' ? 'contains' : field.conditional.operator === 'empty' ? 'is empty' : 'is not empty'}
@@ -1472,7 +1513,7 @@ export default function FormBuilder({
                                                                     <span className="text-[12.5px] font-semibold text-slate-600 font-sans">I'm not a robot</span>
                                                                 </div>
                                                                 <div className="flex flex-col items-center gap-0.5 opacity-80 shrink-0">
-                                                                    <span className="material-symbols-outlined text-sky-500 text-[20px]">sync</span>
+                                                                    <Icon name="refresh" size={16} className="text-sky-500" />
                                                                     <span className="text-[7.5px] font-black text-slate-400 font-sans">reCAPTCHA</span>
                                                                     <span className="text-[6.5px] text-slate-400 font-sans">Privacy - Terms</span>
                                                                 </div>
@@ -1480,14 +1521,14 @@ export default function FormBuilder({
                                                         ) : field.captchaType === 'recaptcha_v2_invisible' ? (
                                                             <div className="w-[240px] border border-slate-250 bg-white rounded p-2.5 flex items-center justify-between select-none shadow-sm text-slate-500">
                                                                 <div className="flex items-center gap-1.5">
-                                                                    <span className="material-symbols-outlined text-sky-500 text-[18px]">verified_user</span>
+                                                                    <Icon name="verified_user" size={14} className="text-sky-500" />
                                                                     <span className="text-[11px] font-semibold">reCAPTCHA v2 (Invisible) Active</span>
                                                                 </div>
                                                             </div>
                                                         ) : field.captchaType === 'recaptcha_v3' ? (
                                                             <div className="w-[240px] border border-slate-250 bg-white rounded p-2.5 flex items-center justify-between select-none shadow-sm text-slate-500">
                                                                 <div className="flex items-center gap-1.5">
-                                                                    <span className="material-symbols-outlined text-sky-600 text-[18px]">security</span>
+                                                                    <Icon name="security" size={14} className="text-sky-600" />
                                                                     <span className="text-[11px] font-semibold">reCAPTCHA v3 Active (Score verify)</span>
                                                                 </div>
                                                             </div>
@@ -1497,7 +1538,7 @@ export default function FormBuilder({
                                                                     <div className="w-[150px] h-[45px] rounded bg-slate-200 border border-slate-300 flex items-center justify-center font-mono font-bold text-slate-500 text-sm select-none">
                                                                         {field.captchaType === 'alphanumeric' ? 'aB3xD (Mock)' : '7 + 4 = ? (Mock)'}
                                                                     </div>
-                                                                    <span className="material-symbols-outlined text-slate-400 text-[18px] cursor-not-allowed">refresh</span>
+                                                                    <Icon name="refresh" size={14} className="text-slate-400 cursor-not-allowed" />
                                                                 </div>
                                                                 <input
                                                                     type="text"
@@ -1508,6 +1549,14 @@ export default function FormBuilder({
                                                             </>
                                                         )}
                                                     </div>
+                                                ) : field.type === 'file' ? (
+                                                    <div className="w-full border border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 select-none hover:bg-slate-50 transition-colors">
+                                                        <Icon name="cloud_upload" size={24} className="text-slate-400" />
+                                                        <div className="text-[12px] font-bold text-slate-700">Drag and drop file here, or browse</div>
+                                                        <div className="text-[9px] text-slate-400">
+                                                            Limit: {field.minFiles || 1} to {field.maxFiles || 1} file(s) ({field.minFileSize || 0.1}MB - {field.maxFileSize || 10}MB)
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <>
                                                         <input
@@ -1517,7 +1566,7 @@ export default function FormBuilder({
                                                             className="w-full h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
                                                         />
                                                         {field.type === 'date' && (
-                                                            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px]">calendar_today</span>
+                                                            <Icon name="calendar_today" size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                                                         )}
                                                     </>
                                                 )}
@@ -1673,6 +1722,74 @@ export default function FormBuilder({
                             </div>
 
                             <hr className="border-outline-variant my-1.5" />
+
+                            {selectedField.type === 'file' && (
+                                <div className="space-y-2.5">
+                                    <h4 className="font-headline-md text-headline-md text-on-background mb-1 text-[10px] font-bold">File Settings</h4>
+                                    
+                                    <div>
+                                        <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label select-none">Min Files Limit</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={selectedField.maxFiles || 10}
+                                            value={selectedField.minFiles !== undefined ? selectedField.minFiles : 1}
+                                            onChange={(e) => {
+                                                const val = Math.max(0, parseInt(e.target.value) || 0);
+                                                updateField(selectedField.id, { minFiles: val });
+                                            }}
+                                            className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label select-none">Max Files Limit</label>
+                                        <input
+                                            type="number"
+                                            min={selectedField.minFiles || 0}
+                                            max="100"
+                                            value={selectedField.maxFiles !== undefined ? selectedField.maxFiles : 1}
+                                            onChange={(e) => {
+                                                const val = Math.max(selectedField.minFiles || 0, parseInt(e.target.value) || 1);
+                                                updateField(selectedField.id, { maxFiles: val });
+                                            }}
+                                            className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label select-none">Min File Size (MB)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="0"
+                                            max={selectedField.maxFileSize || 100}
+                                            value={selectedField.minFileSize !== undefined ? selectedField.minFileSize : 0.1}
+                                            onChange={(e) => {
+                                                const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                                updateField(selectedField.id, { minFileSize: val });
+                                            }}
+                                            className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label select-none">Max File Size (MB)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min={selectedField.minFileSize || 0}
+                                            max="500"
+                                            value={selectedField.maxFileSize !== undefined ? selectedField.maxFileSize : 10}
+                                            onChange={(e) => {
+                                                const val = Math.max(selectedField.minFileSize || 0, parseFloat(e.target.value) || 1);
+                                                updateField(selectedField.id, { maxFileSize: val });
+                                            }}
+                                            className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px]"
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {selectedField.type === 'captcha' && (
                                 <div className="space-y-2.5">
@@ -2263,6 +2380,49 @@ export default function FormBuilder({
                             )}
 
                             <div className="space-y-1.5 pt-2 border-t border-outline-variant/30 animate-fade-in">
+                                <label className="block font-label-caps text-label-caps text-on-surface text-[8px] settings-label select-none">Lead Source Field</label>
+                                <div className="relative">
+                                    <select
+                                        value={formSettings.leadSourceFieldId || ''}
+                                        onChange={(e) => setFormSettings({ ...formSettings, leadSourceFieldId: e.target.value })}
+                                        className="w-full h-8 px-2 border border-outline-variant rounded font-body-md text-body-md text-slate-705 bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[11px] appearance-none cursor-pointer"
+                                    >
+                                        <option value="">None (Default: "Embedded Form")</option>
+                                        {formFields
+                                            .filter(f => f.type !== 'captcha')
+                                            .map(f => (
+                                                <option key={f.id} value={f.id}>
+                                                    {f.label || `Field #${f.id}`} ({f.type})
+                                                </option>
+                                            ))
+                                        }
+                                    </select>
+                                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none">unfold_more</span>
+                                </div>
+
+                                <p className="text-[9px] text-slate-400 select-none leading-relaxed">
+                                    Pick which field's value will be used as the <strong>Lead Source</strong> for filtering. If none is selected, leads default to "Embedded Form: {formTitle}".
+                                </p>
+
+                                {formSettings.leadSourceFieldId && (() => {
+                                    const srcField = formFields.find(f => String(f.id) === String(formSettings.leadSourceFieldId));
+                                    if (!srcField) return null;
+                                    const hasOptions = srcField.type === 'select' || srcField.type === 'radio' || srcField.type === 'checkbox';
+                                    return (
+                                        <div className="flex items-start gap-1.5 px-2 py-1.5 bg-primary/5 border border-primary/15 rounded text-[9px] text-primary font-semibold animate-fade-in select-none">
+                                            <span className="material-symbols-outlined text-[12px] mt-0.5 shrink-0">check_circle</span>
+                                            <span>
+                                                Lead source will come from <strong>"{srcField.label}"</strong> field.
+                                                {hasOptions && srcField.options?.length > 0 && (
+                                                    <> Options: {srcField.options.slice(0, 5).map(o => typeof o === 'object' && o ? o.label : o).join(', ')}{srcField.options.length > 5 ? '…' : ''}</>
+                                                )}
+                                            </span>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+
+                            <div className="space-y-1.5 pt-2 border-t border-outline-variant/30 animate-fade-in">
                                 <div className="flex items-center justify-between">
                                     <label className="block font-label-caps text-label-caps text-on-surface text-[8px] settings-label select-none">Lead Journey</label>
                                     {!isCreatingJourney && (
@@ -2429,6 +2589,52 @@ export default function FormBuilder({
                                         <p className="text-[9px] text-slate-400 select-none leading-relaxed">Select the journey pipeline that new leads from this form will follow.</p>
                                     </div>
                                 )}
+                            </div>
+
+                            <div className="space-y-1.5 pt-2 border-t border-outline-variant/30 animate-fade-in">
+                                <label className="block font-label-caps text-label-caps text-on-surface text-[8px] settings-label select-none">Assign to Counselors (Round Robin)</label>
+                                <p className="text-[9px] text-slate-400 select-none leading-relaxed mb-2">Select one or more counselors. Leads will be distributed equally among them.</p>
+                                
+                                <div className="max-h-[140px] overflow-y-auto border border-outline-variant rounded p-2.5 bg-slate-50/50 space-y-1.5 scrollbar-thin">
+                                    {counselorsList.map(c => {
+                                        const assignedCounselorIds = Array.isArray(formSettings.assignedCounselorIds) 
+                                            ? formSettings.assignedCounselorIds.map(Number) 
+                                            : (formSettings.assignedCounselorId ? [Number(formSettings.assignedCounselorId)] : []);
+                                        
+                                        const isChecked = assignedCounselorIds.includes(Number(c.id));
+                                        
+                                        return (
+                                            <label key={c.id} className="flex items-start gap-2.5 cursor-pointer group select-none py-0.5">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={(e) => {
+                                                        let nextIds = [...assignedCounselorIds];
+                                                        if (e.target.checked) {
+                                                            if (!nextIds.includes(Number(c.id))) {
+                                                                nextIds.push(Number(c.id));
+                                                            }
+                                                        } else {
+                                                            nextIds = nextIds.filter(id => id !== Number(c.id));
+                                                        }
+                                                        setFormSettings({ 
+                                                            ...formSettings, 
+                                                            assignedCounselorIds: nextIds,
+                                                            assignedCounselorId: nextIds.length > 0 ? String(nextIds[0]) : ''
+                                                        });
+                                                    }}
+                                                    className="w-3.5 h-3.5 accent-primary cursor-pointer rounded mt-0.5"
+                                                />
+                                                <span className="text-[11px] font-medium text-slate-700 leading-tight">
+                                                    {c.name} <span className="text-[9px] text-slate-450 font-normal font-sans">({c.role})</span>
+                                                </span>
+                                            </label>
+                                        )
+                                    })}
+                                    {counselorsList.length === 0 && (
+                                        <p className="text-[10px] text-slate-400 italic text-center py-2">No active counselors found</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-3 border-t border-outline-variant/40 mt-4 select-none">

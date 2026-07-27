@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCustomStatuses } from '../helpers/statusHelper';
+import { hasPermission } from './ProtectRoute';
 import './LeadsToolbar.css';
 
 import excelIcon from '../assets/excel.png';
@@ -257,31 +258,34 @@ export default function LeadsToolbar({
                     exit={{ opacity: 0, scale: 0.95, y: -5 }}
                     transition={{ duration: 0.15 }}
                   >
-                    {/* Group 1: Lead Ingestions */}
-                    <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Ingestions</div>
-                    <button
-                      onClick={() => {
-                        setShowBulkUploadModal(true);
-                        setShowGlobalActionsDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
-                      Bulk Offline Upload
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowQuickLeadModal(true);
-                        setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' });
-                        setShowGlobalActionsDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
-                      Add Quick Lead
-                    </button>
-
-                    <hr className="border-slate-100 my-1" />
+                     {/* Group 1: Lead Ingestions */}
+                    {hasPermission('leads_edit') && (
+                      <>
+                        <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Lead Ingestions</div>
+                        <button
+                          onClick={() => {
+                            setShowBulkUploadModal(true);
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">upload_file</span>
+                          Bulk Offline Upload
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowQuickLeadModal(true);
+                            setQuickLeadForm({ name: '', email: '', phone: '', assignedTo: 'Sarah Jenkins', leadType: 'Online', source: 'Website Organic', query: '' });
+                            setShowGlobalActionsDropdown(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-blue-50/60 hover:text-blue-700 rounded-[3px] transition-colors cursor-pointer text-left"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">add_circle</span>
+                          Add Quick Lead
+                        </button>
+                        <hr className="border-slate-100 my-1" />
+                      </>
+                    )}
 
                     {/* Group 2: Data Operations */}
                     <div className="p-1.5 pb-1 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider select-none">Data Operations</div>

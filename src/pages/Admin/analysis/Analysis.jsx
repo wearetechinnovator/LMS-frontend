@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AnalyticsSkeleton } from '../../../components/Skeletons'
+import Icon from '../../../components/Icon'
 import './analysis.css'
 
 export default function Analytics({ activeTabProp = 'stage' }) {
@@ -560,7 +561,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
               <div className="report-view-wrapper">
                 <div className="report-toolbar">
                   <div className="report-search">
-                    <span className="material-symbols-outlined report-search-icon">search</span>
+                    <Icon name="search" className="report-search-icon" size={16} />
                     <input
                       type="text"
                       placeholder="Search stage..."
@@ -576,7 +577,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                       stageData.map(s => [s.stage, s.count, s.percentage])
                     )}
                   >
-                    <span className="material-symbols-outlined">download</span>
+                    <Icon name="download" size={16} />
                     Generate Report
                   </button>
                 </div>
@@ -754,7 +755,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
               <div className="report-view-wrapper">
                 <div className="report-toolbar">
                   <div className="report-search">
-                    <span className="material-symbols-outlined report-search-icon">search</span>
+                    <Icon name="search" className="report-search-icon" size={16} />
                     <input
                       type="text"
                       placeholder="Search interval..."
@@ -770,7 +771,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                       activeIntakeData.map(i => [i.label, i.count, i.conversion])
                     )}
                   >
-                    <span className="material-symbols-outlined">download</span>
+                    <Icon name="download" size={16} />
                     Generate Report
                   </button>
                 </div>
@@ -937,7 +938,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
               <div className="report-view-wrapper">
                 <div className="report-toolbar">
                   <div className="report-search">
-                    <span className="material-symbols-outlined report-search-icon">search</span>
+                    <Icon name="search" className="report-search-icon" size={16} />
                     <input
                       type="text"
                       placeholder="Search region..."
@@ -953,7 +954,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                       activeDemographicData.map(d => [d.region, d.count, d.conversion])
                     )}
                   >
-                    <span className="material-symbols-outlined">download</span>
+                    <Icon name="download" size={16} />
                     Generate Report
                   </button>
                 </div>
@@ -1073,7 +1074,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
               <div className="report-view-wrapper">
                 <div className="report-toolbar">
                   <div className="report-search">
-                    <span className="material-symbols-outlined report-search-icon">search</span>
+                    <Icon name="search" className="report-search-icon" size={16} />
                     <input
                       type="text"
                       placeholder="Search source..."
@@ -1089,7 +1090,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                       sourceData.map(s => [s.source, s.count, s.conversion, s.avgScore])
                     )}
                   >
-                    <span className="material-symbols-outlined">download</span>
+                    <Icon name="download" size={16} />
                     Generate Report
                   </button>
                 </div>
@@ -1274,7 +1275,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                   <>
                     <div className="report-toolbar">
                       <div className="report-search">
-                        <span className="material-symbols-outlined report-search-icon">search</span>
+                        <Icon name="search" className="report-search-icon" size={16} />
                         <input
                           type="text"
                           placeholder="Search vendor..."
@@ -1290,7 +1291,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                           vendorData.map(v => [v.vendor, v.leads, v.conversion, v.qualityScore])
                         )}
                       >
-                        <span className="material-symbols-outlined">download</span>
+                        <Icon name="download" size={16} />
                         Generate Report
                       </button>
                     </div>
@@ -1323,7 +1324,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                   <>
                     <div className="report-toolbar">
                       <div className="report-search">
-                        <span className="material-symbols-outlined report-search-icon">search</span>
+                        <Icon name="search" className="report-search-icon" size={16} />
                         <input
                           type="text"
                           placeholder="Search counselor..."
@@ -1339,7 +1340,7 @@ export default function Analytics({ activeTabProp = 'stage' }) {
                           counselorData.map(c => [c.counselor, c.assigned, c.contacted, c.converted, c.conversion])
                         )}
                       >
-                        <span className="material-symbols-outlined">download</span>
+                        <Icon name="download" size={16} />
                         Generate Report
                       </button>
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Icon from '../Icon'
 export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = [] }) {
   const [activeCategory, setActiveCategory] = useState('counselor') // 'counselor' | 'daily' | 'channel'
   const [viewType, setViewType] = useState('graph') // 'graph' | 'report'
@@ -257,7 +258,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
               }}
               className={`deep-dive-tab-btn ${activeCategory === 'counselor' ? 'active' : ''}`}
             >
-              <span className="material-symbols-outlined">support_agent</span>
+              <Icon name="support_agent" size={14} />
               Counselor
             </button>
             <button
@@ -268,7 +269,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
               }}
               className={`deep-dive-tab-btn ${activeCategory === 'daily' ? 'active' : ''}`}
             >
-              <span className="material-symbols-outlined">calendar_today</span>
+              <Icon name="calendar-days" size={14} />
               Daily
             </button>
             <button
@@ -279,7 +280,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
               }}
               className={`deep-dive-tab-btn ${activeCategory === 'channel' ? 'active' : ''}`}
             >
-              <span className="material-symbols-outlined">attribution</span>
+              <Icon name="attribution" size={14} />
               Channel/Vendor
             </button>
           </div>
@@ -327,7 +328,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
               className={`view-toggle-btn ${viewType === 'graph' ? 'active' : ''}`}
               title="Graph View"
             >
-              <span className="material-symbols-outlined">insights</span>
+              <Icon name="insights" size={14} />
               Graph
             </button>
             <button
@@ -335,7 +336,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
               className={`view-toggle-btn ${viewType === 'report' ? 'active' : ''}`}
               title="Report Table View"
             >
-              <span className="material-symbols-outlined">table_chart</span>
+              <Icon name="table_chart" size={14} />
               Report
             </button>
           </div>
@@ -450,7 +451,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center select-none w-full h-full">
-                <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">analytics</span>
+                <Icon name="analytics" size={32} className="text-slate-300 mb-2" />
                 <span className="text-slate-400 text-xs font-semibold">No analytics data available</span>
               </div>
             )}
@@ -461,7 +462,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
             <div className="flex justify-between items-center gap-4">
               {/* Search filter input */}
               <div className="report-search-bar">
-                <span className="material-symbols-outlined report-search-icon">search</span>
+                <Icon name="search" size={14} className="report-search-icon text-slate-400" />
                 <input
                   type="text"
                   placeholder={`Search ${activeCategory}...`}
@@ -476,7 +477,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
                 onClick={handleExportCSV}
                 className="report-action-btn"
               >
-                <span className="material-symbols-outlined">download</span>
+                <Icon name="download" size={14} />
                 Export Report
               </button>
             </div>
@@ -556,7 +557,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
                 </table>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center select-none w-full">
-                  <span className="material-symbols-outlined text-slate-350 text-3xl mb-2">table_rows</span>
+                  <Icon name="table_rows" size={28} className="text-slate-350 mb-2" />
                   <span className="text-slate-400 text-xs font-semibold">No records found</span>
                 </div>
               )}

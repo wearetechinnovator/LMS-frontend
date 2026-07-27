@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import Icon from '../../../../components/Icon';
+
 export default function InitialConfig({ stages, setStages }) {
   const [selectedIndustry, setSelectedIndustry] = useState('')
   const [industries, setIndustries] = useState([
@@ -150,109 +152,12 @@ export default function InitialConfig({ stages, setStages }) {
   return (
     <div className="initial-config-scope w-full">
       <div className="config-container">
-        {/* Industry Selection */}
-        <div className="config-section-card">
-          <h2 className="config-section-title">
-            <span className="material-symbols-outlined mr-2.5 text-primary text-[20px] font-bold">domain</span>
-            Industry Alignment
-          </h2>
-          <p className="config-section-desc">Select your primary industry or define a custom one to load optimized default templates.</p>
-
-          <div className="industry-grid">
-            {industries.map((ind) => {
-              const isSelected = selectedIndustry === ind.name
-              return (
-                <button
-                  key={ind.id}
-                  type="button"
-                  onClick={() => setSelectedIndustry(ind.name)}
-                  className={isSelected ? 'industry-btn-selected' : 'industry-btn-inactive'}
-                >
-                  <div
-                    className="industry-icon-wrapper"
-                    style={{
-                      backgroundColor: isSelected ? ind.color : `${ind.color}12`,
-                      boxShadow: isSelected ? `0 0 8px ${ind.color}35` : 'none'
-                    }}
-                  >
-                    <span
-                      className="material-symbols-outlined industry-icon"
-                      style={{
-                        color: isSelected ? '#ffffff' : ind.color
-                      }}
-                    >
-                      {ind.icon}
-                    </span>
-                  </div>
-                  <span className="industry-label">
-                    {ind.name}
-                  </span>
-
-                  {isSelected && (
-                    <span className="pulse-dot" />
-                  )}
-                </button>
-              )
-            })}
-
-            {/* Inline Custom Industry Input Card */}
-            {isAddingIndustry ? (
-              <form
-                onSubmit={handleAddCustomIndustry}
-                className="custom-industry-form"
-              >
-                <input
-                  type="text"
-                  autoFocus
-                  value={newIndustryName}
-                  onChange={(e) => setNewIndustryName(e.target.value)}
-                  placeholder="Enter industry..."
-                  className="custom-industry-input"
-                />
-                <div className="action-btn-group">
-                  <button
-                    type="submit"
-                    className="custom-btn-submit"
-                  >
-                    <span className="material-symbols-outlined text-[16px] font-bold leading-none">check</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingIndustry(false)
-                      setNewIndustryName('')
-                    }}
-                    className="custom-btn-cancel"
-                  >
-                    <span className="material-symbols-outlined text-[16px] font-bold leading-none">close</span>
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAddingIndustry(true)}
-                className="btn-add-custom-industry"
-              >
-                <div className="custom-icon-container">
-                  <span className="material-symbols-outlined custom-icon-add">
-                    add
-                  </span>
-                </div>
-                <span className="industry-label">
-                  Custom
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* Pipeline Stages */}
         <div className="pipeline-card-container">
           <div className="pipeline-header">
             <div>
               <h2 className="config-section-title">
-                <span className="material-symbols-outlined mr-2.5 text-primary text-[20px] font-bold">view_timeline</span>
+                <Icon name="view_timeline" size={20} className="mr-2.5 text-primary font-bold" />
                 Pipeline Stages
               </h2>
               <p className="pipeline-desc">Define the lifecycle of a lead. Drag and drop stages horizontally to customize the flow.</p>
@@ -261,7 +166,7 @@ export default function InitialConfig({ stages, setStages }) {
               onClick={() => setShowModal(true)}
               className="btn-pipeline-add"
             >
-              <span className="material-symbols-outlined text-[14px] mr-1.5 font-bold">add</span> ADD STAGE
+              <Icon name="add" size={14} className="mr-1.5 font-bold" /> ADD STAGE
             </button>
           </div>
 
@@ -286,13 +191,9 @@ export default function InitialConfig({ stages, setStages }) {
                     <div className="stage-header-row">
                       <div className="stage-header-left">
                         {!stage.locked ? (
-                          <span className="material-symbols-outlined drag-icon">
-                            drag_indicator
-                          </span>
+                          <Icon name="drag_indicator" size={16} className="drag-icon" />
                         ) : (
-                          <span className="material-symbols-outlined lock-icon">
-                            lock
-                          </span>
+                          <Icon name="lock" size={16} className="lock-icon" />
                         )}
                         <span className="stage-number-label">
                           STAGE {idx + 1}
@@ -306,9 +207,9 @@ export default function InitialConfig({ stages, setStages }) {
                             e.stopPropagation();
                             handleRemoveStage(stage.id);
                           }}
-                          className="material-symbols-outlined stage-btn-remove"
+                          className="stage-btn-remove bg-transparent border-0 flex items-center justify-center p-0 cursor-pointer"
                         >
-                          close
+                          <Icon name="close" size={14} />
                         </button>
                       )}
                     </div>
@@ -324,9 +225,7 @@ export default function InitialConfig({ stages, setStages }) {
                   {/* Chevron Circle exactly between cards */}
                   {idx < stages.length - 1 && (
                     <div className="pipeline-connector">
-                      <span className="material-symbols-outlined pipeline-connector-icon">
-                        chevron_right
-                      </span>
+                      <Icon name="chevron_right" size={16} className="pipeline-connector-icon" />
                     </div>
                   )}
                 </React.Fragment>
@@ -340,9 +239,7 @@ export default function InitialConfig({ stages, setStages }) {
               className="btn-add-stage-card"
             >
               <div className="add-stage-card-icon-wrapper">
-                <span className="material-symbols-outlined add-stage-card-icon">
-                  add
-                </span>
+                <Icon name="add" size={20} className="add-stage-card-icon" />
               </div>
               <span className="add-stage-card-label">
                 Add Stage
@@ -356,14 +253,20 @@ export default function InitialConfig({ stages, setStages }) {
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4">
+            <div className="modal-header">
               <h3 className="modal-title">Add New Stage</h3>
-              <p className="modal-subtitle">Customize your pipeline stage block</p>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="modal-close-btn"
+              >
+                <Icon name="close" size={18} />
+              </button>
             </div>
 
             <div className="space-y-4">
               {/* Stage Name Input */}
-              <div>
+              <div className="modal-field">
                 <label className="modal-label">Stage Name</label>
                 <input
                   type="text"
@@ -376,17 +279,19 @@ export default function InitialConfig({ stages, setStages }) {
               </div>
 
               {/* Color Picker */}
-              <div>
-                <label className="modal-label">Stage Color</label>
-                <div className="color-picker-grid">
-                  {colors.map(color => (
+              <div className="modal-field">
+                <label className="modal-label">Select Color</label>
+                <div className="color-swatch-container">
+                  {COLOR_PRESETS.map(color => (
                     <button
                       key={color}
                       type="button"
                       onClick={() => setNewStage({ ...newStage, color })}
-                      className={newStage.color === color ? 'color-dot-selected' : 'color-dot-inactive'}
+                      className={`color-swatch ${newStage.color === color ? 'selected' : ''}`}
                       style={{ backgroundColor: color }}
-                    />
+                    >
+                      {newStage.color === color && <Icon name="check" size={12} className="text-white" />}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -398,7 +303,7 @@ export default function InitialConfig({ stages, setStages }) {
                   <div className="preview-card">
                     <div className="preview-stripe" style={{ backgroundColor: newStage.color }} />
                     <div className="stage-header-left">
-                      <span className="material-symbols-outlined drag-icon">drag_indicator</span>
+                      <Icon name="drag_indicator" size={16} className="drag-icon" />
                       <span className="stage-number-label">PREVIEW STAGE</span>
                     </div>
                     <span className="preview-name">

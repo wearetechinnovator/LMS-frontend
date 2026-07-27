@@ -1,9 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-
-import { useContext } from 'react'
-
+import Icon from './Icon'
 
 export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogout, navigationItems = [], roleName = 'Admin Account', userName, username }) {
 
@@ -120,9 +118,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
               className="toggle-btn"
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
-              <span className="material-symbols-outlined icon">
-                {sidebarCollapsed ? 'dock_to_left' : 'dock_to_right'}
-              </span>
+              <Icon name={sidebarCollapsed ? 'chevron_right' : 'chevron_left'} size={18} />
             </button>
           </div>
         </div>
@@ -154,12 +150,10 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                   className={`nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
                   data-tour={`sidebar-item-${item.id}`}
                 >
-                  <span className="material-symbols-outlined icon">{item.icon}</span>
+                  <Icon name={item.icon} size={18} />
                   {!sidebarCollapsed && <span className="truncate text-left flex-1" title={item.label}>{item.label}</span>}
                   {!sidebarCollapsed && hasSubItems && (
-                    <span className="material-symbols-outlined sub-menu-arrow">
-                      {isExpanded ? 'expand_less' : 'expand_more'}
-                    </span>
+                    <Icon name={isExpanded ? 'chevron_up' : 'chevron_down'} size={14} className="sub-menu-arrow" />
                   )}
                 </button>
 
@@ -199,7 +193,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
             }}
             onMouseLeave={() => setHoveredItem(null)}
           >
-            <span className="material-symbols-outlined icon">settings</span>
+            <Icon name="settings" size={18} />
             {!sidebarCollapsed && <span>Settings</span>}
           </button>
           <button
@@ -214,7 +208,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
             }}
             onMouseLeave={() => setHoveredItem(null)}
           >
-            <span className="material-symbols-outlined icon">logout</span>
+            <Icon name="logout" size={18} />
             {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </div>
@@ -244,7 +238,7 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
             <div className="bg-[#1e293b] border border-slate-700/80 rounded-xl shadow-xl overflow-hidden py-1.5 min-w-[160px] text-left select-none font-sans">
               {/* Header/Title of parent */}
               <div className="px-3.5 py-1.5 border-b border-slate-700/50 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px]">{hoveredItem.icon || 'folder'}</span>
+                <Icon name={hoveredItem.icon || 'folder'} size={14} />
                 {hoveredItem.label}
               </div>
               

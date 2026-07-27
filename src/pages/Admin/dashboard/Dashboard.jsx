@@ -6,6 +6,7 @@ import DashboardRecentLeads from '../../../components/Dashboard/DashboardRecentL
 import ExportButton from '../../../components/ExportButton'
 import DeepDiveAnalytics from '../../../components/Dashboard/DeepDiveAnalytics'
 import { DashboardSkeleton } from '../../../components/Skeletons'
+import Icon from '../../../components/Icon'
 import './Dashboard.css'
 
 
@@ -49,7 +50,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem('authToken');
         if (token && token !== 'mock-jwt-token') {
-          const activeSession = localStorage.getItem('lms_active_session') || '01/15/2020 - 02/21/2020';
+          const activeSession = localStorage.getItem('lms_active_session') || '01/01/2020 - 12/31/2030';
           const response = await fetch(`${import.meta.env.VITE_BASE_URL}/lead/get-lead?session=${encodeURIComponent(activeSession)}`, {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -344,7 +345,7 @@ export default function Dashboard() {
             transition={{ type: 'spring', duration: 0.4 }}
           >
             <div className="export-toast-content">
-              <span className="material-symbols-outlined export-toast-icon">check_circle</span>
+              <Icon name="check_circle" className="export-toast-icon" size={18} />
               <span className="export-toast-text">{toastMsg}</span>
             </div>
           </motion.div>
@@ -358,9 +359,7 @@ export default function Dashboard() {
             onClick={() => setShowDateDropdown(!showDateDropdown)}
           >
             <span>{selectedDateRange}</span>
-            <span className={`material-symbols-outlined arrow-icon ${showDateDropdown ? 'rotated' : ''}`}>
-              expand_more
-            </span>
+            <Icon name="chevron_down" size={16} className={`arrow-icon ${showDateDropdown ? 'rotated' : ''}`} />
           </div>
 
           <AnimatePresence>
@@ -386,7 +385,7 @@ export default function Dashboard() {
                     >
                       <span>{range.label}</span>
                       {selectedDateRange === range.value && (
-                        <span className="material-symbols-outlined check-icon">check</span>
+                        <Icon name="check" size={14} className="check-icon" />
                       )}
                     </div>
                   ))}

@@ -9,7 +9,7 @@
   padding: 8px 12px;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  /* align-items: center; */
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 24px;
@@ -28,7 +28,7 @@
 
 .leads-toolbar-right {
   display: flex;
-  align-items: center;
+  /* align-items: center;.leads-toolbar */
   gap: 8px;
   flex-shrink: 0;
 }
