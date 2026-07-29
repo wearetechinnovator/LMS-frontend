@@ -14,6 +14,11 @@ export default function PublicEmbedForm() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
+    const isAdmin = useMemo(() => {
+        const token = localStorage.getItem('authToken');
+        return !!(token && token !== 'mock-jwt-token');
+    }, []);
+
     // Parse appearance customisation from URL params
     const appearance = useMemo(() => {
         const p = (key, fallback) => searchParams.get(key) || fallback;
@@ -282,6 +287,12 @@ export default function PublicEmbedForm() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
+
+        if (isAdmin) {
+            setError("As an administrator, you cannot submit live responses/leads to this form. Please open this link in an Incognito window or log out to perform a live submission test.");
+            return;
+        }
+
         setSubmitting(true);
 
         const fields = form.fields || [];
@@ -452,6 +463,15 @@ export default function PublicEmbedForm() {
                     <div className="px-6 py-5 border-b border-slate-100" style={{ background: appearance.cardBg }}>
                         <h2 className="font-extrabold text-lg" style={{ color: appearance.textColor }}>{form.name}</h2>
                         <p className="text-xs mt-1" style={{ color: appearance.labelColor }}>Please fill out the form below.</p>
+                    </div>
+                )}
+                {isAdmin && (
+                    <div className="mx-6 mt-4 p-3.5 bg-amber-50 border border-amber-250 text-amber-800 text-[11px] rounded-lg flex items-start gap-2.5 font-medium leading-relaxed text-left">
+                        <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0 select-none">warning</span>
+                        <div>
+                            <span className="font-bold">Admin Mode Enabled: </span>
+                            Submission is disabled to prevent polluting your dashboard analytics with mock leads. To test submissions, please log out or open this link in an Incognito window.
+                        </div>
                     </div>
                 )}
                 <form onSubmit={handleSubmit} className="space-y-5" style={{ padding: `${appearance.padding}px` }}>
@@ -726,7 +746,7 @@ export default function PublicEmbedForm() {
 
                     <button
                         type="submit"
-                        disabled={submitting}
+                        disabled={submitting || isAdmin}
                         className="w-full h-11 font-bold text-sm transition-all shadow-xs hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ background: appearance.btnColor, color: appearance.btnTextColor, borderRadius: `${appearance.inputRadius}px`, border: 'none' }}
                     >
