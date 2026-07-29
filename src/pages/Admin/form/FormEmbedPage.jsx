@@ -22,6 +22,7 @@ const APPEARANCE_DEFAULTS = {
     btnStyle: 'rounded', // rounded | pill | square
     shadow: 'small', // none | small | medium | large
     themeMode: 'light', // light | dark
+    onlyBody: false,
 }
 
 const FONT_OPTIONS = [
@@ -85,8 +86,8 @@ function LiveFormPreview({ form, appearance }) {
     )
 
     return (
-        <div style={{ background: a.bgColor, padding: `${a.padding}px`, ...fontStyle }} className="w-full h-full flex items-center justify-center">
-            <div style={{ background: a.cardBg, borderRadius: `${a.borderRadius}px`, maxWidth: `${a.maxWidth}px`, boxShadow: cardShadow }} className="w-full border border-slate-100 overflow-hidden transition-all duration-200">
+        <div style={{ background: a.onlyBody ? 'transparent' : a.bgColor, padding: a.onlyBody ? '0px' : `${a.padding}px`, ...fontStyle }} className="w-full h-full flex items-center justify-center">
+            <div style={{ background: a.onlyBody ? 'transparent' : a.cardBg, borderRadius: `${a.borderRadius}px`, maxWidth: `${a.maxWidth}px`, boxShadow: a.onlyBody ? 'none' : cardShadow, border: a.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)' }} className="w-full overflow-hidden transition-all duration-200">
                 {!a.hideHeader && (
                     <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(0,0,0,0.04)', background: `${a.cardBg}` }}>
                         <h3 style={{ color: a.textColor }} className="text-sm font-bold">{form.name}</h3>
@@ -352,6 +353,17 @@ function AppearancePanel({ appearance, setAppearance, form }) {
                             <span className={`inline-block h-3 w-3 rounded-full bg-white shadow transition-transform ${a.hideHeader ? 'translate-x-4' : 'translate-x-1'}`} />
                         </button>
                     </label>
+
+                    <label className="flex items-center justify-between cursor-pointer select-none pt-2 border-t border-slate-100">
+                        <span className="text-[11px] font-semibold text-slate-650">Form Only Body (No Bg/Border)</span>
+                        <button
+                            type="button"
+                            onClick={() => update('onlyBody', !a.onlyBody)}
+                            className={`relative inline-flex h-4.5 w-8 items-center rounded-full transition-colors focus:outline-none shrink-0 ${a.onlyBody ? 'bg-primary' : 'bg-slate-200'}`}
+                        >
+                            <span className={`inline-block h-3 w-3 rounded-full bg-white shadow transition-transform ${a.onlyBody ? 'translate-x-4' : 'translate-x-1'}`} />
+                        </button>
+                    </label>
                 </div>
 
                 {/* Reset */}
@@ -400,6 +412,7 @@ function buildAppearanceParams(appearance) {
     if (appearance.btnStyle && appearance.btnStyle !== defaults.btnStyle) params.set('btnStyle', appearance.btnStyle)
     if (appearance.shadow && appearance.shadow !== defaults.shadow) params.set('shadow', appearance.shadow)
     if (appearance.themeMode && appearance.themeMode !== defaults.themeMode) params.set('themeMode', appearance.themeMode)
+    if (appearance.onlyBody) params.set('onlyBody', '1')
     return params.toString()
 }
 

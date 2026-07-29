@@ -5,6 +5,60 @@ import { getCustomJourneys, getCustomStatuses, saveCustomJourneys, saveCustomSta
 import Icon from '../../../components/Icon'
 import './form.css'
 
+const PHONE_VALIDATION = {
+    '+1': {
+        pattern: /^\d{10}$/,
+        length: '10 digits',
+        desc: 'US phone number must be exactly 10 digits.'
+    },
+    '+91': {
+        pattern: /^[6-9]\d{9}$/,
+        length: '10 digits',
+        desc: 'Indian phone number must be exactly 10 digits and start with 6, 7, 8, or 9.'
+    },
+    '+44': {
+        pattern: /^7\d{9}$/,
+        fallbackPattern: /^\d{9,11}$/,
+        length: '10 digits starting with 7',
+        desc: 'UK mobile number must be exactly 10 digits starting with 7.'
+    },
+    '+49': {
+        pattern: /^\d{10,11}$/,
+        length: '10 or 11 digits',
+        desc: 'Germany phone number must be 10 or 11 digits.'
+    },
+    '+33': {
+        pattern: /^[67]\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'France phone number must be exactly 9 digits.'
+    },
+    '+61': {
+        pattern: /^4\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'Australia phone number must be exactly 9 digits.'
+    },
+    '+971': {
+        pattern: /^5[024568]\d{7}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'UAE phone number must be exactly 9 digits.'
+    },
+    '+966': {
+        pattern: /^5\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'Saudi Arabia phone number must be exactly 9 digits starting with 5.'
+    },
+    '+27': {
+        pattern: /^[678]\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'South Africa phone number must be exactly 9 digits.'
+    }
+};
+
 export default function FormBuilder({
     initialTitle = 'Doctor Appointment Inquiry',
     initialDescription = 'Please fill out the form below to request an appointment. Our staff will contact you shortly to confirm.',
@@ -637,6 +691,36 @@ export default function FormBuilder({
             if (!finalVals[field.id]) {
                 triggerLocalToast(`Please enter the CAPTCHA for "${field.label}".`);
                 return;
+            }
+        }
+
+        // Validate phone number formats for preview
+        for (const f of formFields) {
+            if (f.type === 'phone') {
+                const code = finalVals[`${f.id}-code`] || '+1';
+                const rawNum = finalVals[`${f.id}-num`] || '';
+                const digits = rawNum.replace(/\D/g, '');
+                
+                if (f.required || digits.length > 0) {
+                    if (digits.length === 0) {
+                        triggerLocalToast(`Phone number is required for "${f.label}".`);
+                        return;
+                    }
+                    
+                    const rule = PHONE_VALIDATION[code];
+                    if (rule) {
+                        const isValid = rule.pattern.test(digits) || (rule.fallbackPattern && rule.fallbackPattern.test(digits));
+                        if (!isValid) {
+                            triggerLocalToast(`Invalid phone for "${f.label}": ${rule.desc}`);
+                            return;
+                        }
+                    } else {
+                        if (digits.length < 7 || digits.length > 15) {
+                            triggerLocalToast(`Phone number for "${f.label}" must be between 7 and 15 digits.`);
+                            return;
+                        }
+                    }
+                }
             }
         }
 

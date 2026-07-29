@@ -3,6 +3,60 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../components/Icon';
 
+const PHONE_VALIDATION = {
+    '+1': {
+        pattern: /^\d{10}$/,
+        length: '10 digits',
+        desc: 'US phone number must be exactly 10 digits.'
+    },
+    '+91': {
+        pattern: /^[6-9]\d{9}$/,
+        length: '10 digits',
+        desc: 'Indian phone number must be exactly 10 digits and start with 6, 7, 8, or 9.'
+    },
+    '+44': {
+        pattern: /^7\d{9}$/,
+        fallbackPattern: /^\d{9,11}$/,
+        length: '10 digits starting with 7',
+        desc: 'UK mobile number must be exactly 10 digits starting with 7.'
+    },
+    '+49': {
+        pattern: /^\d{10,11}$/,
+        length: '10 or 11 digits',
+        desc: 'Germany phone number must be 10 or 11 digits.'
+    },
+    '+33': {
+        pattern: /^[67]\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'France phone number must be exactly 9 digits.'
+    },
+    '+61': {
+        pattern: /^4\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'Australia phone number must be exactly 9 digits.'
+    },
+    '+971': {
+        pattern: /^5[024568]\d{7}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'UAE phone number must be exactly 9 digits.'
+    },
+    '+966': {
+        pattern: /^5\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'Saudi Arabia phone number must be exactly 9 digits starting with 5.'
+    },
+    '+27': {
+        pattern: /^[678]\d{8}$/,
+        fallbackPattern: /^\d{9}$/,
+        length: '9 digits',
+        desc: 'South Africa phone number must be exactly 9 digits.'
+    }
+};
+
 export default function PublicEmbedForm() {
     const { formId } = useParams();
     const [searchParams] = useSearchParams();
@@ -43,6 +97,7 @@ export default function PublicEmbedForm() {
             maxWidth: pInt('maxW', 512),
             padding: pInt('pad', 24),
             hideHeader: searchParams.get('hideHeader') === '1',
+            onlyBody: searchParams.get('onlyBody') === '1',
         };
     }, [searchParams]);
 
@@ -352,6 +407,37 @@ export default function PublicEmbedForm() {
                     }
                 }
             }
+        // Validate phone number formats
+        for (const f of fields) {
+            if (isFieldVisible(f, fields, resolvedVals) && f.type === 'phone') {
+                const code = resolvedVals[`${f.id}-code`] || '+1';
+                const rawNum = resolvedVals[`${f.id}-num`] || '';
+                const digits = rawNum.replace(/\D/g, '');
+                
+                if (f.required || digits.length > 0) {
+                    if (digits.length === 0) {
+                        setError(`Phone number is required for "${f.label}".`);
+                        setSubmitting(false);
+                        return;
+                    }
+                    
+                    const rule = PHONE_VALIDATION[code];
+                    if (rule) {
+                        const isValid = rule.pattern.test(digits) || (rule.fallbackPattern && rule.fallbackPattern.test(digits));
+                        if (!isValid) {
+                            setError(`Invalid phone number for "${f.label}": ${rule.desc}`);
+                            setSubmitting(false);
+                            return;
+                        }
+                    } else {
+                        if (digits.length < 7 || digits.length > 15) {
+                            setError(`Phone number for "${f.label}" must be between 7 and 15 digits.`);
+                            setSubmitting(false);
+                            return;
+                        }
+                    }
+                }
+            }
         }
 
         // 2. Map form fields to submission body
@@ -457,8 +543,8 @@ export default function PublicEmbedForm() {
     const fields = form.fields || [];
 
     return (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: appearance.bgColor, padding: `${appearance.padding}px`, ...fontStyle }}>
-            <div className="w-full border border-slate-200 shadow-sm overflow-hidden" style={{ maxWidth: `${appearance.maxWidth}px`, background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, padding: appearance.onlyBody ? '0px' : `${appearance.padding}px`, ...fontStyle }}>
+            <div className="w-full overflow-hidden transition-all duration-200" style={{ maxWidth: `${appearance.maxWidth}px`, background: appearance.onlyBody ? 'transparent' : appearance.cardBg, borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`, border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)', boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
                 {!appearance.hideHeader && (
                     <div className="px-6 py-5 border-b border-slate-100" style={{ background: appearance.cardBg }}>
                         <h2 className="font-extrabold text-lg" style={{ color: appearance.textColor }}>{form.name}</h2>
