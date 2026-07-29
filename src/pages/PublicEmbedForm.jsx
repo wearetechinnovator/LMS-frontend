@@ -423,6 +423,14 @@ export default function PublicEmbedForm() {
         }
     }, [form]);
 
+    useEffect(() => {
+        const originalBg = document.body.style.background;
+        document.body.style.background = appearance.onlyBody ? 'transparent' : (appearance.bgColor || '#f8fafc');
+        return () => {
+            document.body.style.background = originalBg;
+        };
+    }, [appearance.onlyBody, appearance.bgColor]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitError(null);
