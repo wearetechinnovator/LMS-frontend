@@ -260,6 +260,7 @@ export default function FormBuilderPage() {
           }
           const saved = await response.json();
           setFormsList(prev => prev.map(form => form.id === activeFormSchema.id ? saved : form));
+          setActiveFormSchema(saved);
           triggerToast(`Form "${updatedData.title}" saved successfully!`);
         } catch (err) {
           triggerToast(`Error: ${err.message}`);
@@ -664,6 +665,7 @@ export default function FormBuilderPage() {
               initialStatus={activeFormSchema.status ? (activeFormSchema.status.charAt(0).toUpperCase() + activeFormSchema.status.slice(1).toLowerCase()) : 'Draft'}
               initialId={activeFormSchema.id || 'new'}
               initialSettings={activeFormSchema.settings || {}}
+              initialVersions={activeFormSchema.versions || []}
               onBack={() => setActiveFormSchema(null)}
               onSave={handleSaveForm}
               onDelete={() => handleDeleteForm(activeFormSchema.id)}

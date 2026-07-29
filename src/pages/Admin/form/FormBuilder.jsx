@@ -17,6 +17,7 @@ export default function FormBuilder({
     initialStatus = 'Draft',
     initialId = 'new',
     initialSettings = {},
+    initialVersions = [],
     onBack,
     onSave,
     onDelete,
@@ -27,6 +28,12 @@ export default function FormBuilder({
     const [formTitle, setFormTitle] = useState(initialTitle)
     const [formDescription, setFormDescription] = useState(initialDescription)
     const [formSettings, setFormSettings] = useState(initialSettings)
+    const [versionsList, setVersionsList] = useState(initialVersions)
+    const [showVersionHistory, setShowVersionHistory] = useState(false)
+
+    useEffect(() => {
+        setVersionsList(initialVersions)
+    }, [initialVersions])
     const [isEditingTitle, setIsEditingTitle] = useState(false)
     const [isEditingDescription, setIsEditingDescription] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
@@ -1274,16 +1281,6 @@ export default function FormBuilder({
                                                         <Icon name="article" size={14} className="text-slate-400" />
                                                         Save as Template
                                                     </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setShowMoreMenu(false);
-                                                            triggerLocalToast("✓ Form duplicated successfully!");
-                                                        }}
-                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
-                                                    >
-                                                        <Icon name="content_copy" size={14} className="text-slate-400" />
-                                                        Duplicate Form
-                                                    </button>
                                                 </div>
 
                                                 <div className="h-px bg-slate-100 my-1.5 mx-1" />
@@ -1292,54 +1289,12 @@ export default function FormBuilder({
                                                     <button
                                                         onClick={() => {
                                                             setShowMoreMenu(false);
-                                                            triggerLocalToast("✓ Schema imported successfully!");
-                                                        }}
-                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
-                                                    >
-                                                        <Icon name="upload" size={14} className="text-slate-400" />
-                                                        Import Form
-                                                    </button>
-                                                    <button
-                                                        onClick={async () => {
-                                                            setShowMoreMenu(false);
-                                                            try {
-                                                                const schema = { title: formTitle, description: formDescription, fields: formFields };
-                                                                await navigator.clipboard.writeText(JSON.stringify(schema, null, 2));
-                                                                triggerLocalToast("✓ Schema copied to clipboard!");
-                                                            } catch (err) {
-                                                                triggerLocalToast("Export failed.");
-                                                            }
-                                                        }}
-                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
-                                                    >
-                                                        <Icon name="download" size={14} className="text-slate-400" />
-                                                        Export Form
-                                                    </button>
-                                                </div>
-
-                                                <div className="h-px bg-slate-100 my-1.5 mx-1" />
-
-                                                <div className="flex flex-col gap-0.5">
-                                                    <button
-                                                        onClick={() => {
-                                                            setShowMoreMenu(false);
-                                                            triggerLocalToast("✓ Opening version history...");
+                                                            setShowVersionHistory(true);
                                                         }}
                                                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
                                                     >
                                                         <Icon name="history" size={14} className="text-slate-400" />
                                                         Version History
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setShowMoreMenu(false);
-                                                            setFormStatus('Archived');
-                                                            triggerLocalToast("✓ Form archived.");
-                                                        }}
-                                                        className="flex items-center gap-2.5 w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-[11.5px] font-medium transition-colors cursor-pointer"
-                                                    >
-                                                        <Icon name="archive" size={14} className="text-slate-400" />
-                                                        Archive Form
                                                     </button>
                                                 </div>
 
@@ -2980,6 +2935,91 @@ export default function FormBuilder({
                             </div>
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showVersionHistory && (
+                    <motion.div
+                        className="fixed inset-0 bg-on-background/40 flex items-center justify-center z-50 p-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowVersionHistory(false)}
+                    >
+                        <motion.div
+                            className="bg-surface-container-lowest rounded shadow-2xl max-w-[600px] w-full max-h-[85vh] flex flex-col"
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center z-10 shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[20px] text-primary">history</span>
+                                    <h3 className="font-headline-md text-headline-md text-on-background text-[15px] font-bold">Version History</h3>
+                                </div>
+                                <button
+                                    onClick={() => setShowVersionHistory(false)}
+                                    className="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant cursor-pointer border-none bg-transparent flex items-center justify-center"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {versionsList.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center select-none text-slate-400">
+                                        <span className="material-symbols-outlined text-[40px] text-slate-350 mb-2">history</span>
+                                        <p className="text-sm font-semibold">No version history found</p>
+                                        <p className="text-xs text-slate-400 mt-1 max-w-[300px]">Saving changes to this form will automatically record a history of previous versions.</p>
+                                    </div>
+                                ) : (
+                                    versionsList.map((ver, idx) => (
+                                        <div
+                                            key={ver.version || idx}
+                                            className="p-3 border border-outline-variant hover:border-primary rounded-xl flex items-start justify-between gap-4 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <div className="space-y-1 text-left">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[12px] font-black text-slate-800">Version {ver.version}</span>
+                                                    {idx === 0 && (
+                                                        <span className="px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-[8px] font-bold rounded-md">Previous State</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 font-semibold">
+                                                    Saved: {new Date(ver.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-650 text-[9px] rounded font-semibold">
+                                                        Title: {ver.title || 'Untitled'}
+                                                    </span>
+                                                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-650 text-[9px] rounded font-semibold">
+                                                        {ver.fields ? ver.fields.length : 0} fields
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm(`Are you sure you want to restore Version ${ver.version} to the builder canvas? Any unsaved changes on the current canvas will be overwritten.`)) {
+                                                        setFormTitle(ver.title || '');
+                                                        setFormDescription(ver.description || '');
+                                                        setFormFields(ver.fields || []);
+                                                        setFormSettings(ver.settings || {});
+                                                        setShowVersionHistory(false);
+                                                        triggerLocalToast(`✓ Restored Version ${ver.version} to canvas!`);
+                                                    }
+                                                }}
+                                                className="px-2.5 py-1.5 bg-primary/10 hover:bg-primary hover:text-on-primary text-primary transition-colors text-[10px] font-bold rounded-lg cursor-pointer border-none"
+                                            >
+                                                Restore
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 

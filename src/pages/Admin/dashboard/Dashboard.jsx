@@ -395,7 +395,7 @@ export default function Dashboard() {
           </AnimatePresence>
         </div>
 
-        <ExportButton triggerToast={triggerToast} />
+        <ExportButton data={filteredLeads} triggerToast={triggerToast} />
 
       </div>
 
