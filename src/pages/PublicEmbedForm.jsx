@@ -67,6 +67,7 @@ export default function PublicEmbedForm() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [submitError, setSubmitError] = useState(null);
 
     const [countriesList, setCountriesList] = useState([]);
     const [statesMap, setStatesMap] = useState({});
@@ -424,10 +425,11 @@ export default function PublicEmbedForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError(null);
         setError(null);
 
         if (isAdmin) {
-            setError("As an administrator, you cannot submit live responses/leads to this form. Please open this link in an Incognito window or log out to perform a live submission test.");
+            setSubmitError("As an administrator, you cannot submit live responses/leads to this form. Please open this link in an Incognito window or log out to perform a live submission test.");
             return;
         }
 
@@ -448,12 +450,12 @@ export default function PublicEmbedForm() {
                             const token = await window.grecaptcha.execute(f.recaptchaSiteKey, { action: 'submit' });
                             resolvedVals[f.id] = token;
                         } catch (err) {
-                            setError("reCAPTCHA v3 verification failed: " + err.message);
+                            setSubmitError("reCAPTCHA v3 verification failed: " + err.message);
                             setSubmitting(false);
                             return;
                         }
                     } else {
-                        setError("Google reCAPTCHA v3 script is not loaded yet.");
+                        setSubmitError("Google reCAPTCHA v3 script is not loaded yet.");
                         setSubmitting(false);
                         return;
                     }
@@ -471,20 +473,20 @@ export default function PublicEmbedForm() {
                                 if (token) {
                                     resolvedVals[f.id] = token;
                                 } else {
-                                    setError("Invisible reCAPTCHA challenge not completed. Please try again.");
+                                    setSubmitError("Invisible reCAPTCHA challenge not completed. Please try again.");
                                     setSubmitting(false);
                                     return;
                                 }
                             }
                         } catch (err) {
-                            setError("Invisible reCAPTCHA execution failed.");
+                            setSubmitError("Invisible reCAPTCHA execution failed.");
                             setSubmitting(false);
                             return;
                         }
                     }
                 } else if (f.captchaType === 'recaptcha_v2_checkbox') {
                     if (!resolvedVals[f.id]) {
-                        setError("Please complete the reCAPTCHA checkbox to verify.");
+                        setSubmitError("Please complete the reCAPTCHA checkbox to verify.");
                         setSubmitting(false);
                         return;
                     }
@@ -496,11 +498,17 @@ export default function PublicEmbedForm() {
             if (isFieldVisible(f, fields, resolvedVals) && f.type === 'phone') {
                 const code = resolvedVals[`${f.id}-code`] || '+1';
                 const rawNum = resolvedVals[`${f.id}-num`] || '';
-                const digits = rawNum.replace(/\D/g, '');
+                let digits = rawNum.replace(/\D/g, '');
+                
+                // Strip redundant country code prefix if user typed it manually
+                const codePrefix = code.replace(/\D/g, '');
+                if (codePrefix && digits.startsWith(codePrefix) && digits.length > codePrefix.length) {
+                    digits = digits.substring(codePrefix.length);
+                }
                 
                 if (f.required || digits.length > 0) {
                     if (digits.length === 0) {
-                        setError(`Phone number is required for "${f.label}".`);
+                        setSubmitError(`Phone number is required for "${f.label}".`);
                         setSubmitting(false);
                         return;
                     }
@@ -509,13 +517,13 @@ export default function PublicEmbedForm() {
                     if (rule) {
                         const isValid = rule.pattern.test(digits) || (rule.fallbackPattern && rule.fallbackPattern.test(digits));
                         if (!isValid) {
-                            setError(`Invalid phone number for "${f.label}": ${rule.desc}`);
+                            setSubmitError(`Invalid phone number for "${f.label}": ${rule.desc}`);
                             setSubmitting(false);
                             return;
                         }
                     } else {
                         if (digits.length < 7 || digits.length > 15) {
-                            setError(`Phone number for "${f.label}" must be between 7 and 15 digits.`);
+                            setSubmitError(`Phone number for "${f.label}" must be between 7 and 15 digits.`);
                             setSubmitting(false);
                             return;
                         }
@@ -574,11 +582,11 @@ export default function PublicEmbedForm() {
                 }
             } else {
                 const errData = await response.json().catch(() => ({}));
-                setError(errData.error || "Failed to submit form.");
+                setSubmitError(errData.error || "Failed to submit form.");
             }
         } catch (err) {
             console.error("Submission error:", err);
-            setError("Network error. Please try again.");
+            setSubmitError("Network error. Please try again.");
         } finally {
             setSubmitting(false);
         }
@@ -588,7 +596,7 @@ export default function PublicEmbedForm() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.bgColor, ...fontStyle }}>
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${appearance.btnColor}40`, borderTopColor: 'transparent', borderLeftColor: appearance.btnColor }}></div>
                     <p className="text-sm font-semibold" style={{ color: appearance.labelColor }}>Loading form...</p>
@@ -599,7 +607,7 @@ export default function PublicEmbedForm() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.bgColor, ...fontStyle }}>
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
                 <div className="max-w-md w-full border border-slate-200 p-6 shadow-sm text-center space-y-4" style={{ background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
                     <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
                         <Icon name="warning" size={24} />
@@ -615,7 +623,7 @@ export default function PublicEmbedForm() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.bgColor, ...fontStyle }}>
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -638,7 +646,7 @@ export default function PublicEmbedForm() {
 
     return (
         <div className="min-h-screen flex items-center justify-center" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, padding: appearance.onlyBody ? '0px' : `${appearance.padding}px`, ...fontStyle }}>
-            <div className="w-full overflow-hidden transition-all duration-200" style={{ maxWidth: `${appearance.maxWidth}px`, background: appearance.onlyBody ? 'transparent' : appearance.cardBg, borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`, border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)', boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
+            <div className="w-full border border-slate-202 shadow-sm overflow-hidden" style={{ maxWidth: `${appearance.maxWidth}px`, background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
                 {!appearance.hideHeader && (
                     <div className="px-6 py-5 border-b border-slate-100" style={{ background: appearance.cardBg }}>
                         <h2 className="font-extrabold text-lg" style={{ color: appearance.textColor }}>{form.name}</h2>
@@ -655,6 +663,15 @@ export default function PublicEmbedForm() {
                     </div>
                 )}
                 <form onSubmit={handleSubmit} className="space-y-5" style={{ padding: `${appearance.padding}px` }}>
+                    {submitError && (
+                        <div className="p-3.5 bg-rose-50 border border-rose-250 text-rose-800 text-[11px] rounded-lg flex items-start gap-2.5 font-medium leading-relaxed text-left">
+                            <span className="material-symbols-outlined text-[16px] text-rose-600 shrink-0 select-none">error_outline</span>
+                            <div>
+                                <span className="font-bold">Form Submission Error: </span>
+                                {submitError}
+                            </div>
+                        </div>
+                    )}
                     {fields.filter(field => isFieldVisible(field, fields, vals)).map((field) => (
                         <div key={field.id} className="space-y-1.5 text-left">
                             <label className="block text-xs font-bold uppercase tracking-wider" style={{ color: appearance.labelColor }}>

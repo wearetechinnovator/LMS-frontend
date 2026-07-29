@@ -802,7 +802,13 @@ export default function FormBuilder({
             if (f.type === 'phone') {
                 const code = finalVals[`${f.id}-code`] || '+1';
                 const rawNum = finalVals[`${f.id}-num`] || '';
-                const digits = rawNum.replace(/\D/g, '');
+                let digits = rawNum.replace(/\D/g, '');
+                
+                // Strip redundant country code prefix if user typed it manually
+                const codePrefix = code.replace(/\D/g, '');
+                if (codePrefix && digits.startsWith(codePrefix) && digits.length > codePrefix.length) {
+                    digits = digits.substring(codePrefix.length);
+                }
                 
                 if (f.required || digits.length > 0) {
                     if (digits.length === 0) {

@@ -87,7 +87,7 @@ function LiveFormPreview({ form, appearance }) {
 
     return (
         <div style={{ background: a.onlyBody ? 'transparent' : a.bgColor, padding: a.onlyBody ? '0px' : `${a.padding}px`, ...fontStyle }} className="w-full h-full flex items-center justify-center">
-            <div style={{ background: a.onlyBody ? 'transparent' : a.cardBg, borderRadius: `${a.borderRadius}px`, maxWidth: `${a.maxWidth}px`, boxShadow: a.onlyBody ? 'none' : cardShadow, border: a.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)' }} className="w-full overflow-hidden transition-all duration-200">
+            <div style={{ background: a.cardBg, borderRadius: `${a.borderRadius}px`, maxWidth: `${a.maxWidth}px`, boxShadow: cardShadow }} className="w-full border border-slate-105 overflow-hidden transition-all duration-200">
                 {!a.hideHeader && (
                     <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(0,0,0,0.04)', background: `${a.cardBg}` }}>
                         <h3 style={{ color: a.textColor }} className="text-sm font-bold">{form.name}</h3>
@@ -869,7 +869,28 @@ export default function FormEmbedPage() {
 
                         <div className="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
                             {filtered.length === 0 && (
-                                <p className="text-sm text-center text-slate-400 py-8">No forms found</p>
+                                formsList.length === 0 ? (
+                                    <div className="text-center py-6 px-3 bg-slate-50 border border-slate-150 rounded-xl space-y-2">
+                                        <p className="text-[11px] text-slate-450 font-semibold">No forms created yet</p>
+                                        <Link
+                                            to="/admin/form-builder"
+                                            className="w-full py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-sm"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px]">add</span>
+                                            Create Form
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 px-3 bg-slate-50 border border-slate-150 rounded-xl">
+                                        <p className="text-[11px] text-slate-450 font-semibold">No matching forms found</p>
+                                        <button
+                                            onClick={() => setSearch('')}
+                                            className="mt-1.5 text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                                        >
+                                            Clear Search
+                                        </button>
+                                    </div>
+                                )
                             )}
                             {paginatedForms.map(form => {
                                 const isSelected = selectedForm?.id === form.id;
@@ -1047,9 +1068,28 @@ export default function FormEmbedPage() {
                                 </div>
                             </motion.div>
                         ) : (
-                            <div className="flex items-center justify-center h-64 border border-dashed border-slate-250 rounded-2xl text-slate-400 text-sm">
-                                Select a form from the left sidebar to get started.
-                            </div>
+                            formsList.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 px-6 border border-dashed border-slate-250 bg-white rounded-2xl text-center space-y-3.5 shadow-sm">
+                                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-inner">
+                                        <span className="material-symbols-outlined text-[24px]">draft_orders</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-extrabold text-slate-700">No Forms Created Yet</h3>
+                                        <p className="text-xs text-slate-400 max-w-sm mt-1 leading-relaxed">Create your first form using our drag-and-drop builder to configure embedding and sharing options.</p>
+                                    </div>
+                                    <Link
+                                        to="/admin/form-builder"
+                                        className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm animate-pulse hover:animate-none"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">add</span>
+                                        Create Your First Form
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-64 border border-dashed border-slate-250 bg-white rounded-2xl text-slate-400 text-sm">
+                                    Select a form from the left sidebar to get started.
+                                </div>
+                            )
                         )}
                     </div>
                 </div>
