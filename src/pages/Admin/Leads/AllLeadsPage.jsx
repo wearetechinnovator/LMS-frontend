@@ -2329,54 +2329,6 @@ export default function AllLeadsPage() {
                                           </button>
                                         )}
 
-                                        <button
-                                          onClick={() => {
-                                            handleQuickLogDirect(lead.id, 'Phone Call Summary', 'Initiated quick outbound call.');
-                                            triggerToast('Number will be visible for 5 seconds!');
-                                            setRevealedPhoneLeadIds(prev => ({ ...prev, [lead.id]: true }));
-                                            setTimeout(() => {
-                                              setRevealedPhoneLeadIds(prev => {
-                                                const updated = { ...prev };
-                                                delete updated[lead.id];
-                                                return updated;
-                                              });
-                                            }, 5000);
-                                            setActiveDropdownLeadId(null);
-                                          }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                        >
-                                          <span className="material-symbols-outlined text-[16px] text-blue-500 font-medium">call</span>
-                                          Call Lead
-                                        </button>
-
-                                        <button
-                                          onClick={() => {
-                                            setActiveLeadDetails(lead);
-                                            setShowEmailModal(true);
-                                            setActiveDropdownLeadId(null);
-                                          }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                        >
-                                          <span className="material-symbols-outlined text-[16px] text-emerald-500 font-medium">mail</span>
-                                          Send Email
-                                        </button>
-
-                                        <button
-                                          onClick={() => {
-                                            setFollowUpLead(lead);
-                                            setFollowUpType('Call');
-                                            setFollowUpDate('');
-                                            setFollowUpTime('');
-                                            setActiveDropdownLeadId(null);
-                                          }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left"
-                                        >
-                                          <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">calendar_month</span>
-                                          Follow Up
-                                        </button>
-
-                                        <div className="h-px bg-slate-100 my-1" />
-
                                         <div className="relative">
                                           <button
                                             onClick={() => {
@@ -2498,30 +2450,6 @@ export default function AllLeadsPage() {
                                             )}
                                           </AnimatePresence>
                                         </div>
-
-                                        <button
-                                          onClick={() => {
-                                            setActiveLeadDetails(lead);
-                                            setDetailsActiveTab('timeline');
-                                            setActiveDropdownLeadId(null);
-                                          }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
-                                        >
-                                          <span className="material-symbols-outlined text-[16px] text-purple-500 font-medium">history</span>
-                                          View Activity
-                                        </button>
-
-                                        <button
-                                          onClick={() => {
-                                            setActiveLeadDetails(lead);
-                                            setDetailsActiveTab('overview');
-                                            setActiveDropdownLeadId(null);
-                                          }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors cursor-pointer text-left border-t border-slate-100"
-                                        >
-                                          <span className="material-symbols-outlined text-[16px] text-teal-500 font-medium">assignment</span>
-                                          View Application
-                                        </button>
                                       </motion.div>
                                     );
                                   })()}
