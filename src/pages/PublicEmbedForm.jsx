@@ -68,6 +68,89 @@ export default function PublicEmbedForm() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
+    const [countriesList, setCountriesList] = useState([]);
+    const [statesMap, setStatesMap] = useState({});
+    const [citiesMap, setCitiesMap] = useState({});
+
+    // Fetch countries list
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const res = await fetch('https://countriesnow.space/api/v0.1/countries/iso');
+                const data = await res.json();
+                if (data && !data.error) {
+                    setCountriesList(data.data.map(c => c.name).sort());
+                }
+            } catch (e) {
+                console.error('Failed to fetch countries', e);
+            }
+        };
+        fetchCountries();
+    }, []);
+
+    // Fetch states reactively
+    useEffect(() => {
+        if (!form || !form.fields) return;
+        form.fields.forEach(field => {
+            if (field.type === 'city') {
+                const mode = field.locationMode || 'all';
+                const country = mode === 'all' ? vals[`${field.id}-country`] : field.selectedCountry;
+                if (country) {
+                    const fetchStates = async () => {
+                        try {
+                            const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ country })
+                            });
+                            const data = await res.json();
+                            if (data && !data.error && data.data && data.data.states) {
+                                setStatesMap(prev => ({ ...prev, [field.id]: data.data.states.map(s => s.name).sort() }));
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    };
+                    fetchStates();
+                } else {
+                    setStatesMap(prev => ({ ...prev, [field.id]: [] }));
+                }
+            }
+        });
+    }, [vals, form]);
+
+    // Fetch cities reactively
+    useEffect(() => {
+        if (!form || !form.fields) return;
+        form.fields.forEach(field => {
+            if (field.type === 'city') {
+                const mode = field.locationMode || 'all';
+                const country = mode === 'all' ? vals[`${field.id}-country`] : field.selectedCountry;
+                const state = mode === 'city_only' ? field.selectedState : vals[`${field.id}-state`];
+                if (country && state) {
+                    const fetchCities = async () => {
+                        try {
+                            const res = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ country, state })
+                            });
+                            const data = await res.json();
+                            if (data && !data.error && data.data) {
+                                setCitiesMap(prev => ({ ...prev, [field.id]: data.data.sort() }));
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    };
+                    fetchCities();
+                } else {
+                    setCitiesMap(prev => ({ ...prev, [field.id]: [] }));
+                }
+            }
+        });
+    }, [vals, form]);
+
     const isAdmin = useMemo(() => {
         const token = localStorage.getItem('authToken');
         return !!(token && token !== 'mock-jwt-token');
@@ -407,6 +490,7 @@ export default function PublicEmbedForm() {
                     }
                 }
             }
+        }
         // Validate phone number formats
         for (const f of fields) {
             if (isFieldVisible(f, fields, resolvedVals) && f.type === 'phone') {
@@ -443,7 +527,17 @@ export default function PublicEmbedForm() {
         // 2. Map form fields to submission body
         fields.forEach(f => {
             if (isFieldVisible(f, fields, resolvedVals)) {
-                submissionBody[f.label] = resolvedVals[f.id];
+                if (f.type === 'city') {
+                    const mode = f.locationMode || 'all';
+                    const country = mode === 'all' ? resolvedVals[`${f.id}-country`] : f.selectedCountry;
+                    const state = mode === 'city_only' ? f.selectedState : resolvedVals[`${f.id}-state`];
+                    const city = resolvedVals[f.id] || '';
+                    
+                    const components = [country, state, city].filter(Boolean);
+                    submissionBody[f.label] = components.join(', ');
+                } else {
+                    submissionBody[f.label] = resolvedVals[f.id];
+                }
                 if (f.type === 'captcha' && !['recaptcha_v2_checkbox', 'recaptcha_v2_invisible', 'recaptcha_v3'].includes(f.captchaType) && captchaData[f.id]?.token) {
                     captchaTokens[f.id] = captchaData[f.id].token;
                 }
@@ -805,6 +899,128 @@ export default function PublicEmbedForm() {
                                             </ul>
                                         </div>
                                     )}
+                                </div>
+                            ) : field.type === 'city' ? (
+                                <div className="space-y-3">
+                                    {/* Country Dropdown */}
+                                    {(field.locationMode === 'all' || !field.locationMode) && (
+                                        <select
+                                            value={vals[`${field.id}-country`] || ''}
+                                            onChange={(e) => {
+                                                setVals(prev => ({
+                                                    ...prev,
+                                                    [`${field.id}-country`]: e.target.value,
+                                                    [`${field.id}-state`]: '',
+                                                    [field.id]: ''
+                                                }));
+                                            }}
+                                            required={field.required}
+                                            className="w-full h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                            style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                        >
+                                            <option value="">Choose Country...</option>
+                                            {countriesList.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    )}
+
+                                    {/* State Dropdown */}
+                                    {(field.locationMode === 'all' || field.locationMode === 'state_city' || !field.locationMode) && (
+                                        <select
+                                            value={vals[`${field.id}-state`] || ''}
+                                            disabled={field.locationMode === 'all' && !vals[`${field.id}-country`]}
+                                            onChange={(e) => {
+                                                setVals(prev => ({
+                                                    ...prev,
+                                                    [`${field.id}-state`]: e.target.value,
+                                                    [field.id]: ''
+                                                }));
+                                            }}
+                                            required={field.required}
+                                            className="w-full h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                            style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                        >
+                                            <option value="">Choose State...</option>
+                                            {(statesMap[field.id] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    )}
+
+                                    {/* City Dropdown */}
+                                    <select
+                                        value={vals[field.id] || ''}
+                                        disabled={
+                                            (field.locationMode === 'all' && (!vals[`${field.id}-country`] || !vals[`${field.id}-state`])) ||
+                                            (field.locationMode === 'state_city' && !vals[`${field.id}-state`])
+                                        }
+                                        onChange={(e) => {
+                                            setVals(prev => ({
+                                                ...prev,
+                                                [field.id]: e.target.value
+                                            }));
+                                        }}
+                                        required={field.required}
+                                        className="w-full h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                        style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                    >
+                                        <option value="">Choose City...</option>
+                                        {(citiesMap[field.id] || []).map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                            ) : field.type === 'fullname' ? (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <input
+                                        type="text"
+                                        placeholder="First Name"
+                                        value={vals[`${field.id}-first`] || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const mid = vals[`${field.id}-middle`] || '';
+                                            const lst = vals[`${field.id}-last`] || '';
+                                            setVals({
+                                                ...vals,
+                                                [`${field.id}-first`]: val,
+                                                [field.id]: [val, mid, lst].filter(Boolean).join(' ')
+                                            });
+                                        }}
+                                        required={!field.firstOptional}
+                                        className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Middle Name"
+                                        value={vals[`${field.id}-middle`] || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const fst = vals[`${field.id}-first`] || '';
+                                            const lst = vals[`${field.id}-last`] || '';
+                                            setVals({
+                                                ...vals,
+                                                [`${field.id}-middle`]: val,
+                                                [field.id]: [fst, val, lst].filter(Boolean).join(' ')
+                                            });
+                                        }}
+                                        required={!field.middleOptional}
+                                        className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Last Name"
+                                        value={vals[`${field.id}-last`] || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const fst = vals[`${field.id}-first`] || '';
+                                            const mid = vals[`${field.id}-middle`] || '';
+                                            setVals({
+                                                ...vals,
+                                                [`${field.id}-last`]: val,
+                                                [field.id]: [fst, mid, val].filter(Boolean).join(' ')
+                                            });
+                                        }}
+                                        required={!field.lastOptional}
+                                        className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                    />
                                 </div>
                             ) : field.type === 'textarea' ? (
                                 <textarea

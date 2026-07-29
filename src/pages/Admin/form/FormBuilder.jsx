@@ -98,6 +98,109 @@ export default function FormBuilder({
     const [isDraggingActive, setIsDraggingActive] = useState(false)
     const [toastMessage, setToastMessage] = useState(null)
     const [counselorsList, setCounselorsList] = useState([])
+    const [builderCountriesList, setBuilderCountriesList] = useState([])
+    const [builderStatesList, setBuilderStatesList] = useState([])
+
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const res = await fetch('https://countriesnow.space/api/v0.1/countries/iso');
+                const data = await res.json();
+                if (data && !data.error) {
+                    setBuilderCountriesList(data.data.map(c => c.name).sort());
+                }
+            } catch (e) {
+                console.error('Failed to fetch countries for builder', e);
+            }
+        };
+        fetchCountries();
+    }, []);
+
+    useEffect(() => {
+        const fetchStates = async () => {
+            const currentField = formFields.find(f => f.id === selectedFieldId);
+            if (!currentField || currentField.type !== 'city' || !currentField.selectedCountry) {
+                setBuilderStatesList([]);
+                return;
+            }
+            try {
+                const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ country: currentField.selectedCountry })
+                });
+                const data = await res.json();
+                if (data && !data.error && data.data && data.data.states) {
+                    setBuilderStatesList(data.data.states.map(s => s.name).sort());
+                }
+            } catch (e) {
+                console.error('Failed to fetch states for builder', e);
+            }
+        };
+        fetchStates();
+    }, [selectedFieldId, formFields]);
+
+    const [previewStatesMap, setPreviewStatesMap] = useState({})
+    const [previewCitiesMap, setPreviewCitiesMap] = useState({})
+
+    useEffect(() => {
+        formFields.forEach(field => {
+            if (field.type === 'city') {
+                const mode = field.locationMode || 'all';
+                const country = mode === 'all' ? previewValues[`${field.id}-country`] : field.selectedCountry;
+                if (country) {
+                    const fetchStates = async () => {
+                        try {
+                            const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ country })
+                            });
+                            const data = await res.json();
+                            if (data && !data.error && data.data && data.data.states) {
+                                setPreviewStatesMap(prev => ({ ...prev, [field.id]: data.data.states.map(s => s.name).sort() }));
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    };
+                    fetchStates();
+                } else {
+                    setPreviewStatesMap(prev => ({ ...prev, [field.id]: [] }));
+                }
+            }
+        });
+    }, [previewValues, showPreview, formFields]);
+
+    useEffect(() => {
+        formFields.forEach(field => {
+            if (field.type === 'city') {
+                const mode = field.locationMode || 'all';
+                const country = mode === 'all' ? previewValues[`${field.id}-country`] : field.selectedCountry;
+                const state = mode === 'city_only' ? field.selectedState : previewValues[`${field.id}-state`];
+                if (country && state) {
+                    const fetchCities = async () => {
+                        try {
+                            const res = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ country, state })
+                            });
+                            const data = await res.json();
+                            if (data && !data.error && data.data) {
+                                setPreviewCitiesMap(prev => ({ ...prev, [field.id]: data.data.sort() }));
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    };
+                    fetchCities();
+                } else {
+                    setPreviewCitiesMap(prev => ({ ...prev, [field.id]: [] }));
+                }
+            }
+        });
+    }, [previewValues, showPreview, formFields]);
     
     useEffect(() => {
         const fetchCounselors = async () => {
@@ -728,7 +831,8 @@ export default function FormBuilder({
     };
 
     const standardFields = [
-        { type: 'text', label: 'Name', icon: 'text_fields' },
+        { type: 'fullname', label: 'Full Name', icon: 'person' },
+        { type: 'text', label: 'Text Field', icon: 'text_fields' },
         { type: 'email', label: 'Email', icon: 'mail' },
         { type: 'phone', label: 'Phone', icon: 'phone' },
         { type: 'textarea', label: 'Text Area', icon: 'notes' },
@@ -750,43 +854,40 @@ export default function FormBuilder({
 
     const addField = (type) => {
         const newId = Math.max(...formFields.map(f => f.id), 0) + 1
-        if (type === 'city') {
-            const stateId = newId
-            const cityId = newId + 1
-
-            const stateField = {
-                id: stateId,
-                type: 'select',
-                label: 'Select State',
+        if (type === 'fullname') {
+            const fullnameField = {
+                id: newId,
+                type: 'fullname',
+                label: 'Full Name',
                 required: true,
-                placeholder: 'Choose State...',
+                placeholder: '',
                 helperText: '',
-                options: ['California', 'Texas', 'New York'],
+                firstOptional: false,
+                middleOptional: true,
+                lastOptional: false,
                 conditional: { enabled: false, dependentFieldId: '', operator: 'equals', value: '' }
             }
+            setFormFields([...formFields, fullnameField])
+            setSelectedFieldId(newId)
+            return
+        }
 
+        if (type === 'city') {
             const cityField = {
-                id: cityId,
-                type: 'select',
-                label: 'Select City',
+                id: newId,
+                type: 'city',
+                label: 'City',
                 required: true,
                 placeholder: 'Choose City...',
                 helperText: '',
-                options: [
-                    { label: 'Los Angeles', value: 'Los Angeles', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'California' },
-                    { label: 'Houston', value: 'Houston', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'Texas' },
-                    { label: 'New York City', value: 'New York City', conditionalEnabled: true, dependentFieldId: stateId.toString(), conditionalOperator: 'equals', conditionalValue: 'New York' }
-                ],
-                conditional: {
-                    enabled: true,
-                    dependentFieldId: stateId.toString(),
-                    operator: 'not_empty',
-                    value: ''
-                }
+                locationMode: 'all',
+                selectedCountry: '',
+                selectedState: '',
+                conditional: { enabled: false, dependentFieldId: '', operator: 'equals', value: '' }
             }
 
-            setFormFields([...formFields, stateField, cityField])
-            setSelectedFieldId(cityId)
+            setFormFields([...formFields, cityField])
+            setSelectedFieldId(newId)
             return
         }
 
@@ -1514,6 +1615,27 @@ export default function FormBuilder({
                                                             </label>
                                                         ))}
                                                     </div>
+                                                ) : field.type === 'fullname' ? (
+                                                     <div className="grid grid-cols-3 gap-2.5">
+                                                         <input
+                                                             type="text"
+                                                             placeholder="First Name"
+                                                             disabled
+                                                             className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
+                                                         />
+                                                         <input
+                                                             type="text"
+                                                             placeholder="Middle Name"
+                                                             disabled
+                                                             className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
+                                                         />
+                                                         <input
+                                                             type="text"
+                                                             placeholder="Last Name"
+                                                             disabled
+                                                             className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
+                                                         />
+                                                     </div>
                                                 ) : field.type === 'phone' ? (
                                                     <div className="flex gap-2">
                                                         <select disabled className="w-24 h-9 px-1.5 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface text-[12px]">
@@ -1932,6 +2054,117 @@ export default function FormBuilder({
                                             <option value="South Africa Phone +27 XX XXX XXXX">South Africa (+27) +27 XX XXX XXXX</option>
                                             <option value="International">International (+X...)</option>
                                         </select>
+                                    </div>
+                                    <hr className="border-outline-variant my-1.5" />
+                                </div>
+                            )}
+
+                            {selectedField.type === 'city' && (
+                                <div className="space-y-2.5 pb-2.5 border-b border-outline-variant text-left">
+                                    <div className="space-y-1">
+                                        <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label">Location Mode</label>
+                                        <select
+                                            value={selectedField.locationMode || 'all'}
+                                            onChange={(e) => {
+                                                updateField(selectedField.id, { 
+                                                    locationMode: e.target.value,
+                                                    selectedCountry: '',
+                                                    selectedState: ''
+                                                });
+                                            }}
+                                            className="w-full h-8 px-1.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[9px] cursor-pointer"
+                                        >
+                                            <option value="all">Country, State & City</option>
+                                            <option value="state_city">State & City</option>
+                                            <option value="city_only">City Only</option>
+                                        </select>
+                                    </div>
+
+                                    {/* If Mode is state_city or city_only, select target country */}
+                                    {((selectedField.locationMode === 'state_city') || (selectedField.locationMode === 'city_only')) && (
+                                        <div className="space-y-1">
+                                            <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label">Target Country</label>
+                                            <select
+                                                value={selectedField.selectedCountry || ''}
+                                                onChange={(e) => {
+                                                    updateField(selectedField.id, { 
+                                                        selectedCountry: e.target.value,
+                                                        selectedState: ''
+                                                    });
+                                                }}
+                                                className="w-full h-8 px-1.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[9px] cursor-pointer"
+                                            >
+                                                <option value="">Select country...</option>
+                                                {builderCountriesList.map(c => (
+                                                    <option key={c} value={c}>{c}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {/* If Mode is city_only, select target state */}
+                                    {(selectedField.locationMode === 'city_only') && selectedField.selectedCountry && (
+                                        <div className="space-y-1">
+                                            <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label">Target State</label>
+                                            <select
+                                                value={selectedField.selectedState || ''}
+                                                onChange={(e) => {
+                                                    updateField(selectedField.id, { selectedState: e.target.value });
+                                                }}
+                                                className="w-full h-8 px-1.5 border border-outline-variant rounded font-body-md text-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[9px] cursor-pointer"
+                                            >
+                                                <option value="">Select state...</option>
+                                                {builderStatesList.map(s => (
+                                                    <option key={s} value={s}>{s}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                    <hr className="border-outline-variant my-1.5" />
+                                </div>
+                            )}
+
+                            {selectedField.type === 'fullname' && (
+                                <div className="space-y-2.5 pb-2.5 border-b border-outline-variant text-left">
+                                    <h4 className="font-headline-md text-headline-md text-on-background mb-1 text-[10px]">Name Component Configuration</h4>
+                                    
+                                    <div className="flex items-center gap-2 py-1">
+                                        <input
+                                            type="checkbox"
+                                            id="first-optional-toggle"
+                                            checked={!!selectedField.firstOptional}
+                                            onChange={(e) => updateField(selectedField.id, { firstOptional: e.target.checked })}
+                                            className="w-3.5 h-3.5 accent-primary rounded cursor-pointer"
+                                        />
+                                        <label htmlFor="first-optional-toggle" className="font-body-md text-body-md text-on-surface text-[10px] cursor-pointer select-none">
+                                            First Name is Optional
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 py-1">
+                                        <input
+                                            type="checkbox"
+                                            id="middle-optional-toggle"
+                                            checked={!!selectedField.middleOptional}
+                                            onChange={(e) => updateField(selectedField.id, { middleOptional: e.target.checked })}
+                                            className="w-3.5 h-3.5 accent-primary rounded cursor-pointer"
+                                        />
+                                        <label htmlFor="middle-optional-toggle" className="font-body-md text-body-md text-on-surface text-[10px] cursor-pointer select-none">
+                                            Middle Name is Optional
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 py-1">
+                                        <input
+                                            type="checkbox"
+                                            id="last-optional-toggle"
+                                            checked={!!selectedField.lastOptional}
+                                            onChange={(e) => updateField(selectedField.id, { lastOptional: e.target.checked })}
+                                            className="w-3.5 h-3.5 accent-primary rounded cursor-pointer"
+                                        />
+                                        <label htmlFor="last-optional-toggle" className="font-body-md text-body-md text-on-surface text-[10px] cursor-pointer select-none">
+                                            Last Name is Optional
+                                        </label>
                                     </div>
                                     <hr className="border-outline-variant my-1.5" />
                                 </div>
@@ -2854,6 +3087,119 @@ export default function FormBuilder({
                                                                         }}
                                                                         className="flex-1 h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
                                                                     />
+                                                                </div>
+                                                            ) : field.type === 'fullname' ? (
+                                                                <div className="grid grid-cols-3 gap-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="First Name"
+                                                                        value={previewValues[`${field.id}-first`] || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            const mid = previewValues[`${field.id}-middle`] || '';
+                                                                            const lst = previewValues[`${field.id}-last`] || '';
+                                                                            setPreviewValues({
+                                                                                ...previewValues,
+                                                                                [`${field.id}-first`]: val,
+                                                                                [field.id]: [val, mid, lst].filter(Boolean).join(' ')
+                                                                            });
+                                                                        }}
+                                                                        required={!field.firstOptional}
+                                                                        className="h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Middle Name"
+                                                                        value={previewValues[`${field.id}-middle`] || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            const fst = previewValues[`${field.id}-first`] || '';
+                                                                            const lst = previewValues[`${field.id}-last`] || '';
+                                                                            setPreviewValues({
+                                                                                ...previewValues,
+                                                                                [`${field.id}-middle`]: val,
+                                                                                [field.id]: [fst, val, lst].filter(Boolean).join(' ')
+                                                                            });
+                                                                        }}
+                                                                        required={!field.middleOptional}
+                                                                        className="h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Last Name"
+                                                                        value={previewValues[`${field.id}-last`] || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            const fst = previewValues[`${field.id}-first`] || '';
+                                                                            const mid = previewValues[`${field.id}-middle`] || '';
+                                                                            setPreviewValues({
+                                                                                ...previewValues,
+                                                                                [`${field.id}-last`]: val,
+                                                                                [field.id]: [fst, mid, val].filter(Boolean).join(' ')
+                                                                            });
+                                                                        }}
+                                                                        required={!field.lastOptional}
+                                                                        className="h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
+                                                                    />
+                                                                </div>
+                                                            ) : field.type === 'city' ? (
+                                                                <div className="space-y-2">
+                                                                    {/* Country Select */}
+                                                                    {(field.locationMode === 'all' || !field.locationMode) && (
+                                                                        <select
+                                                                            value={previewValues[`${field.id}-country`] || ''}
+                                                                            onChange={(e) => {
+                                                                                setPreviewValues(prev => ({
+                                                                                    ...prev,
+                                                                                    [`${field.id}-country`]: e.target.value,
+                                                                                    [`${field.id}-state`]: '',
+                                                                                    [field.id]: ''
+                                                                                }));
+                                                                            }}
+                                                                            className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] cursor-pointer"
+                                                                        >
+                                                                            <option value="">Choose Country...</option>
+                                                                            {builderCountriesList.map(c => <option key={c} value={c}>{c}</option>)}
+                                                                        </select>
+                                                                    )}
+
+                                                                    {/* State Select */}
+                                                                    {(field.locationMode === 'all' || field.locationMode === 'state_city' || !field.locationMode) && (
+                                                                        <select
+                                                                            value={previewValues[`${field.id}-state`] || ''}
+                                                                            disabled={field.locationMode === 'all' && !previewValues[`${field.id}-country`]}
+                                                                            onChange={(e) => {
+                                                                                setPreviewValues(prev => ({
+                                                                                    ...prev,
+                                                                                    [`${field.id}-state`]: e.target.value,
+                                                                                    [field.id]: ''
+                                                                                }));
+                                                                            }}
+                                                                            className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] cursor-pointer"
+                                                                        >
+                                                                            <option value="">Choose State...</option>
+                                                                            {(previewStatesMap[field.id] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                                                                        </select>
+                                                                    )}
+
+                                                                    {/* City Select */}
+                                                                    <select
+                                                                        value={previewValues[field.id] || ''}
+                                                                        disabled={
+                                                                            (field.locationMode === 'all' && (!previewValues[`${field.id}-country`] || !previewValues[`${field.id}-state`])) ||
+                                                                            (field.locationMode === 'state_city' && !previewValues[`${field.id}-state`])
+                                                                        }
+                                                                        onChange={(e) => {
+                                                                            setPreviewValues(prev => ({
+                                                                                ...prev,
+                                                                                [field.id]: e.target.value
+                                                                            }));
+                                                                        }}
+                                                                        className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] cursor-pointer"
+                                                                    >
+                                                                        <option value="">Choose City...</option>
+                                                                        {(previewCitiesMap[field.id] || []).map(c => <option key={c} value={c}>{c}</option>)}
+                                                                    </select>
                                                                 </div>
                                                             ) : field.type === 'captcha' ? (
                                                                 <div className="flex flex-col gap-2">
