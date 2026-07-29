@@ -2648,7 +2648,7 @@ export default function AllLeadsPage() {
                           {visibleColumns.device && (
                             <td className="px-3 py-4 text-slate-600 text-[11.5px] font-semibold">
                               <span className="flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[14px]">
+                                <span className="material-symbols-outlined text-[14px]!">
                                   {lead.device?.toLowerCase() === 'mobile' ? 'smartphone' :
                                     lead.device?.toLowerCase() === 'tablet' ? 'tablet_mac' : 'desktop_windows'}
                                 </span>

@@ -250,14 +250,14 @@ export default function Teams() {
             }}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto shadow-xs"
           >
-            <span className="material-symbols-outlined text-[16px]">add</span>
+            <span className="material-symbols-outlined text-[18px]!">add</span>
             Create Team
           </button>
         </div>
 
         {/* Search Bar */}
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]!">search</span>
           <input
             type="text"
             placeholder="Search teams by name, description, or head..."

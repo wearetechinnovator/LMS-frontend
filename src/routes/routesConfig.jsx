@@ -15,7 +15,7 @@ const TeamsPage = React.lazy(() => import('../pages/Admin/teams/Teams'))
 const ViewTeamPage = React.lazy(() => import('../pages/Admin/teams/ViewTeam'))
 const ManageTeamPage = React.lazy(() => import('../pages/Admin/teams/ManageTeam'))
 
-const AdminCampaignsPage = React.lazy(() => import('../pages/Admin/campaign/CampaignsPage'))
+// const AdminCampaignsPage = React.lazy(() => import('../pages/Admin/campaign/CampaignsPage'))
 
 const AdminAuditLogsPage = React.lazy(() => import('../pages/Admin/audit/AuditLogs'))
 
@@ -42,7 +42,7 @@ const adminNavItems = [
       { id: 'vendor_counselor', label: 'Vendors & Counselors', path: '/admin/analytics/vendor-counselor' }
     ]
   },
-  { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/admin/departments' },
+  // { id: 'campaigns', label: 'Campaigns', icon: 'campaign', path: '/admin/departments' },
   { id: 'teams', label: 'Teams', icon: 'group', path: '/admin/teams' },
   { id: 'audit-logs', label: 'Audit Logs', icon: 'clipboard_clock', path: '/admin/audit-logs' },
   { id: 'roles', label: 'Roles', icon: 'user_shield', path: '/admin/roles' },
@@ -139,21 +139,9 @@ export const RoleRoutes = ({ username, handleLogout }) => {
             <ManageTeamPage />
           </PermissionGate>
         } />
-        <Route path="departments" element={
-          <PermissionGate permission="leads_view">
-            <AdminCampaignsPage />
-          </PermissionGate>
-        } />
-        <Route path="departments/:id" element={
-          <PermissionGate permission="leads_view">
-            <ViewTeamPage />
-          </PermissionGate>
-        } />
-        <Route path="departments/:id/manage" element={
-          <PermissionGate permission="leads_view">
-            <ManageTeamPage />
-          </PermissionGate>
-        } />
+
+        
+        
         <Route path="audit-logs" element={
           <PermissionGate permission="auditLogs">
             <AdminAuditLogsPage />

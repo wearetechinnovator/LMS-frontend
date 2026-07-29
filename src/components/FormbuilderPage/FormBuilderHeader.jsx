@@ -63,13 +63,13 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                     {isDropdownOpen && (
                         <div className="dropdown-menu">
                             <button
-                                className="dropdown-item"
+                                className="dropdown-item "
                                 onClick={() => {
                                     handleCreateFromScratch()
                                     setIsDropdownOpen(false)
                                 }}
                             >
-                                <Icon name="edit_note" className="item-icon text-indigo-500" size={18} />
+                                <Icon name="edit_note" className="item-icon text-indigo-500 w-[18px]! h-[18px]!"  />
                                 <div className="item-text-container">
                                     <span className="item-title">Create from Scratch</span>
                                     <span className="item-desc">Start with a blank canvas</span>
@@ -82,7 +82,7 @@ export default function FormBuilderHeader({ handleCreateFromScratch, handleOpenT
                                     setIsDropdownOpen(false)
                                 }}
                             >
-                                <Icon name="grid_view" className="item-icon text-purple-500" size={18} />
+                                <Icon name="grid_view" className="item-icon text-purple-500 w-[18px]! h-[18px]!" size={18} />
                                 <div className="item-text-container">
                                     <span className="item-title">Create from Template</span>
                                     <span className="item-desc">Use pre-designed blueprints</span>

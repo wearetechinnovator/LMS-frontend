@@ -13,7 +13,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
   // Sub-metric states for each category
   const [counselorMetric, setCounselorMetric] = useState('leads') // 'leads' | 'conversion' | 'responseTime'
   const [dailyMetric, setDailyMetric] = useState('leads') // 'leads' | 'conversion'
-  const [channelMetric, setChannelMetric] = useState('leads') // 'leads' | 'conversion' | 'cpl'
+  const [channelMetric, setChannelMetric] = useState('leads') // 'leads' | 'conversion'
 
   // 1. Counselor Performance Dataset
   const counselorData = useMemo(() => {
@@ -89,26 +89,13 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
       groups[channel].push(l)
     })
 
-    const cplMap = {
-      'Google Ads': 10.0,
-      'Facebook': 10.0,
-      'Facebook Ads': 10.0,
-      'Organic Search': 2.3,
-      'Website Organic': 2.3,
-      'Referral': 0,
-      'Other': 5.0
-    }
-
     const data = Object.keys(groups).map(name => {
       const channelLeads = groups[name]
       const total = channelLeads.length
       const won = channelLeads.filter(l => l.status === 'WON' || l.status === 'QUALIFIED').length
       const conversion = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0
 
-      const cpl = cplMap[name] !== undefined ? cplMap[name] : 5.0
-      const cost = parseFloat((cpl * total).toFixed(1))
-
-      return { name, leads: total, conversion, cpl, cost }
+      return { name, leads: total, conversion }
     })
 
     if (data.length === 0) {
@@ -152,9 +139,7 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
         id: item.name,
         label: item.name,
         leads: item.leads,
-        conversion: item.conversion,
-        cpl: item.cpl,
-        cost: item.cost
+        conversion: item.conversion
       }))
     }
 
@@ -213,8 +198,8 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
       headers = ['Date', 'Leads Count', 'Conversion Rate (%)', 'Converted Leads']
       rows = dailyData.map(d => [d.date, d.leads, d.conversion, d.converted])
     } else {
-      headers = ['Channel / Vendor', 'Leads Count', 'Conversion Rate (%)', 'Cost per Lead ($)', 'Total Spend ($)']
-      rows = channelData.map(c => [c.name, c.leads, c.conversion, c.cpl, c.cost])
+      headers = ['Channel / Vendor', 'Leads Count', 'Conversion Rate (%)']
+      rows = channelData.map(c => [c.name, c.leads, c.conversion])
     }
 
     const csvContent =
@@ -317,7 +302,6 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
             >
               <option value="leads">Lead Volume</option>
               <option value="conversion">Conversion Rate</option>
-              <option value="cpl">Cost Per Lead (CPL)</option>
             </select>
           )}
 
@@ -440,11 +424,6 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
                           Converted: {activeDataset[hoveredIdx].converted} leads
                         </span>
                       )}
-                      {activeCategory === 'channel' && activeMetric !== 'cost' && (
-                        <span className="text-[8px] text-slate-400 mt-0.5">
-                          Spend: ${activeDataset[hoveredIdx].cost}
-                        </span>
-                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -508,8 +487,6 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
                         <th onClick={() => handleSort('label')}>Channel / Vendor</th>
                         <th onClick={() => handleSort('leads')}>Leads Count</th>
                         <th onClick={() => handleSort('conversion')}>Conversion Rate</th>
-                        <th onClick={() => handleSort('cpl')}>Cost per Lead</th>
-                        <th onClick={() => handleSort('cost')}>Total Spend</th>
                       </tr>
                     )}
                   </thead>
@@ -545,10 +522,6 @@ export default function DeepDiveAnalytics({ triggerToast = () => { }, leads = []
                             <td>
                               <span className="font-semibold text-emerald-600">{row.conversion}%</span>
                             </td>
-                            <td>
-                              <span className="cpl-badge">${row.cpl}</span>
-                            </td>
-                            <td className="font-semibold text-slate-700">${row.cost}</td>
                           </>
                         )}
                       </tr>

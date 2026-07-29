@@ -882,7 +882,7 @@ export default function RoleUserManagement() {
                         <div className="flex items-center gap-2.5 flex-1 w-full max-w-2xl">
                             {/* Search bar input */}
                             <div className="relative flex-1">
-                                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">search</span>
+                                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]!">search</span>
                                 <input
                                     type="text"
                                     placeholder="Search users by name or email address..."
@@ -924,7 +924,7 @@ export default function RoleUserManagement() {
                             onClick={handleOpenCreateDrawer}
                             className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                         >
-                            <span className="material-symbols-outlined text-[15px]">person_add</span>
+                            <span className="material-symbols-outlined text-[18px]!">person_add</span>
                             Add New User
                         </button>
                     </div>
@@ -997,7 +997,7 @@ export default function RoleUserManagement() {
                                                             className="p-1 hover:bg-surface-container rounded text-primary hover:text-primary transition-colors"
                                                             title="Edit Details"
                                                         >
-                                                            <span className="material-symbols-outlined text-[15px]">edit</span>
+                                                            <span className="material-symbols-outlined text-[18px]!">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={() => handleToggleStatus(user)}
@@ -1005,7 +1005,7 @@ export default function RoleUserManagement() {
                                                                 }`}
                                                             title={user.status === 'Active' ? 'Suspend User' : 'Activate User'}
                                                         >
-                                                            <span className="material-symbols-outlined text-[15px]">
+                                                            <span className="material-symbols-outlined text-[18px]!">
                                                                 {user.status === 'Active' ? 'block' : 'check_circle'}
                                                             </span>
                                                         </button>
@@ -1014,7 +1014,7 @@ export default function RoleUserManagement() {
                                                             className="p-1 hover:bg-rose-100 hover:text-rose-600 rounded text-on-surface-variant transition-colors"
                                                             title="Remove User"
                                                         >
-                                                            <span className="material-symbols-outlined text-[15px]">delete</span>
+                                                            <span className="material-symbols-outlined text-[18px]!">delete</span>
                                                         </button>
                                                     </div>
                                                 </td>
@@ -1057,7 +1057,7 @@ export default function RoleUserManagement() {
                                 className="p-1 hover:bg-slate-200/60 rounded text-primary hover:text-primary transition-colors cursor-pointer flex items-center justify-center shrink-0"
                                 title="Create Custom Role"
                             >
-                                <span className="material-symbols-outlined text-[15px] font-bold">add</span>
+                                <span className="material-symbols-outlined text-[18px]! font-bold">add</span>
                             </button>
                         </div>
                         <div className="flex-1 p-1.5 space-y-0.5 overflow-y-auto">
@@ -1083,7 +1083,7 @@ export default function RoleUserManagement() {
                                             className="p-0.5 hover:bg-slate-200/80 rounded text-slate-500 hover:text-primary transition-colors flex items-center justify-center border-none bg-transparent cursor-pointer"
                                             title="Rename Role"
                                         >
-                                            <span className="material-symbols-outlined text-[13px] font-semibold">edit</span>
+                                            <span className="material-symbols-outlined text-[18px]! font-semibold">edit</span>
                                         </button>
                                         
                                         <button
@@ -1095,7 +1095,7 @@ export default function RoleUserManagement() {
                                             className="p-0.5 hover:bg-rose-100 rounded text-slate-500 hover:text-rose-600 transition-colors flex items-center justify-center border-none bg-transparent cursor-pointer"
                                             title="Delete Role"
                                         >
-                                            <span className="material-symbols-outlined text-[13px] font-semibold">delete</span>
+                                            <span className="material-symbols-outlined text-[18px]! font-semibold">delete</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1110,7 +1110,7 @@ export default function RoleUserManagement() {
                         <div className="p-4 border-b border-outline-variant bg-surface-container/30 flex justify-between items-center">
                             <div>
                                 <h2 className="text-[14px] font-bold text-on-background flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+                                    <span className="material-symbols-outlined text-primary text-[18px]!">verified_user</span>
                                     {selectedRole} Permissions Configuration
                                 </h2>
                                 <p className="text-[10px] text-on-surface-variant mt-0.5">
@@ -1123,21 +1123,21 @@ export default function RoleUserManagement() {
                                     onClick={handleClearAllPermissions}
                                     className="px-2 py-1 border border-outline-variant hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded text-[9.5px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
-                                    <span className="material-symbols-outlined text-[13px]">clear_all</span>
+                                    <span className="material-symbols-outlined text-[18px]!">clear_all</span>
                                     Clear All
                                 </button>
                                 <button
                                     onClick={handleSwitchToDefault}
                                     className="px-2 py-1 border border-outline-variant hover:bg-slate-50 text-slate-700 rounded text-[9.5px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
-                                    <span className="material-symbols-outlined text-[13px]">settings_backup_restore</span>
+                                    <span className="material-symbols-outlined text-[18px]!">settings_backup_restore</span>
                                     Switch to Default
                                 </button>
                                 <button
                                     onClick={handleSavePermissions}
                                     className="px-2 py-1 bg-primary hover:bg-primary/95 text-white rounded text-[9.5px] font-bold shadow-xs transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
-                                    <span className="material-symbols-outlined text-[13px]">save</span>
+                                    <span className="material-symbols-outlined text-[18px]!">save</span>
                                     Save Role Permissions
                                 </button>
                             </div>
@@ -1149,7 +1149,7 @@ export default function RoleUserManagement() {
                             {/* Dashboard access panel card */}
                             <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
                                 <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-primary">dashboard</span>
+                                    <span className="material-symbols-outlined text-[18px]! text-primary">dashboard</span>
                                     Core System Navigation
                                 </h3>
                                 <label className="flex items-center gap-2.5 py-1.5 cursor-pointer font-medium">
@@ -1157,7 +1157,7 @@ export default function RoleUserManagement() {
                                         type="checkbox"
                                         checked={rolePermissions[selectedRole]?.dashboard || false}
                                         onChange={() => handleTogglePermission(selectedRole, 'dashboard')}
-                                        className="w-4 h-4 accent-primary"
+                                        className="w-3 h-3 accent-primary"
                                     />
                                     <div>
                                         <p className="text-on-background">Access Main Analytics Dashboard</p>
@@ -1169,7 +1169,7 @@ export default function RoleUserManagement() {
                             {/* Granular Lead Control */}
                             <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
                                 <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-primary">contacts</span>
+                                    <span className="material-symbols-outlined text-[18px]! text-primary">contacts</span>
                                     Lead Management Controls
                                 </h3>
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-1">
@@ -1179,7 +1179,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_view || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_view')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">View Leads Database</p>
@@ -1192,7 +1192,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_details_view || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_details_view')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">View Lead Details</p>
@@ -1205,7 +1205,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_edit || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_edit')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">Edit Lead Profiles</p>
@@ -1218,7 +1218,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_nurture || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_nurture')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">Nurture Leads</p>
@@ -1231,7 +1231,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_assign || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_assign')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">Bulk Reassign Leads</p>
@@ -1244,7 +1244,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.leads_delete || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'leads_delete')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background text-rose-600">Delete Lead Entries</p>
@@ -1258,7 +1258,7 @@ export default function RoleUserManagement() {
                             {/* Scoped Form Builder permissions */}
                             <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
                                 <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-primary">build</span>
+                                    <span className="material-symbols-outlined text-[18px]! text-primary">build</span>
                                     Interactive Form Builder Actions
                                 </h3>
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-1">
@@ -1268,7 +1268,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_view || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_view')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">Access Form Library</p>
@@ -1281,7 +1281,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_create || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_create')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">Create Capture Schemes</p>
@@ -1294,7 +1294,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_edit || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_edit')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">Edit Canvas Mappings</p>
@@ -1307,7 +1307,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.forms_delete || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'forms_delete')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background text-rose-600">Delete Capture Forms</p>
@@ -1321,7 +1321,7 @@ export default function RoleUserManagement() {
                             {/* System Settings & Advanced Admin options */}
                             <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
                                 <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-primary">security</span>
+                                    <span className="material-symbols-outlined text-[18px]! text-primary">security</span>
                                     Compliance & IT Configurations
                                 </h3>
                                 <div className="grid grid-cols-2 gap-6 py-1">
@@ -1331,7 +1331,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.auditLogs || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'auditLogs')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background">View Chronological Audit Logs</p>
@@ -1344,7 +1344,7 @@ export default function RoleUserManagement() {
                                             type="checkbox"
                                             checked={rolePermissions[selectedRole]?.settings || false}
                                             onChange={() => handleTogglePermission(selectedRole, 'settings')}
-                                            className="w-4 h-4 accent-primary mt-0.5"
+                                            className="w-3 h-3 accent-primary mt-0.5"
                                         />
                                         <div>
                                             <p className="text-on-background text-red-600">Modify Webhooks & Scoring Rules</p>
@@ -1384,7 +1384,7 @@ export default function RoleUserManagement() {
                             {/* Drawer header panel */}
                             <div className="p-4 border-b border-outline-variant bg-surface-container/30 flex items-center justify-between">
                                 <h3 className="text-[13px] font-bold text-on-background flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-primary text-[18px]">
+                                    <span className="material-symbols-outlined text-primary text-[18px]!">
                                         {editingUser ? 'manage_accounts' : 'person_add'}
                                     </span>
                                     {editingUser ? 'Edit User Credentials' : 'Register New User'}
@@ -1393,7 +1393,7 @@ export default function RoleUserManagement() {
                                     onClick={() => setIsDrawerOpen(false)}
                                     className="p-1 hover:bg-surface-container rounded-full text-on-surface-variant hover:text-on-surface transition-colors"
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                    <span className="material-symbols-outlined text-[18px]!">close</span>
                                 </button>
                             </div>
 
@@ -1552,7 +1552,7 @@ export default function RoleUserManagement() {
                             <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white">
                                 <div>
                                     <h3 className="text-[13px] font-bold text-slate-800 flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-primary text-[18px]">add_moderator</span>
+                                        <span className="material-symbols-outlined text-primary text-[18px]!">add_moderator</span>
                                         Create Custom Role
                                     </h3>
                                     <p className="text-[9.5px] text-slate-500 mt-0.5">Define a new operational role and custom permission settings.</p>

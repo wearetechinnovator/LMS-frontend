@@ -155,11 +155,11 @@ function SimulatedBrowserFrame({ children, urlParams }) {
                     <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
                 </div>
                 <div className="flex-1 mx-4 h-6 bg-slate-100 border border-slate-200/20 rounded-lg flex items-center px-3 gap-2">
-                    <span className="material-symbols-outlined text-[12px] text-emerald-500 font-bold select-none">lock</span>
+                    <span className="material-symbols-outlined text-[18px]! text-emerald-500 font-bold select-none">lock</span>
                     <span className="text-[11px] text-slate-600 truncate font-medium select-all">
                         your-website.com/form-integration{urlParams ? `?${urlParams}` : ''}
                     </span>
-                    <span className="material-symbols-outlined text-[12px] text-slate-400 ml-auto select-none">refresh</span>
+
                 </div>
             </div>
             {children}
@@ -245,7 +245,7 @@ function AppearancePanel({ appearance, setAppearance, form }) {
             {/* Controls */}
             <div className="w-full lg:w-80 shrink-0 space-y-4">
                 {/* Theme Mode Toggles */}
-                <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2">
+                {/* <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Theme Preset</label>
                     <div className="grid grid-cols-2 gap-2">
                         <button
@@ -265,12 +265,12 @@ function AppearancePanel({ appearance, setAppearance, form }) {
                             Dark Theme
                         </button>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Colors Section */}
                 <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2.5">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[14px]">palette</span>
+                        <span className="material-symbols-outlined text-[18px]!">palette</span>
                         Colors
                     </p>
                     <div className="space-y-1.5 divide-y divide-slate-100">
@@ -286,7 +286,7 @@ function AppearancePanel({ appearance, setAppearance, form }) {
                 {/* Layout & Typography Section */}
                 <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[14px]">dashboard_customize</span>
+                        <span className="material-symbols-outlined text-[18px]!">dashboard_customize</span>
                         Shape & Layout
                     </p>
                     <SliderInput label="Card Border Radius" prop="borderRadius" min={0} max={24} />
@@ -311,7 +311,7 @@ function AppearancePanel({ appearance, setAppearance, form }) {
                 {/* Button & Shadow Section */}
                 <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[14px]">tune</span>
+                        <span className="material-symbols-outlined text-[18px]!">tune</span>
                         Button & Shadows
                     </p>
 
@@ -367,11 +367,8 @@ function AppearancePanel({ appearance, setAppearance, form }) {
             </div>
 
             {/* Live Mini Preview */}
-            <div className="flex-1 min-w-0 space-y-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">
-                    <span className="material-symbols-outlined text-[13px] text-primary">visibility</span>
-                    Real-time Visual Check
-                </div>
+            <div className="flex-1 min-w-0">
+                
                 <SimulatedBrowserFrame urlParams={buildAppearanceParams(appearance)}>
                     <div className="max-h-[480px] overflow-y-auto">
                         <LiveFormPreview form={form} appearance={appearance} />
@@ -440,10 +437,10 @@ function EmbedCodeConsole({
                         : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
                         }`}
                 >
-                    <span className="material-symbols-outlined text-[13px]">
+                    <span className="material-symbols-outlined text-[18px]!">
                         {copiedKey === 'iframe' ? 'check' : 'content_copy'}
                     </span>
-                    {copiedKey === 'iframe' ? 'Copied!' : 'Copy Code'}
+                    {/* {copiedKey === 'iframe' ? 'Copied!' : 'Copy Code'} */}
                 </button>
             </div>
 
@@ -487,8 +484,8 @@ function DirectShareLinkCard({ formUrl, onCopy, copiedKey }) {
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
                         }`}
                 >
-                    <span className="material-symbols-outlined text-[13px]">{copiedKey === 'link' ? 'check' : 'content_copy'}</span>
-                    {copiedKey === 'link' ? 'Copied!' : 'Copy'}
+                    <span className="material-symbols-outlined text-[18px]!">{copiedKey === 'link' ? 'check' : 'content_copy'}</span>
+                    {/* {copiedKey === 'link' ? 'Copied!' : 'Copy'} */}
                 </button>
 
                 <a
@@ -497,8 +494,8 @@ function DirectShareLinkCard({ formUrl, onCopy, copiedKey }) {
                     rel="noreferrer"
                     className="px-3 py-2.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-1.5 shrink-0"
                 >
-                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                    Open
+                    <span className="material-symbols-outlined text-[18px]!">open_in_new</span>
+
                 </a>
             </div>
         </div>
@@ -549,7 +546,7 @@ function QRCodeCard({ formUrl, formName }) {
                     onClick={handleDownload}
                     className="w-full py-2 text-xs font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                 >
-                    <span className="material-symbols-outlined text-[14px]">download</span>
+                    <span className="material-symbols-outlined text-[18px]!">download</span>
                     Download PNG
                 </button>
                 <button
@@ -559,7 +556,7 @@ function QRCodeCard({ formUrl, formName }) {
                         : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                         }`}
                 >
-                    <span className="material-symbols-outlined text-[14px]">{copied ? 'check' : 'link'}</span>
+                    <span className="material-symbols-outlined text-[18px]!">{copied ? 'check' : 'link'}</span>
                     {copied ? 'Copied URL' : 'Copy Form URL'}
                 </button>
             </div>
@@ -813,18 +810,18 @@ export default function FormEmbedPage() {
                         </div>
                         {selectedForm && (
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
-                                <span className="flex items-center gap-1 font-medium">
+                                {/* <span className="flex items-center gap-1 font-medium">
                                     <span className="material-symbols-outlined text-[14px] text-slate-400">fingerprint</span>
                                     ID: {selectedForm.id}
-                                </span>
-                                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                </span> */}
+                                {/* <span className="w-1 h-1 rounded-full bg-slate-300" /> */}
                                 <span className="flex items-center gap-1 font-medium">
-                                    <span className="material-symbols-outlined text-[14px] text-slate-400">dataset</span>
+                                    <span className="material-symbols-outlined text-[18px]! text-slate-400">dataset</span>
                                     {selectedForm.fields.length} fields
                                 </span>
                                 <span className="w-1 h-1 rounded-full bg-slate-300" />
                                 <span className="flex items-center gap-1 font-medium">
-                                    <span className="material-symbols-outlined text-[14px] text-slate-400">person</span>
+                                    <span className="material-symbols-outlined text-[18px]! text-slate-400">person</span>
                                     {selectedForm.responses != null ? selectedForm.responses.toLocaleString() : 0} responses
                                 </span>
                             </div>
@@ -834,9 +831,9 @@ export default function FormEmbedPage() {
                     <div className="shrink-0">
                         <Link
                             to="/admin/form-builder"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-250 text-xs font-semibold text-slate-700 hover:bg-slate-55 transition-colors shadow-sm cursor-pointer bg-white"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg  text-xs font-semibold text-slate-700 hover:bg-slate-55 transition-colors shadow-sm cursor-pointer bg-white"
                         >
-                            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                            <span className="material-symbols-outlined text-[18px]!">arrow_back</span>
                             Back to Forms
                         </Link>
                     </div>
@@ -847,7 +844,7 @@ export default function FormEmbedPage() {
                     {/* ── Left: Form Selector (Sidebar) ── */}
                     <div className="w-full lg:w-72 shrink-0 flex flex-col gap-3">
                         <div className="relative">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]!">search</span>
                             <input
                                 type="text"
                                 value={search}
@@ -877,7 +874,7 @@ export default function FormEmbedPage() {
                                         {isSelected && (
                                             <motion.div
                                                 layoutId="activeFormBorder"
-                                                className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-md"
+                                                className="absolute left-0 top-0 bottom-0 w-1 rounded-r-md"
                                                 transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                                             />
                                         )}
@@ -889,12 +886,12 @@ export default function FormEmbedPage() {
                                         </div>
                                         <div className="flex items-center gap-3 text-[10px] text-slate-500">
                                             <span className="flex items-center gap-1">
-                                                <span className="material-symbols-outlined text-[12px] text-slate-400">dataset</span>
+                                                <span className="material-symbols-outlined text-[18px]! text-slate-400">dataset</span>
                                                 {form.fields.length} fields
                                             </span>
                                             {form.responses != null && (
                                                 <span className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[12px] text-slate-400">person</span>
+                                                    <span className="material-symbols-outlined text-[18px]! text-slate-400">person</span>
                                                     {form.responses.toLocaleString()} responses
                                                 </span>
                                             )}
@@ -940,7 +937,7 @@ export default function FormEmbedPage() {
                             >
                                 {/* Segmented Control Tabs */}
                                 <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-                                    <div className="flex bg-slate-105 p-1 rounded-xl gap-1 relative select-none w-fit border border-slate-200/20">
+                                    <div className="flex bg-slate-100 p-1 rounded-xl gap-1 relative select-none w-fit border border-slate-200/20">
                                         {[
                                             { id: 'embed', icon: 'code', label: 'Embed Code' },
                                             { id: 'appearance', icon: 'palette', label: 'Appearance' },
@@ -1026,7 +1023,7 @@ export default function FormEmbedPage() {
                                             >
                                                 <div className="w-full">
                                                     <SimulatedBrowserFrame urlParams={buildAppearanceParams(appearance)}>
-                                                        <div className="min-h-[480px]">
+                                                        <div className="">
                                                             <LiveFormPreview form={selectedForm} appearance={appearance} />
                                                         </div>
                                                     </SimulatedBrowserFrame>
@@ -1045,16 +1042,16 @@ export default function FormEmbedPage() {
                 </div>
 
                 {/* Collapsible Info Accordion */}
-                <div className="border border-slate-200 rounded-xl bg-white mt-8 overflow-hidden shadow-sm">
+                <div className="border border-slate-200 rounded-xl bg-white mt-8 overflow-hidden shadow-sm ">
                     <button
                         onClick={() => setShowHowItWorks(!showHowItWorks)}
-                        className="w-full flex items-center justify-between p-4 text-xs font-bold text-slate-700 hover:bg-slate-50/50 transition-colors uppercase tracking-wider focus:outline-none"
+                        className="w-full flex items-center justify-between p-4 text-xs font-bold text-slate-700 hover:bg-slate-50/50 transition-colors uppercase tracking-wider focus:outline-none cursor-pointer"
                     >
-                        <span className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[16px] text-primary">help_outline</span>
+                        <span className="flex items-center gap-2 ">
+                            <span className="material-symbols-outlined text-[18px]! text-primary">help_outline</span>
                             How embedding works
                         </span>
-                        <span className={`material-symbols-outlined text-[18px] transition-transform duration-200 ${showHowItWorks ? 'rotate-180' : ''}`}>
+                        <span className={`material-symbols-outlined text-[18px]! transition-transform duration-200 ${showHowItWorks ? 'rotate-180' : ''}`}>
                             expand_more
                         </span>
                     </button>
@@ -1072,7 +1069,7 @@ export default function FormEmbedPage() {
                                     <ul className="list-disc pl-5 space-y-2">
                                         <li><strong>iFrame Code Embed:</strong> Copy the code snippet from the "Embed Code" card and insert it inside your site manager editor. If your site builder doesn't support auto-height resizing, configure absolute width and height attributes in the customization section.</li>
                                         <li><strong>Sharing Directly:</strong> Generate direct links or download high-quality PNG QR codes to distribute forms directly via emails, buttons, social links, or printed media.</li>
-                                        <li><strong>Capturing Leads:</strong> Every submission sent from your embedded forms gets validated and routed directly to the <Link to="/admin/all-leads" className="text-primary font-semibold hover:underline">All Leads</Link> dashboard in real-time.</li>
+                                        <li><strong>Capturing Leads:</strong> Every submission sent from your embedded forms gets validated and routed directly to the <Link to="http://localhost:5173/admin/leads" className="text-primary font-semibold hover:underline">All Leads</Link> dashboard in real-time.</li>
                                     </ul>
                                 </div>
                             </motion.div>

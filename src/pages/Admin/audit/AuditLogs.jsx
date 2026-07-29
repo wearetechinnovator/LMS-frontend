@@ -204,7 +204,7 @@ export default function AuditLogs() {
                     {/* Date select wrapper */}
                     <div className="flex items-center border border-outline-variant rounded bg-surface-container-lowest overflow-hidden h-8">
                         <div className="flex items-center px-2 text-on-surface-variant border-r border-outline-variant gap-1.5 h-full">
-                            <span className="material-symbols-outlined text-[15px]">calendar_today</span>
+                            <span className="material-symbols-outlined text-[15px]!">calendar_today</span>
                             <select
                                 value={selectedDateFilter}
                                 onChange={(e) => setSelectedDateFilter(e.target.value)}
@@ -212,7 +212,7 @@ export default function AuditLogs() {
                             >
                                 {dateFilters.map(df => <option key={df} value={df}>{df}</option>)}
                             </select>
-                            <span className="material-symbols-outlined text-[13px] pointer-events-none">expand_more</span>
+                            <span className="material-symbols-outlined text-[13px]! pointer-events-none">expand_more</span>
                         </div>
                         <button
                             onClick={() => setSelectedDateFilter('Custom Range')}
@@ -229,7 +229,7 @@ export default function AuditLogs() {
                         title="Reset Filters"
                         className="p-1.5 border border-outline-variant rounded hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center h-8 w-8 bg-surface-container-lowest"
                     >
-                        <span className="material-symbols-outlined text-[18px]">filter_list</span>
+                        <span className="material-symbols-outlined text-[18px]!">filter_list</span>
                     </button>
 
                     {/* Export CSV Button */}
@@ -241,7 +241,7 @@ export default function AuditLogs() {
             <div className="flex flex-col md:flex-row gap-3 items-center">
                 {/* Search Inputs */}
                 <div className="flex-1 relative w-full">
-                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-headline-md">search</span>
+                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-headline-md text-[18px]!">search</span>
                     <input
                         type="text"
                         placeholder="Search logs by user, entity, IP or change details..."
@@ -269,7 +269,7 @@ export default function AuditLogs() {
                             <option key={filter} value={filter}>{filter}</option>
                         ))}
                     </select>
-                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-headline-md">expand_more</span>
+                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-headline-md text-[18px]!">expand_more</span>
                 </div>
             </div>
 
@@ -410,7 +410,7 @@ export default function AuditLogs() {
                             className="p-1 rounded hover:bg-surface-container-lowest text-on-surface-variant transition-colors disabled:opacity-30 disabled:pointer-events-none"
                             title="Previous Page"
                         >
-                            <span className="material-symbols-outlined text-headline-md">chevron_left</span>
+                            <span className="material-symbols-outlined text-headline-md text-[18px]!">chevron_left</span>
                         </button>
 
                         <div className="flex gap-0.5">
@@ -439,7 +439,7 @@ export default function AuditLogs() {
                             className="p-1 rounded hover:bg-surface-container-lowest text-on-surface-variant transition-colors disabled:opacity-30 disabled:pointer-events-none"
                             title="Next Page"
                         >
-                            <span className="material-symbols-outlined text-headline-md">chevron_right</span>
+                            <span className="material-symbols-outlined text-headline-md text-[18px]!">chevron_right</span>
                         </button>
                     </div>
                 </div>
