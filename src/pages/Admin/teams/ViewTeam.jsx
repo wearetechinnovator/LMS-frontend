@@ -41,7 +41,7 @@ export default function ViewTeam({ departmentId, departmentName: propName, onBac
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${teamId}`, { headers })
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${teamId}`, { headers })
         if (response.ok) {
           const data = await response.json()
           setTeam(data)

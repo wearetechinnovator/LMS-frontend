@@ -7,7 +7,10 @@
     if (!target) return;
 
     // Determine the API base URL (Backend Port 5001)
-    const apiBase = "http://localhost:5001/api/v1";
+    const scriptSrc = script.src || '';
+    const apiBase = scriptSrc.includes('localhost') || scriptSrc.includes('127.0.0.1')
+        ? "http://localhost:5001/api/v1"
+        : "https://lms-backend-xt66.onrender.com/api/v1";
 
     // Fetch form
     fetch(`${apiBase}/form/public/get-form/${formId}`)

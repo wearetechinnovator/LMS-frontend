@@ -37,7 +37,7 @@ export default function Teams() {
 
     try {
       // Fetch teams
-      const teamRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team`, { headers })
+      const teamRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team`, { headers })
       if (teamRes.ok) {
         const data = await teamRes.json()
         setTeams(data)
@@ -46,7 +46,7 @@ export default function Teams() {
       }
 
       // Fetch users for invitation checklist
-      const userRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/user/get-users`, { headers })
+      const userRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/user/get-users`, { headers })
       if (userRes.ok) {
         const data = await userRes.json()
         setUsers(data)
@@ -74,7 +74,7 @@ export default function Teams() {
 
     const token = localStorage.getItem('authToken')
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/create`, {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ export default function Teams() {
 
     try {
       // Get detailed team members
-      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${team.id}`, { headers })
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${team.id}`, { headers })
       if (response.ok) {
         const data = await response.json()
         setSelectedTeam(team)
@@ -135,7 +135,7 @@ export default function Teams() {
 
     const token = localStorage.getItem('authToken')
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${selectedTeam.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${selectedTeam.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -170,7 +170,7 @@ export default function Teams() {
 
     const token = localStorage.getItem('authToken')
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${teamId}`, {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${teamId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

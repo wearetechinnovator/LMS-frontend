@@ -44,7 +44,7 @@ export default function ManageTeam({ departmentId, departmentName: propName, onB
 
     try {
       // 1. Fetch team details & existing members
-      const teamRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${teamId}`, { headers })
+      const teamRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${teamId}`, { headers })
       if (teamRes.ok) {
         const data = await teamRes.json()
         setTeam(data)
@@ -54,7 +54,7 @@ export default function ManageTeam({ departmentId, departmentName: propName, onB
       }
 
       // 2. Fetch all system users to select from when adding members
-      const userRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/user/get-users`, { headers })
+      const userRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/user/get-users`, { headers })
       if (userRes.ok) {
         const data = await userRes.json()
         setUsers(data)
@@ -75,7 +75,7 @@ export default function ManageTeam({ departmentId, departmentName: propName, onB
   const saveMembershipUpdates = async (updatedMembers) => {
     const token = localStorage.getItem('authToken')
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${teamId}`, {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${teamId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function ManageTeam({ departmentId, departmentName: propName, onB
       if (response.ok) {
         showToast('Membership updated successfully')
         // Refetch to ensure data integrity
-        const teamRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/team/${teamId}`, {
+        const teamRes = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/team/${teamId}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         })
         if (teamRes.ok) {

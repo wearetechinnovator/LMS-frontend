@@ -462,7 +462,7 @@ export default function FormBuilder({
 
     const loadCaptcha = async (fieldId, captchaType) => {
         try {
-            const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1';
+            const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1';
             const response = await fetch(`${API_BASE_URL}/form/public/captcha/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -51,7 +51,7 @@ export default function ChatBot() {
 
         try {
             const token = localStorage.getItem('authToken');
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'http://localhost:5001/api/v1'}/chat`, {
+            const response = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

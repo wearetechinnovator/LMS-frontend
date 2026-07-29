@@ -1069,7 +1069,7 @@ export default function FormEmbedPage() {
                                     <ul className="list-disc pl-5 space-y-2">
                                         <li><strong>iFrame Code Embed:</strong> Copy the code snippet from the "Embed Code" card and insert it inside your site manager editor. If your site builder doesn't support auto-height resizing, configure absolute width and height attributes in the customization section.</li>
                                         <li><strong>Sharing Directly:</strong> Generate direct links or download high-quality PNG QR codes to distribute forms directly via emails, buttons, social links, or printed media.</li>
-                                        <li><strong>Capturing Leads:</strong> Every submission sent from your embedded forms gets validated and routed directly to the <Link to="http://localhost:5173/admin/leads" className="text-primary font-semibold hover:underline">All Leads</Link> dashboard in real-time.</li>
+                                        <li><strong>Capturing Leads:</strong> Every submission sent from your embedded forms gets validated and routed directly to the <Link to="/admin/leads" className="text-primary font-semibold hover:underline">All Leads</Link> dashboard in real-time.</li>
                                     </ul>
                                 </div>
                             </motion.div>
