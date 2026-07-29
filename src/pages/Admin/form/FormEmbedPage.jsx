@@ -87,9 +87,9 @@ function LiveFormPreview({ form, appearance }) {
 
     return (
         <div style={{ background: a.onlyBody ? 'transparent' : a.bgColor, padding: a.onlyBody ? '0px' : `${a.padding}px`, ...fontStyle }} className="w-full h-full flex items-center justify-center">
-            <div style={{ background: a.cardBg, borderRadius: `${a.borderRadius}px`, maxWidth: `${a.maxWidth}px`, boxShadow: cardShadow }} className="w-full border border-slate-105 overflow-hidden transition-all duration-200">
+            <div style={{ background: a.onlyBody ? 'transparent' : a.cardBg, borderRadius: a.onlyBody ? '0px' : `${a.borderRadius}px`, maxWidth: `${a.maxWidth}px`, boxShadow: a.onlyBody ? 'none' : cardShadow, border: a.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)' }} className="w-full overflow-hidden transition-all duration-200">
                 {!a.hideHeader && (
-                    <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(0,0,0,0.04)', background: `${a.cardBg}` }}>
+                    <div style={{ padding: '20px 24px 16px', borderBottom: a.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.04)', background: a.onlyBody ? 'transparent' : a.cardBg }}>
                         <h3 style={{ color: a.textColor }} className="text-sm font-bold">{form.name}</h3>
                         <p style={{ color: a.labelColor }} className="text-[11px] mt-1">Please fill out the form below.</p>
                     </div>

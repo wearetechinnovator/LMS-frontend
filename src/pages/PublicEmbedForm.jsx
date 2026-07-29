@@ -616,7 +616,15 @@ export default function PublicEmbedForm() {
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
-                <div className="max-w-md w-full border border-slate-200 p-6 shadow-sm text-center space-y-4" style={{ background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
+                <div
+                    className="max-w-md w-full p-6 text-center space-y-4"
+                    style={{
+                        background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
+                        borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`,
+                        border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)',
+                        boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                >
                     <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
                         <Icon name="warning" size={24} />
                     </div>
@@ -635,8 +643,13 @@ export default function PublicEmbedForm() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="max-w-md w-full border border-slate-200 p-8 shadow-sm text-center space-y-5"
-                    style={{ background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}
+                    className="max-w-md w-full p-8 text-center space-y-5"
+                    style={{
+                        background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
+                        borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`,
+                        border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)',
+                        boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
+                    }}
                 >
                     <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner border border-emerald-100">
                         <Icon name="check" size={32} />
@@ -654,9 +667,15 @@ export default function PublicEmbedForm() {
 
     return (
         <div className="min-h-screen flex items-center justify-center" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, padding: appearance.onlyBody ? '0px' : `${appearance.padding}px`, ...fontStyle }}>
-            <div className="w-full border border-slate-202 shadow-sm overflow-hidden" style={{ maxWidth: `${appearance.maxWidth}px`, background: appearance.cardBg, borderRadius: `${appearance.borderRadius}px` }}>
+            <div className="w-full overflow-hidden transition-all duration-200" style={{
+                maxWidth: `${appearance.maxWidth}px`,
+                background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
+                borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`,
+                border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)',
+                boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
+            }}>
                 {!appearance.hideHeader && (
-                    <div className="px-6 py-5 border-b border-slate-100" style={{ background: appearance.cardBg }}>
+                    <div className="px-6 py-5" style={{ background: appearance.onlyBody ? 'transparent' : appearance.cardBg, borderBottom: appearance.onlyBody ? 'none' : '1px solid #f1f5f9' }}>
                         <h2 className="font-extrabold text-lg" style={{ color: appearance.textColor }}>{form.name}</h2>
                         <p className="text-xs mt-1" style={{ color: appearance.labelColor }}>Please fill out the form below.</p>
                     </div>
