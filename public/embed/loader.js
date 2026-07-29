@@ -71,6 +71,8 @@
                     </label>`;
                 });
                 html += `</div>`;
+            } else if (field.type === 'textarea') {
+                html += `<textarea name="${field.label}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''} rows="3" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #334155; outline: none; box-sizing: border-box; width: 100%; resize: none; font-family: inherit;"></textarea>`;
             } else {
                 const inputType = field.type === 'phone' ? 'tel' : field.type === 'email' ? 'email' : 'text';
                 html += `<input type="${inputType}" name="${field.label}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''} style="height: 38px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #334155; outline: none; box-sizing: border-box; width: 100%;" />`;

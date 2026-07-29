@@ -640,6 +640,7 @@ export default function FormBuilder({
         { type: 'text', label: 'Name', icon: 'text_fields' },
         { type: 'email', label: 'Email', icon: 'mail' },
         { type: 'phone', label: 'Phone', icon: 'phone' },
+        { type: 'textarea', label: 'Text Area', icon: 'notes' },
         { type: 'date', label: 'Date Picker', icon: 'calendar_today' },
         { type: 'select', label: 'Drop Box', icon: 'arrow_drop_down' },
         { type: 'radio', label: 'Radio Button', icon: 'radio_button_checked' },
@@ -701,7 +702,7 @@ export default function FormBuilder({
         const newField = {
             id: newId,
             type: type,
-            label: type === 'captcha' ? 'Verify you are human' : `New ${type === 'text' ? 'Field' : type}`,
+            label: type === 'captcha' ? 'Verify you are human' : type === 'textarea' ? 'New Text Area' : `New ${type === 'text' ? 'Field' : type}`,
             required: type === 'captcha' ? true : false,
             placeholder: '',
             helperText: '',
@@ -1200,24 +1201,6 @@ export default function FormBuilder({
                                                             label: 'Copy iFrame Code',
                                                             icon: 'devices',
                                                             code: `<iframe src="${window.location.origin}/embed/form/${initialId}" width="100%" height="800" frameborder="0" style="border: none; border-radius: 3px;"></iframe>`
-                                                        },
-                                                        {
-                                                            type: 'script',
-                                                            label: 'Copy Script Code',
-                                                            icon: 'code',
-                                                            code: `<div id="lms-form-${initialId}"></div>\n<script src="${window.location.origin}/embed/js/form-${initialId}.js" data-form-id="${initialId}"></script>`
-                                                        },
-                                                        {
-                                                            type: 'widget',
-                                                            label: 'Copy Widget Code',
-                                                            icon: 'smart_toy',
-                                                            code: `<script>\nwindow.LMSFormWidget = {\n  formId: "${initialId}",\n  containerId: 'form-widget-${initialId}',\n  apiUrl: '${window.location.origin}/api'\n}\n</script>\n<div id="form-widget-${initialId}"></div>\n<script src="${window.location.origin}/embed/widget/form-widget.js"></script>`
-                                                        },
-                                                        {
-                                                            type: 'api',
-                                                            label: 'Copy API Code',
-                                                            icon: 'api',
-                                                            code: `fetch('${window.location.origin}/api/forms/${initialId}/embed', {\n  method: 'GET',\n  headers: { 'Content-Type': 'application/json' }\n})\n.then(response => response.json())\n.then(data => {\n  document.getElementById('form-container').innerHTML = data.html\n})\n.catch(error => console.error('Error:', error))`
                                                         }
                                                     ].map((opt) => (
                                                         <button
@@ -1557,6 +1540,13 @@ export default function FormBuilder({
                                                             Limit: {field.minFiles || 1} to {field.maxFiles || 1} file(s) ({field.minFileSize || 0.1}MB - {field.maxFileSize || 10}MB)
                                                         </div>
                                                     </div>
+                                                ) : field.type === 'textarea' ? (
+                                                    <textarea
+                                                        placeholder={field.placeholder}
+                                                        disabled
+                                                        rows={3}
+                                                        className="w-full px-3 py-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input resize-none"
+                                                    />
                                                 ) : (
                                                     <>
                                                         <input
@@ -1671,9 +1661,9 @@ export default function FormBuilder({
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-2.5 bg-surface-container border-b border-outline-variant flex items-center gap-1.5 text-primary text-[10px] settings-type-header">
                             <span className="material-symbols-outlined text-[14px]">
-                                {selectedField.type === 'phone' ? 'phone' : selectedField.type === 'date' ? 'calendar_today' : 'text_fields'}
+                                {selectedField.type === 'phone' ? 'phone' : selectedField.type === 'date' ? 'calendar_today' : selectedField.type === 'textarea' ? 'notes' : 'text_fields'}
                             </span>
-                            {selectedField.type.charAt(0).toUpperCase() + selectedField.type.slice(1)}
+                            {selectedField.type === 'textarea' ? 'Text Area' : selectedField.type.charAt(0).toUpperCase() + selectedField.type.slice(1)}
                         </div>
 
                         <div className="p-3 space-y-2.5">
@@ -2889,6 +2879,14 @@ export default function FormBuilder({
                                                                         </>
                                                                     )}
                                                                 </div>
+                                                            ) : field.type === 'textarea' ? (
+                                                                <textarea
+                                                                    placeholder={field.placeholder}
+                                                                    value={previewValues[field.id] || ''}
+                                                                    onChange={(e) => setPreviewValues({ ...previewValues, [field.id]: e.target.value })}
+                                                                    rows={3}
+                                                                    className="w-full px-2 py-1.5 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px] resize-none"
+                                                                />
                                                             ) : (
                                                                 <>
                                                                     <input

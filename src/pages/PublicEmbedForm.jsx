@@ -700,6 +700,16 @@ export default function PublicEmbedForm() {
                                         </div>
                                     )}
                                 </div>
+                            ) : field.type === 'textarea' ? (
+                                <textarea
+                                    value={vals[field.id] || ''}
+                                    onChange={e => setVals({ ...vals, [field.id]: e.target.value })}
+                                    placeholder={field.placeholder || ''}
+                                    required={field.required}
+                                    rows={3}
+                                    className="w-full px-3.5 py-2.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300 resize-none"
+                                    style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
+                                />
                             ) : (
                                 <input
                                     type={field.type === 'email' ? 'email' : 'text'}
