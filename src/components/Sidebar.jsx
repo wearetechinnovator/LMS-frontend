@@ -7,6 +7,19 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
 
   const activeUsername = username || userName || localStorage.getItem('username') || 'ADMIN'
   const companyName = localStorage.getItem('companyName') || ''
+  const [companyLogo, setCompanyLogo] = useState(() => localStorage.getItem('companyLogo') || '')
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setCompanyLogo(localStorage.getItem('companyLogo') || '')
+    }
+    window.addEventListener('profile-updated', handleProfileUpdate)
+    window.addEventListener('storage', handleProfileUpdate)
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate)
+      window.removeEventListener('storage', handleProfileUpdate)
+    }
+  }, [])
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -94,7 +107,39 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
       >
         <div className="sidebar-header">
           <div className={`header-content ${sidebarCollapsed ? 'header-content-collapsed' : 'header-content-expanded'}`}>
-            {!sidebarCollapsed && (
+            {sidebarCollapsed ? (
+              <div className="collapsed-logo-icon" title={companyName || activeUsername}>
+                {companyLogo ? (
+                  <img
+                    src={companyLogo}
+                    alt="Company"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                      border: '1px solid #e2e8f0'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    backgroundColor: '#2563eb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 800,
+                    letterSpacing: '0.5px'
+                  }}>
+                    {companyName ? companyName.charAt(0).toUpperCase() : activeUsername.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            ) : (
               <div className="logo-info">
                 {companyName ? (
                   <>

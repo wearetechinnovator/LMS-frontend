@@ -35,7 +35,7 @@ export default function CompanyProfile({ data, onChange }) {
         transition={{ delay: 0.1 }}
       >
         <h2 className="section-title">
-          <span className="material-symbols-outlined mr-2 text-primary text-[20px]">cloud_upload</span>
+          <span className="material-symbols-outlined mr-2 text-primary text-[20px]!">cloud_upload</span>
           Organization Logo
         </h2>
         <div className="upload-zone" onClick={() => document.getElementById('logo-file-input').click()}>
@@ -156,7 +156,7 @@ export default function CompanyProfile({ data, onChange }) {
           type="tel"
           value={data.supportPhone}
           onChange={(e) => onChange('supportPhone', e.target.value)}
-          placeholder="+1 (555) 000-0000"
+          placeholder="+91 000 000 0000"
           className="form-input"
         />
       </motion.div>

@@ -22,6 +22,7 @@ const AdminAuditLogsPage = React.lazy(() => import('../pages/Admin/audit/AuditLo
 const AdminLmsSettingsPage = React.lazy(() => import('../pages/Admin/settings/LmsSettings'))
 
 const AdminFormEmbed = React.lazy(() => import('../pages/Admin/form/FormEmbedPage'))
+const AdminMetaAdsManager = React.lazy(() => import('../pages/Admin/meta-ads/MetaAdsManager'))
 
 const AdminAnalyticsPage = React.lazy(() => import('../pages/Admin/analysis/Analysis'))
 
@@ -47,6 +48,7 @@ const adminNavItems = [
   { id: 'audit-logs', label: 'Audit Logs', icon: 'clipboard_clock', path: '/admin/audit-logs' },
   { id: 'roles', label: 'Roles', icon: 'user_shield', path: '/admin/roles' },
   { id: 'form-embed', label: 'Form Embed', icon: 'paperclip', path: '/admin/form-embed' },
+  { id: 'meta-ads', label: 'Meta Ads Manager', icon: 'ads_click', path: '/admin/meta-ads' },
 ]
 
 export const RoleRoutes = ({ username, handleLogout }) => {
@@ -56,7 +58,7 @@ export const RoleRoutes = ({ username, handleLogout }) => {
     if (item.id === 'dashboard' || item.id === 'analytics') {
       return hasPermission('dashboard')
     }
-    if (item.id === 'form-builder' || item.id === 'form-embed') {
+    if (item.id === 'form-builder' || item.id === 'form-embed' || item.id === 'meta-ads') {
       return hasPermission('forms_view')
     }
     if (item.id === 'leads') {
@@ -122,6 +124,11 @@ export const RoleRoutes = ({ username, handleLogout }) => {
         <Route path="form-embed" element={
           <PermissionGate permission="forms_view">
             <AdminFormEmbed />
+          </PermissionGate>
+        } />
+        <Route path="meta-ads" element={
+          <PermissionGate permission="forms_view">
+            <AdminMetaAdsManager />
           </PermissionGate>
         } />
         <Route path="teams" element={

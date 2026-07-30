@@ -104,15 +104,25 @@ export default function OnboardingPage({ username, onLogout, onComplete }) {
             Previous
           </button>
 
-          <button
-            onClick={handleNextStep}
-            className="onboarding-btn onboarding-btn-next"
-          >
-            {currentStep === 2 ? 'Complete Setup' : 'Next Step'}
-            <span className="material-symbols-outlined btn-icon-right">
-              {currentStep === 2 ? 'check_circle' : 'arrow_forward'}
-            </span>
-          </button>
+          <div className="onboarding-footer-right">
+            <button
+              onClick={() => onComplete && onComplete(null, null)}
+              className="onboarding-btn onboarding-btn-skip"
+            >
+              Skip
+              <span className="material-symbols-outlined btn-icon-right">fast_forward</span>
+            </button>
+
+            <button
+              onClick={handleNextStep}
+              className="onboarding-btn onboarding-btn-next"
+            >
+              {currentStep === 2 ? 'Complete Setup' : 'Next Step'}
+              <span className="material-symbols-outlined btn-icon-right">
+                {currentStep === 2 ? 'check_circle' : 'arrow_forward'}
+              </span>
+            </button>
+          </div>
         </div>
       </main>
     </div>

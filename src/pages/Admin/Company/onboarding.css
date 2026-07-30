@@ -253,6 +253,25 @@
         font-size: 14px;
     }
 
+    .onboarding-footer-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .onboarding-btn-skip {
+        padding: 0 0.75rem;
+        border: 1px solid var(--border-outline-variant);
+        background-color: var(--bg-surface);
+        color: var(--text-on-surface-variant);
+        font-weight: 600;
+    }
+
+    .onboarding-btn-skip:hover {
+        background-color: var(--bg-surface-container);
+        color: var(--text-on-surface);
+    }
+
 
 }
 
