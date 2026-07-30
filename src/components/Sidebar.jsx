@@ -105,17 +105,32 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="sidebar-header">
-          <div className={`header-content ${sidebarCollapsed ? 'header-content-collapsed' : 'header-content-expanded'}`}>
+        <div className="sidebar-header" style={sidebarCollapsed ? { height: 'auto', padding: '12px 0' } : {}}>
+          <div className={`header-content ${sidebarCollapsed ? 'header-content-collapsed' : 'header-content-expanded'}`}
+            style={sidebarCollapsed ? { flexDirection: 'column', gap: 0 } : {}}
+          >
             {sidebarCollapsed ? (
-              <div className="collapsed-logo-icon" title={companyName || activeUsername}>
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="collapsed-logo-icon"
+                title={companyName || activeUsername}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
                 {companyLogo ? (
                   <img
                     src={companyLogo}
                     alt="Company"
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       borderRadius: 8,
                       objectFit: 'cover',
                       border: '1px solid #e2e8f0'
@@ -123,48 +138,49 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                   />
                 ) : (
                   <div style={{
-                    width: 32,
-                    height: 32,
+                    width: 34,
+                    height: 34,
                     borderRadius: 8,
                     backgroundColor: '#2563eb',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#fff',
-                    fontSize: 14,
-                    fontWeight: 800,
-                    letterSpacing: '0.5px'
+                    fontSize: 15,
+                    fontWeight: 800
                   }}>
                     {companyName ? companyName.charAt(0).toUpperCase() : activeUsername.charAt(0).toUpperCase()}
                   </div>
                 )}
-              </div>
+              </button>
             ) : (
-              <div className="logo-info">
-                {companyName ? (
-                  <>
-                    <h1 className="truncate font-bold text-[14px]" style={{ maxWidth: '145px' }} title={companyName}>
-                      {companyName}
-                    </h1>
-                    <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }} className="truncate">
-                      {activeUsername} • {roleName}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h1 className="truncate" style={{ maxWidth: '120px' }}>{activeUsername}</h1>
-                    <p>{roleName}</p>
-                  </>
-                )}
-              </div>
+              <>
+                <div className="logo-info">
+                  {companyName ? (
+                    <>
+                      <h1 className="truncate font-bold text-[14px]" style={{ maxWidth: '145px' }} title={companyName}>
+                        {companyName}
+                      </h1>
+                      <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }} className="truncate">
+                        {activeUsername} • {roleName}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h1 className="truncate" style={{ maxWidth: '120px' }}>{activeUsername}</h1>
+                      <p>{roleName}</p>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="toggle-btn"
+                  title="Collapse"
+                >
+                  <Icon name="chevron_left" size={18} />
+                </button>
+              </>
             )}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="toggle-btn"
-              title={sidebarCollapsed ? 'Expand' : 'Collapse'}
-            >
-              <Icon name={sidebarCollapsed ? 'chevron_right' : 'chevron_left'} size={18} />
-            </button>
           </div>
         </div>
 
