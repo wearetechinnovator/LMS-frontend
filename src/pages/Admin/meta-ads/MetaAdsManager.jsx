@@ -115,9 +115,9 @@ export default function MetaAdsManager() {
     const [aiQuestionIndex, setAiQuestionIndex] = useState(0)
     const [chatIsTyping, setChatIsTyping] = useState(false)
     const [integrations, setIntegrations] = useState({
-        meta: { connected: true, accountName: 'Poweva Store Page', adsAccountId: 'ACT-9852-1085' },
-        google: { connected: false, accountName: null, adsAccountId: null },
-        tiktok: { connected: false, accountName: null, adsAccountId: null },
+        meta: { connected: true, accountName: 'Poweva Store', adsAccountId: 'ACT-9852-1085', pagesCount: 3, adAccountsCount: 4 },
+        google: { connected: true, accountName: 'Google Ads Search Channel', adsAccountId: '938-123-4567', campaignsCount: 2, adAccountsCount: 2 },
+        tiktok: { connected: true, needsAttention: true, accountName: 'TikTok Business Account', adsAccountId: 'ACT-5829-9852', expiresLabel: 'Expires in 8 days', adAccountsCount: 1 },
         linkedin: { connected: false, accountName: null, adsAccountId: null }
     })
     const [authModalPlatform, setAuthModalPlatform] = useState(null) // null | 'meta' | 'google' | 'tiktok' | 'linkedin'
@@ -417,57 +417,209 @@ export default function MetaAdsManager() {
 
     const completionPct = getCompletionPercentage()
 
+    // Helper to render rating dots
+    const renderDots = (filled, colorClass = 'bg-blue-600') => {
+        return (
+            <div className="flex gap-1 justify-center">
+                {[...Array(5)].map((_, i) => (
+                    <span key={i} className={`w-1.5 h-1.5 rounded-full ${i < filled ? colorClass : 'bg-slate-200'}`} />
+                ))}
+            </div>
+        )
+    }
+
+    const connectedCount = Object.values(integrations).filter(item => item.connected && !item.needsAttention).length;
+
     return creationMode === 'select' ? (
-        <div className="meta-ads-workspace w-full h-[calc(100vh-44px)] flex flex-col overflow-y-auto text-slate-800 bg-[#f8fafc] items-center justify-center p-8 select-none">
-            <div className="max-w-3xl w-full text-center space-y-8 animate-fadeIn">
-                <div className="space-y-2">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto text-blue-600 mb-2 animate-pulse">
-                        <span className="material-symbols-outlined text-[24px]">campaign</span>
+        <div className="meta-ads-workspace w-full h-full flex flex-col overflow-y-auto text-slate-800 bg-[#f8fafc] p-8 select-none">
+            <div className="max-w-6xl w-full mx-auto space-y-8 animate-fadeIn py-6">
+                
+                {/* ── HEADER ── */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+                    <div className="space-y-3 z-10 text-left">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-2xs shrink-0">
+                                <span className="material-symbols-outlined text-[26px]! font-black">campaign</span>
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-black text-slate-905 tracking-tight leading-none">Campaign Creation</h1>
+                                <p className="text-[10px] text-slate-450 font-bold mt-1.5 uppercase tracking-wider">Choose your approach</p>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed max-w-xl">
+                            Choose how you want to build and configure your marketing campaign. You can create it manually with full control or let AI do the heavy lifting.
+                        </p>
+                        <div className="pt-1">
+                            <button 
+                                onClick={() => {
+                                    const el = document.getElementById('compares-table');
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-bold hover:underline transition-colors cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-[15px]! font-black">article</span>
+                                Not sure which to choose? Compare options
+                                <span className="material-symbols-outlined text-[13px]! font-black">arrow_right_alt</span>
+                            </button>
+                        </div>
                     </div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Campaign Creation</h1>
-                    <p className="text-xs text-slate-400 font-medium">Choose how you want to build and configure your marketing campaign.</p>
+                    
+                    {/* Right decorative chart */}
+                    <div className="hidden md:flex items-center gap-6 relative select-none pr-4 shrink-0 z-10">
+                        <div className="w-48 h-24 bg-gradient-to-tr from-blue-50 to-indigo-50 border border-slate-200/60 rounded-2xl p-3 flex flex-col justify-between shadow-2xs relative rotate-2 hover:rotate-0 transition-transform">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest bg-blue-100/50 px-2 py-0.5 rounded-md">AI Insights</span>
+                                <span className="material-symbols-outlined text-purple-500 text-[15px]! font-black animate-pulse">auto_awesome</span>
+                            </div>
+                            <div className="flex items-end gap-1.5 h-12 pt-2">
+                                <div className="w-2.5 h-6 bg-blue-300 rounded-xs animate-pulse" />
+                                <div className="w-2.5 h-10 bg-indigo-400 rounded-sm animate-pulse delay-75" />
+                                <div className="w-2.5 h-8 bg-blue-500 rounded-sm animate-pulse delay-150" />
+                                <div className="w-2.5 h-12 bg-indigo-600 rounded-sm animate-pulse delay-200" />
+                                <div className="flex-1 text-right text-[11px] font-black text-slate-800 pr-1 pb-1">84% <span className="text-[8px] text-emerald-600 font-bold block">+12%</span></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 pt-4">
-                    {/* Option 1: Manual configuration */}
-                    <div className="bg-white border border-slate-200 hover:border-blue-500 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center space-y-4 group">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center transition-all group-hover:scale-110">
-                            <span className="material-symbols-outlined text-[22px]! font-black">edit_note</span>
+                {/* ── CARD SELECTION SECTION ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Option 1: Create Manually */}
+                    <div className="bg-white border-2 border-blue-600 rounded-3xl p-6 shadow-sm relative flex flex-col justify-between space-y-6 text-left group">
+                        <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                            <span className="material-symbols-outlined text-[16px]! font-black">check</span>
                         </div>
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-extrabold text-slate-800">Create Manually</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Step-by-step Setup Wizard</p>
+                        
+                        <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-4 flex-1">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-[24px]! font-black">edit_note</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-extrabold text-slate-800">Create Manually</h3>
+                                        <p className="text-[9px] text-blue-600 font-bold uppercase tracking-wider">Step-by-step Setup Wizard</p>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                                    Configure every detail of your campaign manually with full control and advanced options.
+                                </p>
+                                
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
+                                    {[
+                                        'Full campaign control',
+                                        'Custom Budget & schedule',
+                                        'Advanced targeting',
+                                        'Manual optimization'
+                                    ].map(f => (
+                                        <div key={f} className="flex items-center gap-1.5 text-[10px] text-slate-600 font-bold">
+                                            <span className="material-symbols-outlined text-[13px]! text-blue-500 font-black">check</span>
+                                            <span>{f}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* Miniature visual */}
+                            <div className="hidden lg:block w-32 h-28 bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 relative select-none shrink-0 overflow-hidden shadow-2xs">
+                                <div className="h-3 w-8 bg-blue-100 rounded-xs mb-2" />
+                                <div className="space-y-1.5">
+                                    <div className="h-1.5 w-full bg-slate-200 rounded-full" />
+                                    <div className="h-1.5 w-10/12 bg-slate-200 rounded-full" />
+                                    <div className="h-4 w-full bg-white border border-slate-200 rounded-xs flex items-center px-1">
+                                        <div className="h-1 w-6 bg-slate-350 rounded-full" />
+                                    </div>
+                                    <div className="flex gap-1.5 pt-1">
+                                        <div className="h-3 w-7 bg-blue-600 rounded-xs" />
+                                        <div className="h-3 w-7 bg-slate-200 rounded-xs" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-[10.5px] text-slate-400 font-medium leading-relaxed max-w-[240px]">
-                            Configure objective formats, target locations, gender ranges, budgets, and placement parameters manually with full control.
-                        </p>
-                        <div className="pt-2 w-full">
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/50">
+                                <span className="material-symbols-outlined text-[14px]! text-slate-450 font-black">schedule</span>
+                                <span className="text-[10px] text-slate-550 font-bold">Estimated time: <span className="text-slate-700 font-black">2 - 5 min</span></span>
+                            </div>
                             <button
                                 onClick={() => {
                                     setCreationMode('manual')
                                     setActiveStep(1)
                                     triggerToast("Manual campaign mode activated.")
                                 }}
-                                className="w-full py-2 border border-slate-200 group-hover:border-blue-500 group-hover:bg-blue-600 group-hover:text-white text-slate-700 text-[11px] font-extrabold rounded-xl transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black rounded-xl transition-all cursor-pointer shadow-xs hover:shadow-md hover:translate-x-0.5"
                             >
                                 Configure Manually
+                                <span className="material-symbols-outlined text-[13px]! font-black">arrow_right_alt</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* Option 2: AI builder */}
-                    <div className="bg-white border border-slate-200 hover:border-blue-500 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center space-y-4 group">
-                        <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center transition-all group-hover:scale-110">
-                            <span className="material-symbols-outlined text-[22px]! font-black">auto_awesome</span>
+                    {/* Option 2: Create with AI */}
+                    <div className="bg-white border border-slate-200 hover:border-purple-300 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative flex flex-col justify-between space-y-6 text-left group">
+                        <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-4 flex-1">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-[24px]! font-black">auto_awesome</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-extrabold text-slate-800">Create with AI</h3>
+                                        <p className="text-[9px] text-purple-600 font-bold uppercase tracking-wider">Conversational AI Builder</p>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                                    Answer a few questions and our AI will build an optimized campaign for you.
+                                </p>
+                                
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
+                                    {[
+                                        'AI audience suggestions',
+                                        'Creative ideas',
+                                        'Budget recommendations',
+                                        'Targeting optimization'
+                                    ].map(f => (
+                                        <div key={f} className="flex items-center gap-1.5 text-[10px] text-slate-600 font-bold">
+                                            <span className="material-symbols-outlined text-[13px]! text-purple-500 font-black">check</span>
+                                            <span>{f}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* Robot visual */}
+                            <div className="hidden lg:block w-32 h-28 relative select-none shrink-0 overflow-hidden">
+                                <svg className="w-full h-full animate-bounce" style={{ animationDuration: '3s' }} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g transform="translate(10, 5)">
+                                        <rect x="25" y="45" width="30" height="25" rx="8" fill="#F3E8FF" stroke="#A78BFA" strokeWidth="2" />
+                                        <rect x="33" y="52" width="14" height="10" rx="3" fill="#E9D5FF" />
+                                        <circle cx="40" cy="57" r="2" fill="#7C3AED" />
+                                        
+                                        <rect x="20" y="15" width="40" height="25" rx="10" fill="#E8EDFF" stroke="#3B82F6" strokeWidth="2.5" />
+                                        <rect x="28" y="22" width="24" height="10" rx="5" fill="#1E293B" />
+                                        <circle cx="34" cy="27" r="2.5" fill="#38BDF8" className="animate-pulse" />
+                                        <circle cx="46" cy="27" r="2.5" fill="#38BDF8" className="animate-pulse" />
+                                        
+                                        <line x1="40" y1="15" x2="40" y2="8" stroke="#3B82F6" strokeWidth="2.5" />
+                                        <circle cx="40" cy="7" r="3.5" fill="#F43F5E" className="animate-pulse" />
+                                        <rect x="16" y="23" width="4" height="8" rx="1" fill="#94A3B8" />
+                                        <rect x="60" y="23" width="4" height="8" rx="1" fill="#94A3B8" />
+                                        
+                                        <path d="M 25,52 Q 15,55 18,65" stroke="#A78BFA" strokeWidth="2.5" strokeLinecap="round" />
+                                        <path d="M 55,52 Q 65,55 62,65" stroke="#A78BFA" strokeWidth="2.5" strokeLinecap="round" />
+                                    </g>
+                                </svg>
+                            </div>
                         </div>
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-extrabold text-slate-800">Create with AI</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Conversational AI Builder</p>
-                        </div>
-                        <p className="text-[10.5px] text-slate-400 font-medium leading-relaxed max-w-[240px]">
-                            Answer simple questions about your campaign's target, goals, and budget to generate a tailored configuration automatically.
-                        </p>
-                        <div className="pt-2 w-full">
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/50">
+                                <span className="material-symbols-outlined text-[14px]! text-slate-450 font-black">schedule</span>
+                                <span className="text-[10px] text-slate-555 font-bold">Estimated time: <span className="text-slate-700 font-black">45 sec</span></span>
+                            </div>
                             <button
                                 onClick={() => {
                                     setCreationMode('ai')
@@ -477,107 +629,370 @@ export default function MetaAdsManager() {
                                     ])
                                     triggerToast("AI campaign mode activated.")
                                 }}
-                                className="w-full py-2 border border-slate-200 group-hover:border-blue-500 group-hover:bg-blue-600 group-hover:text-white text-slate-700 text-[11px] font-extrabold rounded-xl transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 border border-purple-200 hover:border-purple-400 hover:bg-purple-50 text-purple-650 text-[11px] font-black rounded-xl transition-all cursor-pointer shadow-2xs hover:shadow-xs"
                             >
                                 Start AI Builder
+                                <span className="material-symbols-outlined text-[13px]! font-black">arrow_right_alt</span>
                             </button>
                         </div>
                     </div>
                 </div>
-                {/* ── Connected advertising networks section ── */}
-                <div className="pt-6 border-t border-slate-200 text-left space-y-4">
-                    <div>
-                        <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">Connected Ad Networks</h2>
-                        <p className="text-[10px] text-slate-400 font-medium">Link your advertising accounts to enable publishing campaigns directly to these channels.</p>
-                    </div>
 
-                    <div className="grid grid-cols-4 gap-4">
-                        {[
-                            { key: 'meta', label: 'Meta Ads', desc: 'Facebook & Instagram', icon: 'public', color: 'bg-blue-600' },
-                            { key: 'google', label: 'Google Ads', desc: 'YouTube & Search', icon: 'smart_display', color: 'bg-red-500' },
-                            { key: 'tiktok', label: 'TikTok Ads', desc: 'Short Video Feed', icon: 'movie', color: 'bg-slate-900' },
-                            { key: 'linkedin', label: 'LinkedIn Ads', desc: 'B2B Professional Network', icon: 'work', color: 'bg-blue-800' }
-                        ].map(platform => {
-                            const connData = integrations[platform.key]
-                            const isConnected = connData.connected
-                            return (
-                                <div key={platform.key} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between space-y-3.5 shadow-2xs hover:shadow-xs transition-shadow">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-8 h-8 rounded-xl ${platform.color} text-white flex items-center justify-center`}>
-                                                <span className="material-symbols-outlined text-[17px]! font-black">{platform.icon}</span>
+                {/* ── LAYOUT GRID ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
+                    {/* Left Column (col-span-2) */}
+                    <div className="lg:col-span-2 space-y-8">
+                        
+                        {/* Comparison Table */}
+                        <div id="compares-table" className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4 scroll-mt-6">
+                            <div>
+                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">How it compares</h3>
+                                <p className="text-[10px] text-slate-400 font-medium">Choose the best option for your needs.</p>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 text-[10px] text-slate-450 font-extrabold uppercase tracking-wider text-center">
+                                            <th className="py-2.5 text-left font-black w-24">Approach</th>
+                                            <th className="py-2.5">Speed</th>
+                                            <th className="py-2.5">Control</th>
+                                            <th className="py-2.5">Beginner Friendly</th>
+                                            <th className="py-2.5">Customization</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100/65 text-[11px]">
+                                        <tr className="hover:bg-slate-50/40 transition-colors text-center">
+                                            <td className="py-3 text-left font-black text-slate-700">Manual</td>
+                                            <td className="py-3 text-amber-500 font-extrabold">⚡⚡</td>
+                                            <td className="py-3">{renderDots(4, 'bg-blue-600')}</td>
+                                            <td className="py-3">{renderDots(2, 'bg-blue-600')}</td>
+                                            <td className="py-3">{renderDots(5, 'bg-blue-600')}</td>
+                                        </tr>
+                                        <tr className="hover:bg-slate-50/40 transition-colors text-center">
+                                            <td className="py-3 text-left font-black text-slate-700">AI</td>
+                                            <td className="py-3 text-amber-500 font-extrabold">⚡⚡⚡⚡</td>
+                                            <td className="py-3">{renderDots(2, 'bg-purple-600')}</td>
+                                            <td className="py-3">{renderDots(5, 'bg-purple-600')}</td>
+                                            <td className="py-3">{renderDots(2, 'bg-purple-600')}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+                                <div className="space-y-1 min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block truncate">Connected Platforms</span>
+                                    <div className="text-xl font-black text-slate-800">{connectedCount} / 4</div>
+                                    <button 
+                                        onClick={() => {
+                                            const el = document.getElementById('ad-networks-sidebar');
+                                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                        }}
+                                        className="text-[9px] text-blue-600 hover:text-blue-700 hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
+                                    >
+                                        View all integrations
+                                        <span className="material-symbols-outlined text-[10px]! font-black">arrow_right_alt</span>
+                                    </button>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-3xs shrink-0 ml-1">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">link</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+                                <div className="space-y-1 min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block truncate">Active Campaigns</span>
+                                    <div className="text-xl font-black text-slate-800">18</div>
+                                    <p className="text-[9px] text-slate-450 font-medium truncate">Across all platforms</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-3xs shrink-0 ml-1">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">trending_up</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+                                <div className="space-y-1 min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block truncate">Draft Campaigns</span>
+                                    <div className="text-xl font-black text-slate-800">4</div>
+                                    <p className="text-[9px] text-slate-450 font-medium truncate">Waiting to be published</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-3xs shrink-0 ml-1">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">pending_actions</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Drafts */}
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Recent Drafts</h3>
+                                    <p className="text-[10px] text-slate-400 font-medium">Pick up where you left off.</p>
+                                </div>
+                                <button 
+                                    onClick={() => triggerToast("Viewing all drafts...")}
+                                    className="text-[10px] text-blue-600 hover:text-blue-700 hover:underline font-bold cursor-pointer"
+                                >
+                                    View All
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {[
+                                    { id: 'draft-1', name: 'Summer Collection Traffic', objective: 'traffic', timeText: 'Updated Yesterday, 3:30 PM', logo: 'public', color: 'bg-blue-600' },
+                                    { id: 'draft-2', name: 'iPhone 15 Launch Campaign', objective: 'sales', timeText: 'Updated May 20, 2026', logo: 'smart_display', color: 'bg-red-500' },
+                                    { id: 'draft-3', name: 'LMS - Business Coaching', objective: 'leads', timeText: 'Updated May 18, 2026', logo: 'work', color: 'bg-blue-800' }
+                                ].map(draft => (
+                                    <div key={draft.id} className="border border-slate-100 hover:border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-4 hover:bg-slate-50/20 transition-all">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className={`w-8 h-8 rounded-xl ${draft.color} text-white flex items-center justify-center shrink-0`}>
+                                                <span className="material-symbols-outlined text-[16px]! font-black">{draft.logo}</span>
                                             </div>
-                                            <div className="text-left min-w-0">
-                                                <h4 className="text-[11px] font-black text-slate-800 truncate">{platform.label}</h4>
-                                                <p className="text-[9px] text-slate-400 font-medium truncate">{platform.desc}</p>
+                                            <div className="min-w-0">
+                                                <h4 className="text-[11.5px] font-black text-slate-850 truncate">{draft.name}</h4>
+                                                <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] text-slate-400 font-bold">
+                                                    <span className="capitalize text-blue-600/80 bg-blue-50 px-1.5 py-0.2 rounded-md font-extrabold">{draft.objective}</span>
+                                                    <span>•</span>
+                                                    <span className="truncate">{draft.timeText}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-350'}`} />
-                                    </div>
-
-                                    {isConnected ? (
-                                        <div className="bg-slate-50 p-2 rounded-xl text-[9px] text-slate-500 space-y-0.5">
-                                            <div className="font-extrabold text-slate-700 truncate">{connData.accountName}</div>
-                                            <div className="font-mono text-[8px] text-slate-400 truncate">{connData.adsAccountId}</div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-[9px] text-slate-400 leading-normal">Authenticate account to build campaigns conversant with this ad channel.</p>
-                                    )}
-
-                                    <div>
-                                        {isConnected ? (
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setAuthTempName(connData.accountName)
-                                                        setAuthTempId(connData.adsAccountId)
-                                                        setAuthModalPlatform(platform.key)
-                                                        setEditCredentialsMode(false)
-                                                    }}
-                                                    className="flex-1 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-[9.5px] font-black rounded-lg transition-colors cursor-pointer"
-                                                >
-                                                    Configure
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setIntegrations(prev => ({
-                                                            ...prev,
-                                                            [platform.key]: { connected: false, accountName: null, adsAccountId: null }
-                                                        }))
-                                                        triggerToast(`Disconnected ${platform.label} account.`)
-                                                    }}
-                                                    className="px-2 py-1.5 border border-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-400 text-[9.5px] font-black rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                                                    title="Disconnect"
-                                                >
-                                                    <span className="material-symbols-outlined text-[12px]! font-black">link_off</span>
-                                                </button>
-                                            </div>
-                                        ) : (
+                                        
+                                        <div className="flex items-center gap-2 shrink-0">
                                             <button
                                                 onClick={() => {
-                                                    setAuthTempName(platform.key === 'google' ? 'Google Sandbox Ads Account' : platform.key === 'tiktok' ? 'TikTok Creator Page' : 'LinkedIn Org Campaign Account')
-                                                    setAuthTempId(platform.key === 'google' ? 'ACT-1085-2947' : platform.key === 'tiktok' ? 'ACT-5829-9852' : 'ACT-9852-1985')
-                                                    setAuthModalPlatform(platform.key)
-                                                    setEditCredentialsMode(true)
+                                                    setCampaign(prev => ({
+                                                        ...prev,
+                                                        name: draft.name,
+                                                        objective: draft.objective
+                                                    }))
+                                                    setCreationMode('manual')
+                                                    setActiveStep(1)
+                                                    triggerToast(`Resuming draft campaign: ${draft.name}`)
                                                 }}
-                                                className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[9.5px] font-black rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                                className="px-3 py-1.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-600 hover:text-white text-slate-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
                                             >
-                                                <span className="material-symbols-outlined text-[12px]! font-black">link</span>
-                                                Link Account
+                                                Continue
                                             </button>
-                                        )}
+                                            <button 
+                                                onClick={() => triggerToast("Action menu opened.")}
+                                                className="w-7 h-7 rounded-lg border border-slate-100 flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]! font-black">more_vert</span>
+                                            </button>
+                                        </div>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Start From Template */}
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Start From Template</h3>
+                                    <p className="text-[10px] text-slate-400 font-medium">Pre-built campaigns to get you started.</p>
                                 </div>
-                            )
-                        })}
+                                <button 
+                                    onClick={() => triggerToast("Viewing all templates...")}
+                                    className="text-[10px] text-blue-600 hover:text-blue-700 hover:underline font-bold cursor-pointer"
+                                >
+                                    View All Templates
+                                </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {[
+                                    { id: 'tpl-1', name: 'E-commerce Sales', desc: 'Drive sales for your store', objective: 'sales', icon: 'shopping_bag', defaultName: 'E-commerce Sales Campaign', color: 'text-rose-500 bg-rose-50' },
+                                    { id: 'tpl-2', name: 'App Install', desc: 'Get more installs', objective: 'app_promotion', icon: 'phone_android', defaultName: 'App Install Campaign', color: 'text-indigo-500 bg-indigo-50' },
+                                    { id: 'tpl-3', name: 'Lead Generation', desc: 'Generate quality leads', objective: 'leads', icon: 'contact_mail', defaultName: 'Lead Generation Campaign', color: 'text-emerald-500 bg-emerald-50' },
+                                    { id: 'tpl-4', name: 'Website Traffic', desc: 'Increase visitors', objective: 'traffic', icon: 'language', defaultName: 'Website Traffic Campaign', color: 'text-sky-500 bg-sky-50' },
+                                    { id: 'tpl-5', name: 'Engagement', desc: 'Boost posts & likes', objective: 'favorite', defaultName: 'Engagement Campaign', icon: 'favorite', color: 'text-pink-500 bg-pink-50' },
+                                    { id: 'tpl-6', name: 'Local Business', desc: 'Promote local services', objective: 'awareness', defaultName: 'Local Business Promotion', icon: 'storefront', color: 'text-amber-500 bg-amber-50' }
+                                ].map(template => (
+                                    <button
+                                        key={template.id}
+                                        onClick={() => {
+                                            setCampaign(prev => ({
+                                                ...prev,
+                                                name: template.defaultName,
+                                                objective: template.objective
+                                            }))
+                                            setCreationMode('manual')
+                                            setActiveStep(1)
+                                            triggerToast(`Initialized template: ${template.name}`)
+                                        }}
+                                        className="border border-slate-100 hover:border-blue-200 hover:bg-blue-50/10 p-4 rounded-2xl flex flex-col text-left space-y-2 cursor-pointer transition-all hover:shadow-2xs group"
+                                    >
+                                        <div className={`w-8 h-8 rounded-xl ${template.color} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                                            <span className="material-symbols-outlined text-[16px]! font-black">{template.icon}</span>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-[11px] font-black text-slate-805 group-hover:text-blue-600 transition-colors leading-snug">{template.name}</h4>
+                                            <p className="text-[9px] text-slate-400 font-medium leading-normal mt-0.5">{template.desc}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* Right Column: Connected Ad Networks sidebar (col-span-1) */}
+                    <div className="lg:col-span-1">
+                        <div id="ad-networks-sidebar" className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs text-left space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Connected Ad Networks</h3>
+                                    <p className="text-[10px] text-slate-400 font-medium">Manage connections and permissions.</p>
+                                </div>
+                                <button 
+                                    onClick={() => triggerToast("Managing all connections...")}
+                                    className="text-[10px] text-blue-600 hover:text-blue-700 hover:underline font-bold cursor-pointer"
+                                >
+                                    Manage All
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-4 divide-y divide-slate-100">
+                                {[
+                                    { key: 'meta', label: 'Meta Ads', desc: 'Facebook & Instagram', icon: 'public', color: 'bg-blue-600' },
+                                    { key: 'google', label: 'Google Ads', desc: 'YouTube & Search', icon: 'smart_display', color: 'bg-red-500' },
+                                    { key: 'tiktok', label: 'TikTok Ads', desc: 'Short Video Feed', icon: 'movie', color: 'bg-slate-900' },
+                                    { key: 'linkedin', label: 'LinkedIn Ads', desc: 'B2B Professional Network', icon: 'work', color: 'bg-blue-800' }
+                                ].map((platform, idx) => {
+                                    const connData = integrations[platform.key]
+                                    const isConnected = connData.connected
+                                    const isNeedsAttention = connData.needsAttention
+                                    
+                                    return (
+                                        <div key={platform.key} className={`flex flex-col space-y-3 ${idx > 0 ? 'pt-4' : ''}`}>
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className={`w-8 h-8 rounded-xl ${platform.color} text-white flex items-center justify-center shrink-0`}>
+                                                        <span className="material-symbols-outlined text-[16px]! font-black">{platform.icon}</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-[11px] font-black text-slate-800 leading-snug">{platform.label}</h4>
+                                                        <p className="text-[9px] text-slate-400 font-medium">{platform.desc}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                {isNeedsAttention ? (
+                                                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[8.5px] font-extrabold flex items-center gap-1 select-none">
+                                                        <span className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
+                                                        Needs Attention
+                                                    </span>
+                                                ) : isConnected ? (
+                                                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[8.5px] font-extrabold flex items-center gap-1 select-none">
+                                                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                                        Connected
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-505 text-[8.5px] font-extrabold select-none">
+                                                        Not Connected
+                                                    </span>
+                                                )}
+                                            </div>
+                                            
+                                            {isNeedsAttention ? (
+                                                <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-[9px] text-slate-505 space-y-0.5">
+                                                    <div className="font-extrabold text-slate-700 truncate">{connData.accountName}</div>
+                                                    <div className="text-[8px] text-amber-600 font-extrabold flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[11px]! font-black">warning</span>
+                                                        {connData.expiresLabel}
+                                                    </div>
+                                                    <div className="font-bold text-slate-400">{connData.adAccountsCount} Ad Account</div>
+                                                </div>
+                                            ) : isConnected ? (
+                                                <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-[9px] text-slate-505 space-y-0.5 text-left">
+                                                    <div className="font-extrabold text-slate-700 truncate">{connData.accountName}</div>
+                                                    <div className="font-mono text-[8px] text-slate-400">ID: {connData.adsAccountId}</div>
+                                                    <div className="flex gap-2 text-[8px] text-slate-400 font-bold mt-1">
+                                                        {platform.key === 'meta' && <span>{connData.pagesCount} Pages</span>}
+                                                        {platform.key === 'google' && <span>{connData.campaignsCount} Campaigns</span>}
+                                                        <span>{connData.adAccountsCount} Ad Accounts</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-slate-50 border border-dashed border-slate-200 p-3 rounded-xl text-[9px] text-slate-400 text-center leading-normal text-left">
+                                                    Link your advertising account to enable publishing.
+                                                </div>
+                                            )}
+                                            
+                                            <div className="text-right">
+                                                {isNeedsAttention ? (
+                                                    <button
+                                                        onClick={() => {
+                                                            setAuthTempName(connData.accountName)
+                                                            setAuthTempId(connData.adsAccountId)
+                                                            setAuthModalPlatform(platform.key)
+                                                            setEditCredentialsMode(true)
+                                                        }}
+                                                        className="inline-flex items-center gap-0.5 text-[9.5px] text-amber-700 hover:text-amber-800 font-extrabold cursor-pointer hover:underline"
+                                                    >
+                                                        Reconnect
+                                                        <span className="material-symbols-outlined text-[11px]! font-black">arrow_right_alt</span>
+                                                    </button>
+                                                ) : isConnected ? (
+                                                    <div className="flex items-center justify-between">
+                                                        <button
+                                                            onClick={() => {
+                                                                setIntegrations(prev => ({
+                                                                    ...prev,
+                                                                    [platform.key]: { connected: false, accountName: null, adsAccountId: null }
+                                                                }))
+                                                                triggerToast(`Disconnected ${platform.label} account.`)
+                                                            }}
+                                                            className="text-[9.5px] text-slate-400 hover:text-red-500 font-bold cursor-pointer"
+                                                        >
+                                                            Disconnect
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setAuthTempName(connData.accountName)
+                                                                setAuthTempId(connData.adsAccountId)
+                                                                setAuthModalPlatform(platform.key)
+                                                                setEditCredentialsMode(false)
+                                                            }}
+                                                            className="inline-flex items-center gap-0.5 text-[9.5px] text-blue-600 hover:text-blue-700 font-extrabold cursor-pointer hover:underline"
+                                                        >
+                                                            Configure
+                                                            <span className="material-symbols-outlined text-[11px]! font-black">arrow_right_alt</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            setAuthTempName('LinkedIn Org Campaign Account')
+                                                            setAuthTempId('ACT-9852-1985')
+                                                            setAuthModalPlatform(platform.key)
+                                                            setEditCredentialsMode(true)
+                                                        }}
+                                                        className="inline-flex items-center gap-0.5 text-[9.5px] text-blue-600 hover:text-blue-700 font-extrabold cursor-pointer hover:underline"
+                                                    >
+                                                        Connect
+                                                        <span className="material-symbols-outlined text-[11px]! font-black">arrow_right_alt</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
-            {/* ── OAUTH AUTHENTICATION SIMULATOR DIALOG ── */}
-            <AnimatePresence>
-                {authModalPlatform && (
-                    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-slate-950/40 backdrop-blur-sm">
+        {/* ── OAUTH AUTHENTICATION SIMULATOR DIALOG ── */}
+        <AnimatePresence>
+            {authModalPlatform && (
+                <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-slate-950/40 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -681,16 +1096,26 @@ export default function MetaAdsManager() {
                                 {editCredentialsMode && (
                                     <button
                                         onClick={() => {
-                                            setIntegrations(prev => ({
-                                                ...prev,
-                                                [authModalPlatform]: {
-                                                    connected: true,
-                                                    accountName: authTempName || 'Connected Channel API',
-                                                    adsAccountId: authTempId || 'ACT-SIM-9824'
-                                                }
-                                            }))
-                                            setAuthModalPlatform(null)
-                                            triggerToast(`Authorized account and connected successfully!`)
+                                            setIntegrations(prev => {
+                                                const counts = {
+                                                    meta: { pagesCount: 3, adAccountsCount: 4 },
+                                                    google: { campaignsCount: 2, adAccountsCount: 2 },
+                                                    tiktok: { adAccountsCount: 1 },
+                                                    linkedin: { adAccountsCount: 1 }
+                                                }[authModalPlatform] || {};
+                                                return {
+                                                    ...prev,
+                                                    [authModalPlatform]: {
+                                                        connected: true,
+                                                        needsAttention: false,
+                                                        accountName: authTempName || 'Connected Channel API',
+                                                        adsAccountId: authTempId || 'ACT-SIM-9824',
+                                                        ...counts
+                                                    }
+                                                };
+                                            });
+                                            setAuthModalPlatform(null);
+                                            triggerToast(`Authorized account and connected successfully!`);
                                         }}
                                         className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm animate-pulse"
                                     >
