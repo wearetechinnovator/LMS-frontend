@@ -175,7 +175,8 @@ export default function MetaAdsManager() {
                             accountName: data.pages?.find(p => p.id === data.selectedPage)?.name || 'Meta Ads API Channel',
                             adsAccountId: data.selectedAdAccount || 'act_9852',
                             pagesCount: data.pages?.length || 3,
-                            adAccountsCount: data.adAccounts?.length || 4
+                            adAccountsCount: data.adAccounts?.length || 4,
+                            facebookUser: data.facebookUser
                         }
                     }))
                     if (data.adAccounts && data.adAccounts.length > 0) {
@@ -1095,6 +1096,21 @@ export default function MetaAdsManager() {
                                                 </div>
                                             ) : isConnected ? (
                                                 <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-[9px] text-slate-555 space-y-2 text-left">
+                                                    {platform.key === 'meta' && connData.facebookUser && (
+                                                        <div className="flex items-center gap-2 pb-1.5 border-b border-slate-150">
+                                                            {connData.facebookUser.picture ? (
+                                                                <img src={connData.facebookUser.picture} alt="FB Profile" className="w-5 h-5 rounded-full border border-slate-200" />
+                                                            ) : (
+                                                                <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[7.5px] font-black uppercase shrink-0">
+                                                                    {connData.facebookUser.name?.charAt(0)}
+                                                                </div>
+                                                            )}
+                                                            <div className="flex flex-col truncate">
+                                                                <span className="font-black text-slate-700 text-[9.5px] leading-tight truncate">{connData.facebookUser.name}</span>
+                                                                <span className="font-mono text-[7px] text-slate-400 leading-none">User ID: {connData.facebookUser.id}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                     <div className="font-extrabold text-slate-700 truncate">{connData.accountName}</div>
                                                     <div className="font-mono text-[8px] text-slate-400">ID: {connData.adsAccountId}</div>
                                                     
