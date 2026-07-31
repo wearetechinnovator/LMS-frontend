@@ -171,7 +171,7 @@ export default function MetaAdsManager() {
                     setIntegrations(prev => ({
                         ...prev,
                         meta: {
-                            connected: data.selectedPage ? true : false,
+                            connected: true,
                             accountName: data.pages?.find(p => p.id === data.selectedPage)?.name || 'Meta Ads API Channel',
                             adsAccountId: data.selectedAdAccount || 'act_9852',
                             pagesCount: data.pages?.length || 3,
