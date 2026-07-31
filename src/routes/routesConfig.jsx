@@ -48,7 +48,7 @@ const adminNavItems = [
   { id: 'audit-logs', label: 'Audit Logs', icon: 'clipboard_clock', path: '/admin/audit-logs' },
   { id: 'roles', label: 'Roles', icon: 'user_shield', path: '/admin/roles' },
   { id: 'form-embed', label: 'Form Embed', icon: 'paperclip', path: '/admin/form-embed' },
-  { id: 'meta-ads', label: 'Meta Ads Manager', icon: 'ads_click', path: '/admin/meta-ads' },
+  { id: 'meta-ads', label: 'Campaign', icon: 'campaign', path: '/admin/meta-ads' },
 ]
 
 export const RoleRoutes = ({ username, handleLogout }) => {
