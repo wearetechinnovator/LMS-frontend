@@ -265,7 +265,7 @@ export default function MetaAdsManager() {
                 } else {
                     triggerToast("Facebook login cancelled or failed.")
                 }
-            }, { scope: 'ads_management,ads_read,leads_retrieval,pages_show_list,pages_manage_ads' })
+            }, { scope: 'ads_management,ads_read,pages_show_list' })
         } else {
             const mockToken = "mock_fb_user_token_" + Math.random().toString(36).substring(7)
             exchangeMetaToken(mockToken)
