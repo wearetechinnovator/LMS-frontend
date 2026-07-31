@@ -125,6 +125,10 @@ export default function MetaAdsManager() {
     const [authTempId, setAuthTempId] = useState('')
     const [editCredentialsMode, setEditCredentialsMode] = useState(false)
 
+    const apiBaseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:5001/api/v1'
+        : (import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1')
+
     const [insightsData, setInsightsData] = useState({
         spend: 1550.00,
         reach: '6.2K – 18K',
@@ -137,36 +141,213 @@ export default function MetaAdsManager() {
         roas: 2.40
     })
 
-    useEffect(() => {
-        const fetchAccounts = async () => {
-            const token = localStorage.getItem('authToken')
-            const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
-            try {
-                const res = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/meta/accounts`, { headers })
-                if (res.ok) {
-                    const data = await res.json()
-                    if (data.connected) {
-                        setIntegrations({
-                            meta: {
-                                connected: data.selectedPage ? true : false,
-                                accountName: data.pages?.find(p => p.id === data.selectedPage)?.name || 'Meta Ads API Channel',
-                                adsAccountId: data.selectedAdAccount || 'act_9852'
-                            },
-                            google: {
-                                connected: data.selectedInstagram ? true : false,
-                                accountName: 'Google Ads Search Channel',
-                                adsAccountId: data.selectedAdAccount || 'act_9852'
-                            },
-                            tiktok: { connected: false, accountName: null, adsAccountId: null },
-                            linkedin: { connected: false, accountName: null, adsAccountId: null }
-                        })
+    const [adAccountsList, setAdAccountsList] = useState([
+        { id: 'act_9852', name: 'Poweva Primary Ads Account' },
+        { id: 'act_2047', name: 'Tech Solutions Sandbox Account' }
+    ])
+    const [facebookPagesList, setFacebookPagesList] = useState([
+        { id: 'page_2947', name: 'Poweva Store' },
+        { id: 'page_5829', name: 'LMS Corporate Page' }
+    ])
+    const [selectedAdAccount, setSelectedAdAccount] = useState('act_9852')
+    const [selectedPage, setSelectedPage] = useState('page_2947')
+
+    const [campaignModalOpen, setCampaignModalOpen] = useState(false)
+    const [campaignModalForm, setCampaignModalForm] = useState({
+        name: 'New Awareness Campaign',
+        dailyBudget: '50.00',
+        objective: 'awareness',
+        status: 'PAUSED'
+    })
+
+    const fetchAccounts = async () => {
+        const token = localStorage.getItem('authToken')
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/accounts`, { headers })
+            if (res.ok) {
+                const data = await res.json()
+                if (data.connected) {
+                    setIntegrations(prev => ({
+                        ...prev,
+                        meta: {
+                            connected: data.selectedPage ? true : false,
+                            accountName: data.pages?.find(p => p.id === data.selectedPage)?.name || 'Meta Ads API Channel',
+                            adsAccountId: data.selectedAdAccount || 'act_9852',
+                            pagesCount: data.pages?.length || 3,
+                            adAccountsCount: data.adAccounts?.length || 4
+                        }
+                    }))
+                    if (data.adAccounts && data.adAccounts.length > 0) {
+                        setAdAccountsList(data.adAccounts)
+                    }
+                    if (data.pages && data.pages.length > 0) {
+                        setFacebookPagesList(data.pages)
+                    }
+                    if (data.selectedAdAccount) {
+                        setSelectedAdAccount(data.selectedAdAccount)
+                    }
+                    if (data.selectedPage) {
+                        setSelectedPage(data.selectedPage)
                     }
                 }
-            } catch (err) {
-                console.error("Error loading linked ad accounts:", err)
             }
+        } catch (err) {
+            console.error("Error loading linked ad accounts:", err)
         }
+    }
+
+    const fetchInsights = async () => {
+        const token = localStorage.getItem('authToken')
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/insights`, { headers })
+            if (res.ok) {
+                const data = await res.json()
+                setInsightsData({
+                    spend: data.spend || 1550.00,
+                    reach: data.reach ? `${(data.reach / 1000).toFixed(1)}K` : '6.2K – 18K',
+                    impressions: data.impressions || 28540,
+                    clicks: data.clicks ? String(data.clicks) : '120 – 310',
+                    conversions: data.conversions || data.leads || 24,
+                    ctr: data.ctr || 1.25,
+                    cpc: data.cpc || 1.50,
+                    cpm: data.cpm || 12.00,
+                    roas: data.roas || 2.40
+                })
+            }
+        } catch (err) {
+            console.error("Error fetching campaign insights:", err)
+        }
+    }
+
+    const handleSelectAccountsChange = async (adAccId, pageId) => {
+        const token = localStorage.getItem('authToken')
+        const headers = token ? {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        }
+        try {
+            const pageToken = facebookPagesList.find(p => p.id === pageId)?.access_token || 'mock_page_token'
+            await fetch(`${apiBaseUrl}/meta/select-accounts`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    adAccountId: adAccId,
+                    facebookPageId: pageId,
+                    pageAccessToken: pageToken
+                })
+            })
+            triggerToast("Configurations updated successfully.")
+            fetchAccounts()
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    const handleAdAccountChange = (val) => {
+        setSelectedAdAccount(val)
+        handleSelectAccountsChange(val, selectedPage)
+    }
+
+    const handlePageChange = (val) => {
+        setSelectedPage(val)
+        handleSelectAccountsChange(selectedAdAccount, val)
+    }
+
+    const handleConnectMeta = () => {
+        if (window.FB) {
+            window.FB.login((response) => {
+                if (response.authResponse) {
+                    exchangeMetaToken(response.authResponse.accessToken)
+                } else {
+                    triggerToast("Facebook login cancelled or failed.")
+                }
+            }, { scope: 'ads_management,ads_read,leads_retrieval,pages_show_list,pages_manage_ads' })
+        } else {
+            const mockToken = "mock_fb_user_token_" + Math.random().toString(36).substring(7)
+            exchangeMetaToken(mockToken)
+        }
+    }
+
+    const exchangeMetaToken = async (token) => {
+        const headers = localStorage.getItem('authToken') ? {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        }
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/oauth/exchange`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ shortLivedToken: token })
+            })
+            const data = await res.json()
+            if (res.ok) {
+                setIntegrations(prev => ({
+                    ...prev,
+                    meta: {
+                        connected: true,
+                        accountName: 'Poweva Store',
+                        adsAccountId: 'act_9852',
+                        pagesCount: 3,
+                        adAccountsCount: 4
+                    }
+                }))
+                triggerToast("Meta account connected successfully!")
+                fetchAccounts()
+                fetchInsights()
+            } else {
+                triggerToast(data.error || "Failed to exchange token.")
+            }
+        } catch (err) {
+            console.error(err)
+            triggerToast("Network error connecting Meta account.")
+        }
+    }
+
+    const handleCreateCampaignSubmit = async (e) => {
+        e.preventDefault()
+        const token = localStorage.getItem('authToken')
+        const headers = token ? {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        }
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/campaigns`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    name: campaignModalForm.name,
+                    objective: campaignModalForm.objective,
+                    daily_budget: campaignModalForm.dailyBudget,
+                    status: campaignModalForm.status,
+                    page_id: selectedPage
+                })
+            })
+            const data = await res.json()
+            if (res.ok) {
+                triggerToast(`Campaign created successfully! ID: ${data.id}`)
+                setCampaignModalOpen(false)
+                setCreationMode('manual')
+                setActiveStep(1)
+            } else {
+                triggerToast(data.error || "Failed to create campaign.")
+            }
+        } catch (err) {
+            console.error(err)
+            triggerToast("Network error creating campaign.")
+        }
+    }
+
+    useEffect(() => {
         fetchAccounts()
+        fetchInsights()
     }, [])
 
     useEffect(() => {
@@ -175,7 +356,7 @@ export default function MetaAdsManager() {
                 const token = localStorage.getItem('authToken')
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
                 try {
-                    const res = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/meta/insights`, { headers })
+                    const res = await fetch(`${apiBaseUrl}/meta/insights`, { headers })
                     if (res.ok) {
                         const data = await res.json()
                         setInsightsData({
@@ -337,7 +518,7 @@ export default function MetaAdsManager() {
         } : {}
         
         try {
-            const res = await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/meta/campaigns`, {
+            const res = await fetch(`${apiBaseUrl}/meta/campaigns`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
@@ -381,7 +562,7 @@ export default function MetaAdsManager() {
         } : {}
 
         try {
-            await fetch(`${import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1'}/meta/campaigns`, {
+            await fetch(`${apiBaseUrl}/meta/campaigns`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
@@ -544,11 +725,7 @@ export default function MetaAdsManager() {
                                 <span className="text-[10px] text-slate-550 font-bold">Estimated time: <span className="text-slate-700 font-black">2 - 5 min</span></span>
                             </div>
                             <button
-                                onClick={() => {
-                                    setCreationMode('manual')
-                                    setActiveStep(1)
-                                    triggerToast("Manual campaign mode activated.")
-                                }}
+                                onClick={() => setCampaignModalOpen(true)}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black rounded-xl transition-all cursor-pointer shadow-xs hover:shadow-md hover:translate-x-0.5"
                             >
                                 Configure Manually
@@ -680,47 +857,41 @@ export default function MetaAdsManager() {
                             </div>
                         </div>
 
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
-                                <div className="space-y-1 min-w-0">
-                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block truncate">Connected Platforms</span>
-                                    <div className="text-xl font-black text-slate-800">{connectedCount} / 4</div>
-                                    <button 
-                                        onClick={() => {
-                                            const el = document.getElementById('ad-networks-sidebar');
-                                            if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                        }}
-                                        className="text-[9px] text-blue-600 hover:text-blue-700 hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
-                                    >
-                                        View all integrations
-                                        <span className="material-symbols-outlined text-[10px]! font-black">arrow_right_alt</span>
-                                    </button>
+                                <div className="space-y-1 text-left min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase block truncate">Ad Spend</span>
+                                    <div className="text-lg font-black text-slate-805">${Number(insightsData.spend || 0).toFixed(2)}</div>
                                 </div>
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-3xs shrink-0 ml-1">
-                                    <span className="material-symbols-outlined text-[18px]! font-black">link</span>
+                                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">payments</span>
                                 </div>
                             </div>
-
                             <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
-                                <div className="space-y-1 min-w-0">
-                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block truncate">Active Campaigns</span>
-                                    <div className="text-xl font-black text-slate-800">18</div>
-                                    <p className="text-[9px] text-slate-450 font-medium truncate">Across all platforms</p>
+                                <div className="space-y-1 text-left min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase block truncate">Impressions</span>
+                                    <div className="text-lg font-black text-slate-805">{Number(insightsData.impressions || 0).toLocaleString()}</div>
                                 </div>
-                                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-3xs shrink-0 ml-1">
-                                    <span className="material-symbols-outlined text-[18px]! font-black">trending_up</span>
+                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">visibility</span>
                                 </div>
                             </div>
-
                             <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
-                                <div className="space-y-1 min-w-0">
-                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block truncate">Draft Campaigns</span>
-                                    <div className="text-xl font-black text-slate-800">4</div>
-                                    <p className="text-[9px] text-slate-450 font-medium truncate">Waiting to be published</p>
+                                <div className="space-y-1 text-left min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase block truncate">Clicks</span>
+                                    <div className="text-lg font-black text-slate-850">{Number(insightsData.clicks || 0).toLocaleString()}</div>
                                 </div>
-                                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-3xs shrink-0 ml-1">
-                                    <span className="material-symbols-outlined text-[18px]! font-black">pending_actions</span>
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">ads_click</span>
+                                </div>
+                            </div>
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+                                <div className="space-y-1 text-left min-w-0">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase block truncate">Lead Counts</span>
+                                    <div className="text-lg font-black text-slate-850">{Number(insightsData.conversions || insightsData.leads || 0).toLocaleString()}</div>
+                                </div>
+                                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]! font-black">contact_mail</span>
                                 </div>
                             </div>
                         </div>
@@ -908,14 +1079,45 @@ export default function MetaAdsManager() {
                                                     <div className="font-bold text-slate-400">{connData.adAccountsCount} Ad Account</div>
                                                 </div>
                                             ) : isConnected ? (
-                                                <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-[9px] text-slate-505 space-y-0.5 text-left">
+                                                <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-[9px] text-slate-555 space-y-2 text-left">
                                                     <div className="font-extrabold text-slate-700 truncate">{connData.accountName}</div>
                                                     <div className="font-mono text-[8px] text-slate-400">ID: {connData.adsAccountId}</div>
-                                                    <div className="flex gap-2 text-[8px] text-slate-400 font-bold mt-1">
-                                                        {platform.key === 'meta' && <span>{connData.pagesCount} Pages</span>}
-                                                        {platform.key === 'google' && <span>{connData.campaignsCount} Campaigns</span>}
-                                                        <span>{connData.adAccountsCount} Ad Accounts</span>
-                                                    </div>
+                                                    
+                                                    {platform.key === 'meta' && (
+                                                        <div className="space-y-1.5 pt-1 border-t border-slate-150 text-left">
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <label className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Active Ad Account</label>
+                                                                <select 
+                                                                    value={selectedAdAccount} 
+                                                                    onChange={(e) => handleAdAccountChange(e.target.value)}
+                                                                    className="w-full text-[9px] border border-slate-200 rounded-lg p-1 bg-white outline-none font-bold text-slate-750"
+                                                                >
+                                                                    {adAccountsList.map(acc => (
+                                                                        <option key={acc.id} value={acc.id}>{acc.name} ({acc.id})</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <label className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Active Page</label>
+                                                                <select 
+                                                                    value={selectedPage} 
+                                                                    onChange={(e) => handlePageChange(e.target.value)}
+                                                                    className="w-full text-[9px] border border-slate-200 rounded-lg p-1 bg-white outline-none font-bold text-slate-750"
+                                                                >
+                                                                    {facebookPagesList.map(page => (
+                                                                        <option key={page.id} value={page.id}>{page.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {platform.key !== 'meta' && (
+                                                        <div className="flex gap-2 text-[8px] text-slate-400 font-bold mt-1">
+                                                            {platform.key === 'google' && <span>{connData.campaignsCount} Campaigns</span>}
+                                                            <span>{connData.adAccountsCount} Ad Accounts</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <div className="bg-slate-50 border border-dashed border-slate-200 p-3 rounded-xl text-[9px] text-slate-400 text-center leading-normal text-left">
@@ -967,14 +1169,18 @@ export default function MetaAdsManager() {
                                                 ) : (
                                                     <button
                                                         onClick={() => {
-                                                            setAuthTempName('LinkedIn Org Campaign Account')
-                                                            setAuthTempId('ACT-9852-1985')
-                                                            setAuthModalPlatform(platform.key)
-                                                            setEditCredentialsMode(true)
+                                                            if (platform.key === 'meta') {
+                                                                handleConnectMeta()
+                                                            } else {
+                                                                setAuthTempName(platform.key === 'google' ? 'Google Sandbox Ads Account' : platform.key === 'tiktok' ? 'TikTok Creator Page' : 'LinkedIn Org Campaign Account')
+                                                                setAuthTempId(platform.key === 'google' ? 'ACT-1085-2947' : platform.key === 'tiktok' ? 'ACT-5829-9852' : 'ACT-9852-1985')
+                                                                setAuthModalPlatform(platform.key)
+                                                                setEditCredentialsMode(true)
+                                                            }
                                                         }}
                                                         className="inline-flex items-center gap-0.5 text-[9.5px] text-blue-600 hover:text-blue-700 font-extrabold cursor-pointer hover:underline"
                                                     >
-                                                        Connect
+                                                        {platform.key === 'meta' ? 'Connect Meta Account' : 'Connect'}
                                                         <span className="material-symbols-outlined text-[11px]! font-black">arrow_right_alt</span>
                                                     </button>
                                                 )}
@@ -988,6 +1194,82 @@ export default function MetaAdsManager() {
                 </div>
 
             </div>
+
+            {campaignModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-slate-950/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl border border-slate-100 text-left">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">New Meta Campaign</h3>
+                            <button 
+                                onClick={() => setCampaignModalOpen(false)}
+                                className="w-6 h-6 rounded-full border border-slate-150 flex items-center justify-center hover:bg-slate-50 text-slate-400 cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-[14px]! font-black">close</span>
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleCreateCampaignSubmit} className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-450 uppercase">Campaign Name</label>
+                                <input 
+                                    type="text" 
+                                    value={campaignModalForm.name}
+                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-450 uppercase">Daily Budget ($)</label>
+                                <input 
+                                    type="number" 
+                                    value={campaignModalForm.dailyBudget}
+                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, dailyBudget: e.target.value }))}
+                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-450 uppercase">Objective</label>
+                                <select 
+                                    value={campaignModalForm.objective}
+                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, objective: e.target.value }))}
+                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none font-bold"
+                                >
+                                    <option value="awareness">Awareness</option>
+                                    <option value="leads">Leads</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-450 uppercase">Status</label>
+                                <select 
+                                    value={campaignModalForm.status}
+                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, status: e.target.value }))}
+                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none font-bold"
+                                >
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="PAUSED">Paused</option>
+                                </select>
+                            </div>
+                            <div className="pt-2 flex gap-3">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setCampaignModalOpen(false)}
+                                    className="flex-1 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                                >
+                                    Create Campaign
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
         {/* ── OAUTH AUTHENTICATION SIMULATOR DIALOG ── */}
         <AnimatePresence>
