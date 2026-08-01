@@ -234,7 +234,7 @@ export default function AuthPage({ onAuthSuccess }) {
     
     try {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '148281137021-3e49mbf3b1e3e4811a.apps.googleusercontent.com',
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '797009458228-rref2mg9jtj2s83cvg787t3sf4d1lmm1.apps.googleusercontent.com',
         scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
         callback: async (tokenResponse) => {
           if (tokenResponse && tokenResponse.access_token) {
