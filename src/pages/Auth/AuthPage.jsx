@@ -313,7 +313,7 @@ export default function AuthPage({ onAuthSuccess }) {
 
   const handleLinkedInLogin = () => {
     try {
-      const client_id = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '77t8jt3sf4d1lmm1';
+      const client_id = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '77rzfwul6y3gcv';
       const redirect_uri = window.location.origin + window.location.pathname;
       const scope = 'openid profile email';
       const state = 'linkedin_oauth_state';
