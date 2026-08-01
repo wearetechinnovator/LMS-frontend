@@ -64,11 +64,13 @@ export default function AuthPage({ onAuthSuccess }) {
   const validateForm = () => {
     const newErrors = {}
     if (isLogin) {
-      const email = (formData.number || '').trim().toLowerCase()
+      const mobileNumber = (formData.number || '').trim()
       const password = formData.password
 
-      if (!email) {
-        newErrors.number = 'Mobile number or email is required'
+      if (!mobileNumber) {
+        newErrors.number = 'Mobile number is required'
+      } else if (!/^[0-9]{10}$/.test(mobileNumber)) {
+        newErrors.number = 'Please enter a valid 10 digit mobile number'
       }
 
       if (!password) {
@@ -84,8 +86,8 @@ export default function AuthPage({ onAuthSuccess }) {
       const phoneClean = (formData.number || '').trim()
       if (!phoneClean) {
         newErrors.number = 'Mobile number is required'
-      } else if (!/^\+?[0-9]{10,15}$/.test(phoneClean)) {
-        newErrors.number = 'Please enter a valid 10-15 digit mobile number'
+      } else if (!/^[0-9]{10}$/.test(phoneClean)) {
+        newErrors.number = 'Please enter a valid 10 digit mobile number'
       }
 
       if (!formData.password.trim()) {
@@ -113,22 +115,23 @@ export default function AuthPage({ onAuthSuccess }) {
     const phoneClean = (formData.number || '').trim()
 
     if (isLogin) {
-      const identifier = phoneClean.toLowerCase()
+      const identifier = phoneClean
       const password = formData.password
       
       // Mock login check
-      if (['admin@gmail.com', 'counselor@gmail.com', 'vendor@gmail.com'].includes(identifier)) {
+      if (['9999999999', '8888888888', '7777777777'].includes(identifier)) {
         if (password === '1234') {
           let role = 'admin'
-          if (identifier === 'counselor@gmail.com') role = 'counselor'
-          if (identifier === 'vendor@gmail.com') role = 'vendor'
+          if (identifier === '8888888888') role = 'counselor'
+          if (identifier === '7777777777') role = 'vendor'
           
           triggerToast('Mock login successful!')
           localStorage.setItem('authToken', 'mock-jwt-token')
           localStorage.setItem('userRole', role)
           
           setTimeout(() => {
-            onAuthSuccess({ username: identifier.split('@')[0], role, isNewUser: false })
+            const username = identifier === '9999999999' ? 'admin' : identifier === '8888888888' ? 'counselor' : 'vendor';
+            onAuthSuccess({ username, role, isNewUser: false })
           }, 1000)
           return
         } else {

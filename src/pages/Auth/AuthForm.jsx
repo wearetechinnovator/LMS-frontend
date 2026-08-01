@@ -19,6 +19,14 @@ export default function AuthForm({
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
+  const handleNumberChange = (e) => {
+    const cleanValue = e.target.value.replace(/\D/g, '')
+    if (cleanValue.length <= 10) {
+      e.target.value = cleanValue
+      onFormChange(e)
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (onSubmit) {
@@ -79,7 +87,7 @@ export default function AuthForm({
               type="tel"
               name="number"
               value={formData.number || ''}
-              onChange={onFormChange}
+              onChange={handleNumberChange}
               className={`auth-input ${errors.number ? 'error' : ''}`}
               placeholder='Number'
             />
