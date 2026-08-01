@@ -462,7 +462,7 @@ export default function AuthPage({ onAuthSuccess }) {
 
               <div className="auth-sidebar-footer">
                 <p className="auth-footer-title">TIS — Lead Management System</p>
-                <p className="auth-footer-copyright">© 2026 TIS. All rights reserved.</p>
+                <p className="auth-footer-copyright">© {new Date().getFullYear()} TIS. All rights reserved.</p>
               </div>
             </motion.div>
 
