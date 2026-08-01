@@ -15,7 +15,8 @@ export default function AuthForm({
   onSubmit,
   onToggleMode,
   isLoading,
-  onGoogleClick
+  onGoogleClick,
+  onLinkedInClick
 }) {
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
@@ -247,7 +248,7 @@ export default function AuthForm({
             </button>
             <button
               type="button"
-              onClick={() => console.log('LinkedIn OAuth')}
+              onClick={onLinkedInClick}
               className="auth-oauth-btn"
             >
               <svg className="auth-oauth-icon" viewBox="0 0 24 24" fill="#0A66C2" xmlns="http://www.w3.org/2000/svg">

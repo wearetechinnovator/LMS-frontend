@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import AuthForm from './AuthForm'
 import LoginSVG from './LoginSVG'
 import RegisterSVG from './RegisterSVG'
-import { registerUser, verifyOTP, loginUser, loginWithGoogle } from '../../api/auth'
+import { registerUser, verifyOTP, loginUser, loginWithGoogle, loginWithLinkedIn } from '../../api/auth'
 import Toast from '../../components/Toast'
 import './auth.css'
 
@@ -29,6 +29,16 @@ export default function AuthPage({ onAuthSuccess }) {
 
   useEffect(() => {
     setMounted(true)
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code && state === 'linkedin_oauth_state') {
+      const newUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      verifyLinkedInLogin(code, newUrl);
+    }
   }, [])
 
   useEffect(() => {
@@ -273,6 +283,50 @@ export default function AuthPage({ onAuthSuccess }) {
     }
   };
 
+  const verifyLinkedInLogin = async (code, redirect_uri) => {
+    setIsLoading(true);
+    try {
+      const response = await loginWithLinkedIn(code, redirect_uri);
+      triggerToast('LinkedIn Login successful!');
+      
+      let role = 'admin'
+      if (response.user && response.user.role_name) {
+        const r = response.user.role_name.toLowerCase()
+        if (['admin', 'counselor', 'vendor'].includes(r)) {
+          role = r
+        }
+      }
+      
+      localStorage.setItem('authToken', response.token)
+      localStorage.setItem('userRole', role)
+      localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
+      
+      setTimeout(() => {
+        onAuthSuccess({ username: (response.user && response.user.name) || 'LinkedIn User', role, isNewUser: false })
+      }, 1000)
+    } catch (err) {
+      triggerToast(err.message || 'LinkedIn Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLinkedInLogin = () => {
+    try {
+      const client_id = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '77t8jt3sf4d1lmm1';
+      const redirect_uri = window.location.origin + window.location.pathname;
+      const scope = 'openid profile email';
+      const state = 'linkedin_oauth_state';
+      
+      const authorizationUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&state=${state}&scope=${encodeURIComponent(scope)}`;
+      
+      window.location.href = authorizationUrl;
+    } catch (err) {
+      console.error(err);
+      triggerToast('Could not initialize LinkedIn Sign-in');
+    }
+  };
+
   const handleResendOtp = async () => {
     if (resendTimer > 0) return
     setIsLoading(true)
@@ -431,6 +485,7 @@ export default function AuthPage({ onAuthSuccess }) {
                         setErrors({})
                       }}
                       onGoogleClick={handleGoogleLogin}
+                      onLinkedInClick={handleLinkedInLogin}
                     />
                   </motion.div>
                 ) : (
