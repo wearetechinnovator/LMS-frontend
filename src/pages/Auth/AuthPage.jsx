@@ -35,9 +35,12 @@ export default function AuthPage({ onAuthSuccess }) {
     const state = urlParams.get('state');
     
     if (code && state === 'linkedin_oauth_state') {
+      const cleanPath = window.location.pathname === '/' ? '' : window.location.pathname;
+      const redirectUri = window.location.origin + cleanPath;
+      
       const newUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
-      verifyLinkedInLogin(code, newUrl);
+      verifyLinkedInLogin(code, redirectUri);
     }
   }, [])
 
@@ -314,7 +317,8 @@ export default function AuthPage({ onAuthSuccess }) {
   const handleLinkedInLogin = () => {
     try {
       const client_id = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '77rzfwul6y3gcv';
-      const redirect_uri = window.location.origin + window.location.pathname;
+      const cleanPath = window.location.pathname === '/' ? '' : window.location.pathname;
+      const redirect_uri = window.location.origin + cleanPath;
       const scope = 'openid profile email';
       const state = 'linkedin_oauth_state';
       
