@@ -17,7 +17,7 @@ export default function AuthPage({ onAuthSuccess }) {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [resendTimer, setResendTimer] = useState(60)
   const [isLoading, setIsLoading] = useState(false)
-  
+
   // Toast notifications state
   const [toastMessage, setToastMessage] = useState('')
   const [isToastVisible, setIsToastVisible] = useState(false)
@@ -29,15 +29,15 @@ export default function AuthPage({ onAuthSuccess }) {
 
   useEffect(() => {
     setMounted(true)
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
-    
+
     if (code && state === 'linkedin_oauth_state') {
       const cleanPath = window.location.pathname === '/' ? '' : window.location.pathname;
       const redirectUri = window.location.origin + cleanPath;
-      
+
       const newUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
       verifyLinkedInLogin(code, redirectUri);
@@ -130,18 +130,18 @@ export default function AuthPage({ onAuthSuccess }) {
     if (isLogin) {
       const identifier = phoneClean
       const password = formData.password
-      
+
       // Mock login check
       if (['9999999999', '8888888888', '7777777777'].includes(identifier)) {
         if (password === '1234') {
           let role = 'admin'
           if (identifier === '8888888888') role = 'counselor'
           if (identifier === '7777777777') role = 'vendor'
-          
+
           triggerToast('Mock login successful!')
           localStorage.setItem('authToken', 'mock-jwt-token')
           localStorage.setItem('userRole', role)
-          
+
           setTimeout(() => {
             const username = identifier === '9999999999' ? 'admin' : identifier === '8888888888' ? 'counselor' : 'vendor';
             onAuthSuccess({ username, role, isNewUser: false })
@@ -159,7 +159,7 @@ export default function AuthPage({ onAuthSuccess }) {
       try {
         const response = await loginUser(phoneClean, formData.password)
         triggerToast('Login successful!')
-        
+
         let role = 'admin'
         if (response.user && response.user.role_name) {
           const r = response.user.role_name.toLowerCase()
@@ -167,11 +167,11 @@ export default function AuthPage({ onAuthSuccess }) {
             role = r
           }
         }
-        
+
         localStorage.setItem('authToken', response.token)
         localStorage.setItem('userRole', role)
         localStorage.setItem('userPermissions', JSON.stringify(response.user.permissions || {}))
-        
+
         setTimeout(() => {
           onAuthSuccess({ username: response.user.name, role, isNewUser: false })
         }, 1000)
@@ -216,7 +216,7 @@ export default function AuthPage({ onAuthSuccess }) {
       })
 
       triggerToast('OTP verified successfully! Creating account...')
-      
+
       let role = 'admin'
       if (response.user && response.user.role_name) {
         const r = response.user.role_name.toLowerCase()
@@ -244,7 +244,7 @@ export default function AuthPage({ onAuthSuccess }) {
       triggerToast('Google client library not loaded yet. Please try again in a moment.');
       return;
     }
-    
+
     try {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '797009458228-rref2mg9jtj2s83cvg787t3sf4d1lmm1.apps.googleusercontent.com',
@@ -255,7 +255,7 @@ export default function AuthPage({ onAuthSuccess }) {
             try {
               const response = await loginWithGoogle(tokenResponse.access_token);
               triggerToast('Google Login successful!');
-              
+
               let role = 'admin'
               if (response.user && response.user.role_name) {
                 const r = response.user.role_name.toLowerCase()
@@ -263,11 +263,11 @@ export default function AuthPage({ onAuthSuccess }) {
                   role = r
                 }
               }
-              
+
               localStorage.setItem('authToken', response.token)
               localStorage.setItem('userRole', role)
               localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
-              
+
               setTimeout(() => {
                 onAuthSuccess({ username: (response.user && response.user.name) || 'Google User', role, isNewUser: false })
               }, 1000)
@@ -291,7 +291,7 @@ export default function AuthPage({ onAuthSuccess }) {
     try {
       const response = await loginWithLinkedIn(code, redirect_uri);
       triggerToast('LinkedIn Login successful!');
-      
+
       let role = 'admin'
       if (response.user && response.user.role_name) {
         const r = response.user.role_name.toLowerCase()
@@ -299,11 +299,11 @@ export default function AuthPage({ onAuthSuccess }) {
           role = r
         }
       }
-      
+
       localStorage.setItem('authToken', response.token)
       localStorage.setItem('userRole', role)
       localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
-      
+
       setTimeout(() => {
         onAuthSuccess({ username: (response.user && response.user.name) || 'LinkedIn User', role, isNewUser: false })
       }, 1000)
@@ -321,9 +321,9 @@ export default function AuthPage({ onAuthSuccess }) {
       const redirect_uri = window.location.origin + cleanPath;
       const scope = 'openid profile email';
       const state = 'linkedin_oauth_state';
-      
+
       const authorizationUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&state=${state}&scope=${encodeURIComponent(scope)}`;
-      
+
       window.location.href = authorizationUrl;
     } catch (err) {
       console.error(err);
@@ -462,7 +462,7 @@ export default function AuthPage({ onAuthSuccess }) {
 
               <div className="auth-sidebar-footer">
                 <p className="auth-footer-title">TIS — Lead Management System</p>
-                <p className="auth-footer-copyright">© 2025 TIS. All rights reserved.</p>
+                <p className="auth-footer-copyright">© 2026 TIS. All rights reserved.</p>
               </div>
             </motion.div>
 
