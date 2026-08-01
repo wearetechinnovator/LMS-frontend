@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import AuthForm from './AuthForm'
 import LoginSVG from './LoginSVG'
 import RegisterSVG from './RegisterSVG'
-import { registerUser, verifyOTP, loginUser } from '../../api/auth'
+import { registerUser, verifyOTP, loginUser, loginWithGoogle } from '../../api/auth'
 import Toast from '../../components/Toast'
 import './auth.css'
 
@@ -226,6 +226,53 @@ export default function AuthPage({ onAuthSuccess }) {
     }
   }
 
+  const handleGoogleLogin = () => {
+    if (typeof window.google === 'undefined') {
+      triggerToast('Google client library not loaded yet. Please try again in a moment.');
+      return;
+    }
+    
+    try {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '148281137021-3e49mbf3b1e3e4811a.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+        callback: async (tokenResponse) => {
+          if (tokenResponse && tokenResponse.access_token) {
+            setIsLoading(true);
+            try {
+              const response = await loginWithGoogle(tokenResponse.access_token);
+              triggerToast('Google Login successful!');
+              
+              let role = 'admin'
+              if (response.user && response.user.role_name) {
+                const r = response.user.role_name.toLowerCase()
+                if (['admin', 'counselor', 'vendor'].includes(r)) {
+                  role = r
+                }
+              }
+              
+              localStorage.setItem('authToken', response.token)
+              localStorage.setItem('userRole', role)
+              localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
+              
+              setTimeout(() => {
+                onAuthSuccess({ username: (response.user && response.user.name) || 'Google User', role, isNewUser: false })
+              }, 1000)
+            } catch (err) {
+              triggerToast(err.message || 'Google Login failed');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        },
+      });
+      tokenClient.requestAccessToken();
+    } catch (err) {
+      console.error(err);
+      triggerToast('Could not initialize Google Sign-in');
+    }
+  };
+
   const handleResendOtp = async () => {
     if (resendTimer > 0) return
     setIsLoading(true)
@@ -383,6 +430,7 @@ export default function AuthPage({ onAuthSuccess }) {
                         setIsLogin(!isLogin)
                         setErrors({})
                       }}
+                      onGoogleClick={handleGoogleLogin}
                     />
                   </motion.div>
                 ) : (

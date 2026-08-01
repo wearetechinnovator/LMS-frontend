@@ -14,7 +14,8 @@ export default function AuthForm({
   onFormChange,
   onSubmit,
   onToggleMode,
-  isLoading
+  isLoading,
+  onGoogleClick
 }) {
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
@@ -233,7 +234,7 @@ export default function AuthForm({
           <motion.div custom={isLogin ? 5 : 7} variants={inputV} initial="hidden" animate="visible" className="auth-oauth-group">
             <button
               type="button"
-              onClick={() => console.log('Google OAuth')}
+              onClick={onGoogleClick}
               className="auth-oauth-btn"
             >
               <svg className="auth-oauth-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
