@@ -1016,7 +1016,7 @@ export default function MetaAdsManager() {
                                                                         {c.status}
                                                                     </span>
                                                                     <span>•</span>
-                                                                    <span className="truncate">{c.updated_time ? new Date(c.updated_time).toLocaleDateString() : 'N/A'}</span>
+                                                                    <span className="shrink-0">{c.updated_time ? new Date(c.updated_time).toLocaleDateString() : 'N/A'}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
