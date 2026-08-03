@@ -79,6 +79,17 @@ const SHOE_VARIATIONS = [
     { id: 2, name: 'Dark Navy Speed', url: '/shoe-dark.png' }
 ]
 
+const getObjectiveDetails = (obj) => {
+    const o = (obj || '').toUpperCase();
+    if (o.includes('AWARENESS')) return { logo: 'campaign', color: 'bg-blue-600', label: 'Awareness' };
+    if (o.includes('TRAFFIC')) return { logo: 'navigation', color: 'bg-emerald-500', label: 'Traffic' };
+    if (o.includes('ENGAGEMENT')) return { logo: 'thumb_up', color: 'bg-orange-500', label: 'Engagement' };
+    if (o.includes('LEAD')) return { logo: 'person_add', color: 'bg-blue-800', label: 'Leads' };
+    if (o.includes('APP')) return { logo: 'phone_iphone', color: 'bg-pink-600', label: 'App Promotion' };
+    if (o.includes('SALE')) return { logo: 'shopping_bag', color: 'bg-red-500', label: 'Sales' };
+    return { logo: 'campaign', color: 'bg-slate-500', label: 'Awareness' };
+}
+
 export default function MetaAdsManager() {
     // -------------------------------------------------------------
     // State management
@@ -145,7 +156,7 @@ export default function MetaAdsManager() {
     const [aiQuestionIndex, setAiQuestionIndex] = useState(0)
     const [chatIsTyping, setChatIsTyping] = useState(false)
     const [integrations, setIntegrations] = useState({
-        meta: { connected: true, accountName: 'Poweva Store', adsAccountId: 'ACT-9852-1085', pagesCount: 3, adAccountsCount: 4 },
+        meta: { connected: false, accountName: null, adsAccountId: null, pagesCount: 0, adAccountsCount: 0 },
         google: { connected: true, accountName: 'Google Ads Search Channel', adsAccountId: '938-123-4567', campaignsCount: 2, adAccountsCount: 2 },
         tiktok: { connected: true, needsAttention: true, accountName: 'TikTok Business Account', adsAccountId: 'ACT-5829-9852', expiresLabel: 'Expires in 8 days', adAccountsCount: 1 },
         linkedin: { connected: false, accountName: null, adsAccountId: null }
@@ -160,27 +171,134 @@ export default function MetaAdsManager() {
         : (import.meta.env.VITE_BASE_URL || 'https://lms-backend-xt66.onrender.com/api/v1')
 
     const [insightsData, setInsightsData] = useState({
-        spend: 1550.00,
-        reach: '6.2K – 18K',
-        impressions: 28540,
-        clicks: '120 – 310',
-        conversions: '15 – 45',
-        ctr: 1.25,
-        cpc: 1.50,
-        cpm: 12.00,
-        roas: 2.40
+        spend: 0.00,
+        reach: '0',
+        impressions: 0,
+        clicks: '0',
+        conversions: '0',
+        ctr: 0.00,
+        cpc: 0.00,
+        cpm: 0.00,
+        roas: 0.00
     })
 
-    const [adAccountsList, setAdAccountsList] = useState([
-        { id: 'act_9852', name: 'Poweva Primary Ads Account' },
-        { id: 'act_2047', name: 'Tech Solutions Sandbox Account' }
-    ])
-    const [facebookPagesList, setFacebookPagesList] = useState([
-        { id: 'page_2947', name: 'Poweva Store' },
-        { id: 'page_5829', name: 'LMS Corporate Page' }
-    ])
-    const [selectedAdAccount, setSelectedAdAccount] = useState('act_9852')
-    const [selectedPage, setSelectedPage] = useState('page_2947')
+    const [adAccountsList, setAdAccountsList] = useState([])
+    const [facebookPagesList, setFacebookPagesList] = useState([])
+    const [selectedAdAccount, setSelectedAdAccount] = useState('')
+    const [selectedPage, setSelectedPage] = useState('')
+
+    const [campaignsList, setCampaignsList] = useState([])
+    const [campaignsLoading, setCampaignsLoading] = useState(false)
+    const [campaignLoading, setCampaignLoading] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [statusFilter, setStatusFilter] = useState('ALL')
+    const [objectiveFilter, setObjectiveFilter] = useState('ALL')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [activeActionMenuId, setActiveActionMenuId] = useState(null)
+
+    const fetchCampaigns = async () => {
+        setCampaignsLoading(true)
+        const token = localStorage.getItem('authToken')
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+        try {
+            const params = new URLSearchParams({
+                search: searchQuery,
+                status: statusFilter,
+                objective: objectiveFilter,
+                page: String(currentPage),
+                limit: '4',
+                sort: 'updated_time',
+                order: 'desc'
+            })
+            const res = await fetch(`${apiBaseUrl}/meta/campaigns?${params.toString()}`, { headers })
+            if (res.ok) {
+                const data = await res.json()
+                setCampaignsList(data.data || [])
+                setTotalPages(data.totalPages || 1)
+            }
+        } catch (err) {
+            console.error("Error loading campaigns:", err)
+        } finally {
+            setCampaignsLoading(false)
+        }
+    }
+
+    const handleToggleCampaignStatus = async (id, currentStatus) => {
+        const nextStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE'
+        const token = localStorage.getItem('authToken')
+        const headers = token ? {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        }
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/campaigns/${id}/status`, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify({ status: nextStatus })
+            })
+            if (res.ok) {
+                triggerToast(`Campaign status changed to ${nextStatus}!`)
+                fetchCampaigns()
+            } else {
+                triggerToast("Failed to update status.")
+            }
+        } catch (err) {
+            console.error(err)
+            triggerToast("Network error updating status.")
+        }
+        setActiveActionMenuId(null)
+    }
+
+    const handleDuplicateCampaign = async (id, name) => {
+        const token = localStorage.getItem('authToken')
+        const headers = token ? {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        }
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/campaigns/${id}/duplicate`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ name: `${name} (Copy)` })
+            })
+            if (res.ok) {
+                triggerToast("Campaign duplicated successfully!")
+                fetchCampaigns()
+            } else {
+                triggerToast("Failed to duplicate campaign.")
+            }
+        } catch (err) {
+            console.error(err)
+            triggerToast("Network error duplicating campaign.")
+        }
+        setActiveActionMenuId(null)
+    }
+
+    const handleDeleteCampaign = async (id) => {
+        const token = localStorage.getItem('authToken')
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+        try {
+            const res = await fetch(`${apiBaseUrl}/meta/campaigns/${id}`, {
+                method: 'DELETE',
+                headers
+            })
+            if (res.ok) {
+                triggerToast("Campaign deleted successfully!")
+                fetchCampaigns()
+            } else {
+                triggerToast("Failed to delete campaign.")
+            }
+        } catch (err) {
+            console.error(err)
+            triggerToast("Network error deleting campaign.")
+        }
+        setActiveActionMenuId(null)
+    }
 
     const [campaignModalOpen, setCampaignModalOpen] = useState(false)
     const [campaignModalForm, setCampaignModalForm] = useState({
@@ -367,6 +485,7 @@ export default function MetaAdsManager() {
                 setCampaignModalOpen(false)
                 setCreationMode('manual')
                 setActiveStep(1)
+                fetchCampaigns()
             } else {
                 triggerToast(data.error || "Failed to create campaign.")
             }
@@ -379,6 +498,7 @@ export default function MetaAdsManager() {
     useEffect(() => {
         fetchAccounts()
         fetchInsights()
+        fetchCampaigns()
         window.fbAsyncInit = function () {
             window.FB.init({
                 appId: '1729260811681200',
@@ -395,6 +515,10 @@ export default function MetaAdsManager() {
             fjs.parentNode.insertBefore(js, fjs)
         }(document, 'script', 'facebook-jssdk'))
     }, [])
+
+    useEffect(() => {
+        fetchCampaigns()
+    }, [searchQuery, statusFilter, objectiveFilter, currentPage, selectedAdAccount])
 
     useEffect(() => {
         if (activeStep === 4) {
@@ -578,6 +702,7 @@ export default function MetaAdsManager() {
             })
             if (res.ok) {
                 triggerToast("Campaign draft saved to Meta server!")
+                fetchCampaigns()
             } else {
                 triggerToast("Draft saved locally (Offline)")
             }
@@ -621,6 +746,7 @@ export default function MetaAdsManager() {
                 })
             })
             triggerToast("Campaign published live to Meta networks!")
+            fetchCampaigns()
         } catch (err) {
             console.error("Error publishing campaign:", err)
             triggerToast("Failed to upload active assets to Meta servers.")
@@ -740,7 +866,7 @@ export default function MetaAdsManager() {
                                         ])
                                         triggerToast("AI campaign mode activated.")
                                     }}
-                                    className="inline-flex items-center gap-1.5 px-5 py-2.5  bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-black rounded-xl transition-all cursor-pointer shadow-2xs hover:shadow-xs shrink-0 z-10 absolute right-4 bottom-0"
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-black rounded-xl transition-all cursor-pointer shadow-2xs hover:shadow-xs shrink-0 z-10 absolute right-4 bottom-0"
                                 >
                                     Start
                                     <span className="material-symbols-outlined text-[13px]! font-black">arrow_right_alt</span>
@@ -833,67 +959,189 @@ export default function MetaAdsManager() {
 
                         {/* Side-by-Side: Recent Drafts & Start From Template */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Recent Drafts */}
-                            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
-                                <div className="flex items-center justify-between">
+                            {/* Recent Campaigns */}
+                            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4 relative">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div>
-                                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Recent Drafts</h3>
-                                        <p className="text-[10px] text-slate-400 font-medium">Pick up where you left off.</p>
+                                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Recent Campaigns</h3>
+                                        <p className="text-[10px] text-slate-400 font-medium">Manage and check your campaigns.</p>
                                     </div>
-                                    <button
-                                        onClick={() => triggerToast("Viewing all drafts...")}
-                                        className="text-[10px] text-blue-600 hover:text-blue-700 hover:underline font-bold cursor-pointer"
-                                    >
-                                        View All
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                            placeholder="Search..."
+                                            className="h-7 px-2.5 text-[10px] font-bold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white outline-none w-28 placeholder:text-slate-400"
+                                        />
+                                        <select
+                                            value={statusFilter}
+                                            onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                                            className="h-7 px-2 text-[10px] font-extrabold text-slate-700 border border-slate-200 rounded-xl bg-slate-50 outline-none cursor-pointer hover:bg-slate-100/50"
+                                        >
+                                            <option value="ALL">All Status</option>
+                                            <option value="ACTIVE">Active</option>
+                                            <option value="PAUSED">Paused</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    {[
-                                        { id: 'draft-1', name: 'Summer Collection Traffic', objective: 'traffic', timeText: 'Updated Yesterday, 3:30 PM', logo: 'public', color: 'bg-blue-600' },
-                                        { id: 'draft-2', name: 'iPhone 15 Launch Campaign', objective: 'sales', timeText: 'Updated May 20, 2026', logo: 'smart_display', color: 'bg-red-500' },
-                                        { id: 'draft-3', name: 'LMS - Business Coaching', objective: 'leads', timeText: 'Updated May 18, 2026', logo: 'work', color: 'bg-blue-800' }
-                                    ].map(draft => (
-                                        <div key={draft.id} className="border border-slate-100 hover:border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-4 hover:bg-slate-50/20 transition-all">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className={`w-8 h-8 rounded-xl ${draft.color} text-white flex items-center justify-center shrink-0`}>
-                                                    <span className="material-symbols-outlined text-[16px]! font-black">{draft.logo}</span>
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <h4 className="text-[11.5px] font-black text-slate-850 truncate">{draft.name}</h4>
-                                                    <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] text-slate-400 font-bold">
-                                                        <span className="capitalize text-blue-600/80 bg-blue-50 px-1.5 py-0.2 rounded-md font-extrabold">{draft.objective}</span>
-                                                        <span>•</span>
-                                                        <span className="truncate">{draft.timeText}</span>
-                                                    </div>
-                                                </div>
+                                <div className="space-y-3 min-h-[160px] flex flex-col justify-between">
+                                    <div className="space-y-3">
+                                        {campaignsLoading ? (
+                                            <div className="flex items-center justify-center py-12">
+                                                <div className="w-6 h-6 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
                                             </div>
+                                        ) : campaignsList.length === 0 ? (
+                                            <div className="text-center py-12 text-[10.5px] font-bold text-slate-400">
+                                                No campaigns found.
+                                            </div>
+                                        ) : (
+                                            campaignsList.map(c => {
+                                                const details = getObjectiveDetails(c.objective);
+                                                const isStatusActive = c.status === 'ACTIVE';
+                                                return (
+                                                    <div key={c.id} className="border border-slate-100 hover:border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-4 hover:bg-slate-50/20 transition-all relative">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className={`w-8 h-8 rounded-xl ${details.color} text-white flex items-center justify-center shrink-0`}>
+                                                                <span className="material-symbols-outlined text-[16px]! font-black">{details.logo}</span>
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <h4 className="text-[11.5px] font-black text-slate-850 truncate">{c.name}</h4>
+                                                                <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] text-slate-450 font-extrabold">
+                                                                    <span className="capitalize text-blue-600 bg-blue-50/70 px-1.5 py-0.2 rounded-md font-black text-[8.5px]">{details.label}</span>
+                                                                    <span>•</span>
+                                                                    <span className="flex items-center gap-1">
+                                                                        <span className={`w-1.5 h-1.5 rounded-full ${isStatusActive ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                                                        {c.status}
+                                                                    </span>
+                                                                    <span>•</span>
+                                                                    <span className="truncate">{c.updated_time ? new Date(c.updated_time).toLocaleDateString() : 'N/A'}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                <button
-                                                    onClick={() => {
-                                                        setCampaign(prev => ({
-                                                            ...prev,
-                                                            name: draft.name,
-                                                            objective: draft.objective
-                                                        }))
-                                                        setCreationMode('manual')
-                                                        setActiveStep(1)
-                                                        triggerToast(`Resuming draft campaign: ${draft.name}`)
-                                                    }}
-                                                    className="px-3 py-1.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-600 hover:text-white text-slate-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
-                                                >
-                                                    Continue
-                                                </button>
-                                                <button
-                                                    onClick={() => triggerToast("Action menu opened.")}
-                                                    className="w-7 h-7 rounded-lg border border-slate-100 flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-600 cursor-pointer"
-                                                >
-                                                    <span className="material-symbols-outlined text-[14px]! font-black">more_vert</span>
-                                                </button>
-                                            </div>
+                                                        <div className="flex items-center gap-2 shrink-0 relative">
+                                                            <button
+                                                                disabled={campaignLoading}
+                                                                onClick={async () => {
+                                                                    setCampaignLoading(true);
+                                                                    const token = localStorage.getItem('authToken');
+                                                                    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                                                                    try {
+                                                                        const res = await fetch(`${apiBaseUrl}/meta/campaigns/${c.id}`, { headers });
+                                                                        if (res.ok) {
+                                                                            const details = await res.json();
+                                                                            setCampaign({
+                                                                                id: details.id,
+                                                                                name: details.name,
+                                                                                objective: details.objective ? details.objective.replace("OUTCOME_", "").toLowerCase() : "awareness",
+                                                                                buyingType: details.buyingType || details.buying_type || "Auction",
+                                                                                status: details.status || "PAUSED",
+                                                                                dailyBudget: details.dailyBudget ? (details.dailyBudget / 100).toFixed(2) : "50.00",
+                                                                                lifetimeBudget: details.lifetimeBudget ? (details.lifetimeBudget / 100).toFixed(2) : "350.00",
+                                                                                budgetType: details.lifetimeBudget ? "Lifetime" : "Daily",
+                                                                                budgetOptimization: true,
+                                                                                specialCategory: "None",
+                                                                                spendingLimit: "500.00"
+                                                                            });
+                                                                            if (details.insights) {
+                                                                                setInsightsData({
+                                                                                    spend: details.insights.spend || 1550.00,
+                                                                                    reach: details.insights.reach ? `${(details.insights.reach / 1000).toFixed(1)}K` : '6.2K – 18K',
+                                                                                    impressions: details.insights.impressions || 28540,
+                                                                                    clicks: details.insights.clicks ? String(details.insights.clicks) : '120 – 310',
+                                                                                    conversions: details.insights.conversions ? String(details.insights.conversions) : '15 – 45',
+                                                                                    ctr: details.insights.ctr || 1.25,
+                                                                                    cpc: details.insights.cpc || 1.50,
+                                                                                    cpm: details.insights.cpm || 12.00,
+                                                                                    roas: details.insights.roas || 2.40
+                                                                                });
+                                                                            }
+                                                                            setCreationMode('manual');
+                                                                            setActiveStep(1);
+                                                                            triggerToast(`Resuming campaign: ${details.name}`);
+                                                                        } else {
+                                                                            triggerToast("Failed to fetch campaign details.");
+                                                                        }
+                                                                    } catch (err) {
+                                                                        console.error(err);
+                                                                        triggerToast("Error loading campaign.");
+                                                                    } finally {
+                                                                        setCampaignLoading(false);
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-1.5 border border-slate-200 hover:border-blue-500 hover:bg-blue-600 hover:text-white text-slate-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                                                            >
+                                                                {campaignLoading ? 'Loading...' : 'Continue'}
+                                                            </button>
+                                                            <div className="relative">
+                                                                <button
+                                                                    onClick={() => setActiveActionMenuId(activeActionMenuId === c.id ? null : c.id)}
+                                                                    className="w-7 h-7 rounded-lg border border-slate-100 flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[14px]! font-black">more_vert</span>
+                                                                </button>
+                                                                {activeActionMenuId === c.id && (
+                                                                    <div className="absolute right-0 top-8 z-[9999] bg-white border border-slate-200 rounded-xl p-1.5 shadow-lg w-28 text-left space-y-1 animate-fadeIn">
+                                                                        <button
+                                                                            onClick={() => handleToggleCampaignStatus(c.id, c.status)}
+                                                                            className="w-full text-left px-2 py-1 text-[9.5px] font-black text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-1.5 cursor-pointer"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-[12px]!">
+                                                                                {c.status === 'ACTIVE' ? 'pause_circle' : 'play_circle'}
+                                                                            </span>
+                                                                            {c.status === 'ACTIVE' ? 'Pause' : 'Resume'}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleDuplicateCampaign(c.id, c.name)}
+                                                                            className="w-full text-left px-2 py-1 text-[9.5px] font-black text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-1.5 cursor-pointer"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-[12px]!">content_copy</span>
+                                                                            Duplicate
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (window.confirm("Are you sure you want to delete this campaign?")) {
+                                                                                    handleDeleteCampaign(c.id);
+                                                                                } else {
+                                                                                    setActiveActionMenuId(null);
+                                                                                }
+                                                                            }}
+                                                                            className="w-full text-left px-2 py-1 text-[9.5px] font-black text-red-650 hover:bg-red-50 rounded-lg flex items-center gap-1.5 cursor-pointer"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-[12px]! text-red-500">delete</span>
+                                                                            Delete
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] font-bold text-slate-450">
+                                            <button
+                                                disabled={currentPage === 1}
+                                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                className="px-2 py-1 border border-slate-155 rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                                            >
+                                                Previous
+                                            </button>
+                                            <span>Page {currentPage} of {totalPages}</span>
+                                            <button
+                                                disabled={currentPage === totalPages}
+                                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                                className="px-2 py-1 border border-slate-155 rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                                            >
+                                                Next
+                                            </button>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             </div>
 
