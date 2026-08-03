@@ -237,9 +237,6 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
           title="Search or jump to (Alt+Space or Ctrl+Space)"
         >
           <Icon name="search" size={18} />
-          <span className="text-[10px] font-bold text-slate-400 bg-slate-150/40 dark:bg-slate-800 px-1.5 py-0.5 rounded leading-none select-none hidden sm:inline-block border border-slate-250/20">
-            {navigator.userAgent.indexOf('Mac') !== -1 ? '⌥Space' : 'Ctrl+Space'}
-          </span>
         </button>
 
         {/* Notifications Icon */}
