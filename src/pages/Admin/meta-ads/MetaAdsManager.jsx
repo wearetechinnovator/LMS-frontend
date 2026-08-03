@@ -354,15 +354,15 @@ export default function MetaAdsManager() {
             if (res.ok) {
                 const data = await res.json()
                 setInsightsData({
-                    spend: data.spend || 1550.00,
-                    reach: data.reach ? `${(data.reach / 1000).toFixed(1)}K` : '6.2K – 18K',
-                    impressions: data.impressions || 28540,
-                    clicks: data.clicks ? String(data.clicks) : '120 – 310',
-                    conversions: data.conversions || data.leads || 24,
-                    ctr: data.ctr || 1.25,
-                    cpc: data.cpc || 1.50,
-                    cpm: data.cpm || 12.00,
-                    roas: data.roas || 2.40
+                    spend: data.spend !== undefined ? Number(data.spend) : 0,
+                    reach: data.reach !== undefined ? String(data.reach) : '0',
+                    impressions: data.impressions !== undefined ? Number(data.impressions) : 0,
+                    clicks: data.clicks !== undefined ? String(data.clicks) : '0',
+                    conversions: (data.conversions !== undefined ? String(data.conversions) : null) || (data.leads !== undefined ? String(data.leads) : '0'),
+                    ctr: data.ctr !== undefined ? Number(data.ctr) : 0.00,
+                    cpc: data.cpc !== undefined ? Number(data.cpc) : 0.00,
+                    cpm: data.cpm !== undefined ? Number(data.cpm) : 0.00,
+                    roas: data.roas !== undefined ? Number(data.roas) : 0.00
                 })
             }
         } catch (err) {
@@ -530,15 +530,15 @@ export default function MetaAdsManager() {
                     if (res.ok) {
                         const data = await res.json()
                         setInsightsData({
-                            spend: data.spend || 1550.00,
-                            reach: data.reach ? `${(data.reach / 1000).toFixed(1)}K` : '6.2K – 18K',
-                            impressions: data.impressions || 28540,
-                            clicks: data.clicks ? String(data.clicks) : '120 – 310',
-                            conversions: data.conversions ? String(data.conversions) : '15 – 45',
-                            ctr: data.ctr || 1.25,
-                            cpc: data.cpc || 1.50,
-                            cpm: data.cpm || 12.00,
-                            roas: data.roas || 2.40
+                            spend: data.spend !== undefined ? Number(data.spend) : 0,
+                            reach: data.reach !== undefined ? String(data.reach) : '0',
+                            impressions: data.impressions !== undefined ? Number(data.impressions) : 0,
+                            clicks: data.clicks !== undefined ? String(data.clicks) : '0',
+                            conversions: (data.conversions !== undefined ? String(data.conversions) : null) || (data.leads !== undefined ? String(data.leads) : '0'),
+                            ctr: data.ctr !== undefined ? Number(data.ctr) : 0.00,
+                            cpc: data.cpc !== undefined ? Number(data.cpc) : 0.00,
+                            cpm: data.cpm !== undefined ? Number(data.cpm) : 0.00,
+                            roas: data.roas !== undefined ? Number(data.roas) : 0.00
                         })
                     }
                 } catch (err) {
@@ -1047,15 +1047,15 @@ export default function MetaAdsManager() {
                                                                             });
                                                                             if (details.insights) {
                                                                                 setInsightsData({
-                                                                                    spend: details.insights.spend || 1550.00,
-                                                                                    reach: details.insights.reach ? `${(details.insights.reach / 1000).toFixed(1)}K` : '6.2K – 18K',
-                                                                                    impressions: details.insights.impressions || 28540,
-                                                                                    clicks: details.insights.clicks ? String(details.insights.clicks) : '120 – 310',
-                                                                                    conversions: details.insights.conversions ? String(details.insights.conversions) : '15 – 45',
-                                                                                    ctr: details.insights.ctr || 1.25,
-                                                                                    cpc: details.insights.cpc || 1.50,
-                                                                                    cpm: details.insights.cpm || 12.00,
-                                                                                    roas: details.insights.roas || 2.40
+                                                                                    spend: details.insights?.spend !== undefined ? Number(details.insights.spend) : 0,
+                                                                                    reach: details.insights?.reach !== undefined ? String(details.insights.reach) : '0',
+                                                                                    impressions: details.insights?.impressions !== undefined ? Number(details.insights.impressions) : 0,
+                                                                                    clicks: details.insights?.clicks !== undefined ? String(details.insights.clicks) : '0',
+                                                                                    conversions: (details.insights?.conversions !== undefined ? String(details.insights.conversions) : null) || (details.insights?.leads !== undefined ? String(details.insights.leads) : '0'),
+                                                                                    ctr: details.insights?.ctr !== undefined ? Number(details.insights.ctr) : 0.00,
+                                                                                    cpc: details.insights?.cpc !== undefined ? Number(details.insights.cpc) : 0.00,
+                                                                                    cpm: details.insights?.cpm !== undefined ? Number(details.insights.cpm) : 0.00,
+                                                                                    roas: details.insights?.roas !== undefined ? Number(details.insights.roas) : 0.00
                                                                                 });
                                                                             }
                                                                             setCreationMode('manual');
