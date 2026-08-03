@@ -227,6 +227,21 @@ export default function Navbar({ username, onLogout, roleName = 'Admin Account' 
 
       {/* Right Section - Actions & User Menu */}
       <div className="navbar-right">
+        {/* Spotlight Search Trigger */}
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('lms-open-spotlight'))
+          }}
+          className="navbar-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-all border-none bg-transparent cursor-pointer text-slate-500 hover:text-slate-800 shrink-0"
+          style={{ padding: '6px 12px', height: '36px' }}
+          title="Search or jump to (Alt+Space or Ctrl+Space)"
+        >
+          <Icon name="search" size={18} />
+          <span className="text-[10px] font-bold text-slate-400 bg-slate-150/40 dark:bg-slate-800 px-1.5 py-0.5 rounded leading-none select-none hidden sm:inline-block border border-slate-250/20">
+            {navigator.userAgent.indexOf('Mac') !== -1 ? '⌥Space' : 'Ctrl+Space'}
+          </span>
+        </button>
+
         {/* Notifications Icon */}
         <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
           <button

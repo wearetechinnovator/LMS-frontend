@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import InteractiveTour from '../components/InteractiveTour'
+import SpotlightSearch from '../components/SpotlightSearch'
 
 export default function RoleDashboardLayout({ username, onLogout, navigationItems, roleName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -23,6 +24,12 @@ export default function RoleDashboardLayout({ username, onLogout, navigationItem
         </div>
       </div>
       <InteractiveTour username={username} />
+      <SpotlightSearch
+        onLogout={onLogout}
+        navigationItems={navigationItems}
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      />
     </div>
   )
 }
