@@ -1369,7 +1369,7 @@ export default function LmsSettings() {
                     )}
                     {otpVerified && (
                       <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-0.5">
-                        <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                        <span className="material-symbols-outlined text-[13px]!">check_circle</span>
                         Mobile Verified! Ready to create session.
                       </p>
                     )}
@@ -1474,7 +1474,7 @@ export default function LmsSettings() {
                   ) : (
                     <div className="w-full flex items-center justify-between p-1.5 bg-white border border-slate-200 rounded-lg shadow-2xs" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[16px] text-green-600">check_circle</span>
+                        <span className="material-symbols-outlined text-[16px]! text-green-600">check_circle</span>
                         <span className="text-[11px] font-bold text-slate-700 truncate max-w-[150px]">{file.name}</span>
                         <span className="text-[9px] text-slate-500 font-mono">({formatFileSize(file.size)})</span>
                       </div>
@@ -2035,7 +2035,7 @@ export default function LmsSettings() {
                   }
                   className="h-9 px-6 bg-[#2f7d9e] hover:bg-[#206587] disabled:bg-[#a0aec0] text-white text-[12px] font-bold rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer border-0"
                 >
-                  <span className="material-symbols-outlined text-[15px]">send</span>
+                  <span className="material-symbols-outlined text-[15px]!">send</span>
                   Send Bulk Campaign
                 </button>
               </div>
@@ -2215,7 +2215,7 @@ export default function LmsSettings() {
                                   className="w-6 h-6 rounded-full hover:bg-[#c3c6d7] text-slate-450 hover:text-slate-750 flex items-center justify-center border-none bg-transparent cursor-pointer transition-colors"
                                   title="Edit status"
                                 >
-                                  <span className="material-symbols-outlined text-[15.5px]">edit</span>
+                                  <span className="material-symbols-outlined text-[15px]!">edit</span>
                                 </button>
                                 <button
                                   type="button"
@@ -2223,7 +2223,7 @@ export default function LmsSettings() {
                                   className="w-6 h-6 rounded-full hover:bg-rose-50 text-slate-450 hover:text-red-500 flex items-center justify-center border-none bg-transparent cursor-pointer transition-colors"
                                   title="Delete status"
                                 >
-                                  <span className="material-symbols-outlined text-[15px]">delete</span>
+                                  <span className="material-symbols-outlined text-[15px]!">delete</span>
                                 </button>
                               </div>
                             </td>
@@ -2268,7 +2268,7 @@ export default function LmsSettings() {
                     type="submit"
                     className="h-8.5 px-3.5 bg-[#2f7d9e] hover:bg-[#206587] text-white text-[11px] font-bold rounded-lg flex items-center gap-0.5 shadow-2xs transition-colors cursor-pointer border-0"
                   >
-                    <span className="material-symbols-outlined text-[14px]">add</span>
+                    <span className="material-symbols-outlined text-[14px]!">add</span>
                     Create Pipeline
                   </button>
                 </form>
@@ -2510,7 +2510,7 @@ export default function LmsSettings() {
                         }}
                       >
                         {isSelected && (
-                          <span className="material-symbols-outlined text-white text-[14px] font-bold">check</span>
+                          <span className="material-symbols-outlined text-white text-[14px]! font-bold">check</span>
                         )}
                       </span>
                       <span className={isSelected ? 'text-slate-900 font-bold' : 'text-slate-500'}>{item.name}</span>
@@ -2576,11 +2576,11 @@ export default function LmsSettings() {
                     >
                       <div className="flex items-center justify-between w-full">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                          <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                          <span className="material-symbols-outlined text-[18px]!">{item.icon}</span>
                         </div>
                         {isSelected && (
                           <span className="w-5 h-5 rounded-full bg-[#2f7d9e] text-white flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+                            <span className="material-symbols-outlined text-[12px]! font-bold">check</span>
                           </span>
                         )}
                       </div>
@@ -2600,7 +2600,7 @@ export default function LmsSettings() {
                 type="submit"
                 className="px-6 py-2.5 bg-[#2f7d9e] hover:bg-[#206587] active:scale-98 text-white rounded-xl text-[12px] font-bold shadow-md hover:shadow-lg transition-all cursor-pointer border-0 flex items-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-[15px]">save</span>
+                <span className="material-symbols-outlined text-[15px]!">save</span>
                 Save Preferences
               </button>
             </div>

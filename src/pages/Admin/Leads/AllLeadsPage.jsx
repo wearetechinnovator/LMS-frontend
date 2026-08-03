@@ -18,6 +18,7 @@ export default function AllLeadsPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const [selectedLeads, setSelectedLeads] = useState([])
+  const [lastSelectedLeadId, setLastSelectedLeadId] = useState(null)
   const [activeLeadDetails, setActiveLeadDetails] = useState(null)
 
   const [statusesList, setStatusesList] = useState(() => getCustomStatuses())
@@ -582,12 +583,45 @@ export default function AllLeadsPage() {
     }
   }
 
-  const toggleSelectLead = (id) => {
+  const toggleSelectLead = (id, event) => {
+    if (event && event.shiftKey && lastSelectedLeadId) {
+      const currentIndex = paginatedLeads.findIndex(lead => lead.id === id)
+      const lastIndex = paginatedLeads.findIndex(lead => lead.id === lastSelectedLeadId)
+
+      if (currentIndex !== -1 && lastIndex !== -1) {
+        const start = Math.min(currentIndex, lastIndex)
+        const end = Math.max(currentIndex, lastIndex)
+        const leadsInRange = paginatedLeads.slice(start, end + 1).map(lead => lead.id)
+
+        // Check if the target lead is currently selected
+        const isCurrentSelected = selectedLeads.includes(id)
+
+        if (isCurrentSelected) {
+          // If clicked checkbox was selected, we are deselecting it, so deselect all in range
+          setSelectedLeads(prev => prev.filter(leadId => !leadsInRange.includes(leadId)))
+        } else {
+          // Select all in range
+          setSelectedLeads(prev => {
+            const newSelection = [...prev]
+            leadsInRange.forEach(leadId => {
+              if (!newSelection.includes(leadId)) {
+                newSelection.push(leadId)
+              }
+            })
+            return newSelection
+          })
+        }
+        setLastSelectedLeadId(id)
+        return
+      }
+    }
+
     if (selectedLeads.includes(id)) {
       setSelectedLeads(selectedLeads.filter(leadId => leadId !== id))
     } else {
       setSelectedLeads([...selectedLeads, id])
     }
+    setLastSelectedLeadId(id)
   }
 
   // Dynamic Initials Generator
@@ -2240,7 +2274,11 @@ export default function AllLeadsPage() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: index * 0.04 }}
-                          onClick={() => {
+                          onClick={(e) => {
+                            if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                              toggleSelectLead(lead.id, e)
+                              return
+                            }
                             if (hasPermission('leads_details_view')) {
                               navigate(`/admin/leads/${lead.id}`)
                               setHoveredLeadId(null)
@@ -2254,7 +2292,10 @@ export default function AllLeadsPage() {
                             <input
                               type="checkbox"
                               checked={selectedLeads.includes(lead.id)}
-                              onChange={() => toggleSelectLead(lead.id)}
+                              onClick={(e) => {
+                                toggleSelectLead(lead.id, e)
+                              }}
+                              onChange={() => {}}
                               className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-300"
                             />
                           </td>
