@@ -384,11 +384,15 @@ export default function MetaAdsManager() {
                         ...prev,
                         meta: {
                             connected: true,
-                            accountName: data.pages?.find(p => p.id === data.selectedPage)?.name || 'Meta Ads API Channel',
+                            accountName: data.adAccounts?.find(acc => acc.id === data.selectedAdAccount)?.name || data.pages?.find(p => p.id === data.selectedPage)?.name || 'Meta Ads API Channel',
                             adsAccountId: data.selectedAdAccount || 'act_9852',
                             pagesCount: data.pages?.length || 3,
                             adAccountsCount: data.adAccounts?.length || 4,
-                            facebookUser: data.facebookUser
+                            facebookUser: data.facebookUser,
+                            appName: data.appName,
+                            scopes: data.scopes,
+                            maskedToken: data.maskedToken,
+                            syncLabel: 'Webhooks Active'
                         }
                     }))
                     if (data.adAccounts && data.adAccounts.length > 0) {
@@ -1641,22 +1645,22 @@ export default function MetaAdsManager() {
                                     <div className="space-y-3 text-[11px] text-slate-650 bg-slate-50 p-4 rounded-2xl">
                                         <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                             <span className="font-semibold text-slate-400">Owner API Profile</span>
-                                            <span className="font-extrabold text-slate-700">{PLATFORM_DETAILS[authModalPlatform]?.profile || 'Developer Workspace'}</span>
+                                            <span className="font-extrabold text-slate-700">{integrations[authModalPlatform]?.appName || PLATFORM_DETAILS[authModalPlatform]?.profile || 'Developer Workspace'}</span>
                                         </div>
                                         <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                             <span className="font-semibold text-slate-400">Linked Scopes</span>
-                                            <span className="font-extrabold text-slate-700 font-mono text-[9px] uppercase">{PLATFORM_DETAILS[authModalPlatform]?.scopes || 'ads_management'}</span>
+                                            <span className="font-extrabold text-slate-700 font-mono text-[9px] uppercase">{integrations[authModalPlatform]?.scopes || PLATFORM_DETAILS[authModalPlatform]?.scopes || 'ads_management'}</span>
                                         </div>
                                         <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                             <span className="font-semibold text-slate-400">Connection State</span>
                                             <span className="font-extrabold text-emerald-600 flex items-center gap-1">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-                                                {PLATFORM_DETAILS[authModalPlatform]?.syncLabel || 'Live Synced'}
+                                                {integrations[authModalPlatform]?.syncLabel || PLATFORM_DETAILS[authModalPlatform]?.syncLabel || 'Live Synced'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="font-semibold text-slate-400">API Access Token</span>
-                                            <span className="font-mono text-[9px] text-slate-400">{PLATFORM_DETAILS[authModalPlatform]?.tokenMask || 'EAAX...ZAAZ'}</span>
+                                            <span className="font-mono text-[9px] text-slate-400">{integrations[authModalPlatform]?.maskedToken || PLATFORM_DETAILS[authModalPlatform]?.tokenMask || 'EAAX...ZAAZ'}</span>
                                         </div>
                                     </div>
 
@@ -1706,27 +1710,63 @@ export default function MetaAdsManager() {
                                 </button>
                                 {editCredentialsMode && (
                                     <button
-                                        onClick={() => {
-                                            setIntegrations(prev => {
-                                                const counts = {
-                                                    meta: { pagesCount: 3, adAccountsCount: 4 },
-                                                    google: { campaignsCount: 2, adAccountsCount: 2 },
-                                                    tiktok: { adAccountsCount: 1 },
-                                                    linkedin: { adAccountsCount: 1 }
-                                                }[authModalPlatform] || {};
-                                                return {
-                                                    ...prev,
-                                                    [authModalPlatform]: {
-                                                        connected: true,
-                                                        needsAttention: false,
-                                                        accountName: authTempName || 'Connected Channel API',
-                                                        adsAccountId: authTempId || 'ACT-SIM-9824',
-                                                        ...counts
+                                        onClick={async () => {
+                                            if (authModalPlatform === 'meta') {
+                                                const token = localStorage.getItem('authToken')
+                                                const headers = token ? {
+                                                    'Authorization': `Bearer ${token}`,
+                                                    'Content-Type': 'application/json'
+                                                } : {
+                                                    'Content-Type': 'application/json'
+                                                }
+                                                try {
+                                                    const resolvedPage = facebookPagesList.find(p => p.name.toLowerCase() === authTempName.toLowerCase() || p.id === authTempName);
+                                                    const resolvedPageId = resolvedPage ? resolvedPage.id : authTempName;
+                                                    const resolvedPageToken = resolvedPage ? resolvedPage.access_token : undefined;
+
+                                                    const resolvedAdAccount = adAccountsList.find(a => a.name.toLowerCase() === authTempId.toLowerCase() || a.id === authTempId);
+                                                    const resolvedAdAccountId = resolvedAdAccount ? resolvedAdAccount.id : authTempId;
+
+                                                    const res = await fetch(`${apiBaseUrl}/meta/select-accounts`, {
+                                                        method: 'POST',
+                                                        headers,
+                                                        body: JSON.stringify({
+                                                            adAccountId: resolvedAdAccountId,
+                                                            facebookPageId: resolvedPageId,
+                                                            pageAccessToken: resolvedPageToken
+                                                        })
+                                                    })
+                                                    if (res.ok) {
+                                                        triggerToast("Configurations updated successfully.")
+                                                        fetchAccounts()
+                                                    } else {
+                                                        triggerToast("Failed to update backend credentials.")
                                                     }
-                                                };
-                                            });
+                                                } catch (err) {
+                                                    console.error(err)
+                                                    triggerToast("Network error updating credentials.")
+                                                }
+                                            } else {
+                                                setIntegrations(prev => {
+                                                    const counts = {
+                                                        google: { campaignsCount: 2, adAccountsCount: 2 },
+                                                        tiktok: { adAccountsCount: 1 },
+                                                        linkedin: { adAccountsCount: 1 }
+                                                    }[authModalPlatform] || {};
+                                                    return {
+                                                        ...prev,
+                                                        [authModalPlatform]: {
+                                                            connected: true,
+                                                            needsAttention: false,
+                                                            accountName: authTempName || 'Connected Channel API',
+                                                            adsAccountId: authTempId || 'ACT-SIM-9824',
+                                                            ...counts
+                                                        }
+                                                    };
+                                                });
+                                                triggerToast(`Authorized account and connected successfully!`);
+                                            }
                                             setAuthModalPlatform(null);
-                                            triggerToast(`Authorized account and connected successfully!`);
                                         }}
                                         className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm animate-pulse"
                                     >
