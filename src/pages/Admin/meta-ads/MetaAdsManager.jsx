@@ -4,6 +4,12 @@ import Icon from '../../../components/Icon'
 import lottie from 'lottie-web'
 import assistantBotAnimation from '../../../assets/Assistant-Bot.json'
 import marketingAnimation from '../../../assets/marketing.json'
+import salesAnimation from '../../../assets/Sales.json'
+import searchForEmployeeAnimation from '../../../assets/search_for_employee.json'
+import socialMediaInfluencerAnimation from '../../../assets/Social_Media_Influencer.json'
+import socialMediaInteractionAnimation from '../../../assets/Social_Media_Interaction.json'
+import socialMediaMarketingAnnouncementAnimation from '../../../assets/Social_Media_Marketing_announcement.json'
+import websiteAnimation from '../../../assets/website.json'
 import './meta-ads.css'
 
 const LottieAnimation = ({ animationData }) => {
@@ -42,6 +48,63 @@ const OBJECTIVES = [
     { id: 'leads', label: 'Leads', icon: 'person_add', desc: 'Generate leads and collect contacts' },
     { id: 'app_promotion', label: 'App Promotion', icon: 'phone_iphone', desc: 'Promote your app installs and activity' },
     { id: 'sales', label: 'Sales', icon: 'shopping_bag', desc: 'Increase sales and conversions' }
+]
+
+const OBJECTIVE_OPTIONS = [
+    {
+        value: 'awareness',
+        icon: 'campaign',
+        title: 'Awareness',
+        description: 'Show your ads to people who are most likely to remember them.',
+        tags: ['Reach', 'Brand awareness', 'Video views'],
+        illBg: '#d1fae5',
+        animationData: socialMediaMarketingAnnouncementAnimation
+    },
+    {
+        value: 'traffic',
+        icon: 'arrow_selector_tool',
+        title: 'Traffic',
+        description: 'Send people to a destination, such as your website, app, Instagram profile or Facebook event.',
+        tags: ['Link clicks', 'Landing page views', 'Instagram profile visits', 'Messenger, Instagram and WhatsApp', 'Calls'],
+        illBg: '#fef3c7',
+        animationData: websiteAnimation
+    },
+    {
+        value: 'engagement',
+        icon: 'chat',
+        title: 'Engagement',
+        description: 'Get more messages, purchases through messaging, video views, interactions, Page likes or event responses.',
+        tags: ['Messenger, Instagram and WhatsApp', 'Video views', 'Interactions', 'Conversions'],
+        illBg: '#dbeafe',
+        animationData: socialMediaInteractionAnimation
+    },
+    {
+        value: 'leads',
+        icon: 'filter_alt',
+        title: 'Leads',
+        description: 'Collect leads for your business or brand.',
+        tags: ['Website and instant forms', 'Instant forms', 'Messenger, Instagram and WhatsApp', 'Conversions', 'Calls'],
+        illBg: '#ffedd5',
+        animationData: searchForEmployeeAnimation
+    },
+    {
+        value: 'app_promotion',
+        icon: 'install_mobile',
+        title: 'App promotion',
+        description: 'Find new people to install your app and continue using it.',
+        tags: ['App installs', 'App events'],
+        illBg: '#f3e8ff',
+        animationData: socialMediaInfluencerAnimation
+    },
+    {
+        value: 'sales',
+        icon: 'shopping_bag',
+        title: 'Sales',
+        description: 'Find people likely to purchase your product or service.',
+        tags: ['Conversions', 'Catalog sales', 'Messenger, Instagram and WhatsApp', 'Calls'],
+        illBg: '#fee2e2',
+        animationData: salesAnimation
+    }
 ]
 
 const CTAS = ['Learn More', 'Sign Up', 'Contact Us', 'Apply Now', 'Book Now', 'Shop Now']
@@ -305,7 +368,8 @@ export default function MetaAdsManager() {
         name: 'New Awareness Campaign',
         dailyBudget: '50.00',
         objective: 'awareness',
-        status: 'PAUSED'
+        status: 'PAUSED',
+        buyingType: 'Auction'
     })
 
     const fetchAccounts = async () => {
@@ -459,7 +523,7 @@ export default function MetaAdsManager() {
     }
 
     const handleCreateCampaignSubmit = async (e) => {
-        e.preventDefault()
+        if (e && e.preventDefault) e.preventDefault()
         const token = localStorage.getItem('authToken')
         const headers = token ? {
             'Authorization': `Bearer ${token}`,
@@ -467,15 +531,21 @@ export default function MetaAdsManager() {
         } : {
             'Content-Type': 'application/json'
         }
+
+        const objectiveLabel = campaignModalForm.objective.charAt(0).toUpperCase() + campaignModalForm.objective.slice(1).replace('_', ' ');
+        const campaignName = `New ${objectiveLabel} Campaign`;
+        const dailyBudget = "50.00";
+        const status = "PAUSED";
+
         try {
             const res = await fetch(`${apiBaseUrl}/meta/campaigns`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    name: campaignModalForm.name,
+                    name: campaignName,
                     objective: campaignModalForm.objective,
-                    daily_budget: campaignModalForm.dailyBudget,
-                    status: campaignModalForm.status,
+                    daily_budget: dailyBudget,
+                    status: status,
                     page_id: selectedPage
                 })
             })
@@ -483,6 +553,17 @@ export default function MetaAdsManager() {
             if (res.ok) {
                 triggerToast(`Campaign created successfully! ID: ${data.id}`)
                 setCampaignModalOpen(false)
+                setCampaign({
+                    name: campaignName,
+                    objective: campaignModalForm.objective,
+                    buyingType: campaignModalForm.buyingType || 'Auction',
+                    specialCategory: 'None',
+                    budgetOptimization: true,
+                    budgetType: 'Daily',
+                    dailyBudget: dailyBudget,
+                    lifetimeBudget: '350.00',
+                    spendingLimit: '500.00'
+                })
                 setCreationMode('manual')
                 setActiveStep(1)
                 fetchCampaigns()
@@ -881,42 +962,7 @@ export default function MetaAdsManager() {
                     {/* Left Column (col-span-2) */}
                     <div className="lg:col-span-2 space-y-8">
 
-                        {/* Comparison Table */}
-                        <div id="compares-table" className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4 scroll-mt-6">
-                            <div>
-                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">How it compares</h3>
-                                <p className="text-[10px] text-slate-400 font-medium">Choose the best option for your needs.</p>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-slate-100 text-[10px] text-slate-450 font-extrabold uppercase tracking-wider text-center">
-                                            <th className="py-2.5 text-left font-black w-24">Approach</th>
-                                            <th className="py-2.5">Speed</th>
-                                            <th className="py-2.5">Control</th>
-                                            <th className="py-2.5">Beginner Friendly</th>
-                                            <th className="py-2.5">Customization</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100/65 text-[11px]">
-                                        <tr className="hover:bg-slate-50/40 transition-colors text-center">
-                                            <td className="py-3 text-left font-black text-slate-700">Manual</td>
-                                            <td className="py-3 text-amber-500 font-extrabold">⚡⚡</td>
-                                            <td className="py-3">{renderDots(4, 'bg-blue-600')}</td>
-                                            <td className="py-3">{renderDots(2, 'bg-blue-600')}</td>
-                                            <td className="py-3">{renderDots(5, 'bg-blue-600')}</td>
-                                        </tr>
-                                        <tr className="hover:bg-slate-50/40 transition-colors text-center">
-                                            <td className="py-3 text-left font-black text-slate-700">AI</td>
-                                            <td className="py-3 text-amber-500 font-extrabold">⚡⚡⚡⚡</td>
-                                            <td className="py-3">{renderDots(2, 'bg-purple-600')}</td>
-                                            <td className="py-3">{renderDots(5, 'bg-purple-600')}</td>
-                                            <td className="py-3">{renderDots(2, 'bg-purple-600')}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
@@ -1395,76 +1441,161 @@ export default function MetaAdsManager() {
 
             {campaignModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-slate-950/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl border border-slate-100 text-left">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">New Meta Campaign</h3>
+                    <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl border border-slate-100 text-left overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                            <div className="flex items-center space-x-2">
+                                <span className="bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg select-none">
+                                    Create new campaign
+                                </span>
+                            </div>
                             <button
                                 onClick={() => setCampaignModalOpen(false)}
-                                className="w-6 h-6 rounded-full border border-slate-150 flex items-center justify-center hover:bg-slate-50 text-slate-400 cursor-pointer"
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
                             >
-                                <span className="material-symbols-outlined text-[14px]! font-black">close</span>
+                                <span className="material-symbols-outlined text-[20px] font-bold">close</span>
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateCampaignSubmit} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-450 uppercase">Campaign Name</label>
-                                <input
-                                    type="text"
-                                    value={campaignModalForm.name}
-                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none"
-                                    required
-                                />
+                        {/* Modal Body: Left and Right Columns */}
+                        <div className="flex flex-1 overflow-y-auto min-h-0">
+                            {/* Left Column (Options selection) */}
+                            <div className="w-1/2 p-6 border-r border-slate-100 overflow-y-auto space-y-6">
+                                {/* Buying Type */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 text-xs font-black text-slate-800">
+                                        <span>Choose a buying type</span>
+                                        <span className="material-symbols-outlined text-[14px]! text-slate-400 cursor-pointer" title="Buying types define how you pay for and target ads.">info</span>
+                                    </div>
+                                    <select
+                                        value={campaignModalForm.buyingType || 'Auction'}
+                                        onChange={(e) => setCampaignModalForm(prev => ({ ...prev, buyingType: e.target.value }))}
+                                        className="w-full text-xs border border-slate-200 focus:border-blue-500 rounded-xl p-2.5 bg-white outline-none font-bold text-slate-700 cursor-pointer"
+                                    >
+                                        <option value="Auction">Auction</option>
+                                        <option value="Reservation">Reservation</option>
+                                    </select>
+                                </div>
+
+                                {/* Objective Option Header */}
+                                <div className="space-y-3">
+                                    <h4 className="text-[12px]! font-black text-slate-800">Choose a campaign objective</h4>
+
+                                    {/* Grid of objectives */}
+                                    <div className="space-y-1">
+                                        {OBJECTIVE_OPTIONS.map((item) => {
+                                            const isSelected = campaignModalForm.objective === item.value;
+                                            return (
+                                                <div
+                                                    key={item.value}
+                                                    onClick={() => setCampaignModalForm(prev => ({ ...prev, objective: item.value }))}
+                                                    className={`flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all ${isSelected ? 'bg-slate-100/90' : 'hover:bg-slate-50'
+                                                        }`}
+                                                >
+                                                    {/* Custom Radio Button */}
+                                                    <div className={`w-[16px]! h-[16px]! rounded-full border-[2px]! flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-blue-600 bg-white' : 'border-slate-350'
+                                                        }`}>
+                                                        {isSelected && (
+                                                            <div className="w-[8px]! h-[8px]! rounded-full bg-blue-600"></div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Icon Box */}
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                                        <span className={`material-symbols-outlined text-[18px]! ${isSelected ? 'text-slate-800 font-bold' : 'text-slate-500'}`}>
+                                                            {item.icon}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Title */}
+                                                    <span className={`text-xs font-bold ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
+                                                        {item.title}
+                                                    </span>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-450 uppercase">Daily Budget ($)</label>
-                                <input
-                                    type="number"
-                                    value={campaignModalForm.dailyBudget}
-                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, dailyBudget: e.target.value }))}
-                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none"
-                                    required
-                                />
+
+                            {/* Right Column (Objective Details & Illustration) */}
+                            <div className="w-1/2 p-8 flex flex-col items-center bg-slate-50/30 overflow-y-auto">
+                                {(() => {
+                                    const activeObj = OBJECTIVE_OPTIONS.find(item => item.value === campaignModalForm.objective) || OBJECTIVE_OPTIONS[0];
+                                    return (
+                                        <div className="w-full flex flex-col items-start text-left space-y-6">
+                                            {/* Circular Illustration */}
+                                            <div className="w-full flex justify-center py-4">
+                                                <div
+                                                    className="w-40 h-40 rounded-full overflow-hidden flex items-center justify-center shadow-inner transition-all duration-300 relative p-4"
+                                                    style={{ backgroundColor: activeObj.illBg }}
+                                                >
+                                                    <LottieAnimation animationData={activeObj.animationData} />
+                                                </div>
+                                            </div>
+
+                                            {/* Details */}
+                                            <div className="space-y-4 w-full">
+                                                <div>
+                                                    <h3 className="text-sm font-extrabold text-slate-800">
+                                                        {activeObj.title}
+                                                    </h3>
+                                                    <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
+                                                        {activeObj.description}
+                                                    </p>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <h4 className="text-[10px]! font-black text-slate-450 uppercase tracking-wider">
+                                                        Good for:
+                                                    </h4>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {activeObj.tags.map((tag, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="px-2.5 py-1 bg-[#f1f5f9] text-[#475569] text-[10px] font-bold rounded-lg border border-slate-100"
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })()}
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-450 uppercase">Objective</label>
-                                <select
-                                    value={campaignModalForm.objective}
-                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, objective: e.target.value }))}
-                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none font-bold"
-                                >
-                                    <option value="awareness">Awareness</option>
-                                    <option value="leads">Leads</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-450 uppercase">Status</label>
-                                <select
-                                    value={campaignModalForm.status}
-                                    onChange={(e) => setCampaignModalForm(prev => ({ ...prev, status: e.target.value }))}
-                                    className="w-full text-xs border border-slate-200 rounded-xl p-2 bg-white outline-none font-bold"
-                                >
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="PAUSED">Paused</option>
-                                </select>
-                            </div>
-                            <div className="pt-2 flex gap-3">
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 bg-slate-50/50">
+                            {/* Blue Info Link */}
+                            <a
+                                href="https://www.facebook.com/business/help/1438474483098610"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+                            >
+                                About campaign objectives
+                            </a>
+
+                            <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setCampaignModalOpen(false)}
-                                    className="flex-1 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                                    className="px-5 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    type="submit"
-                                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                                    type="button"
+                                    onClick={() => handleCreateCampaignSubmit()}
+                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-750 text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center shadow-sm hover:shadow"
                                 >
-                                    Create Campaign
+                                    Continue
                                 </button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             )}
