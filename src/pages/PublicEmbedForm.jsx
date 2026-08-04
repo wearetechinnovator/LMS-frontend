@@ -684,8 +684,7 @@ export default function PublicEmbedForm() {
                     <div className="mx-6 mt-4 p-3.5 bg-amber-50 border border-amber-250 text-amber-800 text-[11px] rounded-lg flex items-start gap-2.5 font-medium leading-relaxed text-left">
                         <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0 select-none">warning</span>
                         <div>
-                            <span className="font-bold">Admin Mode Enabled: </span>
-                            Submission is disabled to prevent polluting your dashboard analytics with mock leads. To test submissions, please log out or open this link in an Incognito window.
+                            <span className="font-bold">Admin Mode Enabled</span>
                         </div>
                     </div>
                 )}
