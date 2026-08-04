@@ -357,8 +357,8 @@ export default function PublicEmbedForm() {
     useEffect(() => {
         if (!form) return;
 
-        const recaptchaFields = (form.fields || []).filter(f => 
-            f.type === 'captcha' && 
+        const recaptchaFields = (form.fields || []).filter(f =>
+            f.type === 'captcha' &&
             ['recaptcha_v2_checkbox', 'recaptcha_v2_invisible', 'recaptcha_v3'].includes(f.captchaType)
         );
 
@@ -449,7 +449,7 @@ export default function PublicEmbedForm() {
 
         // 1. Resolve Google reCAPTCHA tokens before sending
         let resolvedVals = { ...vals };
-        
+
         for (const f of fields) {
             if (isFieldVisible(f, fields, vals) && f.type === 'captcha') {
                 if (f.captchaType === 'recaptcha_v3') {
@@ -507,20 +507,20 @@ export default function PublicEmbedForm() {
                 const code = resolvedVals[`${f.id}-code`] || '+1';
                 const rawNum = resolvedVals[`${f.id}-num`] || '';
                 let digits = rawNum.replace(/\D/g, '');
-                
+
                 // Strip redundant country code prefix if user typed it manually
                 const codePrefix = code.replace(/\D/g, '');
                 if (codePrefix && digits.startsWith(codePrefix) && digits.length > codePrefix.length) {
                     digits = digits.substring(codePrefix.length);
                 }
-                
+
                 if (f.required || digits.length > 0) {
                     if (digits.length === 0) {
                         setSubmitError(`Phone number is required for "${f.label}".`);
                         setSubmitting(false);
                         return;
                     }
-                    
+
                     const rule = PHONE_VALIDATION[code];
                     if (rule) {
                         const isValid = rule.pattern.test(digits) || (rule.fallbackPattern && rule.fallbackPattern.test(digits));
@@ -548,7 +548,7 @@ export default function PublicEmbedForm() {
                     const country = mode === 'all' ? resolvedVals[`${f.id}-country`] : f.selectedCountry;
                     const state = mode === 'city_only' ? f.selectedState : resolvedVals[`${f.id}-state`];
                     const city = resolvedVals[f.id] || '';
-                    
+
                     const components = [country, state, city].filter(Boolean);
                     submissionBody[f.label] = components.join(', ');
                 } else {
@@ -681,7 +681,7 @@ export default function PublicEmbedForm() {
                     </div>
                 )}
                 {isAdmin && (
-                    <div className="mx-6 mt-4 p-3.5 bg-amber-50 border border-amber-250 text-amber-800 text-[11px] rounded-lg flex items-start gap-2.5 font-medium leading-relaxed text-left">
+                    <div className="mx-6 mt-4 p-1.5 bg-amber-50 border border-amber-250 text-amber-800 text-[11px] rounded-lg flex items-center gap-2.5 font-medium leading-relaxed text-left">
                         <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0 select-none">warning</span>
                         <div>
                             <span className="font-bold">Admin Mode Enabled</span>
@@ -846,7 +846,7 @@ export default function PublicEmbedForm() {
                                         <>
                                             <div className="flex items-center gap-3">
                                                 {captchaData[field.id]?.svg ? (
-                                                    <div 
+                                                    <div
                                                         dangerouslySetInnerHTML={{ __html: captchaData[field.id].svg }}
                                                         className="w-[150px] h-[45px] shrink-0"
                                                     />
@@ -877,15 +877,15 @@ export default function PublicEmbedForm() {
                                 </div>
                             ) : field.type === 'file' ? (
                                 <div className="space-y-2">
-                                    <div 
+                                    <div
                                         className="w-full border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative"
                                         style={{ borderRadius: `${appearance.inputRadius}px` }}
                                         onClick={() => document.getElementById(`file-input-${field.id}`).click()}
                                     >
                                         <Icon name="cloud_upload" size={28} className="text-slate-400" />
                                         <div className="text-[12.5px] font-bold text-slate-700 mt-1">
-                                            {vals[field.id] && vals[field.id].length > 0 
-                                                ? `${vals[field.id].length} file(s) selected` 
+                                            {vals[field.id] && vals[field.id].length > 0
+                                                ? `${vals[field.id].length} file(s) selected`
                                                 : "Drag and drop files here, or browse"
                                             }
                                         </div>
