@@ -31,7 +31,7 @@ export default function PublicEmbedForm() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [successMessage, setSubmitSuccessMessage] = useState("");
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+    const apiBaseUrl = import.meta.env.VITE_BASE_URL || "https://lms-backend-xt66.onrender.com/api/v1";
 
     useEffect(() => {
         fetchForm();
@@ -58,17 +58,17 @@ export default function PublicEmbedForm() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`${apiBaseUrl}/api/forms/embed/${formId}`);
+            const response = await fetch(`${apiBaseUrl}/form/public/get-form/${formId}`);
             const data = await response.json();
-            if (response.ok && data.success) {
-                setFormConfig(data.data);
+            if (response.ok) {
+                setFormConfig(data);
                 const initialData = {};
-                (data.data.fields || []).forEach((field) => {
+                (data.fields || []).forEach((field) => {
                     initialData[field.id] = field.defaultValue || "";
                 });
                 setFormData(initialData);
             } else {
-                setError(data.message || "Failed to load form.");
+                setError(data.error || data.message || "Failed to load form.");
             }
         } catch (err) {
             console.error("Error fetching embed form:", err);
@@ -122,12 +122,23 @@ export default function PublicEmbedForm() {
 
         try {
             setSubmitting(true);
-            const response = await fetch(`${apiBaseUrl}/api/forms/embed/${formId}/submit`, {
+            const payload = {};
+            (formConfig.fields || []).forEach((field) => {
+                if (field.type === "phone") {
+                    const code = formData[`${field.id}_code`] || "US (+1)";
+                    const num = formData[field.id] || "";
+                    payload[field.label] = num ? `${code} ${num}` : "";
+                } else {
+                    payload[field.label] = formData[field.id] || "";
+                }
+            });
+
+            const response = await fetch(`${apiBaseUrl}/form/public/submit/${formId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ data: formData })
+                body: JSON.stringify(payload)
             });
             const data = await response.json();
 
@@ -135,7 +146,7 @@ export default function PublicEmbedForm() {
                 setSubmitSuccess(true);
                 setSubmitSuccessMessage(data.message || "Thank you! Your submission has been received.");
             } else {
-                alert(data.message || "Failed to submit form.");
+                alert(data.error || data.message || "Failed to submit form.");
             }
         } catch (err) {
             console.error("Error submitting form:", err);
@@ -203,12 +214,12 @@ export default function PublicEmbedForm() {
                             <div className="mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                                 {!hideTitleParam && (
                                     <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                                        {formConfig?.title || "Form"}
+                                        {formConfig?.name || formConfig?.title || "Form"}
                                     </h1>
                                 )}
-                                {!hideDescParam && formConfig?.description && (
+                                {!hideDescParam && (formConfig?.description || "Please fill out the form below.") && (
                                     <p className="text-slate-500 text-sm mt-1">
-                                        {formConfig.description}
+                                        {formConfig?.description || "Please fill out the form below."}
                                     </p>
                                 )}
                             </div>
