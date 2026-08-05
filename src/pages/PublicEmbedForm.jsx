@@ -12,7 +12,6 @@ import {
     Sparkles,
     RefreshCw,
 } from "lucide-react";
-import axios from "axios";
 
 export default function PublicEmbedForm() {
     const { formId } = useParams();
@@ -59,20 +58,21 @@ export default function PublicEmbedForm() {
             setLoading(true);
             setError(null);
 
-            const res = await axios.get(`${apiBaseUrl}/api/forms/embed/${formId}`);
-            if (res.data.success) {
-                setFormConfig(res.data.data);
+            const response = await fetch(`${apiBaseUrl}/api/forms/embed/${formId}`);
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setFormConfig(data.data);
                 const initialData = {};
-                (res.data.data.fields || []).forEach((field) => {
+                (data.data.fields || []).forEach((field) => {
                     initialData[field.id] = field.defaultValue || "";
                 });
                 setFormData(initialData);
             } else {
-                setError(res.data.message || "Failed to load form.");
+                setError(data.message || "Failed to load form.");
             }
         } catch (err) {
             console.error("Error fetching embed form:", err);
-            setError(err.response?.data?.message || "Form not found or unavailable.");
+            setError(err.message || "Form not found or unavailable.");
         } finally {
             setLoading(false);
         }
@@ -122,19 +122,24 @@ export default function PublicEmbedForm() {
 
         try {
             setSubmitting(true);
-            const res = await axios.post(`${apiBaseUrl}/api/forms/embed/${formId}/submit`, {
-                data: formData,
+            const response = await fetch(`${apiBaseUrl}/api/forms/embed/${formId}/submit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ data: formData })
             });
+            const data = await response.json();
 
-            if (res.data.success) {
+            if (response.ok && data.success) {
                 setSubmitSuccess(true);
-                setSubmitSuccessMessage(res.data.message || "Thank you! Your submission has been received.");
+                setSubmitSuccessMessage(data.message || "Thank you! Your submission has been received.");
             } else {
-                alert(res.data.message || "Failed to submit form.");
+                alert(data.message || "Failed to submit form.");
             }
         } catch (err) {
             console.error("Error submitting form:", err);
-            alert(err.response?.data?.message || "Failed to submit form. Please try again.");
+            alert(err.message || "Failed to submit form. Please try again.");
         } finally {
             setSubmitting(false);
         }
