@@ -152,6 +152,19 @@ const getObjectiveDetails = (obj) => {
     if (o.includes('SALE')) return { logo: 'shopping_bag', color: 'bg-red-500', label: 'Sales' };
     return { logo: 'campaign', color: 'bg-slate-500', label: 'Awareness' };
 }
+const ToggleSwitch = ({ checked, onChange }) => (
+    <button
+        type="button"
+        onClick={onChange}
+        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0 cursor-pointer ${checked ? 'bg-blue-600' : 'bg-slate-200'
+            }`}
+    >
+        <span
+            className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                }`}
+        />
+    </button>
+);
 
 export default function MetaAdsManager() {
     // -------------------------------------------------------------
@@ -218,6 +231,36 @@ export default function MetaAdsManager() {
     ])
     const [aiQuestionIndex, setAiQuestionIndex] = useState(0)
     const [chatIsTyping, setChatIsTyping] = useState(false)
+    const [liveVideoAd, setLiveVideoAd] = useState(false)
+    const [abTest, setAbTest] = useState(false)
+    const [frequencyControl, setFrequencyControl] = useState(false)
+    const [showDetailsOptions, setShowDetailsOptions] = useState(false)
+    const [shareBudget20, setShareBudget20] = useState(false)
+    const [adSetName, setAdSetName] = useState('New Engagement ad set')
+    const [conversionLocation, setConversionLocation] = useState('Message destinations')
+    const [performanceGoal, setPerformanceGoal] = useState('Maximise number of conversations')
+    const [costPerResult, setCostPerResult] = useState('')
+    const [showConversionOptions, setShowConversionOptions] = useState(false)
+    const [dailyBudgetAmount, setDailyBudgetAmount] = useState('800.00')
+    const [startDateVal, setStartDateVal] = useState('2026-08-05')
+    const [startTimeVal, setStartTimeVal] = useState('12:40')
+    const [adSetEndDateEnabled, setAdSetEndDateEnabled] = useState(false)
+    const [adSetEndDateVal, setAdSetEndDateVal] = useState('2026-09-05')
+    const [adSetEndTimeVal, setAdSetEndTimeVal] = useState('12:40')
+    const [showBudgetOptions, setShowBudgetOptions] = useState(false)
+    const [scheduleBudgetIncreases, setScheduleBudgetIncreases] = useState(false)
+    const [setScheduleForAds, setSetScheduleForAds] = useState(false)
+    const [securitiesInvestment, setSecuritiesInvestment] = useState(false)
+    const [showAudienceOptions, setShowAudienceOptions] = useState(false)
+    const [partnershipAd, setPartnershipAd] = useState(false)
+    const [adCreativeFormat, setAdCreativeFormat] = useState('single_image')
+    const [multiAdvertiserAds, setMultiAdvertiserAds] = useState(true)
+    const [urlParameters, setUrlParameters] = useState('key1=value1&key2=value2')
+    const [websiteEventsEnabled, setWebsiteEventsEnabled] = useState(true)
+    const [appEventsEnabled, setAppEventsEnabled] = useState(false)
+    const [offlineEventsEnabled, setOfflineEventsEnabled] = useState(false)
+    const [selectedAdPreviewTab, setSelectedAdPreviewTab] = useState('ad')
+    const [adName, setAdName] = useState('New Engagement ad')
     const [integrations, setIntegrations] = useState({
         meta: { connected: false, accountName: null, adsAccountId: null, pagesCount: 0, adAccountsCount: 0 },
         google: { connected: true, accountName: 'Google Ads Search Channel', adsAccountId: '938-123-4567', campaignsCount: 2, adAccountsCount: 2 },
@@ -537,7 +580,7 @@ export default function MetaAdsManager() {
         }
 
         const objectiveLabel = campaignModalForm.objective.charAt(0).toUpperCase() + campaignModalForm.objective.slice(1).replace('_', ' ');
-        const campaignName = `New ${objectiveLabel} Campaign`;
+        const campaignName = campaignModalForm.name || `New ${objectiveLabel} Campaign`;
         const dailyBudget = "50.00";
         const status = "PAUSED";
 
@@ -568,15 +611,49 @@ export default function MetaAdsManager() {
                     lifetimeBudget: '350.00',
                     spendingLimit: '500.00'
                 })
+                setAdSetName(`New ${objectiveLabel} ad set`)
+                setAdName(`New ${objectiveLabel} ad`)
                 setCreationMode('manual')
                 setActiveStep(1)
                 fetchCampaigns()
             } else {
-                triggerToast(data.error || "Failed to create campaign.")
+                triggerToast(data.error || "Failed to create campaign. Proceeding in draft mode.")
+                setCampaignModalOpen(false)
+                setCampaign({
+                    name: campaignName,
+                    objective: campaignModalForm.objective,
+                    buyingType: campaignModalForm.buyingType || 'Auction',
+                    specialCategory: 'None',
+                    budgetOptimization: true,
+                    budgetType: 'Daily',
+                    dailyBudget: dailyBudget,
+                    lifetimeBudget: '350.00',
+                    spendingLimit: '500.00'
+                })
+                setAdSetName(`New ${objectiveLabel} ad set`)
+                setAdName(`New ${objectiveLabel} ad`)
+                setCreationMode('manual')
+                setActiveStep(1)
             }
         } catch (err) {
             console.error(err)
-            triggerToast("Network error creating campaign.")
+            triggerToast("Proceeding in manual draft mode...")
+            setCampaignModalOpen(false)
+            setCampaign({
+                name: campaignName,
+                objective: campaignModalForm.objective,
+                buyingType: campaignModalForm.buyingType || 'Auction',
+                specialCategory: 'None',
+                budgetOptimization: true,
+                budgetType: 'Daily',
+                dailyBudget: dailyBudget,
+                lifetimeBudget: '350.00',
+                spendingLimit: '500.00'
+            })
+            setAdSetName(`New ${objectiveLabel} ad set`)
+            setAdName(`New ${objectiveLabel} ad`)
+            setCreationMode('manual')
+            setActiveStep(1)
         }
     }
 
@@ -1484,7 +1561,6 @@ export default function MetaAdsManager() {
                                 {/* Objective Option Header */}
                                 <div className="space-y-3">
                                     <h4 className="text-[12px]! font-black text-slate-800">Choose a campaign objective</h4>
-
                                     {/* Grid of objectives */}
                                     <div className="space-y-1">
                                         {OBJECTIVE_OPTIONS.map((item) => {
@@ -1492,7 +1568,14 @@ export default function MetaAdsManager() {
                                             return (
                                                 <div
                                                     key={item.value}
-                                                    onClick={() => setCampaignModalForm(prev => ({ ...prev, objective: item.value }))}
+                                                    onClick={() => {
+                                                        const label = item.title;
+                                                        setCampaignModalForm(prev => ({
+                                                            ...prev,
+                                                            objective: item.value,
+                                                            name: `New ${label} Campaign`
+                                                        }));
+                                                    }}
                                                     className={`flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all ${isSelected ? 'bg-slate-100/90' : 'hover:bg-slate-50'
                                                         }`}
                                                 >
@@ -1795,9 +1878,9 @@ export default function MetaAdsManager() {
                 {/* Central Stepper */}
                 <div className="flex items-center gap-6">
                     {[
-                        { step: 1, label: 'Campaign' },
-                        { step: 2, label: 'Ad Set' },
-                        { step: 3, label: 'Ad' },
+                        { step: 1, label: campaign.name || 'Campaign' },
+                        { step: 2, label: adSetName || 'Ad Set' },
+                        { step: 3, label: adName || 'Ad' },
                         { step: 4, label: 'Review' }
                     ].map((item, idx) => (
                         <React.Fragment key={item.step}>
@@ -2126,502 +2209,735 @@ export default function MetaAdsManager() {
                     {/* ── COLUMN 1: CONFIGURATION FORM (LEFT) ── */}
                     <div className="flex-1 bg-white border-r border-slate-200 overflow-y-auto p-8 text-left meta-scroll">
                         {activeStep === 1 ? (
-                            <div className="max-w-[580px] mx-auto space-y-6">
-                                <div>
-                                    <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Campaign</h2>
-                                    <p className="text-xs text-slate-400 mt-1 font-medium">Define your campaign objective and budget.</p>
-                                </div>
-
-                                {/* Field 1: Campaign Name */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-slate-700">Campaign Name</label>
-                                    <div className="relative flex items-center">
+                            <div className="max-w-[580px] mx-auto space-y-4">
+                                {/* Card 1: Campaign name */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Campaign name</h3>
+                                    </div>
+                                    <div className="flex gap-3">
                                         <input
                                             type="text"
                                             value={campaign.name}
                                             onChange={e => setCampaign({ ...campaign, name: e.target.value.slice(0, 100) })}
-                                            className="w-full h-10 pl-3 pr-16 border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 rounded-xl text-xs font-semibold text-slate-800 transition-all outline-none"
+                                            className="flex-1 h-9 px-3 border border-slate-200 focus:border-blue-500 rounded-lg text-xs font-semibold text-slate-800 transition-all outline-none"
                                         />
-                                        <span className="absolute right-4 text-[10px] font-bold text-slate-400">
-                                            {campaign.name.length}/100
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Field 2: Objective Card Grid */}
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-700 block">Objective</label>
-                                        <p className="text-[11px] text-slate-400 mt-0.5 font-normal">Choose the objective that best aligns with your business goals.</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {OBJECTIVES.map(obj => {
-                                            const isSelected = campaign.objective === obj.id
-                                            return (
-                                                <button
-                                                    key={obj.id}
-                                                    onClick={() => setCampaign({ ...campaign, objective: obj.id })}
-                                                    className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col gap-2.5 cursor-pointer ${isSelected
-                                                        ? 'border-blue-500 bg-blue-50/30 ring-1 ring-blue-500 shadow-[0_2px_8px_rgba(0,102,254,0.04)]'
-                                                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/30'
-                                                        }`}
-                                                >
-                                                    {/* Selection checkmark bubble */}
-                                                    {isSelected && (
-                                                        <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                                            <span className="material-symbols-outlined text-[10px]! font-bold">check</span>
-                                                        </div>
-                                                    )}
-
-                                                    <span className={`material-symbols-outlined text-[20px]! ${isSelected ? 'text-blue-600' : 'text-slate-400'}`}>
-                                                        {obj.icon}
-                                                    </span>
-
-                                                    <div>
-                                                        <span className="text-[11px] font-bold text-slate-800 block leading-none">{obj.label}</span>
-                                                        <span className="text-[9.5px] text-slate-400 font-normal mt-1 block leading-snug">
-                                                            {obj.desc}
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Field 3: Buying Type & Special Category */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-slate-700">Buying Type</label>
-                                        <select
-                                            value={campaign.buyingType}
-                                            onChange={e => setCampaign({ ...campaign, buyingType: e.target.value })}
-                                            className="w-full h-10 px-3 border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 transition-all outline-none bg-white cursor-pointer"
-                                        >
-                                            <option value="Auction">Auction</option>
-                                            <option value="Reservation">Reservation</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-1">
-                                            <label className="text-xs font-semibold text-slate-700">Special Category</label>
-                                            <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer hover:text-slate-600" title="More information">info</span>
-                                        </div>
-                                        <select
-                                            value={campaign.specialCategory}
-                                            onChange={e => setCampaign({ ...campaign, specialCategory: e.target.value })}
-                                            className="w-full h-10 px-3 border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 transition-all outline-none bg-white cursor-pointer"
-                                        >
-                                            <option value="None">None</option>
-                                            <option value="Housing">Housing</option>
-                                            <option value="Employment">Employment</option>
-                                            <option value="Credit">Credit</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* Field 4: Campaign Budget Optimization Toggle & Inline budget row */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <span className="text-xs font-extrabold text-slate-900 block">Campaign Budget Optimization</span>
-                                            <span className="text-[9.5px] text-slate-400 font-medium block">Optimize budget across ad sets for better performance.</span>
-                                        </div>
-
-                                        {/* Toggle Switch */}
                                         <button
                                             type="button"
-                                            onClick={() => setCampaign({ ...campaign, budgetOptimization: !campaign.budgetOptimization })}
-                                            className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none cursor-pointer flex items-center ${campaign.budgetOptimization ? 'bg-blue-600' : 'bg-slate-200'
-                                                }`}
+                                            onClick={() => triggerToast("Template creation modal opened.")}
+                                            className="h-9 px-4 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer text-center"
                                         >
-                                            <div
-                                                className={`bg-white w-4 h-4 rounded-full shadow-sm transform duration-200 ${campaign.budgetOptimization ? 'translate-x-5' : 'translate-x-0'
-                                                    }`}
-                                            />
+                                            Create template
                                         </button>
                                     </div>
+                                </div>
 
+                                {/* Card 2: Live video ad */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Live video ad</h3>
+                                        <div className="flex items-center gap-2 select-none">
+                                            <span className="text-[10px] font-bold text-slate-400">{liveVideoAd ? 'On' : 'Off'}</span>
+                                            <ToggleSwitch checked={liveVideoAd} onChange={() => setLiveVideoAd(!liveVideoAd)} />
+                                        </div>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Use settings that are suggested for a live video ad. This will adjust your budget and schedule to more efficiently deliver your ads and drive engagement.
+                                    </p>
+                                </div>
+
+                                {/* Card 3: Campaign details */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Campaign details</h3>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <h4 className="text-[10.5px] font-bold text-slate-400">Buying type</h4>
+                                        <p className="text-xs font-semibold text-slate-800">Auction</p>
+                                    </div>
+                                    <div className="space-y-1.5 pt-1.5">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-400">Campaign objective</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-450 cursor-pointer" title="Campaign objective is dynamic">info</span>
+                                        </div>
+                                        <p className="text-xs font-semibold text-slate-800 capitalize">
+                                            {campaign.objective}
+                                        </p>
+                                    </div>
+                                    <div className="pt-2 border-t border-slate-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDetailsOptions(!showDetailsOptions)}
+                                            className="text-[11px] font-bold text-blue-600 hover:text-blue-750 flex items-center gap-0.5 focus:outline-none cursor-pointer select-none"
+                                        >
+                                            <span>{showDetailsOptions ? 'Hide options' : 'Show options'}</span>
+                                            <span className="material-symbols-outlined text-[16px]!">
+                                                {showDetailsOptions ? 'arrow_drop_up' : 'arrow_drop_down'}
+                                            </span>
+                                        </button>
+                                        {showDetailsOptions && (
+                                            <div className="pt-3.5 space-y-2 animate-fadeIn">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-[10.5px] font-bold text-slate-500">Campaign spending limit</span>
+                                                    <span className="text-slate-350 text-[10px] select-none">•</span>
+                                                    <span className="text-[10.5px] font-bold text-slate-400">Optional</span>
+                                                    <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer select-none" title="Limits overall spend">info</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-400">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={campaign.spendingLimit}
+                                                        onChange={e => setCampaign({ ...campaign, spendingLimit: e.target.value })}
+                                                        placeholder="None added"
+                                                        className="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-slate-400">USD</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Card 4: Advantage+ campaign budget */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h3 className="text-xs font-bold text-slate-800 tracking-tight">Advantage+ campaign budget</h3>
+                                            <span className="material-symbols-outlined text-[14px]! text-blue-500 font-bold">star</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 select-none">
+                                            <span className="text-[10px] font-bold text-slate-400">{campaign.budgetOptimization ? 'On' : 'Off'}</span>
+                                            <ToggleSwitch
+                                                checked={campaign.budgetOptimization}
+                                                onChange={() => setCampaign({ ...campaign, budgetOptimization: !campaign.budgetOptimization })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Distribute your budget across ad sets to get more results. You can control spending for each ad set. <span className="text-blue-600 cursor-pointer hover:underline">About Advantage+ campaign budget</span>
+                                    </p>
                                     {campaign.budgetOptimization && (
-                                        <div className="flex items-center gap-6 flex-wrap">
-                                            {/* Daily Budget */}
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="budgetType"
-                                                    checked={campaign.budgetType === 'Daily'}
-                                                    onChange={() => setCampaign({ ...campaign, budgetType: 'Daily' })}
-                                                    className="accent-blue-600 w-3.5 h-3.5 cursor-pointer"
-                                                />
-                                                <span className="text-[11px] font-bold text-slate-700">Daily Budget</span>
-                                                <span className="text-[10px] font-bold text-slate-400">$</span>
-                                                <input
-                                                    type="number"
-                                                    value={campaign.dailyBudget}
-                                                    disabled={campaign.budgetType !== 'Daily'}
-                                                    onChange={e => setCampaign({ ...campaign, dailyBudget: e.target.value })}
-                                                    className="w-16 h-7 text-right px-1.5 border border-slate-200 rounded-lg text-[11px] font-extrabold text-slate-800 disabled:opacity-40 outline-none"
-                                                />
-                                                <span className="text-[9.5px] font-bold text-slate-400">USD</span>
-                                            </label>
+                                        <div className="pt-4 border-t border-slate-100 space-y-4 animate-fadeIn">
+                                            <div className="flex items-center gap-3">
+                                                <select
+                                                    value={campaign.budgetType}
+                                                    onChange={e => setCampaign({ ...campaign, budgetType: e.target.value })}
+                                                    className="text-xs border border-slate-200 focus:border-blue-500 rounded-lg p-2 bg-white outline-none font-bold text-slate-700 cursor-pointer"
+                                                >
+                                                    <option value="Daily">Daily Budget</option>
+                                                    <option value="Lifetime">Lifetime Budget</option>
+                                                </select>
+                                                <div className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg bg-white">
+                                                    <span className="text-xs font-bold text-slate-400">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={campaign.budgetType === 'Daily' ? campaign.dailyBudget : campaign.lifetimeBudget}
+                                                        onChange={e => {
+                                                            if (campaign.budgetType === 'Daily') {
+                                                                setCampaign({ ...campaign, dailyBudget: e.target.value })
+                                                            } else {
+                                                                setCampaign({ ...campaign, lifetimeBudget: e.target.value })
+                                                            }
+                                                        }}
+                                                        className="w-20 text-slate-800 text-xs font-semibold outline-none"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-slate-450">USD</span>
+                                                </div>
+                                            </div>
 
-                                            {/* Lifetime Budget */}
-                                            <label className="flex items-center gap-2 cursor-pointer">
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center gap-1 select-none">
+                                                    <h4 className="text-[10.5px] font-bold text-slate-400">Campaign bid strategy</h4>
+                                                    <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Bid strategy defines how we bid for your ads">info</span>
+                                                </div>
+                                                <p className="text-xs font-semibold text-slate-800">Highest volume</p>
+                                            </div>
+
+                                            <label className="flex items-start gap-2 cursor-pointer pt-2 select-none">
                                                 <input
-                                                    type="radio"
-                                                    name="budgetType"
-                                                    checked={campaign.budgetType === 'Lifetime'}
-                                                    onChange={() => setCampaign({ ...campaign, budgetType: 'Lifetime' })}
-                                                    className="accent-blue-600 w-3.5 h-3.5 cursor-pointer"
+                                                    type="checkbox"
+                                                    checked={shareBudget20}
+                                                    onChange={() => setShareBudget20(!shareBudget20)}
+                                                    className="accent-blue-600 rounded mt-0.5"
                                                 />
-                                                <span className="text-[11px] font-bold text-slate-700">Lifetime Budget</span>
-                                                <span className="text-[10px] font-bold text-slate-400">$</span>
-                                                <input
-                                                    type="number"
-                                                    value={campaign.lifetimeBudget}
-                                                    disabled={campaign.budgetType !== 'Lifetime'}
-                                                    onChange={e => setCampaign({ ...campaign, lifetimeBudget: e.target.value })}
-                                                    className="w-16 h-7 text-right px-1.5 border border-slate-200 rounded-lg text-[11px] font-extrabold text-slate-800 disabled:opacity-40 outline-none"
-                                                />
-                                                <span className="text-[9.5px] font-bold text-slate-400">USD</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-[10.5px] font-bold text-slate-700">Share up to 20% of your budget with other ad sets</span>
+                                                    <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Distributes a portion of the budget to other ad sets to boost volume">info</span>
+                                                </div>
                                             </label>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Field 5: Campaign Spending Limit */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-slate-700">Campaign Spending Limit · <span className="font-normal text-slate-400">Optional</span></label>
-                                    <div className="flex items-center gap-2 p-3 border border-slate-200 rounded-xl bg-white">
-                                        <span className="text-[11px] font-bold text-slate-400">$</span>
-                                        <input
-                                            type="number"
-                                            value={campaign.spendingLimit}
-                                            onChange={e => setCampaign({ ...campaign, spendingLimit: e.target.value })}
-                                            className="flex-1 h-6 px-1 text-slate-800 text-[11px] font-extrabold outline-none"
-                                        />
-                                        <span className="text-[9.5px] font-bold text-slate-400">USD</span>
+                                {/* Card 5: Campaign frequency control */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Campaign frequency control</h3>
+                                        <div className="flex items-center gap-2 select-none">
+                                            <span className="text-[10px] font-bold text-slate-400">{frequencyControl ? 'On' : 'Off'}</span>
+                                            <ToggleSwitch checked={frequencyControl} onChange={() => setFrequencyControl(!frequencyControl)} />
+                                        </div>
                                     </div>
-                                    <p className="text-[9.5px] text-slate-400 font-medium">We won't spend more than this amount.</p>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Set a frequency if you have a specific number of times that you want people to see your ads throughout your campaign. <span className="text-blue-600 cursor-pointer hover:underline">Learn more</span>
+                                    </p>
                                 </div>
 
-                                {/* Field 6: Advanced Settings Accordion */}
-                                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAdvancedOpen(!advancedOpen)}
-                                        className="w-full p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors focus:outline-none cursor-pointer"
-                                    >
-                                        <span className="text-xs font-extrabold text-slate-800">Advanced Settings</span>
-                                        <span className={`material-symbols-outlined text-[18px]! text-slate-400 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}>
-                                            expand_more
-                                        </span>
-                                    </button>
+                                {/* Card 6: A/B test */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">A/B test</h3>
+                                        <div className="flex items-center gap-2 select-none">
+                                            <span className="text-[10px] font-bold text-slate-400">{abTest ? 'On' : 'Off'}</span>
+                                            <ToggleSwitch checked={abTest} onChange={() => setAbTest(!abTest)} />
+                                        </div>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Help improve ad performance by comparing versions to see what works best. For accuracy, each one will be shown to separate groups of your audience. <span className="text-blue-600 cursor-pointer hover:underline">About A/B tests</span>
+                                    </p>
+                                </div>
 
-                                    <AnimatePresence>
-                                        {advancedOpen && (
-                                            <motion.div
-                                                initial={{ height: 0 }}
-                                                animate={{ height: 'auto' }}
-                                                exit={{ height: 0 }}
-                                                className="overflow-hidden border-t border-slate-100"
-                                            >
-                                                <div className="p-4 space-y-3.5 text-xs text-slate-600 bg-slate-50/30">
-                                                    <div className="flex justify-between">
-                                                        <span className="font-bold text-slate-400">Bid Strategy</span>
-                                                        <span className="font-extrabold text-slate-700">Lowest Cost (Default)</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="font-bold text-slate-400">Scheduling</span>
-                                                        <span className="font-extrabold text-slate-700">Run continuously starting today</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="font-bold text-slate-400">Frequency Cap</span>
-                                                        <span className="font-extrabold text-slate-700">Default (Uncapped)</span>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                {/* Card 7: Special Ad Categories */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Special Ad Categories</h3>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Declare if your ads are related to financial products and services, employment, housing, social issues, elections or politics to help prevent ad rejections. Requirements differ by country. <span className="text-blue-600 cursor-pointer hover:underline">About Special Ad Categories</span>
+                                    </p>
+                                    <div className="space-y-2">
+                                        <h4 className="text-[10.5px] font-bold text-slate-400">Categories</h4>
+                                        <p className="text-[10px] text-slate-400 font-medium">Select the categories that best describe what this campaign will advertise.</p>
+                                        <select
+                                            value={campaign.specialCategory}
+                                            onChange={e => setCampaign({ ...campaign, specialCategory: e.target.value })}
+                                            className="w-full text-xs border border-slate-200 focus:border-blue-500 rounded-lg p-2.5 bg-white outline-none font-semibold text-slate-700 cursor-pointer"
+                                        >
+                                            <option value="None">Declare category if applicable</option>
+                                            <option value="Housing">Housing</option>
+                                            <option value="Employment">Employment</option>
+                                            <option value="Credit">Credit</option>
+                                            <option value="Social Issues">Social Issues, Elections or Politics</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         ) : activeStep === 2 ? (
-                            <div className="max-w-[580px] mx-auto space-y-6">
-                                <div>
-                                    <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Ad Set</h2>
-                                    <p className="text-xs text-slate-400 mt-1 font-medium">Configure target audience, optimization goals, and placements.</p>
+                            <div className="max-w-[580px] mx-auto space-y-4">
+                                {/* Card 1: Ad set name */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Ad set name</h3>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            value={adSetName}
+                                            onChange={e => setAdSetName(e.target.value.slice(0, 100))}
+                                            className="flex-1 h-9 px-3 border border-slate-200 focus:border-blue-500 rounded-lg text-xs font-semibold text-slate-800 transition-all outline-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => triggerToast("Template creation modal opened.")}
+                                            className="h-9 px-4 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer text-center"
+                                        >
+                                            Create template
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {/* Section 1: Conversion Location */}
-                                <div className="border border-slate-200/80 rounded-2xl bg-white p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
-                                    <div className="flex items-start gap-2.5">
-                                        <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold flex items-center justify-center mt-0.5">1</div>
-                                        <div className="space-y-0.5">
-                                            <h3 className="text-xs font-bold text-slate-800 leading-tight">Conversion Location</h3>
-                                            <p className="text-[10px] text-slate-400 leading-tight font-medium">Choose where you want to drive results.</p>
-                                        </div>
+                                {/* Card 2: Conversion */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Conversion</h3>
                                     </div>
 
-                                    <div className="grid grid-cols-3 gap-2.5">
-                                        {[
-                                            { id: 'website', label: 'Website', icon: 'language' },
-                                            { id: 'app', label: 'App', icon: 'phone_iphone' },
-                                            { id: 'messenger', label: 'Messenger', icon: 'chat' },
-                                            { id: 'whatsapp', label: 'WhatsApp', icon: 'chat_bubble' },
-                                            { id: 'calls', label: 'Phone Calls', icon: 'call' },
-                                            { id: 'instagram', label: 'Instagram', icon: 'photo_camera' }
-                                        ].map(loc => {
-                                            const isSelected = adSet.conversionLocation === loc.id
-                                            return (
-                                                <button
-                                                    key={loc.id}
-                                                    onClick={() => setAdSet({ ...adSet, conversionLocation: loc.id })}
-                                                    className={`p-3 rounded-xl border text-center transition-all relative flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[72px] ${isSelected
-                                                        ? 'border-blue-500 bg-blue-50/20 ring-1 ring-blue-500 shadow-[0_1px_6px_rgba(37,99,235,0.03)]'
-                                                        : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50/30'
-                                                        }`}
-                                                >
-                                                    {isSelected && (
-                                                        <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                                                            <span className="material-symbols-outlined text-[8px]! font-bold">check</span>
-                                                        </div>
-                                                    )}
-                                                    <span className={`material-symbols-outlined text-[18px]! ${isSelected ? 'text-blue-600' : 'text-slate-400'}`}>
-                                                        {loc.icon}
+                                    {/* Conversion Location */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10.5px] font-bold text-slate-500">Conversion location</label>
+                                        <select
+                                            value={conversionLocation}
+                                            onChange={e => setConversionLocation(e.target.value)}
+                                            className="w-full text-xs border border-slate-200 focus:border-blue-500 rounded-lg p-2.5 bg-white outline-none font-semibold text-slate-750 cursor-pointer"
+                                        >
+                                            <option value="Message destinations">Message destinations</option>
+                                            <option value="Website">Website</option>
+                                            <option value="App">App</option>
+                                            <option value="Messenger">Messenger</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Facebook Page Section */}
+                                    <div className="space-y-1.5 pt-1.5">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-500">Facebook Page</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="The page that represents your business">info</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-450 leading-relaxed font-semibold">
+                                            This Page will represent your business in your ad and conversation.
+                                        </p>
+                                        <div className="flex items-center justify-between p-3.5 bg-slate-50/50 border border-slate-100 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center border border-slate-100 shadow-sm relative animate-fadeIn">
+                                                    <span className="material-symbols-outlined text-[22px] text-slate-450">person</span>
+                                                    <span className="w-4 h-4 bg-blue-600 rounded-full border border-white flex items-center justify-center absolute bottom-0 right-0 select-none">
+                                                        <span className="material-symbols-outlined text-[8px]! text-white font-black">check</span>
                                                     </span>
-                                                    <span className="text-[10px] font-bold text-slate-700 block leading-tight">{loc.label}</span>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Section 2: Pixel & Optimization */}
-                                <div className="border border-slate-200/80 rounded-2xl bg-white p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
-                                    <div className="flex items-start gap-2.5">
-                                        <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold flex items-center justify-center mt-0.5">2</div>
-                                        <div className="space-y-0.5">
-                                            <h3 className="text-xs font-bold text-slate-800 leading-tight">Pixel & Optimization</h3>
-                                            <p className="text-[10px] text-slate-400 leading-tight font-medium">Select pixel and optimization event.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold text-slate-500">Pixel</label>
-                                            <select
-                                                value={adSet.pixel}
-                                                onChange={e => setAdSet({ ...adSet, pixel: e.target.value })}
-                                                className="w-full h-9 px-3 border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 transition-all outline-none bg-white cursor-pointer"
-                                            >
-                                                <option value="Sayan's Pixel">Sayan's Pixel</option>
-                                                <option value="Secondary Pixel">Secondary Pixel</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold text-slate-500">Optimization Event</label>
-                                            <select
-                                                value={adSet.optimizationEvent}
-                                                onChange={e => setAdSet({ ...adSet, optimizationEvent: e.target.value })}
-                                                className="w-full h-9 px-3 border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 transition-all outline-none bg-white cursor-pointer"
-                                            >
-                                                <option value="Purchase">Purchase</option>
-                                                <option value="Lead">Lead</option>
-                                                <option value="AddToCart">Add to Cart</option>
-                                                <option value="PageView">Page View</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Section 3: Audience */}
-                                <div className="border border-slate-200/80 rounded-2xl bg-white p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
-                                    <div className="flex items-start gap-2.5">
-                                        <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold flex items-center justify-center mt-0.5">3</div>
-                                        <div className="space-y-0.5">
-                                            <h3 className="text-xs font-bold text-slate-800 leading-tight">Audience</h3>
-                                            <p className="text-[10px] text-slate-400 leading-tight font-medium">Define who you want to reach.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3.5">
-                                        {/* Locations */}
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold text-slate-500">Locations</label>
-                                            <select className="w-full h-9 px-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 bg-white mb-2 outline-none cursor-pointer">
-                                                <option>People living in or recently in this location</option>
-                                                <option>People living in this location</option>
-                                                <option>People recently in this location</option>
-                                            </select>
-
-                                            {/* Tag Container */}
-                                            <div className="flex items-center gap-1.5 flex-wrap p-2 border border-slate-200 rounded-xl bg-slate-50/50">
-                                                {adSet.locations.map(loc => (
-                                                    <div key={loc} className="flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 rounded-lg shadow-xs">
-                                                        <span>{loc}</span>
-                                                        <button
-                                                            onClick={() => setAdSet({ ...adSet, locations: adSet.locations.filter(l => l !== loc) })}
-                                                            className="hover:text-red-500 cursor-pointer"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                <div className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black rounded-lg uppercase">
-                                                    +2 more
+                                                </div>
+                                                <div className="text-left">
+                                                    <h5 className="text-[11px] font-bold text-slate-800">Facebook Page</h5>
+                                                    <p className="text-[10.5px] text-slate-450 font-semibold mt-0.5">{selectedPage || "Zengame"}</p>
                                                 </div>
                                             </div>
+                                            <button type="button" onClick={() => triggerToast("Edit Facebook page selection.")} className="p-1 hover:bg-slate-150 rounded cursor-pointer">
+                                                <span className="material-symbols-outlined text-[16px]! text-slate-455">edit</span>
+                                            </button>
                                         </div>
+                                    </div>
 
-                                        {/* Age range */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500">
-                                                <span>Age</span>
-                                                <span className="font-extrabold text-slate-800">{adSet.ageMin} - {adSet.ageMax}+</span>
+                                    {/* Message destinations Section */}
+                                    <div className="space-y-1.5 pt-1.5">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-500">Message destinations</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Where messages are received">info</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-455 leading-relaxed font-semibold">
+                                            Manual destination
+                                        </p>
+                                        <div className="flex items-center gap-2 p-1.5 px-3 bg-blue-50/30 border border-blue-100/50 rounded-lg w-max select-none">
+                                            <span className="material-symbols-outlined text-[15px]! text-blue-600">chat</span>
+                                            <span className="text-[10.5px] font-bold text-blue-850">{selectedPage || "Zengame"}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Performance Goal */}
+                                    <div className="space-y-1.5 pt-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-[10.5px] font-bold text-slate-500">Performance goal</h4>
+                                            <span className="text-[10px] font-bold text-blue-600 cursor-pointer hover:underline">About performance goals</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-455 font-semibold leading-relaxed">
+                                            How you measure success for your ads.
+                                        </p>
+                                        <select
+                                            value={performanceGoal}
+                                            onChange={e => setPerformanceGoal(e.target.value)}
+                                            className="w-full text-xs border border-slate-200 focus:border-blue-500 rounded-lg p-2.5 bg-white outline-none font-semibold text-slate-700 cursor-pointer"
+                                        >
+                                            <option value="Maximise number of conversations">Maximise number of conversations</option>
+                                            <option value="Maximise number of link clicks">Maximise number of link clicks</option>
+                                            <option value="Maximise landing page views">Maximise landing page views</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Cost per result goal */}
+                                    <div className="space-y-1.5 pt-1.5">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-500">Cost per result goal</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-455 cursor-pointer" title="Optional target amount">info</span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={costPerResult}
+                                            onChange={e => setCostPerResult(e.target.value)}
+                                            placeholder="X.XXX"
+                                            className="w-full h-9 px-3 border border-slate-200 focus:border-blue-500 rounded-lg text-xs font-semibold text-slate-800 transition-all outline-none"
+                                        />
+                                        <p className="text-[10px] text-slate-450 font-semibold leading-relaxed">
+                                            Meta will aim to spend your entire budget and get the most results using the highest-volume bid strategy.
+                                        </p>
+                                    </div>
+
+                                    {/* Value rules */}
+                                    <div className="space-y-1.5 pt-1.5">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-500">Value rules</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-450 cursor-pointer" title="Adjust bids dynamically">info</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-450 font-semibold leading-relaxed">
+                                            Tell us how much more certain audiences, conversion locations and placements are worth to your business. Our system will optimise for outcomes based on these rules. <span className="text-blue-600 cursor-pointer hover:underline">About value rules</span>
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => triggerToast("Value rule set builder opened.")}
+                                            className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 w-max"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]! font-black">add</span>
+                                            Create a rule set
+                                        </button>
+                                    </div>
+
+                                    {/* Show/Hide more options link */}
+                                    <div className="pt-2 border-t border-slate-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConversionOptions(!showConversionOptions)}
+                                            className="text-[11px] font-bold text-blue-600 hover:text-blue-750 flex items-center gap-0.5 focus:outline-none cursor-pointer select-none"
+                                        >
+                                            <span>{showConversionOptions ? 'Hide options' : 'Show options'}</span>
+                                            <span className="material-symbols-outlined text-[16px]!">
+                                                {showConversionOptions ? 'arrow_drop_up' : 'arrow_drop_down'}
+                                            </span>
+                                        </button>
+                                        {showConversionOptions && (
+                                            <div className="pt-3.5 space-y-2 animate-fadeIn">
+                                                <div className="flex items-center gap-1 select-none">
+                                                    <span className="text-[10.5px] font-bold text-slate-500">Delivery type</span>
+                                                    <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Meta delivery type">info</span>
+                                                </div>
+                                                <p className="text-xs font-semibold text-slate-800">Standard</p>
                                             </div>
-                                            <div className="flex items-center gap-4">
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Card 3: Budget & schedule */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Budget & schedule</h3>
+                                    </div>
+
+                                    {/* Budget Type Dropdown & Input */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <label className="text-[10.5px] font-bold text-slate-500">Budget</label>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Sets the ad set level budget type and limit">info</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <select
+                                                value={adSet.budgetType}
+                                                onChange={e => setAdSet({ ...adSet, budgetType: e.target.value })}
+                                                className="text-xs border border-slate-200 focus:border-blue-500 rounded-lg p-2.5 bg-white outline-none font-bold text-slate-700 cursor-pointer"
+                                            >
+                                                <option value="Daily">Daily budget</option>
+                                                <option value="Lifetime">Lifetime budget</option>
+                                            </select>
+                                            <div className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg bg-white flex-1 max-w-[200px]">
+                                                <span className="text-xs font-bold text-slate-400">₹</span>
                                                 <input
-                                                    type="range"
-                                                    min="13"
-                                                    max="65"
-                                                    value={adSet.ageMin}
-                                                    onChange={e => setAdSet({ ...adSet, ageMin: parseInt(e.target.value) })}
-                                                    className="w-full accent-blue-600 cursor-pointer h-1.5 bg-slate-100 rounded-lg"
+                                                    type="number"
+                                                    value={dailyBudgetAmount}
+                                                    onChange={e => setDailyBudgetAmount(e.target.value)}
+                                                    className="w-full text-slate-805 text-xs font-semibold outline-none"
                                                 />
+                                                <span className="text-[10px] font-bold text-slate-455 select-none">INR</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-slate-455 font-semibold leading-relaxed">
+                                            Ad set budget sharing is on, but you have only one ad set. We'll aim to spend an average of ₹{dailyBudgetAmount} per day. The maximum that you will spend on any day is ₹{Math.round(dailyBudgetAmount * 1.75)} and the maximum that you will spend in a week is ₹{Math.round(dailyBudgetAmount * 7)}. <span className="text-blue-600 hover:underline cursor-pointer">About daily budget</span>
+                                        </p>
+                                    </div>
+
+                                    {/* Schedule */}
+                                    <div className="space-y-3 pt-1">
+                                        <h4 className="text-[11px] font-bold text-slate-800 tracking-tight">Schedule</h4>
+                                        <div className="space-y-1.5">
+                                            <span className="text-[10px] font-bold text-slate-500 block">Start date</span>
+                                            <div className="flex gap-2.5">
+                                                <div className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg bg-white flex-1">
+                                                    <span className="material-symbols-outlined text-[16px]! text-slate-400 select-none">calendar_today</span>
+                                                    <input
+                                                        type="date"
+                                                        value={startDateVal}
+                                                        onChange={e => setStartDateVal(e.target.value)}
+                                                        className="w-full text-xs font-semibold text-slate-800 outline-none"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg bg-white flex-1">
+                                                    <span className="material-symbols-outlined text-[16px]! text-slate-400 select-none">schedule</span>
+                                                    <input
+                                                        type="text"
+                                                        value={startTimeVal}
+                                                        onChange={e => setStartTimeVal(e.target.value)}
+                                                        className="w-full text-xs font-semibold text-slate-800 outline-none"
+                                                    />
+                                                    <span className="text-[9px] font-bold text-slate-400 select-none">GMT+5:30</span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Gender */}
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold text-slate-500">Gender</label>
-                                            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                                {['All', 'Men', 'Women'].map(g => (
-                                                    <button
-                                                        key={g}
-                                                        onClick={() => setAdSet({ ...adSet, gender: g })}
-                                                        className={`py-1.5 rounded-lg text-[10.5px] font-extrabold text-center transition-all cursor-pointer ${adSet.gender === g
-                                                            ? 'bg-white text-blue-600 shadow-xs'
-                                                            : 'text-slate-500 hover:text-slate-700'
-                                                            }`}
-                                                    >
-                                                        {g}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                        <div className="space-y-1.5 pt-1.5">
+                                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={adSetEndDateEnabled}
+                                                    onChange={() => setAdSetEndDateEnabled(!adSetEndDateEnabled)}
+                                                    className="accent-blue-600 rounded"
+                                                />
+                                                <span className="text-[11px] font-bold text-slate-700">Set an end date</span>
+                                            </label>
+                                            {adSetEndDateEnabled && (
+                                                <div className="flex gap-2.5 pt-1 animate-fadeIn">
+                                                    <div className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg bg-white flex-1">
+                                                        <span className="material-symbols-outlined text-[16px]! text-slate-400 select-none">calendar_today</span>
+                                                        <input
+                                                            type="date"
+                                                            value={adSetEndDateVal}
+                                                            onChange={e => setAdSetEndDateVal(e.target.value)}
+                                                            className="w-full text-xs font-semibold text-slate-800 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg bg-white flex-1">
+                                                        <span className="material-symbols-outlined text-[16px]! text-slate-400 select-none">schedule</span>
+                                                        <input
+                                                            type="text"
+                                                            value={adSetEndTimeVal}
+                                                            onChange={e => setAdSetEndTimeVal(e.target.value)}
+                                                            className="w-full text-xs font-semibold text-slate-800 outline-none"
+                                                        />
+                                                        <span className="text-[9px] font-bold text-slate-400 select-none">GMT+5:30</span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
+                                    </div>
 
-                                        {/* Languages */}
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold text-slate-500">Languages</label>
-                                            <select
-                                                value={adSet.languages}
-                                                onChange={e => setAdSet({ ...adSet, languages: e.target.value })}
-                                                className="w-full h-9 px-3 border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 transition-all outline-none bg-white cursor-pointer"
-                                            >
-                                                <option value="English (All)">English (All)</option>
-                                                <option value="Spanish">Spanish</option>
-                                                <option value="Hindi">Hindi</option>
-                                            </select>
-                                        </div>
+                                    {/* Show/Hide more options link */}
+                                    <div className="pt-2 border-t border-slate-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowBudgetOptions(!showBudgetOptions)}
+                                            className="text-[11px] font-bold text-blue-600 hover:text-blue-750 flex items-center gap-0.5 focus:outline-none cursor-pointer select-none"
+                                        >
+                                            <span>{showBudgetOptions ? 'Hide options' : 'Show options'}</span>
+                                            <span className="material-symbols-outlined text-[16px]!">
+                                                {showBudgetOptions ? 'arrow_drop_up' : 'arrow_drop_down'}
+                                            </span>
+                                        </button>
+                                        {showBudgetOptions && (
+                                            <div className="pt-3.5 space-y-4 animate-fadeIn">
+                                                {/* Budget scheduling */}
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center gap-1 select-none">
+                                                        <h4 className="text-[10.5px] font-bold text-slate-500">Budget scheduling</h4>
+                                                        <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Adjust budget on schedule">info</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-455 font-semibold leading-relaxed">
+                                                        Increase your budget during specific days or times.
+                                                    </p>
+                                                    <div className="flex items-center gap-3">
+                                                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={scheduleBudgetIncreases}
+                                                                onChange={() => setScheduleBudgetIncreases(!scheduleBudgetIncreases)}
+                                                                className="accent-blue-600 rounded"
+                                                            />
+                                                            <span className="text-[10.5px] font-bold text-slate-700">Schedule budget increases</span>
+                                                        </label>
+                                                        <button disabled className="text-[10px] font-bold px-2.5 py-1 border border-slate-200 text-slate-400 bg-slate-50 rounded-lg">View</button>
+                                                    </div>
+                                                </div>
 
-                                        {/* Detailed Targeting */}
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold text-slate-500">Detailed Targeting</label>
-                                            <div className="flex items-center gap-1.5 flex-wrap p-2.5 border border-slate-200 rounded-xl bg-slate-50/50">
-                                                {adSet.detailedTargeting.map(tag => (
-                                                    <div key={tag} className="flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 rounded-lg shadow-xs">
-                                                        <span>{tag}</span>
+                                                {/* Ad set scheduling Banner */}
+                                                <div className="space-y-1.5 pt-1.5">
+                                                    <div className="flex items-center gap-1 select-none">
+                                                        <h4 className="text-[10.5px] font-bold text-slate-500">Ad set scheduling</h4>
+                                                        <span className="material-symbols-outlined text-[13px]! text-slate-400 cursor-pointer" title="Delivery hours">info</span>
+                                                    </div>
+
+                                                    <div className="p-3.5 bg-emerald-50/30 border border-emerald-100/50 rounded-xl space-y-3">
+                                                        <div className="flex gap-2.5 items-start">
+                                                            <span className="material-symbols-outlined text-[16px]! text-emerald-600 mt-0.5 select-none">trending_up</span>
+                                                            <div className="text-left space-y-1">
+                                                                <h5 className="text-[10.5px] font-bold text-slate-805 leading-snug">You could get 22.8% more conversions by running ads during specific business hours</h5>
+                                                                <p className="text-[9.5px] text-slate-455 leading-relaxed font-semibold">With ad set scheduling, we'll show your ads when your business is likely open and available to message, which may help you connect with more potential customers.</p>
+                                                            </div>
+                                                        </div>
                                                         <button
-                                                            onClick={() => setAdSet({ ...adSet, detailedTargeting: adSet.detailedTargeting.filter(t => t !== tag) })}
-                                                            className="hover:text-red-500 cursor-pointer"
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSetScheduleForAds(true);
+                                                                triggerToast("Applied ad set scheduling.");
+                                                            }}
+                                                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-lg transition-colors cursor-pointer text-center"
                                                         >
-                                                            ×
+                                                            Apply now
                                                         </button>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Section 4: Placements */}
-                                <div className="border border-slate-200/80 rounded-2xl bg-white p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
-                                    <div className="flex items-start gap-2.5">
-                                        <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold flex items-center justify-center mt-0.5">4</div>
-                                        <div className="space-y-0.5">
-                                            <h3 className="text-xs font-bold text-slate-800 leading-tight">Placements</h3>
-                                            <p className="text-[10px] text-slate-400 leading-tight font-medium">Show your ads where they'll perform best.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setAdSet({ ...adSet, placementType: 'automatic' })}
-                                            className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col gap-1.5 cursor-pointer ${adSet.placementType === 'automatic'
-                                                ? 'border-blue-500 bg-blue-50/20 ring-1 ring-blue-500 shadow-sm'
-                                                : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50/30'
-                                                }`}
-                                        >
-                                            {adSet.placementType === 'automatic' && (
-                                                <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                                                    <span className="material-symbols-outlined text-[8px]! font-bold">check</span>
-                                                </div>
-                                            )}
-                                            <span className="text-[10.5px] font-bold text-slate-800 leading-none">Automatic Placements</span>
-                                            <span className="text-[9px] text-slate-400 font-medium leading-snug">Let our algorithm show your ads in the best performing placements.</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => setAdSet({ ...adSet, placementType: 'manual' })}
-                                            className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col gap-1.5 cursor-pointer ${adSet.placementType === 'manual'
-                                                ? 'border-blue-500 bg-blue-50/20 ring-1 ring-blue-500 shadow-sm'
-                                                : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50/30'
-                                                }`}
-                                        >
-                                            {adSet.placementType === 'manual' && (
-                                                <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                                                    <span className="material-symbols-outlined text-[8px]! font-bold">check</span>
-                                                </div>
-                                            )}
-                                            <span className="text-[10.5px] font-bold text-slate-800 leading-none">Manual Placements</span>
-                                            <span className="text-[9px] text-slate-400 font-medium leading-snug">Choose specific places to show your ads.</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                                        <label className="text-[10px] font-semibold text-slate-500 block mb-1">Included Placements</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {[
-                                                { id: 'facebook_feed', label: 'Facebook Feed' },
-                                                { id: 'instagram_feed', label: 'Instagram Feed' },
-                                                { id: 'stories', label: 'Stories' },
-                                                { id: 'reels', label: 'Reels' },
-                                                { id: 'marketplace', label: 'Marketplace' },
-                                                { id: 'messenger', label: 'Messenger' },
-                                                { id: 'audience_network', label: 'Audience Network' }
-                                            ].map(item => {
-                                                const isChecked = adSet.includedPlacements.includes(item.id)
-                                                return (
-                                                    <label key={item.id} className="flex items-center gap-2 cursor-pointer p-2 bg-slate-50/50 hover:bg-slate-50 rounded-lg border border-slate-200/50 transition-colors">
+                                                    <label className="flex items-center gap-2 cursor-pointer select-none pt-2">
                                                         <input
                                                             type="checkbox"
-                                                            checked={isChecked}
-                                                            onChange={() => {
-                                                                const newPlacements = isChecked
-                                                                    ? adSet.includedPlacements.filter(p => p !== item.id)
-                                                                    : [...adSet.includedPlacements, item.id]
-                                                                setAdSet({ ...adSet, includedPlacements: newPlacements })
-                                                            }}
-                                                            className="accent-blue-600 w-3.5 h-3.5 rounded cursor-pointer"
+                                                            checked={setScheduleForAds}
+                                                            onChange={() => setSetScheduleForAds(!setScheduleForAds)}
+                                                            className="accent-blue-600 rounded"
                                                         />
-                                                        <span className="text-[10px] font-bold text-slate-700">{item.label}</span>
+                                                        <span className="text-[10.5px] font-bold text-slate-700">Set a schedule for ads</span>
                                                     </label>
-                                                )
-                                            })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Card 4: Audience controls */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Audience controls</h3>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Set criteria for where ads for this campaign can be delivered. <span className="text-blue-600 cursor-pointer hover:underline">Learn more</span>
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg select-none">No account controls set</span>
+                                    </div>
+                                    <div className="space-y-1.5 pt-1">
+                                        <label className="text-[10.5px] font-bold text-slate-500 block">Use a saved audience</label>
+                                        <select className="w-full text-xs border border-slate-200 focus:border-blue-500 rounded-lg p-2.5 bg-white outline-none font-semibold text-slate-400 cursor-pointer">
+                                            <option>No saved audience</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Locations Section */}
+                                    <div className="p-4 bg-slate-50/50 border border-slate-150 rounded-xl space-y-3.5">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-1 select-none">
+                                                <span className="text-[11px] font-bold text-slate-800">* Locations</span>
+                                                <span className="material-symbols-outlined text-[13px]! text-slate-450 cursor-pointer" title="Ad target location">info</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => triggerToast("Edit target locations modal.")}
+                                                className="flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-750 cursor-pointer"
+                                            >
+                                                <span className="material-symbols-outlined text-[13px]!">edit</span>
+                                                Edit
+                                            </button>
                                         </div>
+                                        <div className="space-y-1">
+                                            <h5 className="text-[10px] font-bold text-slate-450 select-none">Included location:</h5>
+                                            <p className="text-xs font-semibold text-slate-800 flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-0.5 select-none" />
+                                                India
+                                            </p>
+                                        </div>
+
+                                        {/* India Securities Warning Banner */}
+                                        <div className="p-3 bg-amber-50/30 border border-amber-200/50 rounded-lg space-y-2.5">
+                                            <div className="flex gap-2 items-start">
+                                                <span className="material-symbols-outlined text-[15px]! text-amber-600 mt-0.5 select-none">warning</span>
+                                                <p className="text-[9.5px] text-slate-700 leading-snug font-semibold">To run ads in India, you need to declare if your ads are related to securities and investments.</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSecuritiesInvestment(true);
+                                                    triggerToast("Requirements reviewed.");
+                                                }}
+                                                className="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[9.5px] font-extrabold rounded transition-colors cursor-pointer text-center"
+                                            >
+                                                Review requirements
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {/* Show/Hide options link */}
+                                    <div className="pt-2 border-t border-slate-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAudienceOptions(!showAudienceOptions)}
+                                            className="text-[11px] font-bold text-blue-600 hover:text-blue-750 flex items-center gap-0.5 focus:outline-none cursor-pointer select-none"
+                                        >
+                                            <span>{showAudienceOptions ? 'Hide options' : 'Show options'}</span>
+                                            <span className="material-symbols-outlined text-[16px]!">
+                                                {showAudienceOptions ? 'arrow_drop_up' : 'arrow_drop_down'}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Card 5: Policy and regulatory requirements (India) */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-805 tracking-tight leading-none">Policy and regulatory requirements (India)</h3>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-505 font-semibold leading-relaxed">
+                                        Provide required information about your ads, yourself or your organisation.
+                                    </p>
+                                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={securitiesInvestment}
+                                            onChange={() => setSecuritiesInvestment(!securitiesInvestment)}
+                                            className="accent-blue-600 rounded mt-0.5"
+                                        />
+                                        <div className="text-left space-y-0.5">
+                                            <span className="text-[10.5px] font-bold text-slate-700 block leading-tight">This ad set includes ads related to securities and investments</span>
+                                            <span className="text-[9.5px] text-blue-600 hover:underline block cursor-pointer">About verification requirements</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {/* Card 6: Placements */}
+                                <div className="bg-white border border-slate-200/90 rounded-xl p-5 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.01)] text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]! text-emerald-600 font-bold select-none">check_circle</span>
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight">Placements</h3>
+                                    </div>
+                                    <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                                        Choose where your ad appears across Meta technologies. <span className="text-blue-600 cursor-pointer hover:underline">Learn more</span>
+                                    </p>
+
+                                    {/* Value rule banner */}
+                                    <div className="p-3 bg-slate-50/50 border border-slate-150 rounded-xl flex justify-between items-start gap-2.5 select-none">
+                                        <div className="flex gap-2 items-start">
+                                            <span className="material-symbols-outlined text-[15px]! text-slate-450 mt-0.5">info</span>
+                                            <div className="text-left">
+                                                <h5 className="text-[10px] font-bold text-slate-805 leading-none">Value rule creation is changing</h5>
+                                                <p className="text-[9.5px] text-slate-455 mt-1 font-semibold leading-normal">You can now add rules closer to where you select your ad set's placements.</p>
+                                            </div>
+                                        </div>
+                                        <button className="text-slate-400 hover:text-slate-600">
+                                            <span className="material-symbols-outlined text-[15px]! font-bold">close</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Placement value rules section */}
+                                    <div className="p-4 bg-blue-50/10 border border-blue-100 rounded-xl space-y-3.5">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <span className="text-[11px] font-bold text-slate-800">Placement value rules</span>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-455 cursor-pointer" title="Adjust bids for placements">info</span>
+                                        </div>
+                                        <p className="text-[10.5px] text-slate-500 leading-relaxed font-semibold">
+                                            Prioritise the placements that matter most to your business by adjusting bids for them. <span className="text-blue-600 cursor-pointer hover:underline">About value rules</span>
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => triggerToast("Placement value rules builder opened.")}
+                                            className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 w-max"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]! font-black">add</span>
+                                            Create a rule set
+                                        </button>
+                                    </div>
+
+                                    {/* Account controls */}
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-505">Account controls</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-slate-455 cursor-pointer" title="Excluded placements settings">info</span>
+                                        </div>
+                                        <p className="text-xs font-semibold text-slate-805">Excluded placements: None</p>
+                                    </div>
+
+                                    {/* Advantage+ placements */}
+                                    <div className="space-y-1.5 pt-1">
+                                        <div className="flex items-center gap-1 select-none">
+                                            <h4 className="text-[10.5px] font-bold text-slate-505">Advantage+ placements</h4>
+                                            <span className="material-symbols-outlined text-[13px]! text-blue-500 font-bold">star</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-455 font-semibold leading-relaxed">
+                                            Your budget will be allocated by Meta's delivery system across multiple placements based on where they're likely to perform best.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
