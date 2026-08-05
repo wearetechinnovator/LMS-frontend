@@ -74,7 +74,6 @@ export default function PublicEmbedForm() {
     const [statesMap, setStatesMap] = useState({});
     const [citiesMap, setCitiesMap] = useState({});
 
-    // Fetch countries list
     useEffect(() => {
         const fetchCountries = async () => {
             try {
@@ -90,7 +89,6 @@ export default function PublicEmbedForm() {
         fetchCountries();
     }, []);
 
-    // Fetch states reactively
     useEffect(() => {
         if (!form || !form.fields) return;
         form.fields.forEach(field => {
@@ -121,7 +119,6 @@ export default function PublicEmbedForm() {
         });
     }, [vals, form]);
 
-    // Fetch cities reactively
     useEffect(() => {
         if (!form || !form.fields) return;
         form.fields.forEach(field => {
@@ -158,7 +155,6 @@ export default function PublicEmbedForm() {
         return !!(token && token !== 'mock-jwt-token');
     }, []);
 
-    // Parse appearance customisation from URL params
     const appearance = useMemo(() => {
         const p = (key, fallback) => searchParams.get(key) || fallback;
         const pColor = (key, fallback) => {
@@ -186,7 +182,6 @@ export default function PublicEmbedForm() {
         };
     }, [searchParams]);
 
-    // Load Google Font if a custom font is specified
     useEffect(() => {
         if (appearance.fontFamily && appearance.fontFamily !== 'System') {
             const fontName = appearance.fontFamily.replace(/ /g, '+');
@@ -443,7 +438,7 @@ export default function PublicEmbedForm() {
     }, [isEmbedded, appearance.onlyBody, appearance.bgColor]);
 
     useEffect(() => {
-        if (window.self === window.top) return;
+        if (!isEmbedded) return;
         
         const sendHeight = () => {
             const height = document.body.scrollHeight || document.documentElement.scrollHeight;
@@ -451,25 +446,20 @@ export default function PublicEmbedForm() {
         };
 
         sendHeight();
-        const timers = [
-            setTimeout(sendHeight, 100),
-            setTimeout(sendHeight, 300),
-            setTimeout(sendHeight, 600),
-            setTimeout(sendHeight, 1200)
-        ];
+
+        const resizeObserver = new ResizeObserver(() => {
+            sendHeight();
+        });
         
-        const observer = new MutationObserver(sendHeight);
-        observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+        resizeObserver.observe(document.body);
 
         window.addEventListener('resize', sendHeight);
         
         return () => {
-            timers.forEach(clearTimeout);
-            observer.disconnect();
+            resizeObserver.disconnect();
             window.removeEventListener('resize', sendHeight);
         };
-    }, []);
-
+    }, [isEmbedded]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -487,7 +477,6 @@ export default function PublicEmbedForm() {
         const submissionBody = {};
         const captchaTokens = {};
 
-        // 1. Resolve Google reCAPTCHA tokens before sending
         let resolvedVals = { ...vals };
 
         for (const f of fields) {
@@ -541,14 +530,13 @@ export default function PublicEmbedForm() {
                 }
             }
         }
-        // Validate phone number formats
+        
         for (const f of fields) {
             if (isFieldVisible(f, fields, resolvedVals) && f.type === 'phone') {
                 const code = resolvedVals[`${f.id}-code`] || '+1';
                 const rawNum = resolvedVals[`${f.id}-num`] || '';
                 let digits = rawNum.replace(/\D/g, '');
 
-                // Strip redundant country code prefix if user typed it manually
                 const codePrefix = code.replace(/\D/g, '');
                 if (codePrefix && digits.startsWith(codePrefix) && digits.length > codePrefix.length) {
                     digits = digits.substring(codePrefix.length);
@@ -580,7 +568,6 @@ export default function PublicEmbedForm() {
             }
         }
 
-        // 2. Map form fields to submission body
         fields.forEach(f => {
             if (isFieldVisible(f, fields, resolvedVals)) {
                 if (f.type === 'city') {
@@ -641,14 +628,13 @@ export default function PublicEmbedForm() {
     };
 
     const fontStyle = appearance.fontFamily !== 'System' ? { fontFamily: `'${appearance.fontFamily}', sans-serif` } : {};
-    const wrapperClass = `flex flex-col items-center ${isEmbedded ? 'min-h-0 justify-start' : 'min-h-screen justify-center'}`;
 
     if (loading) {
         return (
-            <div className={`${wrapperClass} ${isEmbedded ? '' : 'p-4'}`} style={{ background: (isEmbedded || appearance.onlyBody) ? 'transparent' : appearance.bgColor, ...fontStyle }}>
-                <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${appearance.btnColor}40`, borderTopColor: 'transparent', borderLeftColor: appearance.btnColor }}></div>
-                    <p className="text-sm font-semibold" style={{ color: appearance.labelColor }}>Loading form...</p>
+            <div className="flex items-center justify-center p-4 bg-transparent min-h-0 w-full" style={fontStyle}>
+                <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${appearance.btnColor}40`, borderTopColor: 'transparent', borderLeftColor: appearance.btnColor }}></div>
+                    <p className="text-xs font-semibold" style={{ color: appearance.labelColor }}>Loading...</p>
                 </div>
             </div>
         );
@@ -656,16 +642,8 @@ export default function PublicEmbedForm() {
 
     if (error) {
         return (
-            <div className={`${wrapperClass} ${isEmbedded ? '' : 'p-4'}`} style={{ background: (isEmbedded || appearance.onlyBody) ? 'transparent' : appearance.bgColor, ...fontStyle }}>
-                <div
-                    className="max-w-md w-full p-6 text-center space-y-4"
-                    style={{
-                        background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
-                        borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`,
-                        border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)',
-                        boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
-                    }}
-                >
+            <div className="w-full flex flex-col items-center justify-center bg-transparent min-h-0 py-4 px-2" style={fontStyle}>
+                <div className="max-w-md w-full p-6 text-center space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
                         <Icon name="warning" size={24} />
                     </div>
@@ -680,17 +658,11 @@ export default function PublicEmbedForm() {
 
     if (submitted) {
         return (
-            <div className={`${wrapperClass} ${isEmbedded ? '' : 'p-4'}`} style={{ background: (isEmbedded || appearance.onlyBody) ? 'transparent' : appearance.bgColor, ...fontStyle }}>
+            <div className="w-full flex flex-col items-center justify-center bg-transparent min-h-0 py-4 px-2" style={fontStyle}>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="max-w-md w-full p-8 text-center space-y-5"
-                    style={{
-                        background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
-                        borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`,
-                        border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)',
-                        boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
-                    }}
+                    className="max-w-md w-full p-8 text-center space-y-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
                 >
                     <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner border border-emerald-100">
                         <Icon name="check" size={32} />
@@ -707,16 +679,15 @@ export default function PublicEmbedForm() {
     const fields = form.fields || [];
 
     return (
-        <div className={wrapperClass} style={{ background: (isEmbedded || appearance.onlyBody) ? 'transparent' : appearance.bgColor, padding: appearance.onlyBody ? '0px' : `${appearance.padding}px`, ...fontStyle }}>
-            <div className="w-full overflow-hidden transition-all duration-200" style={{
-                maxWidth: `${appearance.maxWidth}px`,
-                background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
-                borderRadius: appearance.onlyBody ? '0px' : `${appearance.borderRadius}px`,
-                border: appearance.onlyBody ? 'none' : '1px solid rgba(0,0,0,0.08)',
-                boxShadow: appearance.onlyBody ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
-            }}>
+        <div 
+            className={`w-full flex flex-col items-center ${isEmbedded ? 'bg-transparent min-h-0 py-4 px-2' : 'min-h-screen justify-center p-4'}`} 
+            style={isEmbedded ? fontStyle : { background: appearance.bgColor || '#f8fafc', ...fontStyle }}
+        >
+            <div 
+                className={appearance.onlyBody ? "w-full bg-transparent" : "max-w-lg mx-auto w-full overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"}
+            >
                 {!appearance.hideHeader && (
-                    <div className="px-6 py-5" style={{ background: appearance.onlyBody ? 'transparent' : appearance.cardBg, borderBottom: appearance.onlyBody ? 'none' : '1px solid #f1f5f9' }}>
+                    <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
                         <h2 className="font-extrabold text-lg" style={{ color: appearance.textColor }}>{form.name}</h2>
                         <p className="text-xs mt-1" style={{ color: appearance.labelColor }}>Please fill out the form below.</p>
                     </div>
@@ -750,7 +721,7 @@ export default function PublicEmbedForm() {
                                     value={vals[field.id] || ''}
                                     onChange={e => setVals({ ...vals, [field.id]: e.target.value })}
                                     required={field.required}
-                                    className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                    className="w-full h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
                                     style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor, borderColor: '#e2e8f0', '--tw-ring-color': `${appearance.btnColor}20` }}
                                 >
                                     <option value="">{field.placeholder || 'Select option...'}</option>
@@ -826,7 +797,7 @@ export default function PublicEmbedForm() {
                                                 [field.id]: `${code} ${num}`
                                             });
                                         }}
-                                        className="w-28 h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                        className="w-28 h-10 px-3 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
                                         style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     >
                                         <option value="+1">US (+1)</option>
@@ -853,7 +824,7 @@ export default function PublicEmbedForm() {
                                         }}
                                         placeholder={field.placeholder || ''}
                                         required={field.required}
-                                        className="flex-1 h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        className="flex-1 h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
                                         style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     />
                                 </div>
@@ -870,7 +841,7 @@ export default function PublicEmbedForm() {
                                                         <div id={`recaptcha-public-${field.id}`} style={{ display: 'none' }}></div>
                                                     )}
                                                     {field.captchaType === 'recaptcha_v3' && (
-                                                        <div className="text-[11px] text-slate-400 bg-slate-50 border p-2 rounded flex items-center gap-1.5 font-medium">
+                                                        <div className="text-[11px] text-slate-400 bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 p-2 rounded flex items-center gap-1.5 font-medium">
                                                             <Icon name="security" size={14} className="text-slate-555" />
                                                             Secured by Google reCAPTCHA v3
                                                         </div>
@@ -892,14 +863,14 @@ export default function PublicEmbedForm() {
                                                         className="w-[150px] h-[45px] shrink-0"
                                                     />
                                                 ) : (
-                                                    <div className="w-[150px] h-[45px] shrink-0 bg-slate-100 border rounded flex items-center justify-center text-[10px] text-slate-400 font-semibold animate-pulse">
+                                                    <div className="w-[150px] h-[45px] shrink-0 bg-slate-100 dark:bg-slate-800 border dark:border-slate-700 rounded flex items-center justify-center text-[10px] text-slate-400 font-semibold animate-pulse">
                                                         Loading...
                                                     </div>
                                                 )}
                                                 <button
                                                     type="button"
                                                     onClick={() => loadCaptcha(field.id, field.captchaType || 'math')}
-                                                    className="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 text-slate-500 border border-slate-200 transition-colors cursor-pointer"
+                                                    className="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                                                     title="Refresh CAPTCHA"
                                                 >
                                                     <Icon name="refresh" size={16} />
@@ -911,7 +882,7 @@ export default function PublicEmbedForm() {
                                                 onChange={e => setVals({ ...vals, [field.id]: e.target.value })}
                                                 placeholder={field.placeholder || 'Enter verification code'}
                                                 required={field.required}
-                                                className="w-full h-10 px-3.5 border border-slate-205 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all font-semibold placeholder:text-slate-300"
+                                                className="w-full h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all font-semibold placeholder:text-slate-300"
                                             />
                                         </>
                                     )}
@@ -919,12 +890,12 @@ export default function PublicEmbedForm() {
                             ) : field.type === 'file' ? (
                                 <div className="space-y-2">
                                     <div
-                                        className="w-full border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative"
+                                        className="w-full border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 bg-slate-55/50 dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative"
                                         style={{ borderRadius: `${appearance.inputRadius}px` }}
                                         onClick={() => document.getElementById(`file-input-${field.id}`).click()}
                                     >
                                         <Icon name="cloud_upload" size={28} className="text-slate-400" />
-                                        <div className="text-[12.5px] font-bold text-slate-700 mt-1">
+                                        <div className="text-[12.5px] font-bold text-slate-700 dark:text-slate-300 mt-1">
                                             {vals[field.id] && vals[field.id].length > 0
                                                 ? `${vals[field.id].length} file(s) selected`
                                                 : "Drag and drop files here, or browse"
@@ -974,9 +945,9 @@ export default function PublicEmbedForm() {
                                         />
                                     </div>
                                     {vals[field.id] && vals[field.id].length > 0 && (
-                                        <div className="text-[10px] text-slate-550 font-semibold space-y-1 pl-1">
+                                        <div className="text-[10px] text-slate-550 dark:text-slate-400 font-semibold space-y-1 pl-1">
                                             Selected files:
-                                            <ul className="list-disc list-inside font-medium text-slate-650">
+                                            <ul className="list-disc list-inside font-medium text-slate-650 dark:text-slate-350">
                                                 {vals[field.id].map((fname, fidx) => (
                                                     <li key={fidx}>{fname}</li>
                                                 ))}
@@ -986,7 +957,6 @@ export default function PublicEmbedForm() {
                                 </div>
                             ) : field.type === 'city' ? (
                                 <div className="space-y-3">
-                                    {/* Country Dropdown */}
                                     {(field.locationMode === 'all' || !field.locationMode) && (
                                         <select
                                             value={vals[`${field.id}-country`] || ''}
@@ -999,7 +969,7 @@ export default function PublicEmbedForm() {
                                                 }));
                                             }}
                                             required={field.required}
-                                            className="w-full h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                            className="w-full h-10 px-3 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
                                             style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                         >
                                             <option value="">Choose Country...</option>
@@ -1007,7 +977,6 @@ export default function PublicEmbedForm() {
                                         </select>
                                     )}
 
-                                    {/* State Dropdown */}
                                     {(field.locationMode === 'all' || field.locationMode === 'state_city' || !field.locationMode) && (
                                         <select
                                             value={vals[`${field.id}-state`] || ''}
@@ -1020,7 +989,7 @@ export default function PublicEmbedForm() {
                                                 }));
                                             }}
                                             required={field.required}
-                                            className="w-full h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                            className="w-full h-10 px-3 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
                                             style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                         >
                                             <option value="">Choose State...</option>
@@ -1028,7 +997,6 @@ export default function PublicEmbedForm() {
                                         </select>
                                     )}
 
-                                    {/* City Dropdown */}
                                     <select
                                         value={vals[field.id] || ''}
                                         disabled={
@@ -1042,7 +1010,7 @@ export default function PublicEmbedForm() {
                                             }));
                                         }}
                                         required={field.required}
-                                        className="w-full h-10 px-3 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
+                                        className="w-full h-10 px-3 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer font-semibold"
                                         style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     >
                                         <option value="">Choose City...</option>
@@ -1066,7 +1034,7 @@ export default function PublicEmbedForm() {
                                             });
                                         }}
                                         required={!field.firstOptional}
-                                        className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        className="w-full h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
                                         style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     />
                                     <input
@@ -1084,7 +1052,7 @@ export default function PublicEmbedForm() {
                                             });
                                         }}
                                         required={!field.middleOptional}
-                                        className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        className="w-full h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
                                         style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     />
                                     <input
@@ -1102,7 +1070,7 @@ export default function PublicEmbedForm() {
                                             });
                                         }}
                                         required={!field.lastOptional}
-                                        className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                        className="w-full h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
                                         style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                     />
                                 </div>
@@ -1113,7 +1081,7 @@ export default function PublicEmbedForm() {
                                     placeholder={field.placeholder || ''}
                                     required={field.required}
                                     rows={3}
-                                    className="w-full px-3.5 py-2.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300 resize-none"
+                                    className="w-full px-3.5 py-2.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300 resize-none"
                                     style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                 />
                             ) : (
@@ -1123,7 +1091,7 @@ export default function PublicEmbedForm() {
                                     onChange={e => setVals({ ...vals, [field.id]: e.target.value })}
                                     placeholder={field.placeholder || ''}
                                     required={field.required}
-                                    className="w-full h-10 px-3.5 border border-slate-205 bg-white text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
+                                    className="w-full h-10 px-3.5 border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 transition-all font-semibold placeholder:text-slate-300"
                                     style={{ borderRadius: `${appearance.inputRadius}px`, color: appearance.textColor }}
                                 />
                             )}
