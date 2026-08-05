@@ -1868,12 +1868,12 @@ export default function MetaAdsManager() {
             {/* ── STEPPER / HEADER BAR ── */}
             <div className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
                 {/* Logo or placeholder to push stepper to center */}
-                <div className="w-[150px]">
+                {/* <div className="w-[150px]">
                     <span className="text-[11px] font-black tracking-wider uppercase text-blue-600 flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[16px]!">ads_click</span>
                         Ads Manager
                     </span>
-                </div>
+                </div> */}
 
                 {/* Central Stepper */}
                 <div className="flex items-center gap-6">
