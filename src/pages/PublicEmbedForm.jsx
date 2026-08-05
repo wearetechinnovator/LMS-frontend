@@ -38,6 +38,22 @@ export default function PublicEmbedForm() {
     }, [formId]);
 
     useEffect(() => {
+        const originalBg = document.body.style.background;
+        const originalBgImage = document.body.style.backgroundImage;
+        const originalBgColor = document.body.style.backgroundColor;
+
+        document.body.style.background = "transparent";
+        document.body.style.backgroundImage = "none";
+        document.body.style.backgroundColor = "transparent";
+
+        return () => {
+            document.body.style.background = originalBg;
+            document.body.style.backgroundImage = originalBgImage;
+            document.body.style.backgroundColor = originalBgColor;
+        };
+    }, []);
+
+    useEffect(() => {
         if (!autoResizeParam) return;
 
         const sendHeight = () => {

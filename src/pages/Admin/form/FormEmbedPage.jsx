@@ -428,10 +428,12 @@ function EmbedCodeConsole({
     copiedKey
 }) {
     const finalWidth = embedWidth.endsWith('%') || embedWidth.endsWith('px') ? embedWidth : `${embedWidth}px`;
-    const finalHeight = embedAutoHeight ? '100%' : (embedHeight.endsWith('px') ? embedHeight : `${embedHeight}px`);
-    const styleStr = `border:none;border-radius:${embedBorderRadius}px;width:${finalWidth};height:${finalHeight};`;
+    const finalHeight = embedAutoHeight ? '600px' : (embedHeight.endsWith('px') ? embedHeight : `${embedHeight}px`);
+    const styleStr = `border:none;border-radius:${embedBorderRadius}px;width:${finalWidth};max-width:512px;height:${finalHeight};display:block;margin:0 auto;`;
 
-    const iframeCode = `<iframe\n  src="${formUrl}"\n  width="${finalWidth}"\n  height="${finalHeight}"\n  frameborder="0"\n  style="${styleStr}"\n  title="${formName}"\n></iframe>`
+    const iframeCode = embedAutoHeight
+        ? `<iframe src="${formUrl}" frameborder="0" style="${styleStr}" title="${formName}"></iframe>\n\n<script>\n  window.addEventListener('message', function(e) {\n    if (e.data && e.data.type === 'LMS_FORM_RESIZE') {\n      const iframes = document.querySelectorAll('iframe');\n      for (const iframe of iframes) {\n        if (iframe.src.includes(e.data.formId)) {\n          iframe.style.height = e.data.height + 'px';\n          break;\n        }\n      }\n    }\n  });\n</script>`
+        : `<iframe src="${formUrl}" width="${finalWidth}" height="${finalHeight}" frameborder="0" style="${styleStr}" title="${formName}"></iframe>`;
 
     return (
         <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 text-slate-800 shadow-sm relative p-6">
@@ -457,16 +459,9 @@ function EmbedCodeConsole({
                 </button>
             </div>
 
-            <div className="text-[11.5px] font-mono text-slate-650 leading-relaxed overflow-x-auto whitespace-pre h-[140px] max-h-[140px] scrollbar-thin scrollbar-thumb-slate-200">
+            <div className="text-[11.5px] font-mono text-slate-650 leading-relaxed overflow-x-auto whitespace-pre-wrap h-[140px] max-h-[140px] scrollbar-thin scrollbar-thumb-slate-200">
                 <code>
-                    <span className="text-pink-600">&lt;iframe</span><br />
-                    &nbsp;&nbsp;<span className="text-sky-600">src</span>=<span className="text-emerald-650">"{formUrl}"</span><br />
-                    &nbsp;&nbsp;<span className="text-sky-600">width</span>=<span className="text-emerald-650">"{finalWidth}"</span><br />
-                    &nbsp;&nbsp;<span className="text-sky-600">height</span>=<span className="text-emerald-650">"{finalHeight}"</span><br />
-                    &nbsp;&nbsp;<span className="text-sky-600">frameborder</span>=<span className="text-emerald-650">"0"</span><br />
-                    &nbsp;&nbsp;<span className="text-sky-600">style</span>=<span className="text-emerald-650">"{styleStr}"</span><br />
-                    &nbsp;&nbsp;<span className="text-sky-600">title</span>=<span className="text-emerald-650">"{formName}"</span><br />
-                    <span className="text-pink-600">&gt;&lt;/iframe&gt;</span>
+                    {iframeCode}
                 </code>
             </div>
         </div>
