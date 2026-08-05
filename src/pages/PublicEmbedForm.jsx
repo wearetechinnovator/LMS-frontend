@@ -441,6 +441,35 @@ export default function PublicEmbedForm() {
         };
     }, [appearance.onlyBody, appearance.bgColor]);
 
+    useEffect(() => {
+        if (window.self === window.top) return;
+        
+        const sendHeight = () => {
+            const height = document.body.scrollHeight || document.documentElement.scrollHeight;
+            window.parent.postMessage({ type: 'lms-form-resize', height }, '*');
+        };
+
+        sendHeight();
+        const timers = [
+            setTimeout(sendHeight, 100),
+            setTimeout(sendHeight, 300),
+            setTimeout(sendHeight, 600),
+            setTimeout(sendHeight, 1200)
+        ];
+        
+        const observer = new MutationObserver(sendHeight);
+        observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+
+        window.addEventListener('resize', sendHeight);
+        
+        return () => {
+            timers.forEach(clearTimeout);
+            observer.disconnect();
+            window.removeEventListener('resize', sendHeight);
+        };
+    }, []);
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitError(null);
@@ -611,10 +640,12 @@ export default function PublicEmbedForm() {
     };
 
     const fontStyle = appearance.fontFamily !== 'System' ? { fontFamily: `'${appearance.fontFamily}', sans-serif` } : {};
+    const isEmbedded = window.self !== window.top;
+    const wrapperClass = `flex flex-col items-center ${isEmbedded ? 'min-h-0 justify-start' : 'min-h-screen justify-center'}`;
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
+            <div className={`${wrapperClass} ${isEmbedded ? '' : 'p-4'}`} style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${appearance.btnColor}40`, borderTopColor: 'transparent', borderLeftColor: appearance.btnColor }}></div>
                     <p className="text-sm font-semibold" style={{ color: appearance.labelColor }}>Loading form...</p>
@@ -625,7 +656,7 @@ export default function PublicEmbedForm() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
+            <div className={`${wrapperClass} ${isEmbedded ? '' : 'p-4'}`} style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
                 <div
                     className="max-w-md w-full p-6 text-center space-y-4"
                     style={{
@@ -649,7 +680,7 @@ export default function PublicEmbedForm() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
+            <div className={`${wrapperClass} ${isEmbedded ? '' : 'p-4'}`} style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, ...fontStyle }}>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -676,7 +707,7 @@ export default function PublicEmbedForm() {
     const fields = form.fields || [];
 
     return (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, padding: appearance.onlyBody ? '0px' : `${appearance.padding}px`, ...fontStyle }}>
+        <div className={wrapperClass} style={{ background: appearance.onlyBody ? 'transparent' : appearance.bgColor, padding: appearance.onlyBody ? '0px' : `${appearance.padding}px`, ...fontStyle }}>
             <div className="w-full overflow-hidden transition-all duration-200" style={{
                 maxWidth: `${appearance.maxWidth}px`,
                 background: appearance.onlyBody ? 'transparent' : appearance.cardBg,
