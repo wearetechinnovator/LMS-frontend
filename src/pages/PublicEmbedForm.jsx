@@ -425,9 +425,19 @@ export default function PublicEmbedForm() {
 
     useEffect(() => {
         const originalBg = document.body.style.background;
-        document.body.style.background = appearance.onlyBody ? 'transparent' : (appearance.bgColor || '#f8fafc');
+        const originalBgImage = document.body.style.backgroundImage;
+        const originalBgColor = document.body.style.backgroundColor;
+        if (appearance.onlyBody) {
+            document.body.style.background = 'transparent';
+            document.body.style.backgroundImage = 'none';
+            document.body.style.backgroundColor = 'transparent';
+        } else {
+            document.body.style.background = appearance.bgColor || '#f8fafc';
+        }
         return () => {
             document.body.style.background = originalBg;
+            document.body.style.backgroundImage = originalBgImage;
+            document.body.style.backgroundColor = originalBgColor;
         };
     }, [appearance.onlyBody, appearance.bgColor]);
 
