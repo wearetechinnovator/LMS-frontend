@@ -748,6 +748,9 @@ export default function MetaAdsManager() {
 
     const callGeminiAPI = async (messagesHistory) => {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("Gemini API Key is missing. If you are running locally, please restart your dev server. If you are using the deployed version (e.g. Render/Vercel), you must add 'VITE_GEMINI_API_KEY' in your dashboard's Environment Variables settings.");
+        }
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         // Map the chat history to Gemini's format
@@ -895,7 +898,8 @@ Only include the keys that you have successfully resolved or updated so far. Do 
             }
         } catch (err) {
             console.error("Error calling Gemini API:", err);
-            setChatMessages(prev => [...prev, { sender: 'ai', text: "I'm sorry, I encountered a connection issue while building your campaign. Please try again." }]);
+            const textMsg = err.message || "I'm sorry, I encountered a connection issue while building your campaign. Please try again.";
+            setChatMessages(prev => [...prev, { sender: 'ai', text: textMsg }]);
         } finally {
             setChatIsTyping(false);
         }
