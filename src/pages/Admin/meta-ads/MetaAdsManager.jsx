@@ -748,7 +748,7 @@ export default function MetaAdsManager() {
 
     const callGeminiAPI = async (messagesHistory) => {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         // Map the chat history to Gemini's format
         const contents = messagesHistory.map(m => ({
