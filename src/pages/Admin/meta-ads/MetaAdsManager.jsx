@@ -746,117 +746,160 @@ export default function MetaAdsManager() {
         setTimeout(() => setToastMessage(null), 3000)
     }
 
-    const handleSendChatMessage = (textToSubmit) => {
-        const text = textToSubmit || chatInput
-        if (!text.trim()) return
+    const callGeminiAPI = async (messagesHistory) => {
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-        const newMsgUser = { sender: 'user', text: text }
-        setChatMessages(prev => [...prev, newMsgUser])
-        setChatInput('')
-        setChatIsTyping(true)
+        // Map the chat history to Gemini's format
+        const contents = messagesHistory.map(m => ({
+            role: m.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: m.text }]
+        }));
 
-        setTimeout(() => {
-            let nextIndex = aiQuestionIndex
-            let replyText = ""
+        // System instructions to guide Gemini
+        const systemInstruction = {
+            parts: [{
+                text: `You are an expert Facebook Ads Campaign Assistant. Your task is to help the user build a complete Meta Ads Campaign step-by-step through a friendly chat.
+To build a campaign, you need to collect all of the following parameters from the user:
+1. campaignName (e.g. "Summer Collection Launch")
+2. objective (Must extract one of these EXACT strings: "awareness", "traffic", "engagement", "leads", "sales", "app_promotion")
+3. dailyBudget (e.g. "50.00" - numerical string in USD)
+4. adSetName (e.g. "Broad Targeting AdSet")
+5. locations (e.g. "India" or "USA" - array of strings)
+6. ageMin (minimum age, default 18)
+7. ageMax (maximum age, default 65)
+8. gender (Must extract one of: "Male", "Female", "All")
+9. primaryText (Primary ad copy or marketing hook)
+10. headline (Ad headline)
+11. description (Ad description)
+12. cta (Must extract one of: "Learn More", "Shop Now", "Sign Up", "Contact Us", "Book Now")
+13. websiteUrl (Target URL link)
 
-            if (aiQuestionIndex === 0) {
-                const lowerText = text.toLowerCase()
-                let parsedGoal = 'awareness'
-                let label = 'Awareness'
-                if (lowerText.includes('lead')) { parsedGoal = 'leads'; label = 'Leads'; }
-                else if (lowerText.includes('sale') || lowerText.includes('convers')) { parsedGoal = 'sales'; label = 'Sales'; }
-                else if (lowerText.includes('traffic') || lowerText.includes('click') || lowerText.includes('websi')) { parsedGoal = 'traffic'; label = 'Traffic'; }
-                else if (lowerText.includes('engag') || lowerText.includes('like') || lowerText.includes('comment')) { parsedGoal = 'engagement'; label = 'Engagement'; }
-                else if (lowerText.includes('app') || lowerText.includes('promo')) { parsedGoal = 'app_promotion'; label = 'App Promotion'; }
+Rules:
+- Be polite, direct, concise, and professional.
+- Ask questions one or two at a time to build the campaign step-by-step.
+- If the user provides info for any of the parameters in their response, extract them.
+- Crucially, whenever you extract or update any parameters, append a single tag at the very end of your response in this exact format (on a new line):
+[UPDATE: {"campaignName": "...", "objective": "...", "dailyBudget": "...", "adSetName": "...", "locations": ["..."], "ageMin": 18, "ageMax": 65, "gender": "...", "primaryText": "...", "headline": "...", "description": "...", "cta": "...", "websiteUrl": "..."}]
+Only include the keys that you have successfully resolved or updated so far. Do not include unresolved keys.
+- Once ALL parameters have been collected, tell the user that the configuration is complete, and they can click "Go to Review" to publish.
+- Prefilled company details: Company Name is "${localStorage.getItem('companyName') || ''}".`
+            }]
+        };
 
-                setCampaign(prev => ({
-                    ...prev,
-                    objective: parsedGoal,
-                    name: `AI Generated ${label} Campaign`
-                }))
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents,
+                systemInstruction
+            })
+        });
 
-                replyText = `Great! I've set your campaign goal to **${label}**.\n\nNext, what is your target daily budget? (e.g., $20, $50, $100)`
-                nextIndex = 1
-            } else if (aiQuestionIndex === 1) {
-                const numbers = text.match(/\d+(\.\d+)?/)
-                let budgetVal = "50.00"
-                if (numbers) {
-                    budgetVal = parseFloat(numbers[0]).toFixed(2)
+        if (!response.ok) {
+            throw new Error(`Gemini API returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I encountered an issue processing your request.";
+    };
+
+    const handleSendChatMessage = async (textToSubmit) => {
+        const text = textToSubmit || chatInput;
+        if (!text.trim()) return;
+
+        const newMsgUser = { sender: 'user', text: text };
+        const currentMessages = [...chatMessages, newMsgUser];
+        
+        setChatMessages(currentMessages);
+        setChatInput('');
+        setChatIsTyping(true);
+
+        try {
+            const rawReply = await callGeminiAPI(currentMessages);
+            
+            // Extract the [UPDATE: ...] tag if it exists in the raw reply
+            let cleanedReply = rawReply;
+            let updateData = null;
+            
+            const updateRegex = /\[UPDATE:\s*(\{.*?\}|\{[\s\S]*?\})\]/;
+            const match = rawReply.match(updateRegex);
+            if (match) {
+                try {
+                    updateData = JSON.parse(match[1]);
+                    // Strip the tag from the reply text
+                    cleanedReply = rawReply.replace(updateRegex, '').trim();
+                } catch (e) {
+                    console.error("Failed to parse [UPDATE] JSON tag from Gemini response:", e);
                 }
-
-                setCampaign(prev => ({ ...prev, dailyBudget: budgetVal }))
-                setAdSet(prev => ({ ...prev, dailyBudget: budgetVal }))
-
-                replyText = `Perfect! Budget set to **$${budgetVal} Daily**.\n\nNow, let's configure your audience. What target location or country would you like to focus on? (e.g., India, USA, Global)`
-                nextIndex = 2
-            } else if (aiQuestionIndex === 2) {
-                const loc = text.trim()
-                setAdSet(prev => ({ ...prev, locations: [loc] }))
-
-                replyText = `Got it! Targeting **${loc}**.\n\nWhat is the target age range for this campaign? (e.g., 18-65, 25-50)`
-                nextIndex = 3
-            } else if (aiQuestionIndex === 3) {
-                const matches = text.match(/\d+/g)
-                let min = 18
-                let max = 65
-                if (matches && matches.length >= 2) {
-                    min = parseInt(matches[0])
-                    max = parseInt(matches[1])
-                } else if (matches && matches.length === 1) {
-                    min = parseInt(matches[0])
-                }
-
-                setAdSet(prev => ({ ...prev, ageMin: min, ageMax: max }))
-
-                replyText = `Audience configured! Age range set to **${min} - ${max}+**.\n\nNext, what website URL should we direct users to? (e.g., https://poweva.com/collection)`
-                nextIndex = 4
-            } else if (aiQuestionIndex === 4) {
-                let url = text.trim()
-                if (!/^https?:\/\//i.test(url)) {
-                    url = 'https://' + url
-                }
-                setAdCreative(prev => ({ ...prev, websiteUrl: url }))
-
-                replyText = `URL saved: **${url}**.\n\nLet's write your ad text. What is the primary message or hook for your ad creative? (e.g., 'Discover our new collection designed for performance and style.')`
-                nextIndex = 5
-            } else if (aiQuestionIndex === 5) {
-                const primary = text.trim()
-                setAdCreative(prev => ({ ...prev, primaryText: primary }))
-
-                replyText = `Primary text configured!\n\nNow, write a short, catchy Headline for the ad. (e.g., 'Elevate Your Performance')`
-                nextIndex = 6
-            } else if (aiQuestionIndex === 6) {
-                const head = text.trim()
-                setAdCreative(prev => ({ ...prev, headline: head }))
-
-                replyText = `Headline configured: "${head}".\n\nWrite a brief description or secondary message. (e.g., 'High quality • Best Price')`
-                nextIndex = 7
-            } else if (aiQuestionIndex === 7) {
-                const desc = text.trim()
-                setAdCreative(prev => ({ ...prev, description: desc }))
-
-                replyText = `Description saved!\n\nFinally, which Call-To-Action (CTA) label matches best? (Learn More, Shop Now, Sign Up, Contact Us, Book Now)`
-                nextIndex = 8
-            } else if (aiQuestionIndex === 8) {
-                const lowerText = text.toLowerCase()
-                let parsedCta = 'Learn More'
-                if (lowerText.includes('shop')) parsedCta = 'Shop Now'
-                else if (lowerText.includes('sign')) parsedCta = 'Sign Up'
-                else if (lowerText.includes('contact')) parsedCta = 'Contact Us'
-                else if (lowerText.includes('book')) parsedCta = 'Book Now'
-                else if (lowerText.includes('apply')) parsedCta = 'Apply Now'
-
-                setAdCreative(prev => ({ ...prev, cta: parsedCta }))
-
-                replyText = `All details set! I have configured the CTA to **${parsedCta}**.\n\nYour Campaign configuration is complete and the ad has been created. Click the button below to view the final review screen and publish your campaign.`
-                nextIndex = 9
             }
 
-            setChatIsTyping(false)
-            setAiQuestionIndex(nextIndex)
-            setChatMessages(prev => [...prev, { sender: 'ai', text: replyText }])
-        }, 1200)
-    }
+            // If Gemini resolved parameters, update the corresponding React states dynamically!
+            if (updateData) {
+                if (updateData.campaignName) {
+                    setCampaign(prev => ({ ...prev, name: updateData.campaignName }));
+                }
+                if (updateData.objective) {
+                    let mappedObj = updateData.objective.toLowerCase();
+                    if (mappedObj.startsWith("outcome_")) {
+                        mappedObj = mappedObj.replace("outcome_", "");
+                    }
+                    setCampaign(prev => ({ ...prev, objective: mappedObj }));
+                }
+                if (updateData.dailyBudget) {
+                    setCampaign(prev => ({ ...prev, dailyBudget: updateData.dailyBudget }));
+                    setAdSet(prev => ({ ...prev, dailyBudget: updateData.dailyBudget }));
+                }
+                if (updateData.adSetName) {
+                    setAdSetName(updateData.adSetName);
+                }
+                if (updateData.locations) {
+                    setAdSet(prev => ({ ...prev, locations: updateData.locations }));
+                }
+                if (updateData.ageMin) {
+                    setAdSet(prev => ({ ...prev, ageMin: updateData.ageMin }));
+                }
+                if (updateData.ageMax) {
+                    setAdSet(prev => ({ ...prev, ageMax: updateData.ageMax }));
+                }
+                if (updateData.gender) {
+                    setAdSet(prev => ({ ...prev, gender: updateData.gender }));
+                }
+                if (updateData.facebookPage) {
+                    setAdCreative(prev => ({ ...prev, facebookPage: updateData.facebookPage }));
+                }
+                if (updateData.primaryText) {
+                    setAdCreative(prev => ({ ...prev, primaryText: updateData.primaryText }));
+                }
+                if (updateData.headline) {
+                    setAdCreative(prev => ({ ...prev, headline: updateData.headline }));
+                }
+                if (updateData.description) {
+                    setAdCreative(prev => ({ ...prev, description: updateData.description }));
+                }
+                if (updateData.cta) {
+                    setAdCreative(prev => ({ ...prev, cta: updateData.cta }));
+                }
+                if (updateData.websiteUrl) {
+                    setAdCreative(prev => ({ ...prev, websiteUrl: updateData.websiteUrl }));
+                }
+            }
+
+            const isCompleted = cleanedReply.toLowerCase().includes("complete") || cleanedReply.toLowerCase().includes("review") || aiQuestionIndex >= 8;
+            
+            setChatMessages(prev => [...prev, { sender: 'ai', text: cleanedReply }]);
+            if (isCompleted) {
+                setAiQuestionIndex(9); // triggers the Go to Review option
+            } else {
+                setAiQuestionIndex(prev => prev + 1);
+            }
+        } catch (err) {
+            console.error("Error calling Gemini API:", err);
+            setChatMessages(prev => [...prev, { sender: 'ai', text: "I'm sorry, I encountered a connection issue while building your campaign. Please try again." }]);
+        } finally {
+            setChatIsTyping(false);
+        }
+    };
 
     const handleSaveDraft = async () => {
         const token = localStorage.getItem('authToken')
@@ -1072,7 +1115,7 @@ export default function MetaAdsManager() {
                                         setCreationMode('ai')
                                         setAiQuestionIndex(0)
                                         setChatMessages([
-                                            { sender: 'ai', text: "Hi there! I am your AI Campaign Builder. Let's configure an optimized ads campaign together.\n\nFirst, what is your primary goal or objective for this campaign? (Awareness, Traffic, Engagement, Leads, App Promotion, or Sales)" }
+                                            { sender: 'ai', text: `Hello! I am your AI Campaign Assistant. I will guide you to create an optimized Meta Ads Campaign with all options (Name, Objective, Budget, Ad Set Targeting, and Ad Creative).\n\nTo start, what is the name of your campaign and what objective or goal would you like to target?` }
                                         ])
                                         triggerToast("AI campaign mode activated.")
                                     }}
@@ -2086,7 +2129,47 @@ export default function MetaAdsManager() {
                         )}
 
                         {/* Chat input box */}
-                        <div className="p-4 border-t border-slate-200 bg-white shrink-0">
+                        <div className="p-4 border-t border-slate-200 bg-white shrink-0 space-y-3">
+                            {/* File Upload in AI Chat */}
+                            <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span className="material-symbols-outlined text-[16px] text-slate-400">image</span>
+                                <span className="text-[10px] text-slate-600 font-bold flex-1 text-left">
+                                    {adCreative.imageSrc ? "Custom Image Uploaded" : "Upload Ad Image (Optional)"}
+                                </span>
+                                <input
+                                    type="file"
+                                    id="ai-ad-image-upload"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const objectUrl = URL.createObjectURL(file);
+                                            setAdCreative(prev => ({ ...prev, imageSrc: objectUrl }));
+                                            triggerToast("Ad image uploaded successfully!");
+                                        }
+                                    }}
+                                />
+                                {adCreative.imageSrc ? (
+                                    <button
+                                        onClick={() => {
+                                            setAdCreative(prev => ({ ...prev, imageSrc: null }));
+                                            triggerToast("Image removed.");
+                                        }}
+                                        className="px-2 py-1 text-red-500 hover:bg-red-50 text-[9px] font-black rounded-lg cursor-pointer border border-transparent"
+                                    >
+                                        Remove
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => document.getElementById('ai-ad-image-upload')?.click()}
+                                        className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-black text-slate-700 shadow-sm cursor-pointer"
+                                    >
+                                        Choose File
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="relative flex items-center">
                                 <input
                                     type="text"
