@@ -160,14 +160,7 @@ export default function AuthPage({ onAuthSuccess }) {
         const response = await loginUser(phoneClean, formData.password)
         triggerToast('Login successful!')
 
-        let role = 'admin'
-        if (response.user && response.user.role_name) {
-          const r = response.user.role_name.toLowerCase()
-          if (['admin', 'counselor', 'vendor'].includes(r)) {
-            role = r
-          }
-        }
-
+        const role = (response.user && response.user.role_name) || 'admin'
         localStorage.setItem('authToken', response.token)
         localStorage.setItem('userRole', role)
         localStorage.setItem('userPermissions', JSON.stringify(response.user.permissions || {}))
@@ -217,14 +210,7 @@ export default function AuthPage({ onAuthSuccess }) {
 
       triggerToast('OTP verified successfully! Creating account...')
 
-      let role = 'admin'
-      if (response.user && response.user.role_name) {
-        const r = response.user.role_name.toLowerCase()
-        if (['admin', 'counselor', 'vendor'].includes(r)) {
-          role = r
-        }
-      }
-
+      const role = (response.user && response.user.role_name) || 'admin'
       localStorage.setItem('authToken', response.token)
       localStorage.setItem('userRole', role)
       localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
@@ -256,14 +242,7 @@ export default function AuthPage({ onAuthSuccess }) {
               const response = await loginWithGoogle(tokenResponse.access_token);
               triggerToast('Google Login successful!');
 
-              let role = 'admin'
-              if (response.user && response.user.role_name) {
-                const r = response.user.role_name.toLowerCase()
-                if (['admin', 'counselor', 'vendor'].includes(r)) {
-                  role = r
-                }
-              }
-
+              const role = (response.user && response.user.role_name) || 'admin'
               localStorage.setItem('authToken', response.token)
               localStorage.setItem('userRole', role)
               localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
@@ -292,14 +271,7 @@ export default function AuthPage({ onAuthSuccess }) {
       const response = await loginWithLinkedIn(code, redirect_uri);
       triggerToast('LinkedIn Login successful!');
 
-      let role = 'admin'
-      if (response.user && response.user.role_name) {
-        const r = response.user.role_name.toLowerCase()
-        if (['admin', 'counselor', 'vendor'].includes(r)) {
-          role = r
-        }
-      }
-
+      const role = (response.user && response.user.role_name) || 'admin'
       localStorage.setItem('authToken', response.token)
       localStorage.setItem('userRole', role)
       localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
