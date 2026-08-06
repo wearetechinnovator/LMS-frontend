@@ -823,7 +823,14 @@ Only include the keys that you have successfully resolved or updated so far. Do 
         }
 
         if (!response.ok) {
-            throw new Error(`Gemini API returned status ${response.status}`);
+            let errorText = "";
+            try {
+                const errData = await response.json();
+                errorText = errData.error?.message || JSON.stringify(errData);
+            } catch (e) {
+                errorText = `Status ${response.status}`;
+            }
+            throw new Error(`Gemini API Error: ${errorText}`);
         }
 
         const data = await response.json();
