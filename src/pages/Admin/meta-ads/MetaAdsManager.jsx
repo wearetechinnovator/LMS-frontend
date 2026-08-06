@@ -751,7 +751,7 @@ export default function MetaAdsManager() {
         if (!apiKey) {
             throw new Error("Gemini API Key is missing. If you are running locally, please restart your dev server. If you are using the deployed version (e.g. Render/Vercel), you must add 'VITE_GEMINI_API_KEY' in your dashboard's Environment Variables settings.");
         }
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         // Map the chat history to Gemini's format
         const contents = messagesHistory.map(m => ({
@@ -790,14 +790,37 @@ Only include the keys that you have successfully resolved or updated so far. Do 
             }]
         };
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents,
-                systemInstruction
-            })
-        });
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey 
+                },
+                body: JSON.stringify({
+                    contents,
+                    systemInstruction
+                })
+            });
+        } catch (fetchErr) {
+            console.warn("Failed calling Gemini API with v1 endpoint:", fetchErr.message);
+        }
+
+        if (!response || !response.ok) {
+            const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            response = await fetch(fallbackUrl, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey 
+                },
+                body: JSON.stringify({
+                    contents,
+                    systemInstruction
+                })
+            });
+        }
 
         if (!response.ok) {
             throw new Error(`Gemini API returned status ${response.status}`);
