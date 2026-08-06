@@ -235,12 +235,12 @@ export default function Dashboard() {
     const activeCampaigns = new Set(
       filteredLeads
         .map(l => l.campaign)
-        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion')
+        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion' && c !== 'Web_Ingest')
     ).size
     const prevActiveCampaigns = new Set(
       prevPeriodLeads
         .map(l => l.campaign)
-        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion')
+        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion' && c !== 'Web_Ingest')
     ).size
     let campChange = ''
     let campTrend = 'neutral'

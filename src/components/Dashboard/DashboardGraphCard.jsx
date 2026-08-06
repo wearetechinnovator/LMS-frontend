@@ -167,7 +167,7 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
     return new Set(
       leads
         .map(l => l.campaign)
-        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion')
+        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion' && c !== 'Web_Ingest')
     ).size
   }, [leads])
 
