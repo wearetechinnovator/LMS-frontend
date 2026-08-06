@@ -830,6 +830,20 @@ Only include the keys that you have successfully resolved or updated so far. Do 
             } catch (e) {
                 errorText = `Status ${response.status}`;
             }
+
+            try {
+                const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                if (listRes.ok) {
+                    const listData = await listRes.json();
+                    const modelNames = listData.models?.map(m => m.name.replace("models/", "")) || [];
+                    if (modelNames.length > 0) {
+                        errorText += `\n\nAvailable models for your key: ${modelNames.join(", ")}`;
+                    }
+                }
+            } catch (listErr) {
+                console.warn("Failed to list models:", listErr);
+            }
+
             throw new Error(`Gemini API Error: ${errorText}`);
         }
 
