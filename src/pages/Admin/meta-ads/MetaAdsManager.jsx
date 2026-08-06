@@ -904,7 +904,39 @@ export default function MetaAdsManager() {
                     status: 'ACTIVE',
                     dailyBudget: campaign.dailyBudget,
                     lifetimeBudget: campaign.lifetimeBudget,
-                    budgetType: campaign.budgetType
+                    budgetType: campaign.budgetType,
+                    adSetName: adSetName,
+                    adSet: {
+                        conversionLocation: adSet.conversionLocation,
+                        pixel: adSet.pixel,
+                        optimizationEvent: adSet.optimizationEvent,
+                        locations: adSet.locations,
+                        ageMin: adSet.ageMin,
+                        ageMax: adSet.ageMax,
+                        gender: adSet.gender,
+                        placementType: adSet.placementType,
+                        includedPlacements: adSet.includedPlacements,
+                        optimizationForAdDelivery: adSet.optimizationForAdDelivery,
+                        bidStrategy: adSet.bidStrategy,
+                        attributionSetting: adSet.attributionSetting,
+                        startDate: adSet.startDate,
+                        startTime: adSet.startTime,
+                        setEndDate: adSet.setEndDate,
+                        endDate: adSet.endDate,
+                        endTime: adSet.endTime
+                    },
+                    adName: adName,
+                    adCreative: {
+                        facebookPage: adCreative.facebookPage,
+                        instagramAccount: adCreative.instagramAccount,
+                        format: adCreative.format,
+                        primaryText: adCreative.primaryText,
+                        headline: adCreative.headline,
+                        description: adCreative.description,
+                        cta: adCreative.cta,
+                        websiteUrl: adCreative.websiteUrl
+                    },
+                    page_id: selectedPage
                 })
             })
             triggerToast("Campaign published live to Meta networks!")
