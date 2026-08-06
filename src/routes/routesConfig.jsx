@@ -53,61 +53,6 @@ const adminNavItems = [
 
 export const RoleRoutes = ({ username, handleLogout }) => {
   const role = localStorage.getItem('userRole')
-  const location = useLocation()
-  const [permsVersion, setPermsVersion] = React.useState(0)
-
-  React.useEffect(() => {
-    const fetchLatestPermissions = async () => {
-      const token = localStorage.getItem('authToken')
-      if (!token) return
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        if (response.ok) {
-          const data = await response.json()
-          if (data && data.permissions) {
-            localStorage.setItem('userPermissions', JSON.stringify(data.permissions))
-            if (data.role) {
-              localStorage.setItem('userRole', data.role)
-            }
-            setPermsVersion(v => v + 1)
-          }
-        }
-      } catch (err) {
-        console.warn("Failed to sync latest permissions:", err)
-      }
-    }
-    fetchLatestPermissions()
-  }, [location.pathname])
-
-  const filteredNavItems = adminNavItems.filter(item => {
-    if (item.id === 'dashboard' || item.id === 'analytics') {
-      return hasPermission('dashboard')
-    }
-    if (item.id === 'form-builder' || item.id === 'form-embed') {
-      return hasPermission('forms_view')
-    }
-    if (item.id === 'meta-ads') {
-      return hasPermission('campaigns_view')
-    }
-    if (item.id === 'leads') {
-      return hasPermission('leads_view')
-    }
-    if (item.id === 'campaigns') {
-      return hasPermission('leads_view') || hasPermission('dashboard')
-    }
-    if (item.id === 'teams' || item.id === 'roles') {
-      return hasPermission('settings')
-    }
-    if (item.id === 'audit-logs') {
-      return hasPermission('auditLogs')
-    }
-    return true
-  })
-
   const displayRoleName = role ? `${role} Account` : 'User Account'
 
   return (
@@ -119,7 +64,7 @@ export const RoleRoutes = ({ username, handleLogout }) => {
             <RoleDashboardLayout
               username={username}
               onLogout={handleLogout}
-              navigationItems={filteredNavItems}
+              navigationItems={adminNavItems}
               roleName={displayRoleName}
             />
           </ProtectRoute>
