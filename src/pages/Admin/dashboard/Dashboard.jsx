@@ -232,8 +232,16 @@ export default function Dashboard() {
       }
     }
 
-    const activeCampaigns = new Set(filteredLeads.map(l => l.campaign).filter(Boolean)).size
-    const prevActiveCampaigns = new Set(prevPeriodLeads.map(l => l.campaign).filter(Boolean)).size
+    const activeCampaigns = new Set(
+      filteredLeads
+        .map(l => l.campaign)
+        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion')
+    ).size
+    const prevActiveCampaigns = new Set(
+      prevPeriodLeads
+        .map(l => l.campaign)
+        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion')
+    ).size
     let campChange = ''
     let campTrend = 'neutral'
     if (prevTotal > 0 && selectedDateRange !== 'This Session') {

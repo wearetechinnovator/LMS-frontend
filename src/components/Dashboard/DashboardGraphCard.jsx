@@ -164,7 +164,11 @@ export default function DashboardGraphCard({ sources = [], leads = [], selectedD
   }, [leads])
 
   const activeCampaignsCount = React.useMemo(() => {
-    return new Set(leads.map(l => l.campaign).filter(Boolean)).size
+    return new Set(
+      leads
+        .map(l => l.campaign)
+        .filter(c => c && c !== 'Direct_Ingest' && c !== 'CSV_Ingestion')
+    ).size
   }, [leads])
 
   const getSliceColor = (tab, index) => {
