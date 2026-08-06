@@ -54,8 +54,12 @@ export default function RoleDashboardLayout({ username, onLogout, navigationItem
     if (item.id === 'campaigns') {
       return hasPermission('leads_view') || hasPermission('dashboard')
     }
-    if (item.id === 'teams' || item.id === 'roles') {
+    if (item.id === 'teams') {
       return hasPermission('settings')
+    }
+    if (item.id === 'roles') {
+      const uRole = localStorage.getItem('userRole')
+      return uRole === 'Admin' || uRole === 'System Admin'
     }
     if (item.id === 'audit-logs') {
       return hasPermission('auditLogs')

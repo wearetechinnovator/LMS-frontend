@@ -76,9 +76,11 @@ export const RoleRoutes = ({ username, handleLogout }) => {
           </PermissionGate>
         } />
         <Route path="roles" element={
-          <PermissionGate permission="settings">
+          localStorage.getItem('userRole') === 'Admin' || localStorage.getItem('userRole') === 'System Admin' ? (
             <AdminRoleUserManagement />
-          </PermissionGate>
+          ) : (
+            <Navigate to="/unauthorized" replace />
+          )
         } />
         <Route path="profile" element={
           <AdminProfilePage />
