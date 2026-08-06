@@ -1318,6 +1318,69 @@ export default function RoleUserManagement() {
                                 </div>
                             </div>
 
+                            {/* Scoped Meta Campaigns permissions */}
+                            <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
+                                <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[18px]! text-primary">campaign</span>
+                                    Meta Campaigns & Ads Management
+                                </h3>
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-1">
+
+                                    <label className="flex items-start gap-2.5 cursor-pointer font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={rolePermissions[selectedRole]?.campaigns_view || false}
+                                            onChange={() => handleTogglePermission(selectedRole, 'campaigns_view')}
+                                            className="w-3 h-3 accent-primary mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-on-background">View Campaigns & Insights</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Allows accessing the Meta Ads Manager page and reading insights.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-2.5 cursor-pointer font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={rolePermissions[selectedRole]?.campaigns_create || false}
+                                            onChange={() => handleTogglePermission(selectedRole, 'campaigns_create')}
+                                            className="w-3 h-3 accent-primary mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-on-background">Create Campaigns & Ad Sets</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Allows launching new campaigns, ad sets, and uploading creative media.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-2.5 cursor-pointer font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={rolePermissions[selectedRole]?.campaigns_edit || false}
+                                            onChange={() => handleTogglePermission(selectedRole, 'campaigns_edit')}
+                                            className="w-3 h-3 accent-primary mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-on-background">Edit Campaign Parameters</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Allows updating campaigns, changing statuses, and altering selected accounts.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-2.5 cursor-pointer font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={rolePermissions[selectedRole]?.campaigns_delete || false}
+                                            onChange={() => handleTogglePermission(selectedRole, 'campaigns_delete')}
+                                            className="w-3 h-3 accent-primary mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-on-background text-rose-600">Delete Campaigns</p>
+                                            <p className="text-[9px] text-on-surface-variant mt-0.5">Enables deleting campaign drafts and live campaign entries.</p>
+                                        </div>
+                                    </label>
+
+                                </div>
+                            </div>
+
                             {/* System Settings & Advanced Admin options */}
                             <div className="border border-outline-variant rounded bg-surface-container/20 p-3 space-y-2">
                                 <h3 className="font-bold text-on-background text-[11px] border-b border-outline-variant/60 pb-1 flex items-center gap-1">

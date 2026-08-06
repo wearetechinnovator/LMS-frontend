@@ -58,8 +58,11 @@ export const RoleRoutes = ({ username, handleLogout }) => {
     if (item.id === 'dashboard' || item.id === 'analytics') {
       return hasPermission('dashboard')
     }
-    if (item.id === 'form-builder' || item.id === 'form-embed' || item.id === 'meta-ads') {
+    if (item.id === 'form-builder' || item.id === 'form-embed') {
       return hasPermission('forms_view')
+    }
+    if (item.id === 'meta-ads') {
+      return hasPermission('campaigns_view')
     }
     if (item.id === 'leads') {
       return hasPermission('leads_view')
@@ -127,7 +130,7 @@ export const RoleRoutes = ({ username, handleLogout }) => {
           </PermissionGate>
         } />
         <Route path="meta-ads" element={
-          <PermissionGate permission="forms_view">
+          <PermissionGate permission="campaigns_view">
             <AdminMetaAdsManager />
           </PermissionGate>
         } />
