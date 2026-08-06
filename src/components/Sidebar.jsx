@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Icon from './Icon'
 
@@ -192,12 +192,12 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
 
             return (
               <div key={item.id} className="nav-group" style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                <button
-                  onClick={() => {
+                <Link
+                  to={item.path || '#'}
+                  onClick={(e) => {
                     if (hasSubItems) {
+                      e.preventDefault()
                       setExpandedItems(prev => ({ ...prev, [item.id]: !prev[item.id] }))
-                    } else {
-                      navigate(item.path)
                     }
                   }}
                   onMouseEnter={(e) => {
@@ -210,13 +210,14 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                   onMouseLeave={() => setHoveredItem(null)}
                   className={`nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
                   data-tour={`sidebar-item-${item.id}`}
+                  style={{ textDecoration: 'none' }}
                 >
                   <Icon name={item.icon} size={18} />
                   {!sidebarCollapsed && <span className="truncate text-left flex-1" title={item.label}>{item.label}</span>}
                   {!sidebarCollapsed && hasSubItems && (
                     <Icon name={isExpanded ? 'chevron_up' : 'chevron_down'} size={14} className="sub-menu-arrow" />
                   )}
-                </button>
+                </Link>
 
                 {/* Sub Menu Items */}
                 {!sidebarCollapsed && hasSubItems && isExpanded && (
@@ -224,14 +225,15 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                     {item.subItems.map(subItem => {
                       const isSubActive = location.pathname === subItem.path
                       return (
-                        <button
+                        <Link
                           key={subItem.id}
-                          onClick={() => navigate(subItem.path)}
+                          to={subItem.path}
                           className={`sub-nav-item ${isSubActive ? 'active' : ''}`}
+                          style={{ textDecoration: 'none' }}
                         >
                           <span className="sub-nav-dot" />
                           <span className="truncate text-left flex-1" title={subItem.label}>{subItem.label}</span>
-                        </button>
+                        </Link>
                       )
                     })}
                   </div>
@@ -242,8 +244,8 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
         </nav>
 
         <div className="sidebar-footer">
-          <button
-            onClick={() => navigate(getSettingsPath())}
+          <Link
+            to={getSettingsPath()}
             className={`footer-btn ${location.pathname === getSettingsPath() ? 'active' : ''} ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
             onMouseEnter={(e) => {
               if (sidebarCollapsed) {
@@ -253,10 +255,11 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
               }
             }}
             onMouseLeave={() => setHoveredItem(null)}
+            style={{ textDecoration: 'none' }}
           >
             <Icon name="settings" size={18} />
             {!sidebarCollapsed && <span>Settings</span>}
-          </button>
+          </Link>
           <button
             onClick={onLogout}
             className={`footer-btn ${sidebarCollapsed ? 'nav-item-collapsed' : ''}`}
@@ -308,10 +311,10 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                 {hoveredItem.subItems.map(sub => {
                   const isSubActive = location.pathname === sub.path
                   return (
-                    <button
+                    <Link
                       key={sub.id}
+                      to={sub.path}
                       onClick={() => {
-                        navigate(sub.path)
                         setHoveredItem(null)
                       }}
                       className={`w-full px-3.5 py-2 text-left text-[12px] font-semibold flex items-center gap-2 cursor-pointer border-0 bg-transparent ${
@@ -319,10 +322,11 @@ export default function Sidebar({ sidebarCollapsed, setSidebarCollapsed, onLogou
                           ? 'text-[#2f7d9e]' 
                           : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
+                      style={{ textDecoration: 'none', display: 'flex' }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                       {sub.label}
-                    </button>
+                    </Link>
                   )
                 })}
               </div>
