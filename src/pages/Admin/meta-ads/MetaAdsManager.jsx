@@ -213,14 +213,15 @@ export default function MetaAdsManager() {
     })
 
     const [adCreative, setAdCreative] = useState({
-        facebookPage: 'Poweva Store',
-        instagramAccount: '@poweva.store',
+        facebookPage: localStorage.getItem('companyName') || '',
+        instagramAccount: localStorage.getItem('companyName') ? `@${localStorage.getItem('companyName').toLowerCase().replace(/\s+/g, '')}` : '',
         format: 'single_image', // 'single_image' | 'video' | 'carousel' | 'collection' | 'flexible'
-        primaryText: 'Discover our new collection designed for performance and style.',
-        headline: 'Elevate Your Performance',
-        description: 'High quality • Best Price',
+        primaryText: '',
+        headline: '',
+        description: '',
         cta: 'Learn More',
-        websiteUrl: 'https://poweva.com/collection'
+        websiteUrl: '',
+        imageSrc: null
     })
 
     const [selectedVariation, setSelectedVariation] = useState(0)
@@ -443,6 +444,14 @@ export default function MetaAdsManager() {
                     }
                     if (data.pages && data.pages.length > 0) {
                         setFacebookPagesList(data.pages)
+                        const defaultPageId = data.selectedPage || data.pages[0].id;
+                        const defaultPageObj = data.pages.find(p => p.id === defaultPageId);
+                        if (defaultPageObj) {
+                            setAdCreative(prev => ({
+                                ...prev,
+                                facebookPage: defaultPageObj.name
+                            }));
+                        }
                     }
                     if (data.selectedAdAccount) {
                         setSelectedAdAccount(data.selectedAdAccount)
@@ -515,6 +524,13 @@ export default function MetaAdsManager() {
     const handlePageChange = (val) => {
         setSelectedPage(val)
         handleSelectAccountsChange(selectedAdAccount, val)
+        const selectedPageObj = facebookPagesList.find(p => p.id === val);
+        if (selectedPageObj) {
+            setAdCreative(prev => ({
+                ...prev,
+                facebookPage: selectedPageObj.name
+            }));
+        }
     }
 
     const handleConnectMeta = () => {
@@ -2168,10 +2184,10 @@ export default function MetaAdsManager() {
                                 {/* Media visual */}
                                 <div className="aspect-[16/11] bg-slate-50 border-y border-slate-100 flex items-center justify-center overflow-hidden relative">
                                     <img
-                                        src={SHOE_VARIATIONS[selectedVariation].url}
+                                        src={adCreative.imageSrc || SHOE_VARIATIONS[selectedVariation].url}
                                         alt="Preview creative"
                                         className="w-full h-full object-cover animate-fadeIn"
-                                        key={selectedVariation}
+                                        key={adCreative.imageSrc || selectedVariation}
                                     />
                                 </div>
 
@@ -3081,7 +3097,24 @@ export default function MetaAdsManager() {
                                             <span className="material-symbols-outlined text-[20px] text-slate-300">cloud_upload</span>
                                             <span className="text-[9.5px] font-bold text-slate-500">Drag and drop image here</span>
                                             <span className="text-[8.5px] text-slate-400">or</span>
-                                            <button onClick={() => triggerToast("File uploader dialog opened.")} className="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-[9.5px] font-black text-slate-700 shadow-sm cursor-pointer">
+                                            <input
+                                                type="file"
+                                                id="ad-image-upload"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        const objectUrl = URL.createObjectURL(file);
+                                                        setAdCreative(prev => ({ ...prev, imageSrc: objectUrl }));
+                                                        triggerToast("Custom image uploaded successfully!");
+                                                    }
+                                                }}
+                                            />
+                                            <button 
+                                                onClick={() => document.getElementById('ad-image-upload')?.click()} 
+                                                className="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-[9.5px] font-black text-slate-700 shadow-sm cursor-pointer"
+                                            >
                                                 Upload Image
                                             </button>
                                         </div>
@@ -3089,15 +3122,18 @@ export default function MetaAdsManager() {
                                         {/* Preview container */}
                                         <div className="border border-slate-150 rounded-xl overflow-hidden relative aspect-[4/3] bg-slate-50 flex items-center justify-center min-h-[120px]">
                                             <img
-                                                src={SHOE_VARIATIONS[selectedVariation].url}
+                                                src={adCreative.imageSrc || SHOE_VARIATIONS[selectedVariation].url}
                                                 alt="Preview shoe"
                                                 className="w-full h-full object-cover"
                                             />
                                             <div className="absolute bottom-2 right-2 flex gap-1.5">
-                                                <button onClick={() => triggerToast("Refreshing image variant")} className="w-6 h-6 rounded-lg bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center hover:bg-white hover:scale-105 cursor-pointer">
-                                                    <span className="material-symbols-outlined text-[12px] text-slate-600 font-black">refresh</span>
-                                                </button>
-                                                <button onClick={() => triggerToast("Clearing selected media")} className="w-6 h-6 rounded-lg bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center hover:bg-white hover:text-red-500 hover:scale-105 cursor-pointer">
+                                                <button 
+                                                    onClick={() => {
+                                                        setAdCreative(prev => ({ ...prev, imageSrc: null }));
+                                                        triggerToast("Custom media cleared.");
+                                                    }} 
+                                                    className="w-6 h-6 rounded-lg bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center hover:bg-white hover:text-red-500 hover:scale-105 cursor-pointer"
+                                                >
                                                     <span className="material-symbols-outlined text-[12px] text-slate-600 font-black">delete</span>
                                                 </button>
                                             </div>
@@ -3383,7 +3419,7 @@ export default function MetaAdsManager() {
                                         {/* Thumbnail Preview */}
                                         <div className="w-24 h-24 border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
                                             <img
-                                                src={SHOE_VARIATIONS[selectedVariation].url}
+                                                src={adCreative.imageSrc || SHOE_VARIATIONS[selectedVariation].url}
                                                 alt="Preview shoe"
                                                 className="w-full h-full object-cover"
                                             />
@@ -3899,10 +3935,10 @@ export default function MetaAdsManager() {
                                         {/* Media visual */}
                                         <div className="aspect-[16/11] bg-slate-50 border-y border-slate-100 flex items-center justify-center overflow-hidden relative">
                                             <img
-                                                src={SHOE_VARIATIONS[selectedVariation].url}
+                                                src={adCreative.imageSrc || SHOE_VARIATIONS[selectedVariation].url}
                                                 alt="Preview creative"
                                                 className="w-full h-full object-cover animate-fadeIn"
-                                                key={selectedVariation}
+                                                key={adCreative.imageSrc || selectedVariation}
                                             />
                                         </div>
 
@@ -4522,10 +4558,10 @@ export default function MetaAdsManager() {
                                                 {/* Media visual */}
                                                 <div className="aspect-[16/11] bg-slate-50 border-y border-slate-100 flex items-center justify-center overflow-hidden relative">
                                                     <img
-                                                        src={SHOE_VARIATIONS[selectedVariation].url}
+                                                        src={adCreative.imageSrc || SHOE_VARIATIONS[selectedVariation].url}
                                                         alt="Preview creative"
                                                         className="w-full h-full object-cover animate-fadeIn"
-                                                        key={selectedVariation}
+                                                        key={adCreative.imageSrc || selectedVariation}
                                                     />
                                                 </div>
 
