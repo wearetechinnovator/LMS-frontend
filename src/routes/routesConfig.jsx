@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Navigate } from 'react-router-dom'
+import { Route, Navigate, useLocation } from 'react-router-dom'
 import { ProtectRoute, PermissionGate, hasPermission } from '../components/ProtectRoute'
 import RoleDashboardLayout from '../layouts/RoleDashboardLayout'
 
@@ -53,6 +53,35 @@ const adminNavItems = [
 
 export const RoleRoutes = ({ username, handleLogout }) => {
   const role = localStorage.getItem('userRole')
+  const location = useLocation()
+  const [permsVersion, setPermsVersion] = React.useState(0)
+
+  React.useEffect(() => {
+    const fetchLatestPermissions = async () => {
+      const token = localStorage.getItem('authToken')
+      if (!token) return
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/user/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data && data.permissions) {
+            localStorage.setItem('userPermissions', JSON.stringify(data.permissions))
+            if (data.role) {
+              localStorage.setItem('userRole', data.role)
+            }
+            setPermsVersion(v => v + 1)
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to sync latest permissions:", err)
+      }
+    }
+    fetchLatestPermissions()
+  }, [location.pathname])
 
   const filteredNavItems = adminNavItems.filter(item => {
     if (item.id === 'dashboard' || item.id === 'analytics') {
