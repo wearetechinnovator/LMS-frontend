@@ -77,11 +77,11 @@ export default function AllLeadsPage() {
       const parts = val.split(' | ');
       const type = parts[0];
       const dateTime = parts[1];
-      
+
       let icon = 'schedule';
       let iconColor = 'text-slate-400';
       let bgColor = 'bg-slate-50/50 border-slate-200/50 text-slate-600';
-      
+
       if (type === 'WhatsApp') {
         icon = 'chat';
         iconColor = 'text-emerald-500';
@@ -99,7 +99,7 @@ export default function AllLeadsPage() {
         iconColor = 'text-purple-500';
         bgColor = 'bg-purple-50/30 border-purple-100 text-slate-700 dark:bg-purple-950/20 dark:border-purple-900/50 dark:text-purple-300';
       }
-      
+
       return (
         <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-bold ${bgColor}`}>
           <span className={`material-symbols-outlined text-[13px] ${iconColor}`}>{icon}</span>
@@ -187,7 +187,7 @@ export default function AllLeadsPage() {
   const tableContainerRef = React.useRef(null)
   const topScrollbarRef = React.useRef(null)
   const [tableScrollWidth, setTableScrollWidth] = React.useState(0)
-  
+
   const isScrollingTopRef = React.useRef(false)
   const isScrollingTableRef = React.useRef(false)
 
@@ -892,11 +892,11 @@ export default function AllLeadsPage() {
     const currentTotal30 = formFilteredLeads.filter(l => l.createdAt && (now - new Date(l.createdAt)) <= 30 * dayMs).length;
     const currentQualified30 = formFilteredLeads.filter(l => l.status === 'QUALIFIED' && l.createdAt && (now - new Date(l.createdAt)) <= 30 * dayMs).length;
     const currentConv = currentTotal30 > 0 ? (currentQualified30 / currentTotal30) * 100 : 0;
-    
+
     const prevTotal30 = formFilteredLeads.filter(l => l.createdAt && (now - new Date(l.createdAt)) > 30 * dayMs && (now - new Date(l.createdAt)) <= 60 * dayMs).length;
     const prevQualified30 = formFilteredLeads.filter(l => l.status === 'QUALIFIED' && l.createdAt && (now - new Date(l.createdAt)) > 30 * dayMs && (now - new Date(l.createdAt)) <= 60 * dayMs).length;
     const prevConv = prevTotal30 > 0 ? (prevQualified30 / prevTotal30) * 100 : 0;
-    
+
     const convDiff = currentConv - prevConv;
     let convChange = `${convDiff >= 0 ? '+' : ''}${convDiff.toFixed(0)}% vs last month`;
     let convUp = convDiff >= 0;
@@ -1522,7 +1522,7 @@ export default function AllLeadsPage() {
 
   const handleDownloadLeads = (format = 'CSV') => {
     setExportFormat(format);
-    
+
     // Pre-populate export columns selection to match current visibleColumns state
     setExportColumns({
       id: true,
@@ -1643,7 +1643,7 @@ export default function AllLeadsPage() {
         headers.forEach(h => {
           tableHeaderHtml += '<th>' + h + '</th>';
         });
-        
+
         let tableBodyHtml = '';
         rows.forEach(row => {
           tableBodyHtml += '<tr>';
@@ -1686,12 +1686,12 @@ export default function AllLeadsPage() {
         URL.revokeObjectURL(url);
       } else if (exportFormat === 'PDF') {
         const printWindow = window.open('', '_blank');
-        
+
         let tableHeaderHtml = '';
         headers.forEach(h => {
           tableHeaderHtml += '<th>' + h + '</th>';
         });
-        
+
         let tableBodyHtml = '';
         rows.forEach(row => {
           tableBodyHtml += '<tr>';
@@ -1849,7 +1849,7 @@ export default function AllLeadsPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="h-full overflow-y-auto p-4">
       <div className="leads-page-scope">
         <div className="leads-wrapper">
           {/* Toast Notification */}
@@ -2295,7 +2295,7 @@ export default function AllLeadsPage() {
                               onClick={(e) => {
                                 toggleSelectLead(lead.id, e)
                               }}
-                              onChange={() => {}}
+                              onChange={() => { }}
                               className="w-4 h-4 cursor-pointer accent-primary rounded border-slate-300"
                             />
                           </td>
@@ -3178,11 +3178,10 @@ export default function AllLeadsPage() {
                             key={fmt}
                             type="button"
                             onClick={() => setExportFormat(fmt)}
-                            className={`py-2 px-3 text-[11px] font-bold rounded-[3px] border transition-all cursor-pointer text-center ${
-                              exportFormat === fmt
+                            className={`py-2 px-3 text-[11px] font-bold rounded-[3px] border transition-all cursor-pointer text-center ${exportFormat === fmt
                                 ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm'
                                 : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                            }`}
+                              }`}
                           >
                             {fmt}
                           </button>
@@ -3455,11 +3454,11 @@ export default function AllLeadsPage() {
                   transition={{ duration: 0.15 }}
                 >
                   {/* Modal Header */}
-                  <div 
+                  <div
                     style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
                     className="px-5 py-4 border-b flex justify-between items-center"
                   >
-                    <h3 
+                    <h3
                       style={{ color: '#1e293b' }}
                       className="text-[13px] font-extrabold flex items-center gap-1.5 uppercase tracking-wide"
                     >
@@ -3531,7 +3530,7 @@ export default function AllLeadsPage() {
                     className="p-5 space-y-4 text-left"
                   >
                     <div>
-                      <label 
+                      <label
                         style={{ color: '#94a3b8' }}
                         className="block text-[11px] font-extrabold uppercase tracking-wider mb-2"
                       >
@@ -3561,7 +3560,7 @@ export default function AllLeadsPage() {
                     </div>
 
                     <div>
-                      <label 
+                      <label
                         style={{ color: '#94a3b8' }}
                         className="block text-[11px] font-extrabold uppercase tracking-wider mb-1.5"
                       >
@@ -3578,7 +3577,7 @@ export default function AllLeadsPage() {
                     </div>
 
                     <div>
-                      <label 
+                      <label
                         style={{ color: '#94a3b8' }}
                         className="block text-[11px] font-extrabold uppercase tracking-wider mb-1.5"
                       >

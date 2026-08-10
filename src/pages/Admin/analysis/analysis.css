@@ -5,6 +5,8 @@
 .analytics-container {
     padding: 24px;
     width: 100%;
+    height: 100%;
+    overflow-y: auto;
     box-sizing: border-box;
     background-color: var(--color-background, #f8f9ff);
     font-family: var(--font-sans, "Inter", sans-serif);

@@ -79,7 +79,7 @@ export default function RoleDashboardLayout({ username, onLogout, navigationItem
       />
       <div className="layout-main">
         <Navbar username={username} onLogout={onLogout} roleName={roleName} />
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
           <Outlet />
         </div>
       </div>
