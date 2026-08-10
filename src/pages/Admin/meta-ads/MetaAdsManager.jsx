@@ -1868,7 +1868,7 @@ Only include the keys that you have successfully resolved or updated so far. Do 
                                         <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                             <span className="font-semibold text-slate-400">Owner API Profile</span>
                                             <span className="font-extrabold text-slate-700">{integrations[authModalPlatform]?.appName || PLATFORM_DETAILS[authModalPlatform]?.profile || 'Developer Workspace'}</span>
-                                        </div>
+                                         </div>
                                         <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                             <span className="font-semibold text-slate-400">Linked Scopes</span>
                                             <span className="font-extrabold text-slate-700 font-mono text-[9px] uppercase">{integrations[authModalPlatform]?.scopes || PLATFORM_DETAILS[authModalPlatform]?.scopes || 'ads_management'}</span>
