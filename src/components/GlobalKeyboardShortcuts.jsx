@@ -42,6 +42,12 @@ export default function GlobalKeyboardShortcuts() {
             navigate('/admin/analytics')
           }
           break
+        case 'l': // alt+l or alt+li -> leads
+        case 'li':
+          if (hasPermission('leads_view') || hasPermission('leads')) {
+            navigate('/admin/leads')
+          }
+          break
         case 't': // alt+t -> team
           if (hasPermission('settings')) {
             navigate('/admin/teams')
@@ -106,8 +112,8 @@ export default function GlobalKeyboardShortcuts() {
           return
         }
 
-        // Multi-key prefix handling for 'a' (audit-log vs analytics 'al') and 'f' (form-builder vs form-embed 'fe')
-        if (isAltPressed && sequenceBufferRef.current === '' && (char === 'a' || char === 'f')) {
+        // Multi-key prefix handling for 'a' (audit-log vs analytics 'al'), 'f' (form-builder vs form-embed 'fe'), and 'l' (leads 'li')
+        if (isAltPressed && sequenceBufferRef.current === '' && (char === 'a' || char === 'f' || char === 'l')) {
           e.preventDefault()
           const prefix = char
           sequenceBufferRef.current = prefix
@@ -137,11 +143,19 @@ export default function GlobalKeyboardShortcuts() {
           return
         }
 
+        // Second key sequence 'l' -> 'i' => 'li' (Leads)
+        if (sequenceBufferRef.current === 'l' && char === 'i') {
+          e.preventDefault()
+          clearPendingTimer()
+          executeShortcut('li')
+          return
+        }
+
         // If another key is pressed while buffer is active, handle reset
         if (sequenceBufferRef.current.length > 0 && isAltPressed) {
           clearPendingTimer()
           sequenceBufferRef.current = ''
-          if (['d', 't', 'r', 'c', 'a', 'f'].includes(char)) {
+          if (['d', 't', 'r', 'c', 'a', 'f', 'l'].includes(char)) {
             e.preventDefault()
             if (['d', 't', 'r', 'c'].includes(char)) {
               executeShortcut(char)
