@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import InteractiveTour from '../components/InteractiveTour'
 import SpotlightSearch from '../components/SpotlightSearch'
+import GlobalKeyboardShortcuts from '../components/GlobalKeyboardShortcuts'
 import { hasPermission } from '../components/ProtectRoute'
 
 export default function RoleDashboardLayout({ username, onLogout, navigationItems, roleName }) {
@@ -90,6 +91,7 @@ export default function RoleDashboardLayout({ username, onLogout, navigationItem
         sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}
       />
+      <GlobalKeyboardShortcuts />
     </div>
   )
 }

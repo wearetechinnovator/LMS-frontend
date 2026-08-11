@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormBuilder from './FormBuilder'
 import FormBuilderHeader from '../../../components/FormbuilderPage/FormBuilderHeader'
@@ -120,6 +121,8 @@ export default function FormBuilderPage() {
   const paginationStartIndex = totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage
   const paginationEndIndex = Math.min(currentPage * rowsPerPage, totalItems)
 
+  const location = useLocation()
+
   // Set up action to open fresh blank form builder
   const handleCreateNewForm = () => {
     setActiveFormSchema({
@@ -133,6 +136,23 @@ export default function FormBuilderPage() {
       ]
     })
   }
+
+  // Handle shortcut or URL trigger for create mode
+  useEffect(() => {
+    if (location.search.includes('mode=create') || location.state?.createMode) {
+      handleCreateNewForm()
+    }
+  }, [location])
+
+  useEffect(() => {
+    const handleShortcutCreate = () => {
+      handleCreateNewForm()
+    }
+    window.addEventListener('lms_shortcut_create_form', handleShortcutCreate)
+    return () => {
+      window.removeEventListener('lms_shortcut_create_form', handleShortcutCreate)
+    }
+  }, [])
 
   // Handle template selection & clone to launch builder
   const handleSelectTemplate = (template) => {
