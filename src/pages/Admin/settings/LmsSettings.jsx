@@ -1275,6 +1275,9 @@ export default function LmsSettings() {
     return <SettingsSkeleton />
   }
 
+  const selectedFormForFields = formsList.find(f => String(f.id) === String(selectedFormId))
+  const formFields = selectedFormForFields && Array.isArray(selectedFormForFields.fields) ? selectedFormForFields.fields : []
+
   return (
     <div className="w-full relative h-full flex flex-col font-sans select-none p-6 bg-white text-left overflow-y-auto">
       {/* Toast Notification */}
@@ -2669,6 +2672,49 @@ export default function LmsSettings() {
                 </div>
               )}
             </div>
+
+            {/* Form Fields Mapping Reference */}
+            {formFields.length > 0 && (
+              <div className="bg-white border border-[#c3c6d7] rounded-xl p-5 shadow-xs space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Icon name="table_rows" size={18} className="text-[#2f7d9e]" />
+                    Form Fields Reference
+                  </h3>
+                  <p className="text-[11px] text-slate-400">Below are the custom fields configured in your form. You can use either the Label (Option 1) or Name (Option 2) as the JSON key when sending leads via the API.</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-[11px]">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                        <th className="px-3 py-2">Field Label</th>
+                        <th className="px-3 py-2">Field Type</th>
+                        <th className="px-3 py-2">Payload Key (Option 1)</th>
+                        <th className="px-3 py-2">Payload Key (Option 2)</th>
+                        <th className="px-3 py-2">Required</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {formFields.filter(f => f.type !== 'captcha').map((field, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/50">
+                          <td className="px-3 py-2 font-semibold text-slate-800">{field.label}</td>
+                          <td className="px-3 py-2 font-mono text-[10px] text-slate-500 capitalize">{field.type}</td>
+                          <td className="px-3 py-2 font-mono text-[#2f7d9e] font-bold select-all">"{field.label}"</td>
+                          <td className="px-3 py-2 font-mono text-slate-500 select-all">{field.name ? `"${field.name}"` : '--'}</td>
+                          <td className="px-3 py-2">
+                            {field.required ? (
+                              <span className="text-red-500 font-bold">Yes</span>
+                            ) : (
+                              <span className="text-slate-400">No</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Developer Documentation Panel */}
             {formsList.length > 0 && (
