@@ -2695,21 +2695,30 @@ export default function LmsSettings() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {formFields.filter(f => f.type !== 'captcha').map((field, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50">
-                          <td className="px-3 py-2 font-semibold text-slate-800">{field.label}</td>
-                          <td className="px-3 py-2 font-mono text-[10px] text-slate-500 capitalize">{field.type}</td>
-                          <td className="px-3 py-2 font-mono text-[#2f7d9e] font-bold select-all">"{field.label}"</td>
-                          <td className="px-3 py-2 font-mono text-slate-500 select-all">{field.name ? `"${field.name}"` : '--'}</td>
-                          <td className="px-3 py-2">
-                            {field.required ? (
-                              <span className="text-red-500 font-bold">Yes</span>
-                            ) : (
-                              <span className="text-slate-400">No</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      {formFields.filter(f => f.type !== 'captcha').map((field, idx) => {
+                        const option2Key = field.name || String(field.label || "")
+                          .toLowerCase()
+                          .trim()
+                          .replace(/[^\w\s-]/g, '')
+                          .replace(/[\s_-]+/g, '_')
+                          .replace(/^-+|-+$/g, '');
+
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/50">
+                            <td className="px-3 py-2 font-semibold text-slate-800">{field.label}</td>
+                            <td className="px-3 py-2 font-mono text-[10px] text-slate-500 capitalize">{field.type}</td>
+                            <td className="px-3 py-2 font-mono text-[#2f7d9e] font-bold select-all">"{field.label}"</td>
+                            <td className="px-3 py-2 font-mono text-slate-500 select-all">"{option2Key}"</td>
+                            <td className="px-3 py-2">
+                              {field.required ? (
+                                <span className="text-red-500 font-bold">Yes</span>
+                              ) : (
+                                <span className="text-slate-400">No</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
