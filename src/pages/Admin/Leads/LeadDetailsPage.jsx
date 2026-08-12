@@ -1161,7 +1161,7 @@ export default function LeadDetailsPage() {
   }, [journeySteps, statusesList])
 
   return (
-    <div className="leads-page-scope leads-details-scope min-h-screen flex flex-col p-4 md:p-6">
+    <div className="leads-page-scope leads-details-scope h-full overflow-y-auto flex flex-col p-4 md:p-6">
       <AnimatePresence>
         {toastMsg && (
           <motion.div
