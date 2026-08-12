@@ -43,6 +43,7 @@ export default function LmsSettings() {
       tabs.push({ id: 'bulk', label: 'Bulk Messaging', icon: 'messages-square' })
       tabs.push({ id: 'statuses', label: 'Custom Statuses', icon: 'chart-spline' })
       tabs.push({ id: 'journey', label: 'Lead Journey', icon: 'route' })
+      tabs.push({ id: 'apiKey', label: 'API Integration', icon: 'key' })
     } else if (role === 'vendor' || role === 'Vendor') {
       tabs.push({ id: 'import', label: 'Import Leads', icon: 'file-up' })
       tabs.push({ id: 'export', label: 'Export Leads', icon: 'download' })
@@ -75,7 +76,82 @@ export default function LmsSettings() {
   })
   const [toastMsg, setToastMsg] = useState(null)
   const [dbUsers, setDbUsers] = useState([])
-  
+  const [apiKey, setApiKey] = useState('')
+  const [apiKeyLoading, setApiKeyLoading] = useState(false)
+  const [copiedKey, setCopiedKey] = useState(false)
+
+  const fetchApiKey = async () => {
+    try {
+      setApiKeyLoading(true)
+      const token = localStorage.getItem('authToken')
+      if (!token) return
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/company/get-company`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.api_key) {
+          setApiKey(data.api_key)
+        } else {
+          setApiKey('')
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch API key:", err)
+    } finally {
+      setApiKeyLoading(false)
+    }
+  }
+
+  const handleRegenerateApiKey = async () => {
+    if (apiKey && !window.confirm("Are you sure you want to regenerate your API Key? Any existing integrations using the old key will stop working immediately.")) {
+      return
+    }
+    try {
+      setApiKeyLoading(true)
+      const token = localStorage.getItem('authToken')
+      if (!token) return
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/company/regenerate-api-key`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.apiKey) {
+          setApiKey(data.apiKey)
+          triggerToast("API Key regenerated successfully!")
+        }
+      } else {
+        triggerToast("Failed to regenerate API Key.")
+      }
+    } catch (err) {
+      console.error("Failed to regenerate API key:", err)
+      triggerToast("An error occurred. Please try again.")
+    } finally {
+      setApiKeyLoading(false)
+    }
+  }
+
+  const handleCopyKey = () => {
+    if (!apiKey) return
+    navigator.clipboard.writeText(apiKey)
+    setCopiedKey(true)
+    triggerToast("API Key copied to clipboard!")
+    setTimeout(() => {
+      setCopiedKey(false)
+    }, 2000)
+  }
+
+  useEffect(() => {
+    if (role === 'admin' || role === 'Admin' || role === 'System Admin' || canManageSettings) {
+      fetchApiKey()
+    }
+  }, [role, canManageSettings])
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -2455,7 +2531,181 @@ export default function LmsSettings() {
           </motion.div>
         )}
 
-        {/* TAB 7: APPEARANCE PREFERENCES */}
+        {/* TAB 7: API INTEGRATION */}
+        {activeSettingsTab === 'apiKey' && (
+          <motion.div
+            key="api-key-tab"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
+            className="w-full text-left space-y-6"
+          >
+            {/* API Credentials Panel */}
+            <div className="bg-white border border-[#c3c6d7] rounded-xl p-5 shadow-xs relative overflow-hidden">
+              <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4 mb-5">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Icon name="key" size={18} className="text-[#2f7d9e]" />
+                    API Credentials
+                  </h3>
+                  <p className="text-[11px] text-slate-400">Use this API Key to ingest leads from external sources and partner systems.</p>
+                </div>
+              </div>
+
+              {apiKeyLoading ? (
+                <div className="py-8 flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2f7d9e]"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-2">Workspace API Key</label>
+                    {apiKey ? (
+                      <div className="flex items-center gap-2 max-w-2xl">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            readOnly
+                            value={apiKey}
+                            className="w-full font-mono text-[12px] bg-slate-50 text-slate-800 border border-slate-200/80 rounded-lg py-2 px-3 pr-10 focus:outline-none select-all"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCopyKey}
+                          className="flex items-center gap-1 bg-[#2f7d9e] hover:bg-[#256382] text-white text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-colors shadow-2xs select-none border-0"
+                        >
+                          {copiedKey ? (
+                            <>
+                              <Icon name="check" size={14} />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Icon name="copy" size={14} />
+                              Copy Key
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-start gap-3 p-4 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
+                        <p className="text-xs text-slate-500">No API Key has been generated for this workspace yet. Generate one to get started.</p>
+                        <button
+                          type="button"
+                          onClick={handleRegenerateApiKey}
+                          className="flex items-center gap-1.5 bg-[#2f7d9e] hover:bg-[#256382] text-white text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-colors border-0"
+                        >
+                          <Icon name="plus" size={14} />
+                          Generate API Key
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {apiKey && (
+                    <div className="border-t border-slate-100 pt-5">
+                      <h4 className="text-xs font-bold text-red-600 mb-2">Danger Zone</h4>
+                      <p className="text-[11px] text-slate-500 mb-3">Regenerating the API Key will immediately revoke the current key. Any external system using it will fail to send leads until updated with the new key.</p>
+                      <button
+                        type="button"
+                        onClick={handleRegenerateApiKey}
+                        className="flex items-center gap-1 border border-red-200 hover:bg-red-50 text-red-600 text-xs font-semibold py-1.5 px-3 rounded-lg cursor-pointer transition-colors bg-white select-none"
+                      >
+                        <Icon name="refresh" size={13} />
+                        Regenerate API Key
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Developer Documentation Panel */}
+            <div className="bg-white border border-[#c3c6d7] rounded-xl p-5 shadow-xs space-y-5">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Icon name="api" size={18} className="text-[#2f7d9e]" />
+                  API Integration Reference
+                </h3>
+                <p className="text-[11px] text-slate-400">Send HTTP requests from any external system to add leads directly to your dashboard.</p>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                {/* Method & URL */}
+                <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-lg flex flex-col md:flex-row md:items-center gap-2.5">
+                  <span className="bg-emerald-600 text-white font-black px-2.5 py-1 rounded text-[10px] tracking-wide max-w-fit select-none">POST</span>
+                  <span className="font-mono text-slate-800 font-bold select-all break-all">
+                    {import.meta.env.VITE_BASE_URL}/lead/send-leads
+                  </span>
+                </div>
+
+                {/* Headers */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-slate-800 text-xs">Required Headers</h4>
+                  <table className="w-full border-collapse border border-slate-200 rounded-lg overflow-hidden text-[11px]">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                        <th className="px-3 py-2 text-left">Header Key</th>
+                        <th className="px-3 py-2 text-left">Value Type / Format</th>
+                        <th className="px-3 py-2 text-left">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      <tr>
+                        <td className="px-3 py-2 font-mono font-bold text-[#2f7d9e]">Content-Type</td>
+                        <td className="px-3 py-2">application/json</td>
+                        <td className="px-3 py-2 text-slate-500">Specify JSON format</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-mono font-bold text-[#2f7d9e]">x-api-key</td>
+                        <td className="px-3 py-2">string</td>
+                        <td className="px-3 py-2 text-slate-500">Your workspace API key (can also be passed in body/query as `apiKey`)</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Request Payload */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-slate-800 text-xs">JSON Request Body Fields</h4>
+                  <div className="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-[11px] leading-relaxed relative group select-all">
+                    <pre className="overflow-x-auto whitespace-pre">{`{
+  "name": "John Doe",          // String (Required) - Lead full name
+  "email": "john@example.com", // String (Optional) - Lead email address
+  "phone": "9876543210",       // String (Optional) - Lead contact number
+  "source": "Partner System",  // String (Optional) - Referral source
+  "location": "Miami",         // String (Optional) - Geo location
+  "query": "BCA",              // String (Optional) - Course / query target
+  "campaign": "Ingest_API",    // String (Optional) - Ad or marketing campaign name
+  "status": "NEW"              // String (Optional) - Default lead status (e.g. NEW)
+}`}</pre>
+                  </div>
+                </div>
+
+                {/* Code Sample */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-slate-800 text-xs">Example Integration Code (cURL)</h4>
+                  <div className="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto relative select-all">
+                    <pre className="whitespace-pre">{`curl -X POST "${import.meta.env.VITE_BASE_URL}/lead/send-leads" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: ${apiKey || 'your_api_key'}" \\
+  -d '{
+    "name": "Jane Smith",
+    "email": "janesmith@example.com",
+    "phone": "9876543210",
+    "source": "Partner API",
+    "query": "BCA"
+  }'`}</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* TAB 8: APPEARANCE PREFERENCES */}
         {activeSettingsTab === 'appearance' && (
           <motion.form
             key="appearance-form"
