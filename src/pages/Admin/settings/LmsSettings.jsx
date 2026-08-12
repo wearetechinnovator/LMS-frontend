@@ -1259,7 +1259,7 @@ export default function LmsSettings() {
   }
 
   return (
-    <div className="w-full relative h-full flex flex-col font-sans select-none p-6 bg-white text-left">
+    <div className="w-full relative h-full flex flex-col font-sans select-none p-6 bg-white text-left overflow-y-auto">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMsg && (
