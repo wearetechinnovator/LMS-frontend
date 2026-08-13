@@ -226,43 +226,7 @@ export default function AuthPage({ onAuthSuccess }) {
   }
 
   const handleGoogleLogin = () => {
-    if (typeof window.google === 'undefined') {
-      triggerToast('Google client library not loaded yet. Please try again in a moment.');
-      return;
-    }
-
-    try {
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '797009458228-rref2mg9jtj2s83cvg787t3sf4d1lmm1.apps.googleusercontent.com',
-        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-        callback: async (tokenResponse) => {
-          if (tokenResponse && tokenResponse.access_token) {
-            setIsLoading(true);
-            try {
-              const response = await loginWithGoogle(tokenResponse.access_token);
-              triggerToast('Google Login successful!');
-
-              const role = (response.user && response.user.role_name) || 'admin'
-              localStorage.setItem('authToken', response.token)
-              localStorage.setItem('userRole', role)
-              localStorage.setItem('userPermissions', JSON.stringify((response.user && response.user.permissions) || {}))
-
-              setTimeout(() => {
-                onAuthSuccess({ username: (response.user && response.user.name) || 'Google User', role, isNewUser: false })
-              }, 1000)
-            } catch (err) {
-              triggerToast(err.message || 'Google Login failed');
-            } finally {
-              setIsLoading(false);
-            }
-          }
-        },
-      });
-      tokenClient.requestAccessToken();
-    } catch (err) {
-      console.error(err);
-      triggerToast('Could not initialize Google Sign-in');
-    }
+    triggerToast('Google Sign-in is temporarily unavailable.');
   };
 
   const verifyLinkedInLogin = async (code, redirect_uri) => {
@@ -287,20 +251,7 @@ export default function AuthPage({ onAuthSuccess }) {
   };
 
   const handleLinkedInLogin = () => {
-    try {
-      const client_id = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '77rzfwul6y3gcv';
-      const cleanPath = window.location.pathname === '/' ? '' : window.location.pathname;
-      const redirect_uri = window.location.origin + cleanPath;
-      const scope = 'openid profile email';
-      const state = 'linkedin_oauth_state';
-
-      const authorizationUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&state=${state}&scope=${encodeURIComponent(scope)}`;
-
-      window.location.href = authorizationUrl;
-    } catch (err) {
-      console.error(err);
-      triggerToast('Could not initialize LinkedIn Sign-in');
-    }
+    triggerToast('LinkedIn Sign-in is temporarily unavailable.');
   };
 
   const handleResendOtp = async () => {
@@ -377,7 +328,7 @@ export default function AuthPage({ onAuthSuccess }) {
               <div className="auth-sidebar-header">
                 <div className="auth-badge">
                   <span className="auth-badge-dot" />
-                  TIS PLATFORM
+                  <img src="/techilogo.png" alt="TIS Logo" style={{ height: '24px', objectFit: 'contain' }} />
                 </div>
 
                 <AnimatePresence mode="wait">
@@ -434,7 +385,32 @@ export default function AuthPage({ onAuthSuccess }) {
 
               <div className="auth-sidebar-footer">
                 <p className="auth-footer-title">TIS — Lead Management System</p>
-                <p className="auth-footer-copyright">© {new Date().getFullYear()} TIS. All rights reserved.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <p className="auth-footer-copyright">© {new Date().getFullYear()} TIS. All rights reserved.</p>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '10px' }}>•</span>
+                  <a
+                    href="https://lms-docs-site.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="auth-footer-link"
+                    style={{
+                      fontSize: '10px',
+                      color: 'rgba(255, 255, 255, 0.65)',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.color = '#ffffff';
+                      e.target.style.textDecoration = 'underline';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.color = 'rgba(255, 255, 255, 0.65)';
+                      e.target.style.textDecoration = 'none';
+                    }}
+                  >
+                    Documentation
+                  </a>
+                </div>
               </div>
             </motion.div>
 

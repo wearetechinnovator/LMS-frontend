@@ -40,7 +40,7 @@ export default function LmsSettings() {
       tabs.push({ id: 'session', label: 'Session Creation', icon: 'clock-fading' })
       tabs.push({ id: 'import', label: 'Import Leads', icon: 'file-up' })
       tabs.push({ id: 'export', label: 'Export Leads', icon: 'download' })
-      tabs.push({ id: 'bulk', label: 'Bulk Messaging', icon: 'messages-square' })
+      // tabs.push({ id: 'bulk', label: 'Bulk Messaging', icon: 'messages-square' })
       tabs.push({ id: 'statuses', label: 'Custom Statuses', icon: 'chart-spline' })
       tabs.push({ id: 'journey', label: 'Lead Journey', icon: 'route' })
       tabs.push({ id: 'apiKey', label: 'API Integration', icon: 'key' })
