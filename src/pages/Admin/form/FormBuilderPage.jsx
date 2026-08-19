@@ -39,6 +39,25 @@ export default function FormBuilderPage() {
     setToastMessage(msg)
   }
 
+  const formatFormDate = (dateStr) => {
+    if (!dateStr || dateStr === 'Just now') return dateStr;
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }) + ', ' + d.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const [isLoading, setIsLoading] = useState(true)
   const [formsList, setFormsList] = useState([])
 
@@ -592,7 +611,7 @@ export default function FormBuilderPage() {
                         {/* Author Details & Created Time */}
                         <td className="px-5 py-1 text-left">
                           <span className="font-semibold text-[11.5px] text-slate-700">{form.createdBy}</span>
-                          <p className="text-[10px] text-slate-400 mt-0">{form.createdDate}</p>
+                          <p className="text-[10px] text-slate-400 mt-0">{formatFormDate(form.createdDate)}</p>
                         </td>
 
                         {/* Action Triggers */}
@@ -909,7 +928,7 @@ export default function FormBuilderPage() {
                       <div className="mt-4 pt-3 border-t border-slate-100 shrink-0 flex items-center justify-between gap-4">
                         <div className="flex flex-col">
                           <span className="text-[9px] text-slate-400">Created by: {activePreviewTemplate.createdBy || 'System'}</span>
-                          <span className="text-[8px] text-slate-400 mt-0.5">{activePreviewTemplate.createdDate}</span>
+                          <span className="text-[8px] text-slate-400 mt-0.5">{formatFormDate(activePreviewTemplate.createdDate)}</span>
                         </div>
                         <button
                           onClick={() => handleSelectTemplate(activePreviewTemplate)}
