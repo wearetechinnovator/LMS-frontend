@@ -306,7 +306,7 @@ function App() {
             width: `${progress}%`,
             height: '3px',
             backgroundColor: 'rgb(2, 137, 247)',
-            zIndex: 999999,
+            zIndex: 9999999,
             opacity: progress === 100 ? 0 : 1,
             transition: 'width 0.2s ease, opacity 0.4s ease',
             pointerEvents: 'none'
