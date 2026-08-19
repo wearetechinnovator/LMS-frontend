@@ -201,7 +201,7 @@ export default function FormBuilder({
             }
         });
     }, [previewValues, showPreview, formFields]);
-    
+
     useEffect(() => {
         const fetchCounselors = async () => {
             try {
@@ -224,7 +224,7 @@ export default function FormBuilder({
         };
         fetchCounselors();
     }, []);
-    
+
     const triggerLocalToast = (msg) => {
         setToastMessage(msg)
     }
@@ -673,8 +673,8 @@ export default function FormBuilder({
     useEffect(() => {
         if (!showPreview) return;
 
-        const recaptchaFields = formFields.filter(f => 
-            f.type === 'captcha' && 
+        const recaptchaFields = formFields.filter(f =>
+            f.type === 'captcha' &&
             ['recaptcha_v2_checkbox', 'recaptcha_v2_invisible', 'recaptcha_v3'].includes(f.captchaType)
         );
 
@@ -742,9 +742,9 @@ export default function FormBuilder({
 
     const handlePreviewSubmit = async (e) => {
         e.preventDefault();
-        
-        const recaptchaFields = formFields.filter(f => 
-            f.type === 'captcha' && 
+
+        const recaptchaFields = formFields.filter(f =>
+            f.type === 'captcha' &&
             ['recaptcha_v2_checkbox', 'recaptcha_v2_invisible', 'recaptcha_v3'].includes(f.captchaType)
         );
 
@@ -803,19 +803,19 @@ export default function FormBuilder({
                 const code = finalVals[`${f.id}-code`] || '+1';
                 const rawNum = finalVals[`${f.id}-num`] || '';
                 let digits = rawNum.replace(/\D/g, '');
-                
+
                 // Strip redundant country code prefix if user typed it manually
                 const codePrefix = code.replace(/\D/g, '');
                 if (codePrefix && digits.startsWith(codePrefix) && digits.length > codePrefix.length) {
                     digits = digits.substring(codePrefix.length);
                 }
-                
+
                 if (f.required || digits.length > 0) {
                     if (digits.length === 0) {
                         triggerLocalToast(`Phone number is required for "${f.label}".`);
                         return;
                     }
-                    
+
                     const rule = PHONE_VALIDATION[code];
                     if (rule) {
                         const isValid = rule.pattern.test(digits) || (rule.fallbackPattern && rule.fallbackPattern.test(digits));
@@ -1124,7 +1124,7 @@ export default function FormBuilder({
 
     const handleSaveDraft = () => {
         const isPublished = formStatus === 'Published' || String(formStatus).toUpperCase() === 'PUBLISHED';
-        
+
         if (isPublished) {
             const proceed = window.confirm("It is a published form. Saving changes will reflect in live. Do you want to proceed?");
             if (!proceed) return;
@@ -1563,7 +1563,7 @@ export default function FormBuilder({
                                                 </div>
 
                                                 <div className="absolute -top-3 right-4 flex gap-2 z-10">
-                                                    <button 
+                                                    <button
                                                         onClick={(e) => { e.stopPropagation(); setSelectedFieldId(field.id); }}
                                                         className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:border-primary text-primary hover:bg-primary/5 active:bg-primary/10 flex items-center justify-center transition-all shadow-md hover:shadow-lg cursor-pointer"
                                                     >
@@ -1622,26 +1622,26 @@ export default function FormBuilder({
                                                         ))}
                                                     </div>
                                                 ) : field.type === 'fullname' ? (
-                                                     <div className="grid grid-cols-3 gap-2.5">
-                                                         <input
-                                                             type="text"
-                                                             placeholder="First Name"
-                                                             disabled
-                                                             className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
-                                                         />
-                                                         <input
-                                                             type="text"
-                                                             placeholder="Middle Name"
-                                                             disabled
-                                                             className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
-                                                         />
-                                                         <input
-                                                             type="text"
-                                                             placeholder="Last Name"
-                                                             disabled
-                                                             className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
-                                                         />
-                                                     </div>
+                                                    <div className="grid grid-cols-3 gap-2.5">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="First Name"
+                                                            disabled
+                                                            className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Middle Name"
+                                                            disabled
+                                                            className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Last Name"
+                                                            disabled
+                                                            className="h-9 px-3 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none text-[12.5px] field-card-input"
+                                                        />
+                                                    </div>
                                                 ) : field.type === 'phone' ? (
                                                     <div className="flex gap-2">
                                                         <select disabled className="w-24 h-9 px-1.5 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface text-[12px]">
@@ -1803,22 +1803,20 @@ export default function FormBuilder({
                     <button
                         type="button"
                         onClick={() => setSelectedFieldId(null)}
-                        className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
-                            !selectedField
+                        className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider transition-all border-b-2 cursor-pointer ${!selectedField
                                 ? 'border-primary text-primary bg-white font-black'
                                 : 'border-transparent text-slate-500 hover:text-slate-800'
-                        }`}
+                            }`}
                     >
                         Form Settings
                     </button>
                     <button
                         type="button"
                         disabled={!selectedFieldId}
-                        className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider border-b-2 transition-all ${
-                            selectedField
+                        className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider border-b-2 transition-all ${selectedField
                                 ? 'border-primary text-primary bg-white font-black cursor-pointer'
                                 : 'border-transparent text-slate-300 cursor-not-allowed'
-                        }`}
+                            }`}
                     >
                         Field Settings
                     </button>
@@ -1883,7 +1881,7 @@ export default function FormBuilder({
                             {selectedField.type === 'file' && (
                                 <div className="space-y-2.5">
                                     <h4 className="font-headline-md text-headline-md text-on-background mb-1 text-[10px] font-bold">File Settings</h4>
-                                    
+
                                     <div>
                                         <label className="block font-label-caps text-label-caps text-on-surface mb-1 text-[8px] settings-label select-none">Min Files Limit</label>
                                         <input
@@ -1967,7 +1965,7 @@ export default function FormBuilder({
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     {['recaptcha_v2_checkbox', 'recaptcha_v2_invisible', 'recaptcha_v3'].includes(selectedField.captchaType) && (
                                         <div className="space-y-2 pt-1 border-t border-outline-variant/30">
                                             <div>
@@ -2042,7 +2040,7 @@ export default function FormBuilder({
                                                 } else if (newFormat === 'International') {
                                                     newPlaceholder = '+X XXX XXX XXXX';
                                                 }
-                                                updateField(selectedField.id, { 
+                                                updateField(selectedField.id, {
                                                     phoneFormat: newFormat,
                                                     placeholder: newPlaceholder
                                                 });
@@ -2072,7 +2070,7 @@ export default function FormBuilder({
                                         <select
                                             value={selectedField.locationMode || 'all'}
                                             onChange={(e) => {
-                                                updateField(selectedField.id, { 
+                                                updateField(selectedField.id, {
                                                     locationMode: e.target.value,
                                                     selectedCountry: '',
                                                     selectedState: ''
@@ -2093,7 +2091,7 @@ export default function FormBuilder({
                                             <select
                                                 value={selectedField.selectedCountry || ''}
                                                 onChange={(e) => {
-                                                    updateField(selectedField.id, { 
+                                                    updateField(selectedField.id, {
                                                         selectedCountry: e.target.value,
                                                         selectedState: ''
                                                     });
@@ -2133,7 +2131,7 @@ export default function FormBuilder({
                             {selectedField.type === 'fullname' && (
                                 <div className="space-y-2.5 pb-2.5 border-b border-outline-variant text-left">
                                     <h4 className="font-headline-md text-headline-md text-on-background mb-1 text-[10px]">Name Component Configuration</h4>
-                                    
+
                                     <div className="flex items-center gap-2 py-1">
                                         <input
                                             type="checkbox"
@@ -2694,7 +2692,7 @@ export default function FormBuilder({
                                 <div className="flex items-center justify-between">
                                     <label className="block font-label-caps text-label-caps text-on-surface text-[8px] settings-label select-none">Lead Journey</label>
                                     {!isCreatingJourney && (
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => {
                                                 setIsCreatingJourney(true);
@@ -2710,7 +2708,7 @@ export default function FormBuilder({
                                 {isCreatingJourney ? (
                                     <div className="space-y-3.5 p-3.5 border border-outline-variant rounded bg-slate-50/50 animate-fade-in mt-2">
                                         <div className="font-bold text-[10px] text-slate-800">Create Custom Journey</div>
-                                        
+
                                         <div className="space-y-1">
                                             <label className="block text-[8px] font-bold text-slate-500 uppercase">Journey Name</label>
                                             <input
@@ -2740,7 +2738,7 @@ export default function FormBuilder({
                                                             className="w-3.5 h-3.5 accent-primary cursor-pointer rounded"
                                                         />
                                                         <div className="flex items-center gap-1.5">
-                                                            <span 
+                                                            <span
                                                                 className="w-2.5 h-2.5 rounded-full inline-block"
                                                                 style={{ backgroundColor: status.color || '#3b82f6' }}
                                                             />
@@ -2755,7 +2753,7 @@ export default function FormBuilder({
                                             {showInlineAddStage ? (
                                                 <div className="p-2.5 border border-outline-variant rounded bg-white space-y-2 animate-fade-in">
                                                     <div className="text-[9px] font-bold text-slate-700">Add Custom Stage</div>
-                                                    
+
                                                     <div className="space-y-1">
                                                         <input
                                                             type="text"
@@ -2775,7 +2773,7 @@ export default function FormBuilder({
                                                                     type="button"
                                                                     onClick={() => setInlineStageColor(color)}
                                                                     className="w-4 h-4 rounded-full border border-white hover:scale-110 transition-transform cursor-pointer relative"
-                                                                    style={{ 
+                                                                    style={{
                                                                         backgroundColor: color,
                                                                         boxShadow: inlineStageColor === color ? '0 0 0 1.5px rgba(2, 137, 247, 0.6)' : 'none'
                                                                     }}
@@ -2862,15 +2860,15 @@ export default function FormBuilder({
                             <div className="space-y-1.5 pt-2 border-t border-outline-variant/30 animate-fade-in">
                                 <label className="block font-label-caps text-label-caps text-on-surface text-[8px] settings-label select-none">Assign to Counselors (Round Robin)</label>
                                 <p className="text-[9px] text-slate-400 select-none leading-relaxed mb-2">Select one or more counselors. Leads will be distributed equally among them.</p>
-                                
+
                                 <div className="max-h-[140px] overflow-y-auto border border-outline-variant rounded p-2.5 bg-slate-50/50 space-y-1.5 scrollbar-thin">
                                     {counselorsList.map(c => {
-                                        const assignedCounselorIds = Array.isArray(formSettings.assignedCounselorIds) 
-                                            ? formSettings.assignedCounselorIds.map(Number) 
+                                        const assignedCounselorIds = Array.isArray(formSettings.assignedCounselorIds)
+                                            ? formSettings.assignedCounselorIds.map(Number)
                                             : (formSettings.assignedCounselorId ? [Number(formSettings.assignedCounselorId)] : []);
-                                        
+
                                         const isChecked = assignedCounselorIds.includes(Number(c.id));
-                                        
+
                                         return (
                                             <label key={c.id} className="flex items-start gap-2.5 cursor-pointer group select-none py-0.5">
                                                 <input
@@ -2885,8 +2883,8 @@ export default function FormBuilder({
                                                         } else {
                                                             nextIds = nextIds.filter(id => id !== Number(c.id));
                                                         }
-                                                        setFormSettings({ 
-                                                            ...formSettings, 
+                                                        setFormSettings({
+                                                            ...formSettings,
                                                             assignedCounselorIds: nextIds,
                                                             assignedCounselorId: nextIds.length > 0 ? String(nextIds[0]) : ''
                                                         });
@@ -3206,69 +3204,6 @@ export default function FormBuilder({
                                                                         <option value="">Choose City...</option>
                                                                         {(previewCitiesMap[field.id] || []).map(c => <option key={c} value={c}>{c}</option>)}
                                                                     </select>
-                                                                </div>
-                                                            ) : field.type === 'captcha' ? (
-                                                                <div className="flex flex-col gap-2">
-                                                                    {['recaptcha_v2_checkbox', 'recaptcha_v2_invisible', 'recaptcha_v3'].includes(field.captchaType) ? (
-                                                                        <div className="py-1">
-                                                                            {field.recaptchaSiteKey ? (
-                                                                                <>
-                                                                                    {field.captchaType === 'recaptcha_v2_checkbox' && (
-                                                                                        <div id={`recaptcha-preview-${field.id}`} className="g-recaptcha-container"></div>
-                                                                                    )}
-                                                                                    {field.captchaType === 'recaptcha_v2_invisible' && (
-                                                                                        <div className="text-xs text-slate-500 flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-200 rounded">
-                                                                                            <span className="material-symbols-outlined text-sky-500 text-[16px] font-bold">verified_user</span>
-                                                                                            <span>Google reCAPTCHA v2 (Invisible) Loaded</span>
-                                                                                            <div id={`recaptcha-preview-${field.id}`} style={{ display: 'none' }}></div>
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {field.captchaType === 'recaptcha_v3' && (
-                                                                                        <div className="text-xs text-slate-500 flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-200 rounded">
-                                                                                            <span className="material-symbols-outlined text-sky-650 text-[16px] font-bold">security</span>
-                                                                                            <span>Google reCAPTCHA v3 Active (Site Key configured)</span>
-                                                                                        </div>
-                                                                                    )}
-                                                                                </>
-                                                                            ) : (
-                                                                                <div className="text-[10px] text-amber-600 border border-amber-250 bg-amber-50 p-2 rounded flex items-center gap-1.5 font-bold">
-                                                                                    <span className="material-symbols-outlined text-[14px]">warning</span>
-                                                                                    Please configure reCAPTCHA Site Key in Settings
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <>
-                                                                            <div className="flex items-center gap-3">
-                                                                                {captchaData[field.id]?.svg ? (
-                                                                                    <div 
-                                                                                        dangerouslySetInnerHTML={{ __html: captchaData[field.id].svg }}
-                                                                                        className="w-[150px] h-[45px] shrink-0"
-                                                                                    />
-                                                                                ) : (
-                                                                                    <div className="w-[150px] h-[45px] shrink-0 bg-slate-100 border rounded flex items-center justify-center text-[10px] text-slate-400 font-semibold animate-pulse">
-                                                                                        Loading...
-                                                                                    </div>
-                                                                                )}
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => loadCaptcha(field.id, field.captchaType || 'math')}
-                                                                                    className="flex items-center justify-center p-1.5 rounded-full hover:bg-slate-100 text-slate-500 border border-slate-200 transition-colors"
-                                                                                    title="Refresh CAPTCHA"
-                                                                                >
-                                                                                    <span className="material-symbols-outlined text-[16px] font-bold">refresh</span>
-                                                                                </button>
-                                                                            </div>
-                                                                            <input
-                                                                                type="text"
-                                                                                placeholder="Enter verification code"
-                                                                                value={previewValues[field.id] || ''}
-                                                                                onChange={(e) => setPreviewValues({ ...previewValues, [field.id]: e.target.value })}
-                                                                                required={field.required}
-                                                                                className="w-full h-8 px-2 border border-outline-variant rounded bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-[10px]"
-                                                                            />
-                                                                        </>
-                                                                    )}
                                                                 </div>
                                                             ) : field.type === 'textarea' ? (
                                                                 <textarea
