@@ -1804,8 +1804,8 @@ export default function FormBuilder({
                         type="button"
                         onClick={() => setSelectedFieldId(null)}
                         className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider transition-all border-b-2 cursor-pointer ${!selectedField
-                                ? 'border-primary text-primary bg-white font-black'
-                                : 'border-transparent text-slate-500 hover:text-slate-800'
+                            ? 'border-primary text-primary bg-white font-black'
+                            : 'border-transparent text-slate-500 hover:text-slate-800'
                             }`}
                     >
                         Form Settings
@@ -1814,8 +1814,8 @@ export default function FormBuilder({
                         type="button"
                         disabled={!selectedFieldId}
                         className={`flex-1 py-2 text-[10px] font-extrabold text-center uppercase tracking-wider border-b-2 transition-all ${selectedField
-                                ? 'border-primary text-primary bg-white font-black cursor-pointer'
-                                : 'border-transparent text-slate-300 cursor-not-allowed'
+                            ? 'border-primary text-primary bg-white font-black cursor-pointer'
+                            : 'border-transparent text-slate-300 cursor-not-allowed'
                             }`}
                     >
                         Field Settings
@@ -1959,9 +1959,9 @@ export default function FormBuilder({
                                             >
                                                 <option value="math">Math CAPTCHA (Self-Hosted SVG)</option>
                                                 <option value="alphanumeric">Alphanumeric CAPTCHA (Self-Hosted SVG)</option>
-                                                <option value="recaptcha_v2_checkbox">Google reCAPTCHA v2 (Checkbox)</option>
+                                                {/* <option value="recaptcha_v2_checkbox">Google reCAPTCHA v2 (Checkbox)</option>
                                                 <option value="recaptcha_v2_invisible">Google reCAPTCHA v2 (Invisible)</option>
-                                                <option value="recaptcha_v3">Google reCAPTCHA v3</option>
+                                                <option value="recaptcha_v3">Google reCAPTCHA v3</option> */}
                                             </select>
                                         </div>
                                     </div>
